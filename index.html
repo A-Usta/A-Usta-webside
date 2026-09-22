@@ -1,1 +1,1234 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>A-USTA | Bütün avtomobil xidmətləri bir platformada</title>
+
+    <meta
+        name="description"
+        content="A-USTA — usta çağırışı, avtoservis, ehtiyat hissələri, avtomobil alqı-satqısı, logistika, xaricdən sifariş və digər avtomobil xidmətlərini birləşdirən platforma."
+    >
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- =========================================================
+     A-USTA PLATFORM
+     MASTER FRONTEND STRUCTURE v1.0
+     ========================================================= -->
+
+
+<!-- =========================================================
+     HEADER
+     ========================================================= -->
+
+<header class="site-header">
+
+    <div class="header-top">
+
+        <a href="#home" class="brand">
+            <span class="brand-logo">A</span>
+
+            <span class="brand-text">
+                <strong>A-USTA</strong>
+                <small>Bütün avtomobil xidmətləri bir tətbiqdə</small>
+            </span>
+        </a>
+
+
+        <div class="global-search">
+
+            <input
+                type="search"
+                id="globalSearch"
+                placeholder="Xidmət, usta, marka və ya kateqoriya axtar..."
+            >
+
+            <button type="button" aria-label="Axtar">
+                🔍
+            </button>
+
+        </div>
+
+
+        <button class="location-selector" type="button">
+            📍 Bakı
+            <span>⌄</span>
+        </button>
+
+
+        <a href="#account" class="account-link">
+            👤 Hesab
+        </a>
+
+
+        <button class="menu-button" type="button" aria-label="Menyu">
+            ☰
+        </button>
+
+    </div>
+
+
+    <!-- MAIN NAVIGATION -->
+
+    <nav class="main-navigation">
+
+        <a href="#home">🏠 Əsas səhifə</a>
+
+        <a href="#services">🛠️ Xidmətlər</a>
+
+        <a href="#mechanic">🔧 Usta çağırışı</a>
+
+        <a href="#parts">⚙️ Ehtiyat hissələri</a>
+
+        <a href="#cars">🚗 Avtomobil bazarı</a>
+
+        <a href="#logistics">🚚 Logistika</a>
+
+        <a href="#legal">⚖️ Hüquqi xidmətlər</a>
+
+        <a href="#foreign-orders">🌍 Xaricdən sifariş</a>
+
+    </nav>
+
+</header>
+
+
+
+<!-- =========================================================
+     MAIN
+     ========================================================= -->
+
+<main id="home">
+
+
+<!-- =========================================================
+     HERO / ANA EKRAN
+     ========================================================= -->
+
+<section class="hero-section">
+
+    <div class="hero-content">
+
+        <span class="section-label">
+            A-USTA PLATFORM
+        </span>
+
+        <h1>
+            Avtomobiliniz üçün
+            <strong>bütün xidmətlər A-USTA-da!</strong>
+        </h1>
+
+        <p>
+            Usta çağırışından ehtiyat hissəsinə,
+            avtomobil satışından logistikaya qədər
+            avtomobil dünyasının xidmətlərini bir platformada birləşdiririk.
+        </p>
+
+
+        <div class="hero-actions">
+
+            <button class="primary-button" type="button">
+                Xidmətlərə bax
+            </button>
+
+            <button class="secondary-button" type="button">
+                🔧 Usta çağır
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- YAXIN USTALAR -->
+
+    <div class="nearby-mechanics-card">
+
+        <div class="card-icon">📍</div>
+
+        <h2>Yaxın ərazidə ustalar</h2>
+
+        <p>
+            Xəritədə ən yaxın servis və usta məntəqələrini tapın.
+        </p>
+
+        <button class="primary-button" type="button">
+            Xəritədə göstər
+        </button>
+
+        <div class="map-placeholder">
+            XƏRİTƏ / GPS
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     ƏSAS XİDMƏT KATEQORİYALARI
+     ========================================================= -->
+
+<section class="quick-services section">
+
+    <div class="section-heading">
+
+        <h2>Əsas xidmətlər</h2>
+
+        <a href="#services">
+            Hamısına bax →
+        </a>
+
+    </div>
+
+
+    <div class="service-category-grid">
+
+
+        <article class="category-card">
+            <span>🔧</span>
+            <h3>Usta çağırışı</h3>
+            <p>Yaxın ustanı tap</p>
+        </article>
+
+
+        <article class="category-card">
+            <span>⚙️</span>
+            <h3>Ehtiyat hissələri</h3>
+            <p>Hissə sifariş et</p>
+        </article>
+
+
+        <article class="category-card">
+            <span>🚘</span>
+            <h3>Avtoservis</h3>
+            <p>Servis tap</p>
+        </article>
+
+
+        <article class="category-card">
+            <span>🚗</span>
+            <h3>Avtomobil satışı</h3>
+            <p>Avtomobil al / sat</p>
+        </article>
+
+
+        <article class="category-card">
+            <span>🚙</span>
+            <h3>Avtomobil kirayəsi</h3>
+            <p>Kirayə götür / ver</p>
+        </article>
+
+
+        <article class="category-card">
+            <span>🚚</span>
+            <h3>Logistika</h3>
+            <p>Nəqliyyat sifariş et</p>
+        </article>
+
+
+        <article class="category-card">
+            <span>⚖️</span>
+            <h3>Hüquqi xidmətlər</h3>
+            <p>Notariat və müqavilələr</p>
+        </article>
+
+
+        <article class="category-card">
+            <span>🌍</span>
+            <h3>Xaricdən sifariş</h3>
+            <p>Avtomobil və hissə</p>
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     USTA ÇAĞIRIŞI
+     ========================================================= -->
+
+<section id="mechanic" class="feature-section">
+
+    <div class="section-heading">
+
+        <h2>🔧 Usta çağırışı</h2>
+
+        <a href="#mechanic-request">
+            Usta çağır →
+        </a>
+
+    </div>
+
+
+    <div class="feature-grid">
+
+
+        <article class="feature-card">
+            <h3>Problemini bildir</h3>
+            <p>
+                Avtomobilinizdə yaranan problemi seçin
+                və ya özünüz izah edin.
+            </p>
+        </article>
+
+
+        <article class="feature-card">
+            <h3>📍 Yaxın ustaları tap</h3>
+            <p>
+                GPS əsasında yaxınlıqdakı uyğun ustalar göstərilir.
+            </p>
+        </article>
+
+
+        <article class="feature-card">
+            <h3>💰 Qiymət müqayisəsi</h3>
+            <p>
+                Ən aşağı, orta və tam xidmət qiymətləri göstərilə bilər.
+            </p>
+        </article>
+
+
+        <article class="feature-card">
+            <h3>❓ Problem bilinmirsə</h3>
+            <p>
+                İlkin qiymət naməlum ola bilər və usta yerində
+                diaqnostika aparır.
+            </p>
+        </article>
+
+
+        <article class="feature-card">
+            <h3>📸 Əvvəl / sonra</h3>
+            <p>
+                Görülən işlər foto və video ilə qeyd edilə bilər.
+            </p>
+        </article>
+
+
+        <article class="feature-card">
+            <h3>📄 Müqavilə və zəmanət</h3>
+            <p>
+                Böyük işlər üçün rəqəmsal müqavilə və zəmanət mexanizmi.
+            </p>
+        </article>
+
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     XİDMƏTLƏRİN TAM KATALOQU
+     ========================================================= -->
+
+<section id="services" class="services-section section">
+
+    <div class="section-heading">
+
+        <h2>🛠️ Avtomobil xidmətləri</h2>
+
+        <a href="#all-services">
+            Hamısına bax →
+        </a>
+
+    </div>
+
+
+    <div class="service-list-grid">
+
+
+        <!-- TEXNİKİ XİDMƏTLƏR -->
+
+        <article class="service-group">
+
+            <h3>🔧 Texniki xidmətlər</h3>
+
+            <ul>
+                <li>Mühərrik təmiri</li>
+                <li>Karopka / sürətlər qutusu</li>
+                <li>Yağ dəyişimi</li>
+                <li>Filtr dəyişimi</li>
+                <li>Əyləc sistemi</li>
+                <li>Akkumulyator</li>
+                <li>Kondisioner</li>
+                <li>Radiator</li>
+                <li>Asqı sistemi</li>
+                <li>Elektrik sistemi</li>
+            </ul>
+
+        </article>
+
+
+        <!-- TƏKƏR -->
+
+        <article class="service-group">
+
+            <h3>🛞 Təkər xidmətləri</h3>
+
+            <ul>
+                <li>Təkər təmiri</li>
+                <li>Razval</li>
+                <li>Balans</li>
+                <li>Təkər dəyişimi</li>
+                <li>Disk xidmətləri</li>
+                <li>Şin satışı</li>
+            </ul>
+
+        </article>
+
+
+        <!-- KARYOZ / KUZOV -->
+
+        <article class="service-group">
+
+            <h3>🚘 Kuzov və görünüş</h3>
+
+            <ul>
+                <li>Karopka / kuzov işləri</li>
+                <li>Boyama</li>
+                <li>Polirovka</li>
+                <li>Detaylinq</li>
+                <li>Ximçistka</li>
+                <li>PPF</li>
+                <li>Wrap</li>
+                <li>Faraların bərpası</li>
+                <li>Bamper təmiri</li>
+                <li>Qapı təmiri</li>
+            </ul>
+
+        </article>
+
+
+        <!-- ELEKTRONİKA -->
+
+        <article class="service-group">
+
+            <h3>💻 Elektronika və proqramlaşdırma</h3>
+
+            <ul>
+                <li>ECU proqramlaşdırma</li>
+                <li>Avtomobil diaqnostikası</li>
+                <li>Stage 1</li>
+                <li>Stage 2</li>
+                <li>Stage 3</li>
+                <li>Çip tuning</li>
+                <li>Elektron sistemlər</li>
+            </ul>
+
+        </article>
+
+
+        <!-- AÇAR -->
+
+        <article class="service-group">
+
+            <h3>🔑 Açar xidmətləri</h3>
+
+            <ul>
+                <li>Açar hazırlanması</li>
+                <li>Açar təmiri</li>
+                <li>Qapının açılması</li>
+                <li>İtirilmiş açarın bərpası</li>
+                <li>Smart key</li>
+            </ul>
+
+        </article>
+
+
+        <!-- XÜSUSİ -->
+
+        <article class="service-group">
+
+            <h3>🚿 Mobil xidmətlər</h3>
+
+            <ul>
+                <li>Mobil avtoyuma</li>
+                <li>Ünvana usta</li>
+                <li>Yanacaq gətirilməsi</li>
+                <li>Primicka / akü xidməti</li>
+                <li>Yolda texniki yardım</li>
+            </ul>
+
+        </article>
+
+
+        <!-- DİGƏR -->
+
+        <article class="service-group">
+
+            <h3>➕ Digər xidmətlər</h3>
+
+            <ul>
+                <li>Katalizator / Cat</li>
+                <li>Patpress</li>
+                <li>Egzoz</li>
+                <li>Şüşə</li>
+                <li>İşıq sistemi</li>
+                <li>Yanacaq sistemi</li>
+            </ul>
+
+        </article>
+
+
+        <!-- GƏLƏCƏK -->
+
+        <article class="service-group future-services">
+
+            <h3>➕ Yeni xidmətlər</h3>
+
+            <p>
+                Gələcəkdə A-USTA platformasına əlavə ediləcək
+                yeni xidmətlər üçün struktur.
+            </p>
+
+            <button type="button">
+                Yeni xidmət əlavə et
+            </button>
+
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     POPULYAR XİDMƏTLƏR
+     ========================================================= -->
+
+<section class="popular-section section">
+
+    <div class="section-heading">
+
+        <h2>Populyar xidmətlər</h2>
+
+        <a href="#services">
+            Hamısına bax →
+        </a>
+
+    </div>
+
+
+    <div class="popular-grid">
+
+        <article class="popular-card">
+            <div class="image-placeholder">PPF / WRAP</div>
+            <h3>PPF / Wrap</h3>
+            <p>Qoruyucu film</p>
+        </article>
+
+        <article class="popular-card">
+            <div class="image-placeholder">TUNING</div>
+            <h3>Tuning</h3>
+            <p>Güc və görünüş</p>
+        </article>
+
+        <article class="popular-card">
+            <div class="image-placeholder">DETAILING</div>
+            <h3>Ximçistka</h3>
+            <p>Salon təmiri</p>
+        </article>
+
+        <article class="popular-card">
+            <div class="image-placeholder">BOYA</div>
+            <h3>Polirovka</h3>
+            <p>Rəngləmə və bərpa</p>
+        </article>
+
+        <article class="popular-card">
+            <div class="image-placeholder">MOTOR</div>
+            <h3>Motor</h3>
+            <p>Təmir və diaqnostika</p>
+        </article>
+
+        <article class="popular-card">
+            <div class="image-placeholder">KAROPKA</div>
+            <h3>Karopka</h3>
+            <p>Təmir və bərpa</p>
+        </article>
+
+        <article class="popular-card">
+            <div class="image-placeholder">DAMIRCİ</div>
+            <h3>Dəmirçi</h3>
+            <p>Kuzov işləri</p>
+        </article>
+
+        <article class="popular-card">
+            <div class="image-placeholder">QAPI</div>
+            <h3>Qapı açılması</h3>
+            <p>Açar xidməti</p>
+        </article>
+
+        <article class="popular-card">
+            <div class="image-placeholder">AVTO YUMA</div>
+            <h3>Avto yuma</h3>
+            <p>Mobil və məntəqə</p>
+        </article>
+
+        <article class="popular-card">
+            <div class="image-placeholder">KONDİSİONER</div>
+            <h3>Kondisioner</h3>
+            <p>Qaz və təmir</p>
+        </article>
+
+        <article class="popular-card">
+            <div class="image-placeholder">FREN</div>
+            <h3>Fren sistemi</h3>
+            <p>Təmir və dəyişmə</p>
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     EHTİYAT HİSSƏLƏRİ
+     ========================================================= -->
+
+<section id="parts" class="parts-section section">
+
+    <div class="section-heading">
+
+        <h2>⚙️ Ehtiyat hissələri</h2>
+
+        <a href="#parts-catalog">
+            Kataloqa bax →
+        </a>
+
+    </div>
+
+
+    <div class="parts-source-banner">
+
+        <div>
+            <h3>Xaricdən ehtiyat hissəsi sifarişi</h3>
+
+            <p>
+                Orijinal və uyğun avtomobil hissələrinin
+                xarici təchizatçılardan sifarişi.
+            </p>
+        </div>
+
+        <button type="button">
+            Sifariş et
+        </button>
+
+    </div>
+
+
+    <div class="parts-countries">
+
+        <button type="button">🇩🇪 Almaniya</button>
+        <button type="button">🇦🇪 Dubai</button>
+        <button type="button">🇨🇳 Çin</button>
+        <button type="button">🇰🇷 Koreya</button>
+        <button type="button">🇦🇿 Azərbaycan</button>
+
+    </div>
+
+
+    <div class="parts-grid">
+
+        <article class="parts-card">
+            <h3>🇦🇿 Azərbaycan ehtiyat hissələri</h3>
+            <p>Yerli satıcılardan hissələr.</p>
+        </article>
+
+        <article class="parts-card">
+            <h3>🌍 Xarici ehtiyat hissələri</h3>
+            <p>Almaniya, Çin, Koreya, Dubai və digər bazarlar.</p>
+        </article>
+
+        <article class="parts-card">
+            <h3>🔍 Hissə axtarışı</h3>
+            <p>Marka, model, il və hissə kodu ilə axtarış.</p>
+        </article>
+
+        <article class="parts-card">
+            <h3>📦 Sifariş izləmə</h3>
+            <p>Sifarişdən çatdırılmaya qədər izləmə.</p>
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     AVTOMOBİL BAZARI
+     ========================================================= -->
+
+<section id="cars" class="cars-section section">
+
+    <div class="section-heading">
+
+        <h2>🚗 Avtomobil bazarı</h2>
+
+        <a href="#car-market">
+            Hamısına bax →
+        </a>
+
+    </div>
+
+
+    <div class="market-grid">
+
+        <article class="market-card">
+            <h3>🚗 Avtomobil al</h3>
+            <p>Satış elanlarını araşdır.</p>
+        </article>
+
+        <article class="market-card">
+            <h3>🏷️ Avtomobil sat</h3>
+            <p>Yeni elan yerləşdir.</p>
+        </article>
+
+        <article class="market-card">
+            <h3>🚙 Avtomobil kirayəsi</h3>
+            <p>Avtomobil kirayə götür və ya ver.</p>
+        </article>
+
+        <article class="market-card">
+            <h3>🔍 Ekspert yoxlaması</h3>
+            <p>Satışdan əvvəl mexanik yoxlaması.</p>
+        </article>
+
+        <article class="market-card">
+            <h3>📄 Alqı-satqı müqaviləsi</h3>
+            <p>Rəsmi müqavilə və zəmanət.</p>
+        </article>
+
+        <article class="market-card">
+            <h3>⚖️ Notariat</h3>
+            <p>Alqı-satqı prosesində hüquqi dəstək.</p>
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     TİKTOK TİPİ AVTOMOBİL VİDEO ELANLARI
+     ========================================================= -->
+
+<section id="video-listings" class="video-section section">
+
+    <div class="section-heading">
+
+        <h2>🎬 Video avtomobil elanları</h2>
+
+        <a href="#video-feed">
+            Videolara bax →
+        </a>
+
+    </div>
+
+
+    <p class="section-description">
+        Avtomobilləri qısa şaquli videolar vasitəsilə kəşf edin.
+    </p>
+
+
+    <div class="video-feed-grid">
+
+        <article class="video-card">
+            <div class="video-placeholder">▶</div>
+            <h3>BMW 5 Series</h3>
+            <p>60,000 AZN</p>
+        </article>
+
+        <article class="video-card">
+            <div class="video-placeholder">▶</div>
+            <h3>Mercedes-Benz</h3>
+            <p>42,000 AZN</p>
+        </article>
+
+        <article class="video-card">
+            <div class="video-placeholder">▶</div>
+            <h3>Toyota Prado</h3>
+            <p>63,000 AZN</p>
+        </article>
+
+        <article class="video-card">
+            <div class="video-placeholder">▶</div>
+            <h3>Range Rover</h3>
+            <p>120,000 AZN</p>
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     BÖYÜK NƏQLİYYAT VƏ KOMMERSİYA
+     ========================================================= -->
+
+<section id="logistics" class="logistics-section section">
+
+    <div class="section-heading">
+
+        <h2>🚚 Böyük nəqliyyat və kommersiya xidmətləri</h2>
+
+    </div>
+
+
+    <div class="logistics-grid">
+
+        <article>
+            <h3>🚚 Yükdaşıma</h3>
+            <p>Doblo və digər yük avtomobilləri.</p>
+        </article>
+
+        <article>
+            <h3>🚢 Su nəqliyyatı</h3>
+            <p>Qayıq və digər su nəqliyyatı.</p>
+        </article>
+
+        <article>
+            <h3>🛻 Qoşqular</h3>
+            <p>Qoşqu satışı və kirayəsi.</p>
+        </article>
+
+        <article>
+            <h3>🔢 Qeydiyyat nişanları</h3>
+            <p>Dövlət nömrə nişanı xidmətləri.</p>
+        </article>
+
+        <article>
+            <h3>🚌 Avtobuslar</h3>
+            <p>Satış və kirayə.</p>
+        </article>
+
+        <article>
+            <h3>🏍️ Motosiklet / Moped / Skuter</h3>
+            <p>Satış, kirayə və xidmətlər.</p>
+        </article>
+
+        <article>
+            <h3>🏗️ Tikinti texnikası</h3>
+            <p>Texnika satışı və kirayəsi.</p>
+        </article>
+
+        <article>
+            <h3>🏗️ Kran xidməti</h3>
+            <p>Kran sifarişi və kirayəsi.</p>
+        </article>
+
+        <article>
+            <h3>🚛 TIR</h3>
+            <p>TIR satışı, kirayəsi və daşınması.</p>
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     XARİCDƏN AVTOMOBİL SİFARİŞİ
+     ========================================================= -->
+
+<section id="foreign-orders" class="foreign-section section">
+
+    <div class="section-heading">
+
+        <h2>🌍 Xaricdən avtomobil sifarişi</h2>
+
+    </div>
+
+
+    <div class="foreign-grid">
+
+        <article>
+            <h3>🏁 Copart</h3>
+            <p>Xarici hərrac avtomobilləri.</p>
+        </article>
+
+        <article>
+            <h3>🏁 IAAI</h3>
+            <p>Xarici hərrac avtomobilləri.</p>
+        </article>
+
+        <article>
+            <h3>🌎 Digər bazarlar</h3>
+            <p>Digər xarici mənbələrdən avtomobil axtarışı.</p>
+        </article>
+
+        <article>
+            <h3>🛡️ Zəmanət</h3>
+            <p>Sifariş və çatdırılma şərtləri.</p>
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     HÜQUQİ XİDMƏTLƏR
+     ========================================================= -->
+
+<section id="legal" class="legal-section section">
+
+    <div class="section-heading">
+
+        <h2>⚖️ Hüquqi xidmətlər</h2>
+
+    </div>
+
+
+    <div class="legal-grid">
+
+        <article>
+            <h3>📄 Müqavilə</h3>
+            <p>Avtomobil və xidmət müqavilələri.</p>
+        </article>
+
+        <article>
+            <h3>⚖️ Notariat</h3>
+            <p>Alqı-satqı zamanı notariat prosesi.</p>
+        </article>
+
+        <article>
+            <h3>🛡️ Zəmanət</h3>
+            <p>Xidmət və satış zəmanəti.</p>
+        </article>
+
+        <article>
+            <h3>🔐 Təhlükəsiz əməliyyat</h3>
+            <p>Əməliyyatların sənədləşdirilməsi.</p>
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     EHTİYAT HİSSƏLƏRİ VƏ AKSESUARLAR
+     ========================================================= -->
+
+<section class="accessories-section section">
+
+    <div class="section-heading">
+
+        <h2>🧰 Aksesuarlar və avtomobil məhsulları</h2>
+
+    </div>
+
+
+    <div class="accessories-grid">
+
+        <span>Mühərrik hissələri</span>
+        <span>Karopka hissələri</span>
+        <span>Yağlar</span>
+        <span>Filtrlər</span>
+        <span>Əyləc məhsulları</span>
+        <span>Açar məhsulları</span>
+        <span>Sükan sistemi</span>
+        <span>Elektrik məhsulları</span>
+        <span>İşıqlandırma</span>
+        <span>Salon aksesuarları</span>
+        <span>Telefon aksesuarları</span>
+        <span>Kamera</span>
+        <span>Sensorlar</span>
+        <span>Park sensorları</span>
+        <span>Spoyler</span>
+        <span>Zero-start</span>
+        <span>LED işıqlar</span>
+        <span>Avtomobil təhlükəsizliyi</span>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     HESAB / SİFARİŞLƏR
+     ========================================================= -->
+
+<section id="account" class="account-section section">
+
+    <div class="section-heading">
+
+        <h2>👤 Şəxsi kabinet</h2>
+
+    </div>
+
+
+    <div class="account-grid">
+
+        <article>
+            <h3>👤 Profil</h3>
+            <p>Şəxsi məlumatlar.</p>
+        </article>
+
+        <article>
+            <h3>🚗 Mənim avtomobillərim</h3>
+            <p>Avtomobillərinizi əlavə edin.</p>
+        </article>
+
+        <article>
+            <h3>📦 Sifarişlərim</h3>
+            <p>Bütün sifarişlər.</p>
+        </article>
+
+        <article>
+            <h3>❤️ Seçilmişlər</h3>
+            <p>Elan və xidmətlər.</p>
+        </article>
+
+        <article>
+            <h3>💬 Mesajlar</h3>
+            <p>Usta və satıcılarla əlaqə.</p>
+        </article>
+
+        <article>
+            <h3>🔔 Bildirişlər</h3>
+            <p>Sifariş və xidmət bildirişləri.</p>
+        </article>
+
+        <article>
+            <h3>⭐ Reytinqlərim</h3>
+            <p>Verdiyiniz və aldığınız rəylər.</p>
+        </article>
+
+        <article>
+            <h3>🔐 Təhlükəsizlik</h3>
+            <p>Hesab təhlükəsizliyi və girişlər.</p>
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     ZERO-RATING KONSEPTİ
+     ========================================================= -->
+
+<section class="zero-rating-section">
+
+    <div class="zero-rating-content">
+
+        <div class="zero-rating-icon">
+            📶
+        </div>
+
+        <div>
+
+            <h2>A-USTA Zero-Rating</h2>
+
+            <p>
+                Mobil operatorlarla mümkün əməkdaşlıq çərçivəsində
+                A-USTA xidmətlərinə xüsusi internet trafik modeli.
+            </p>
+
+            <small>
+                Texniki və kommersiya şərtləri operator razılaşmalarından asılıdır.
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <div class="operators">
+
+        <span>Azercell</span>
+        <span>Bakcell</span>
+        <span>Nar</span>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     MOBİL TƏTBİQ
+     ========================================================= -->
+
+<section class="mobile-app-section section">
+
+    <div>
+
+        <h2>📱 A-USTA mobil tətbiqi</h2>
+
+        <p>
+            A-USTA platformasının Android və iOS tətbiq versiyaları.
+        </p>
+
+    </div>
+
+
+    <div class="app-buttons">
+
+        <button type="button">
+             App Store
+        </button>
+
+        <button type="button">
+            ▶ Google Play
+        </button>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     GƏLƏCƏK MODULLAR ÜÇÜN YER
+     ========================================================= -->
+
+<section class="future-section section">
+
+    <div class="section-heading">
+
+        <h2>🚀 Gələcək A-USTA modulları</h2>
+
+    </div>
+
+    <p>
+        Bu bölmə gələcəkdə platformaya əlavə ediləcək yeni
+        xidmətlər, tərəfdaşlıqlar və texnologiyalar üçün saxlanılır.
+    </p>
+
+
+    <div class="future-module-grid">
+
+        <article>
+            <h3>Yeni xidmət</h3>
+            <p>Gələcək modul üçün yer.</p>
+        </article>
+
+        <article>
+            <h3>Yeni bazar</h3>
+            <p>Yeni ölkə və tərəfdaşlar.</p>
+        </article>
+
+        <article>
+            <h3>Yeni texnologiya</h3>
+            <p>Gələcək rəqəmsal imkanlar.</p>
+        </article>
+
+        <article>
+            <h3>Yeni tərəfdaşlıq</h3>
+            <p>Operator, bank, servis və şirkətlər.</p>
+        </article>
+
+    </div>
+
+</section>
+
+
+
+</main>
+
+
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+
+<footer class="site-footer">
+
+    <div class="footer-brand">
+
+        <strong>A-USTA</strong>
+
+        <p>
+            Bütün avtomobil xidmətlərini bir platformada.
+        </p>
+
+    </div>
+
+
+    <div class="footer-links">
+
+        <div>
+            <h3>A-USTA</h3>
+            <a href="#about">Haqqımızda</a>
+            <a href="#services">Xidmətlər</a>
+            <a href="#contact">Əlaqə</a>
+        </div>
+
+
+        <div>
+            <h3>Müştəri</h3>
+            <a href="#account">Hesab</a>
+            <a href="#orders">Sifarişlər</a>
+            <a href="#support">Dəstək</a>
+        </div>
+
+
+        <div>
+            <h3>Hüquqi</h3>
+            <a href="#terms">İstifadə şərtləri</a>
+            <a href="#privacy">Məxfilik</a>
+            <a href="#security">Təhlükəsizlik</a>
+        </div>
+
+    </div>
+
+
+    <div class="footer-bottom">
+
+        <p>
+            © 2026 A-USTA. Bütün hüquqlar qorunur.
+        </p>
+
+    </div>
+
+</footer>
+
+
+
+<!-- =========================================================
+     FUTURE JAVASCRIPT
+     =========================================================
+     Buraya daha sonra:
+     - axtarış
+     - GPS
+     - xəritə
+     - usta seçimi
+     - qiymət sistemi
+     - login/register
+     - sifariş
+     - mesajlaşma
+     - bildiriş
+     - video feed
+     - ödəniş
+     - API
+     və digər funksiyalar əlavə ediləcək.
+     ========================================================= -->
+
+<script src="script.js"></script>
+
+</body>
+</html>
