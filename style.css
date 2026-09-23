@@ -1151,3 +1151,19 @@ textarea:focus-visible {
     top: 70px;
   }
 }
+/* Click-to-open location menu */
+.location-picker .location-menu {
+  display: block;
+}
+
+.location-picker.location-open .location-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.location-picker:not(.location-open) .location-menu {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+}
