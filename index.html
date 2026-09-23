@@ -1256,7 +1256,426 @@
      və digər funksiyalar əlavə ediləcək.
      ========================================================= -->
 
-<script src="script.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const picker = document.querySelector(".location-picker");
+    const selector = document.querySelector(".location-selector");
+    const menu = document.querySelector(".location-menu");
+    const search = document.querySelector(".location-search");
+    const list = document.querySelector("#location-list");
+
+    if (!picker || !selector || !menu || !list) return;
+
+    /* =====================================================
+       A-USTA — AZƏRBAYCAN TAM MƏKAN BAZASI
+       Rəsmi iqtisadi rayon + şəhər/rayon strukturu
+       ===================================================== */
+
+    const locations = {
+
+        "Bakı şəhəri": [
+            "Bakı şəhəri"
+        ],
+
+        "Naxçıvan iqtisadi rayonu": [
+            "Babək rayonu",
+            "Culfa rayonu",
+            "Kəngərli rayonu",
+            "Ordubad rayonu",
+            "Sədərək rayonu",
+            "Şahbuz rayonu",
+            "Şərur rayonu",
+            "Naxçıvan şəhəri"
+        ],
+
+        "Abşeron-Xızı iqtisadi rayonu": [
+            "Sumqayıt şəhəri",
+            "Abşeron rayonu",
+            "Xızı rayonu"
+        ],
+
+        "Dağlıq-Şirvan iqtisadi rayonu": [
+            "Ağsu rayonu",
+            "İsmayıllı rayonu",
+            "Qobustan rayonu",
+            "Şamaxı rayonu"
+        ],
+
+        "Gəncə-Daşkəsən iqtisadi rayonu": [
+            "Gəncə şəhəri",
+            "Naftalan şəhəri",
+            "Daşkəsən rayonu",
+            "Goranboy rayonu",
+            "Göygöl rayonu",
+            "Samux rayonu"
+        ],
+
+        "Qarabağ iqtisadi rayonu": [
+            "Xankəndi şəhəri",
+            "Ağcabədi rayonu",
+            "Ağdam rayonu",
+            "Ağdərə rayonu",
+            "Bərdə rayonu",
+            "Füzuli rayonu",
+            "Xocalı rayonu",
+            "Xocavənd rayonu",
+            "Şuşa rayonu",
+            "Tərtər rayonu"
+        ],
+
+        "Qazax-Tovuz iqtisadi rayonu": [
+            "Ağstafa rayonu",
+            "Gədəbəy rayonu",
+            "Qazax rayonu",
+            "Şəmkir rayonu",
+            "Tovuz rayonu"
+        ],
+
+        "Quba-Xaçmaz iqtisadi rayonu": [
+            "Xaçmaz rayonu",
+            "Quba rayonu",
+            "Qusar rayonu",
+            "Siyəzən rayonu",
+            "Şabran rayonu"
+        ],
+
+        "Lənkəran-Astara iqtisadi rayonu": [
+            "Astara rayonu",
+            "Cəlilabad rayonu",
+            "Lerik rayonu",
+            "Lənkəran rayonu",
+            "Masallı rayonu",
+            "Yardımlı rayonu"
+        ],
+
+        "Mərkəzi Aran iqtisadi rayonu": [
+            "Mingəçevir şəhəri",
+            "Ağdaş rayonu",
+            "Göyçay rayonu",
+            "Kürdəmir rayonu",
+            "Ucar rayonu",
+            "Yevlax rayonu",
+            "Zərdab rayonu"
+        ],
+
+        "Mil-Muğan iqtisadi rayonu": [
+            "Beyləqan rayonu",
+            "İmişli rayonu",
+            "Saatlı rayonu",
+            "Sabirabad rayonu"
+        ],
+
+        "Şəki-Zaqatala iqtisadi rayonu": [
+            "Balakən rayonu",
+            "Qax rayonu",
+            "Qəbələ rayonu",
+            "Oğuz rayonu",
+            "Şəki şəhəri",
+            "Zaqatala rayonu"
+        ],
+
+        "Şərqi Zəngəzur iqtisadi rayonu": [
+            "Cəbrayıl rayonu",
+            "Kəlbəcər rayonu",
+            "Qubadlı rayonu",
+            "Laçın rayonu",
+            "Zəngilan rayonu"
+        ],
+
+        "Şirvan-Salyan iqtisadi rayonu": [
+            "Şirvan şəhəri",
+            "Biləsuvar rayonu",
+            "Hacıqabul rayonu",
+            "Neftçala rayonu",
+            "Salyan rayonu"
+        ]
+    };
+
+
+    /* =====================================================
+       SÖZLƏRİ NORMALİZƏ ET
+       Hacı / Haci / HACI eyni nəticəni versin
+       ===================================================== */
+
+    function normalizeText(text) {
+
+        return text
+            .toLocaleLowerCase("az-AZ")
+            .replace(/ə/g, "e")
+            .replace(/ı/g, "i")
+            .replace(/ö/g, "o")
+            .replace(/ü/g, "u")
+            .replace(/ş/g, "s")
+            .replace(/ç/g, "c")
+            .replace(/ğ/g, "g")
+            .replace(/[^a-z0-9\s-]/g, "")
+            .trim();
+    }
+
+
+    /* =====================================================
+       ƏSAS MƏKAN SEÇİMİ
+       ===================================================== */
+
+    function selectLocation(location) {
+
+        selector.innerHTML =
+            "📍 " + location + ' <span>⌄</span>';
+
+        picker.classList.remove("location-open");
+
+        localStorage.setItem(
+            "a-usta-location",
+            location
+        );
+    }
+
+
+    /* =====================================================
+       BÜTÜN REGIONLARI GÖSTƏR
+       ===================================================== */
+
+    function renderRegions() {
+
+        list.innerHTML = "";
+
+        Object.keys(locations).forEach(function (region) {
+
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.textContent = "📍 " + region;
+
+            button.addEventListener("click", function () {
+
+                renderDistricts(region);
+
+            });
+
+            list.appendChild(button);
+
+        });
+    }
+
+
+    /* =====================================================
+       REGIONUN ŞƏHƏR/RAYONLARINI GÖSTƏR
+       ===================================================== */
+
+    function renderDistricts(region) {
+
+        list.innerHTML = "";
+
+        const backButton = document.createElement("button");
+
+        backButton.type = "button";
+        backButton.textContent = "← Bütün regionlar";
+
+        backButton.classList.add("location-back");
+
+        backButton.addEventListener("click", function () {
+
+            search.value = "";
+
+            renderRegions();
+
+        });
+
+        list.appendChild(backButton);
+
+
+        locations[region].forEach(function (place) {
+
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.textContent = "📍 " + place;
+
+            button.addEventListener("click", function () {
+
+                selectLocation(place);
+
+            });
+
+            list.appendChild(button);
+
+        });
+    }
+
+
+    /* =====================================================
+       BÜTÜN AZƏRBAYCAN ÜZRƏ AXTARIŞ
+       ===================================================== */
+
+    function searchLocations(query) {
+
+        const normalizedQuery = normalizeText(query);
+
+        list.innerHTML = "";
+
+        if (!normalizedQuery) {
+
+            renderRegions();
+
+            return;
+        }
+
+
+        let found = false;
+
+
+        Object.keys(locations).forEach(function (region) {
+
+            locations[region].forEach(function (place) {
+
+                const normalizedPlace =
+                    normalizeText(place);
+
+                const normalizedRegion =
+                    normalizeText(region);
+
+
+                if (
+                    normalizedPlace.includes(normalizedQuery) ||
+                    normalizedRegion.includes(normalizedQuery)
+                ) {
+
+                    found = true;
+
+                    const button =
+                        document.createElement("button");
+
+                    button.type = "button";
+                    button.textContent =
+                        "📍 " + place;
+
+                    button.addEventListener(
+                        "click",
+                        function () {
+
+                            selectLocation(place);
+
+                        }
+                    );
+
+                    list.appendChild(button);
+                }
+
+            });
+
+        });
+
+
+        if (!found) {
+
+            const empty =
+                document.createElement("div");
+
+            empty.style.padding = "18px";
+            empty.style.color = "#9ca3af";
+            empty.style.textAlign = "center";
+            empty.textContent =
+                "Bu məkan tapılmadı.";
+
+            list.appendChild(empty);
+        }
+    }
+
+
+    /* =====================================================
+       MƏKAN DÜYMƏSİ
+       ===================================================== */
+
+    selector.addEventListener(
+        "click",
+        function (event) {
+
+            event.stopPropagation();
+
+            picker.classList.toggle(
+                "location-open"
+            );
+
+            if (
+                picker.classList.contains(
+                    "location-open"
+                )
+            ) {
+
+                renderRegions();
+
+            }
+        }
+    );
+
+
+    /* =====================================================
+       AXTARIŞ
+       ===================================================== */
+
+    if (search) {
+
+        search.addEventListener(
+            "input",
+            function () {
+
+                searchLocations(
+                    this.value
+                );
+
+            }
+        );
+    }
+
+
+    /* =====================================================
+       ÇÖLDƏ KLİK → MENYU BAĞLANIR
+       ===================================================== */
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            if (!picker.contains(event.target)) {
+
+                picker.classList.remove(
+                    "location-open"
+                );
+
+            }
+
+        }
+    );
+
+
+    /* =====================================================
+       ƏVVƏLKİ SEÇİMİ YADDA SAXLA
+       ===================================================== */
+
+    const savedLocation =
+        localStorage.getItem(
+            "a-usta-location"
+        );
+
+    if (savedLocation) {
+
+        selector.innerHTML =
+            "📍 " +
+            savedLocation +
+            ' <span>⌄</span>';
+
+    }
+
+
+    /* =====================================================
+       İLK VƏZİYYƏT
+       ===================================================== */
+
+    renderRegions();
+
+});
+</script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
