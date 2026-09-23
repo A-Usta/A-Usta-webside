@@ -1258,6 +1258,80 @@
      ========================================================= -->
 
 <script src="script.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
 
+    const picker = document.querySelector(".location-picker");
+    const selector = document.querySelector(".location-selector");
+    const menu = document.querySelector(".location-menu");
+    const search = document.querySelector(".location-search");
+    const locations = document.querySelectorAll(".location-list button");
+
+    if (!picker || !selector || !menu) return;
+
+    /* Məkan düyməsinə klik */
+    selector.addEventListener("click", function (event) {
+        event.stopPropagation();
+        picker.classList.toggle("location-open");
+    });
+
+    /* Məkan seçimi */
+    locations.forEach(function (button) {
+        button.addEventListener("click", function () {
+
+            const selectedLocation = this.textContent.trim();
+
+            selector.innerHTML =
+                selectedLocation + ' <span>⌄</span>';
+
+            picker.classList.remove("location-open");
+
+            /* Seçilən məkanı yadda saxla */
+            localStorage.setItem(
+                "a-usta-location",
+                selectedLocation
+            );
+        });
+    });
+
+    /* Məkan axtarışı */
+    if (search) {
+        search.addEventListener("input", function () {
+
+            const query = this.value.toLowerCase().trim();
+
+            locations.forEach(function (button) {
+
+                const text =
+                    button.textContent.toLowerCase();
+
+                button.style.display =
+                    text.includes(query)
+                        ? "flex"
+                        : "none";
+            });
+        });
+    }
+
+    /* Çöldə klik ediləndə bağla */
+    document.addEventListener("click", function (event) {
+
+        if (!picker.contains(event.target)) {
+            picker.classList.remove("location-open");
+        }
+
+    });
+
+    /* Əvvəl seçilmiş məkanı geri yüklə */
+    const savedLocation =
+        localStorage.getItem("a-usta-location");
+
+    if (savedLocation) {
+        selector.innerHTML =
+            savedLocation + ' <span>⌄</span>';
+    }
+
+});
+</script>
 </body>
 </html>
