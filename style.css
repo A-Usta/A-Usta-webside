@@ -992,17 +992,22 @@ textarea:focus-visible {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
+
   width: 360px;
   max-width: calc(100vw - 28px);
+
   padding: 18px;
+
   background: #101114;
   border: 1px solid #2c3038;
   border-radius: 20px;
+
   box-shadow:
     0 25px 70px rgba(0, 0, 0, 0.35),
     0 0 0 1px rgba(227, 6, 19, 0.06);
-  opacity: 0;
-  visibility: hidden;
+
+  z-index: 999999;
+
   transform: translateY(-8px);
   transition:
     opacity 0.2s ease,
@@ -1010,12 +1015,32 @@ textarea:focus-visible {
     visibility 0.2s ease;
 }
 
-/* Hover zamanı panel açılır */
+/* MENYU BAĞLI */
 
-.location-picker:hover .location-menu {
+.location-menu[hidden] {
+  display: none !important;
+}
+
+/* MENYU AÇIQ */
+
+.location-menu:not([hidden]) {
+  display: block !important;
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+}
+
+/* PANEL TITLE */
+
+.location-menu-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 4px 15px;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 900;
+  border-bottom: 1px solid #292d35;
 }
 
 /* PANEL TITLE */
