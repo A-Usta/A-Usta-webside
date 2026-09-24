@@ -54,14 +54,23 @@
 
         </div>
 
-<div class="location-picker">
+ <div class="location-picker" id="locationPicker">
 
-    <button class="location-selector" type="button">
-        📍 Bakı
-        <span>⌄</span>
+    <button
+        class="location-selector"
+        id="locationSelector"
+        type="button"
+        aria-expanded="false"
+    >
+        <span id="selectedLocation">📍 Bakı</span>
+        <span class="location-arrow">⌄</span>
     </button>
 
-    <div class="location-menu">
+    <div
+        class="location-menu"
+        id="locationMenu"
+        hidden
+    >
 
         <div class="location-menu-title">
             📍 Məkanınızı seçin
@@ -70,24 +79,7 @@
         <input
             type="search"
             class="location-search"
-            placeholder="Şəhər və ya rayon axtar..."
-        >
-
-        <button
-            type="button"
-            class="location-gps-button"
-            onclick="AUSTA_getCurrentLocation()"
-        >
-            📍 Mənim yerimi müəyyən et
-        </button>
-
-        <div class="location-list" id="location-list"></div>
-
-    </div>
-
-</div>
-
- id="locationSearch"
+            id="locationSearch"
             placeholder="Şəhər və ya rayon axtar..."
             autocomplete="off"
         >
