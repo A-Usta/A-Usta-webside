@@ -1181,17 +1181,10 @@ textarea:focus-visible {
   display: block;
 }
 
-.location-picker.location-open .location-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+
 }
 
-.location-picker:not(.location-open) .location-menu {
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-8px);
-}
+
 /* =========================================================
    A-USTA LOCATION + GPS BUTTON
    ========================================================= */
@@ -1205,24 +1198,41 @@ textarea:focus-visible {
     position: absolute;
     top: calc(100% + 12px);
     right: 0;
+
     width: 360px;
     max-width: calc(100vw - 28px);
+
     padding: 18px;
+
     background: #101114;
     border: 1px solid #2c3038;
     border-radius: 20px;
+
     box-shadow: 0 25px 70px rgba(0,0,0,.35);
-    opacity: 0;
-    visibility: hidden;
+
+    z-index: 999999;
+
     transform: translateY(-8px);
-    transition: .2s ease;
+    transition:
+        opacity .2s ease,
+        transform .2s ease,
+        visibility .2s ease;
 }
 
-.location-picker.location-open .location-menu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+/* Bağlı vəziyyət */
+.location-menu[hidden] {
+    display: none !important;
 }
+
+/* Açıq vəziyyət */
+.location-menu:not([hidden]) {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+
 
 .location-menu-title {
     color: #fff;
