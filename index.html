@@ -2133,7 +2133,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 <!-- =========================================================
-     A-USTA LOCATION & TRACKING CORE
+     A-USTA LOCATION & TRACKING CORE 2.0
      ========================================================= -->
 
 <script>
@@ -2141,225 +2141,141 @@ document.addEventListener("DOMContentLoaded", function () {
 
     "use strict";
 
+    const AUSTA_CORE_VERSION = "2.0.0";
+    const STORAGE_KEY = "a-usta-location-core";
 
-    const AUSTA_CORE_VERSION =
-        "1.0.0";
-
-    const STORAGE_KEY =
-        "a-usta-location-core";
-
+    let locationWatchId = null;
 
     let locationState = {
+        version: AUSTA_CORE_VERSION,
 
-        version:
-            AUSTA_CORE_VERSION,
+        permission: "unknown",
 
-        permission:
-            "unknown",
+        gpsEnabled: true,
 
-        gpsEnabled:
-            true,
-
-        source:
-            "unknown",
+        source: "unknown",
 
         coordinates: {
-
-            latitude:
-                null,
-
-            longitude:
-                null,
-
-            accuracy:
-                null,
-
-            altitude:
-                null,
-
-            heading:
-                null,
-
-            speed:
-                null
-
+            latitude: null,
+            longitude: null,
+            accuracy: null,
+            altitude: null,
+            heading: null,
+            speed: null
         },
 
         address: {
-
-            country:
-                null,
-
-            city:
-                null,
-
-            district:
-                null,
-
-            region:
-                null,
-
-            formatted:
-                null
-
+            country: null,
+            city: null,
+            district: null,
+            region: null,
+            formatted: null
         },
 
-        timestamp:
-            null
-
+        timestamp: null
     };
 
 
     let providerLocation = {
 
-        providerId:
-            null,
+        providerId: null,
 
-        providerType:
-            "usta",
+        providerType: "usta",
 
-        name:
-            null,
+        name: null,
 
         coordinates: {
-
-            latitude:
-                null,
-
-            longitude:
-                null
-
+            latitude: null,
+            longitude: null
         },
 
-        accuracy:
-            null,
+        accuracy: null,
 
-        availability:
-            "offline",
+        availability: "offline",
 
-        lastLocationUpdate:
-            null,
+        lastLocationUpdate: null,
 
-        tracking:
-            false
-
+        tracking: false
     };
 
 
     let liveTracking = {
 
-        trackingId:
-            null,
+        trackingId: null,
 
-        type:
-            "customer-provider",
+        type: "customer-provider",
 
-        customerId:
-            null,
+        customerId: null,
 
-        providerId:
-            null,
+        providerId: null,
 
-        customerLocation:
-            null,
+        customerLocation: null,
 
-        providerLocation:
-            null,
+        providerLocation: null,
 
-        distanceMeters:
-            null,
+        distanceMeters: null,
 
-        status:
-            "idle",
+        status: "idle",
 
-        startedAt:
-            null,
+        startedAt: null,
 
-        updatedAt:
-            null,
+        updatedAt: null,
 
-        active:
-            false
-
+        active: false
     };
 
 
     let transport = {
 
-        vehicleId:
-            null,
+        vehicleId: null,
 
-        type:
-            null,
+        type: null,
 
-        driverId:
-            null,
+        driverId: null,
 
-        driverName:
-            null,
+        driverName: null,
 
-        currentLocation:
-            null,
+        currentLocation: null,
 
-        destination:
-            null,
+        destination: null,
 
-        status:
-            "idle",
+        status: "idle",
 
-        tracking:
-            false,
+        tracking: false,
 
-        updatedAt:
-            null
-
+        updatedAt: null
     };
 
 
-    function createShipment(
-        shipmentType
-    ) {
+    function createShipment(shipmentType) {
 
         return {
 
-            shipmentId:
-                null,
+            shipmentId: null,
 
-            shipmentType:
-                shipmentType,
+            shipmentType: shipmentType,
 
-            orderId:
-                null,
+            orderId: null,
 
-            vehicleId:
-                null,
+            vehicleId: null,
 
-            supplier:
-                null,
+            supplier: null,
 
-            origin:
-                null,
+            origin: null,
 
-            destination:
-                null,
+            destination: null,
 
-            currentLocation:
-                null,
+            currentLocation: null,
 
-            status:
-                "created",
+            status: "created",
 
-            estimatedDelivery:
-                null,
+            estimatedDelivery: null,
 
-            createdAt:
-                new Date().toISOString(),
+            createdAt: new Date().toISOString(),
 
-            updatedAt:
-                new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
 
-            history:
-                []
+            history: []
 
         };
 
@@ -2367,16 +2283,59 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     let sparePartsShipment =
-        createShipment(
-            "spare-parts"
-        );
+        createShipment("spare-parts");
 
 
     let carShipment =
-        createShipment(
-            "vehicle"
+        createShipment("vehicle");
+
+
+    /* =====================================================
+       SAFE CLONE
+       ===================================================== */
+
+    function clone(data) {
+
+        return JSON.parse(
+            JSON.stringify(data)
         );
 
+    }
+
+
+    /* =====================================================
+       EVENT SYSTEM
+       ===================================================== */
+
+    function emitEvent(name, detail) {
+
+        try {
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    name,
+                    {
+                        detail: clone(detail)
+                    }
+                )
+            );
+
+        }
+        catch (error) {
+
+            console.warn(
+                "A-USTA event error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       SAVE CORE
+       ===================================================== */
 
     function saveCore() {
 
@@ -2418,9 +2377,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
         }
-        catch (
-            error
-        ) {
+        catch (error) {
 
             console.warn(
                 "A-USTA Core save error:",
@@ -2431,6 +2388,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
+
+    /* =====================================================
+       LOAD CORE
+       ===================================================== */
 
     function loadCore() {
 
@@ -2507,9 +2468,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
         }
-        catch (
-            error
-        ) {
+        catch (error) {
 
             console.warn(
                 "A-USTA Core load error:",
@@ -2521,11 +2480,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
+    /* =====================================================
+       PERMISSION
+       ===================================================== */
+
     async function checkPermission() {
 
-        if (
-            !navigator.permissions
-        ) {
+        if (!navigator.permissions) {
 
             return "unknown";
 
@@ -2536,10 +2497,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const permission =
                 await navigator.permissions.query({
-
-                    name:
-                        "geolocation"
-
+                    name: "geolocation"
                 });
 
 
@@ -2555,6 +2513,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     saveCore();
 
+                    emitEvent(
+                        "austa:permissionchange",
+                        {
+                            permission:
+                                permission.state
+                        }
+                    );
+
                 };
 
 
@@ -2564,9 +2530,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return permission.state;
 
         }
-        catch (
-            error
-        ) {
+        catch (error) {
 
             console.warn(
                 "A-USTA permission check:",
@@ -2580,9 +2544,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    function updateLocation(
-        position
-    ) {
+    /* =====================================================
+       UPDATE LOCATION
+       ===================================================== */
+
+    function updateLocation(position) {
 
         const coords =
             position.coords;
@@ -2628,32 +2594,27 @@ document.addEventListener("DOMContentLoaded", function () {
         saveCore();
 
 
-        window.dispatchEvent(
+        updateCustomerTracking();
 
-            new CustomEvent(
-                "austa:locationchange",
-                {
-                    detail:
-                        getLocation()
-                }
-            )
 
+        emitEvent(
+            "austa:locationchange",
+            getLocation()
         );
 
     }
 
 
+    /* =====================================================
+       CURRENT GPS
+       ===================================================== */
+
     function getCurrentPosition() {
 
         return new Promise(
-            function (
-                resolve,
-                reject
-            ) {
+            function (resolve, reject) {
 
-                if (
-                    !navigator.geolocation
-                ) {
+                if (!navigator.geolocation) {
 
                     reject(
                         new Error(
@@ -2668,9 +2629,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 navigator.geolocation.getCurrentPosition(
 
-                    function (
-                        position
-                    ) {
+                    function (position) {
 
                         updateLocation(
                             position
@@ -2682,13 +2641,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     },
 
-                    function (
-                        error
-                    ) {
+                    function (error) {
 
-                        if (
-                            error.code === 1
-                        ) {
+                        if (error.code === 1) {
 
                             locationState.permission =
                                 "denied";
@@ -2696,11 +2651,32 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
 
 
+                        if (
+                            error.code === 2
+                        ) {
+
+                            locationState.gpsEnabled =
+                                false;
+
+                        }
+
+
                         saveCore();
 
-                        reject(
-                            error
+
+                        emitEvent(
+                            "austa:locationerror",
+                            {
+                                code:
+                                    error.code,
+
+                                message:
+                                    error.message
+                            }
                         );
+
+
+                        reject(error);
 
                     },
 
@@ -2725,9 +2701,137 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    function setManualLocation(
-        data
-    ) {
+    /* =====================================================
+       START CONTINUOUS GPS
+       ===================================================== */
+
+    function startLocationWatch() {
+
+        if (!navigator.geolocation) {
+
+            console.warn(
+                "A-USTA: GPS dəstəklənmir."
+            );
+
+            return false;
+
+        }
+
+
+        if (
+            locationWatchId !== null
+        ) {
+
+            return true;
+
+        }
+
+
+        locationWatchId =
+            navigator.geolocation.watchPosition(
+
+                function (position) {
+
+                    updateLocation(
+                        position
+                    );
+
+                },
+
+                function (error) {
+
+                    emitEvent(
+                        "austa:locationerror",
+                        {
+                            code:
+                                error.code,
+
+                            message:
+                                error.message
+                        }
+                    );
+
+                },
+
+                {
+
+                    enableHighAccuracy:
+                        true,
+
+                    timeout:
+                        20000,
+
+                    maximumAge:
+                        5000
+
+                }
+
+            );
+
+
+        locationState.gpsEnabled =
+            true;
+
+
+        saveCore();
+
+
+        emitEvent(
+            "austa:trackingstarted",
+            {
+                type: "gps"
+            }
+        );
+
+
+        return true;
+
+    }
+
+
+    /* =====================================================
+       STOP GPS WATCH
+       ===================================================== */
+
+    function stopLocationWatch() {
+
+        if (
+            locationWatchId !== null &&
+            navigator.geolocation
+        ) {
+
+            navigator.geolocation.clearWatch(
+                locationWatchId
+            );
+
+            locationWatchId =
+                null;
+
+        }
+
+
+        emitEvent(
+            "austa:trackingstopped",
+            {
+                type: "gps"
+            }
+        );
+
+
+        return true;
+
+    }
+
+
+    /* =====================================================
+       MANUAL LOCATION
+       ===================================================== */
+
+    function setManualLocation(data) {
+
+        data =
+            data || {};
+
 
         locationState.source =
             "manual";
@@ -2754,21 +2858,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         if (
-            data.latitude !== undefined
+            data.latitude !== undefined &&
+            data.latitude !== null
         ) {
 
             locationState.coordinates.latitude =
-                data.latitude;
+                Number(data.latitude);
 
         }
 
 
         if (
-            data.longitude !== undefined
+            data.longitude !== undefined &&
+            data.longitude !== null
         ) {
 
             locationState.coordinates.longitude =
-                data.longitude;
+                Number(data.longitude);
 
         }
 
@@ -2780,82 +2886,36 @@ document.addEventListener("DOMContentLoaded", function () {
         saveCore();
 
 
-        window.dispatchEvent(
+        updateCustomerTracking();
 
-            new CustomEvent(
-                "austa:locationchange",
-                {
-                    detail:
-                        getLocation()
-                }
-            )
 
+        emitEvent(
+            "austa:locationchange",
+            getLocation()
         );
+
+
+        return getLocation();
 
     }
 
+
+    /* =====================================================
+       GET LOCATION
+       ===================================================== */
 
     function getLocation() {
 
-        return JSON.parse(
-            JSON.stringify(
-                locationState
-            )
+        return clone(
+            locationState
         );
 
     }
 
 
-    function getCore() {
-
-        return {
-
-            location:
-                getLocation(),
-
-            provider:
-                JSON.parse(
-                    JSON.stringify(
-                        providerLocation
-                    )
-                ),
-
-            liveTracking:
-                JSON.parse(
-                    JSON.stringify(
-                        liveTracking
-                    )
-                ),
-
-            transport:
-                JSON.parse(
-                    JSON.stringify(
-                        transport
-                    )
-                ),
-
-            shipments: {
-
-                spareParts:
-                    JSON.parse(
-                        JSON.stringify(
-                            sparePartsShipment
-                        )
-                    ),
-
-                vehicle:
-                    JSON.parse(
-                        JSON.stringify(
-                            carShipment
-                        )
-                    )
-
-            }
-
-        };
-
-    }
-
+    /* =====================================================
+       DISTANCE
+       ===================================================== */
 
     function calculateDistance(
         lat1,
@@ -2863,6 +2923,18 @@ document.addEventListener("DOMContentLoaded", function () {
         lat2,
         lon2
     ) {
+
+        if (
+            lat1 === null ||
+            lon1 === null ||
+            lat2 === null ||
+            lon2 === null
+        ) {
+
+            return null;
+
+        }
+
 
         const earthRadius =
             6371000;
@@ -2923,50 +2995,126 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    function setProviderLocation(
-        data
+    /* =====================================================
+       FORMAT DISTANCE
+       ===================================================== */
+
+    function formatDistance(
+        meters
     ) {
+
+        if (
+            meters === null ||
+            meters === undefined
+        ) {
+
+            return null;
+
+        }
+
+
+        if (
+            meters < 1000
+        ) {
+
+            return (
+                Math.round(meters) +
+                " m"
+            );
+
+        }
+
+
+        return (
+            (meters / 1000)
+                .toFixed(1) +
+            " km"
+        );
+
+    }
+
+
+    /* =====================================================
+       PROVIDER LOCATION
+       ===================================================== */
+
+    function setProviderLocation(data) {
+
+        data =
+            data || {};
+
 
         providerLocation = {
 
             providerId:
-                data.providerId || null,
+                data.providerId ||
+                providerLocation.providerId ||
+                null,
 
             providerType:
-                data.providerType || "usta",
+                data.providerType ||
+                "usta",
 
             name:
-                data.name || null,
+                data.name ||
+                providerLocation.name ||
+                null,
 
             coordinates: {
 
                 latitude:
-                    data.latitude ?? null,
+                    data.latitude ??
+                    providerLocation.coordinates.latitude ??
+                    null,
 
                 longitude:
-                    data.longitude ?? null
+                    data.longitude ??
+                    providerLocation.coordinates.longitude ??
+                    null
 
             },
 
             accuracy:
-                data.accuracy ?? null,
+                data.accuracy ??
+                null,
 
             availability:
-                data.availability || "online",
+                data.availability ||
+                "online",
 
             lastLocationUpdate:
                 new Date().toISOString(),
 
             tracking:
-                true
+                data.tracking !== undefined
+                    ? Boolean(data.tracking)
+                    : true
 
         };
 
 
         saveCore();
 
+
+        updateProviderTracking();
+
+
+        emitEvent(
+            "austa:providerlocationchange",
+            providerLocation
+        );
+
+
+        return clone(
+            providerLocation
+        );
+
     }
 
+
+    /* =====================================================
+       START LIVE TRACKING
+       ===================================================== */
 
     function startLiveTracking(
         customerId,
@@ -2976,7 +3124,8 @@ document.addEventListener("DOMContentLoaded", function () {
         liveTracking = {
 
             trackingId:
-                "TRK-" + Date.now(),
+                "TRK-" +
+                Date.now(),
 
             type:
                 "customer-provider",
@@ -3011,13 +3160,194 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
 
+        updateCustomerTracking();
+
+        updateProviderTracking();
+
+
         saveCore();
 
 
-        return liveTracking;
+        emitEvent(
+            "austa:livetrackingstarted",
+            liveTracking
+        );
+
+
+        return clone(
+            liveTracking
+        );
 
     }
 
+
+    /* =====================================================
+       UPDATE CUSTOMER TRACKING
+       ===================================================== */
+
+    function updateCustomerTracking() {
+
+        if (
+            !liveTracking.active
+        ) {
+
+            return;
+
+        }
+
+
+        const customer =
+            locationState.coordinates;
+
+
+        liveTracking.customerLocation = {
+
+            latitude:
+                customer.latitude,
+
+            longitude:
+                customer.longitude,
+
+            accuracy:
+                customer.accuracy ?? null,
+
+            timestamp:
+                locationState.timestamp
+
+        };
+
+
+        if (
+            liveTracking.providerLocation &&
+            liveTracking.providerLocation.latitude !== null &&
+            liveTracking.providerLocation.longitude !== null
+        ) {
+
+            liveTracking.distanceMeters =
+                calculateDistance(
+
+                    customer.latitude,
+
+                    customer.longitude,
+
+                    liveTracking.providerLocation.latitude,
+
+                    liveTracking.providerLocation.longitude
+
+                );
+
+        }
+
+
+        liveTracking.updatedAt =
+            new Date().toISOString();
+
+
+        saveCore();
+
+
+        emitEvent(
+            "austa:livetrackingchange",
+            liveTracking
+        );
+
+    }
+
+
+    /* =====================================================
+       UPDATE PROVIDER TRACKING
+       ===================================================== */
+
+    function updateProviderTracking() {
+
+        if (
+            !liveTracking.active
+        ) {
+
+            return;
+
+        }
+
+
+        const provider =
+            providerLocation.coordinates;
+
+
+        liveTracking.providerLocation = {
+
+            latitude:
+                provider.latitude,
+
+            longitude:
+                provider.longitude,
+
+            accuracy:
+                providerLocation.accuracy,
+
+            timestamp:
+                providerLocation.lastLocationUpdate
+
+        };
+
+
+        const customer =
+            locationState.coordinates;
+
+
+        if (
+            customer.latitude !== null &&
+            customer.longitude !== null &&
+            provider.latitude !== null &&
+            provider.longitude !== null
+        ) {
+
+            liveTracking.distanceMeters =
+                calculateDistance(
+
+                    customer.latitude,
+
+                    customer.longitude,
+
+                    provider.latitude,
+
+                    provider.longitude
+
+                );
+
+        }
+
+
+        liveTracking.updatedAt =
+            new Date().toISOString();
+
+
+        saveCore();
+
+
+        emitEvent(
+            "austa:livetrackingchange",
+            liveTracking
+        );
+
+    }
+
+
+    /* =====================================================
+       GET LIVE TRACKING
+       ===================================================== */
+
+    function getLiveTracking() {
+
+        return clone(
+            liveTracking
+        );
+
+    }
+
+
+    /* =====================================================
+       STOP LIVE TRACKING
+       ===================================================== */
 
     function stopLiveTracking() {
 
@@ -3030,42 +3360,73 @@ document.addEventListener("DOMContentLoaded", function () {
         liveTracking.updatedAt =
             new Date().toISOString();
 
+
         saveCore();
+
+
+        emitEvent(
+            "austa:livetrackingstopped",
+            liveTracking
+        );
+
+
+        return clone(
+            liveTracking
+        );
 
     }
 
 
-    function updateTransport(
-        data
-    ) {
+    /* =====================================================
+       TRANSPORT
+       ===================================================== */
+
+    function updateTransport(data) {
+
+        data =
+            data || {};
+
 
         transport = {
 
             vehicleId:
-                data.vehicleId || null,
+                data.vehicleId ||
+                transport.vehicleId ||
+                null,
 
             type:
-                data.type || null,
+                data.type ||
+                transport.type ||
+                null,
 
             driverId:
-                data.driverId || null,
+                data.driverId ||
+                transport.driverId ||
+                null,
 
             driverName:
-                data.driverName || null,
+                data.driverName ||
+                transport.driverName ||
+                null,
 
             currentLocation:
-                data.currentLocation || null,
+                data.currentLocation ||
+                transport.currentLocation ||
+                null,
 
             destination:
-                data.destination || null,
+                data.destination ||
+                transport.destination ||
+                null,
 
             status:
-                data.status || "idle",
+                data.status ||
+                "idle",
 
             tracking:
-                Boolean(
-                    data.tracking
-                ),
+                data.tracking !== undefined
+                    ? Boolean(data.tracking)
+                    : false,
 
             updatedAt:
                 new Date().toISOString()
@@ -3075,43 +3436,122 @@ document.addEventListener("DOMContentLoaded", function () {
 
         saveCore();
 
+
+        emitEvent(
+            "austa:transportchange",
+            transport
+        );
+
+
+        return clone(
+            transport
+        );
+
     }
 
 
-    function createShipmentWithId(
-        shipmentType
+    /* =====================================================
+       UPDATE TRANSPORT LOCATION
+       ===================================================== */
+
+    function updateTransportLocation(
+        latitude,
+        longitude,
+        accuracy
     ) {
+
+        transport.currentLocation = {
+
+            latitude:
+                latitude,
+
+            longitude:
+                longitude,
+
+            accuracy:
+                accuracy ?? null,
+
+            timestamp:
+                new Date().toISOString()
+
+        };
+
+
+        transport.updatedAt =
+            new Date().toISOString();
+
+
+        transport.tracking =
+            true;
+
+
+        saveCore();
+
+
+        emitEvent(
+            "austa:transportlocationchange",
+            transport
+        );
+
+
+        return clone(
+            transport
+        );
+
+    }
+
+
+    /* =====================================================
+       CREATE SHIPMENT
+       ===================================================== */
+
+    function createShipmentWithId(
+        shipmentType,
+        data
+    ) {
+
+        data =
+            data || {};
+
 
         return {
 
             shipmentId:
-                "SHP-" + Date.now(),
+                "SHP-" +
+                Date.now(),
 
             shipmentType:
                 shipmentType,
 
             orderId:
+                data.orderId ||
                 null,
 
             vehicleId:
+                data.vehicleId ||
                 null,
 
             supplier:
+                data.supplier ||
                 null,
 
             origin:
+                data.origin ||
                 null,
 
             destination:
+                data.destination ||
                 null,
 
             currentLocation:
+                data.currentLocation ||
                 null,
 
             status:
                 "created",
 
             estimatedDelivery:
+                data.estimatedDelivery ||
                 null,
 
             createdAt:
@@ -3120,13 +3560,63 @@ document.addEventListener("DOMContentLoaded", function () {
             updatedAt:
                 new Date().toISOString(),
 
-            history:
-                []
+            history: []
 
         };
 
     }
 
+
+    /* =====================================================
+       SAVE SHIPMENT
+       ===================================================== */
+
+    function saveShipment(
+        shipmentType,
+        shipment
+    ) {
+
+        if (
+            shipmentType ===
+            "spare-parts"
+        ) {
+
+            sparePartsShipment =
+                shipment;
+
+        }
+
+
+        if (
+            shipmentType ===
+            "vehicle"
+        ) {
+
+            carShipment =
+                shipment;
+
+        }
+
+
+        saveCore();
+
+
+        emitEvent(
+            "austa:shipmentchange",
+            shipment
+        );
+
+
+        return clone(
+            shipment
+        );
+
+    }
+
+
+    /* =====================================================
+       ADD SHIPMENT HISTORY
+       ===================================================== */
 
     function addStatusHistory(
         shipment,
@@ -3136,11 +3626,21 @@ document.addEventListener("DOMContentLoaded", function () {
     ) {
 
         if (
-            !shipment ||
-            !shipment.history
+            !shipment
         ) {
 
-            return;
+            return null;
+
+        }
+
+
+        if (
+            !Array.isArray(
+                shipment.history
+            )
+        ) {
+
+            shipment.history = [];
 
         }
 
@@ -3176,52 +3676,213 @@ document.addEventListener("DOMContentLoaded", function () {
 
         saveCore();
 
+
+        emitEvent(
+            "austa:shipmentstatuschange",
+            {
+                shipment:
+                    shipment,
+
+                history:
+                    item
+            }
+        );
+
+
+        return clone(
+            shipment
+        );
+
     }
 
+
+    /* =====================================================
+       UPDATE SHIPMENT LOCATION
+       ===================================================== */
+
+    function updateShipmentLocation(
+        shipmentType,
+        latitude,
+        longitude,
+        accuracy
+    ) {
+
+        let shipment =
+            shipmentType === "vehicle"
+                ? carShipment
+                : sparePartsShipment;
+
+
+        shipment.currentLocation = {
+
+            latitude:
+                latitude,
+
+            longitude:
+                longitude,
+
+            accuracy:
+                accuracy ?? null,
+
+            timestamp:
+                new Date().toISOString()
+
+        };
+
+
+        shipment.updatedAt =
+            new Date().toISOString();
+
+
+        saveCore();
+
+
+        emitEvent(
+            "austa:shipmentlocationchange",
+            shipment
+        );
+
+
+        return clone(
+            shipment
+        );
+
+    }
+
+
+    /* =====================================================
+       GET CORE
+       ===================================================== */
+
+    function getCore() {
+
+        return {
+
+            version:
+                AUSTA_CORE_VERSION,
+
+            location:
+                getLocation(),
+
+            provider:
+                clone(providerLocation),
+
+            liveTracking:
+                clone(liveTracking),
+
+            transport:
+                clone(transport),
+
+            shipments: {
+
+                spareParts:
+                    clone(sparePartsShipment),
+
+                vehicle:
+                    clone(carShipment)
+
+            }
+
+        };
+
+    }
+
+
+    /* =====================================================
+       PUBLIC API
+       ===================================================== */
 
     window.AUSTA_LOCATION_CORE = {
 
         version:
             AUSTA_CORE_VERSION,
 
+
         checkPermission:
             checkPermission,
+
 
         getCurrentPosition:
             getCurrentPosition,
 
+
+        startLocationWatch:
+            startLocationWatch,
+
+
+        stopLocationWatch:
+            stopLocationWatch,
+
+
         setManualLocation:
             setManualLocation,
+
 
         getLocation:
             getLocation,
 
+
         getCore:
             getCore,
+
 
         setProviderLocation:
             setProviderLocation,
 
+
         startLiveTracking:
             startLiveTracking,
+
 
         stopLiveTracking:
             stopLiveTracking,
 
+
+        getLiveTracking:
+            getLiveTracking,
+
+
         updateTransport:
             updateTransport,
+
+
+        updateTransportLocation:
+            updateTransportLocation,
+
 
         createShipment:
             createShipmentWithId,
 
+
+        saveShipment:
+            saveShipment,
+
+
         addStatusHistory:
             addStatusHistory,
 
+
+        updateShipmentLocation:
+            updateShipmentLocation,
+
+
         calculateDistance:
-            calculateDistance
+            calculateDistance,
+
+
+        formatDistance:
+            formatDistance,
+
+
+        save:
+            saveCore
 
     };
 
+
+    /* =====================================================
+       INITIALIZATION
+       ===================================================== */
 
     loadCore();
 
