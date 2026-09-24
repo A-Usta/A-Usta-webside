@@ -1765,6 +1765,465 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 });
-</script>
+</script>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+ <script>
+/* =========================================================
+   A-USTA LOCATION PICKER
+   Azərbaycan şəhər və rayon sistemi
+   ========================================================= */
+
+(function () {
+
+    const locationPicker =
+        document.querySelector(".location-picker");
+
+    const locationSelector =
+        document.querySelector(".location-selector");
+
+    const locationMenu =
+        document.querySelector(".location-menu");
+
+    const locationSearch =
+        document.querySelector(".location-search");
+
+    const locationList =
+        document.getElementById("location-list");
+
+
+    if (
+        !locationPicker ||
+        !locationSelector ||
+        !locationMenu ||
+        !locationSearch ||
+        !locationList
+    ) {
+        return;
+    }
+
+
+    const locations = {
+
+        "Bakı şəhəri": [
+            "Bakı"
+        ],
+
+        "Naxçıvan": [
+            "Babək",
+            "Culfa",
+            "Kəngərli",
+            "Ordubad",
+            "Sədərək",
+            "Şahbuz",
+            "Şərur",
+            "Naxçıvan"
+        ],
+
+        "Abşeron-Xızı": [
+            "Sumqayıt",
+            "Abşeron",
+            "Xızı"
+        ],
+
+        "Dağlıq-Şirvan": [
+            "Ağsu",
+            "İsmayıllı",
+            "Qobustan",
+            "Şamaxı"
+        ],
+
+        "Gəncə-Daşkəsən": [
+            "Gəncə",
+            "Naftalan",
+            "Daşkəsən",
+            "Goranboy",
+            "Göygöl",
+            "Samux"
+        ],
+
+        "Qarabağ": [
+            "Xankəndi",
+            "Ağcabədi",
+            "Ağdam",
+            "Ağdərə",
+            "Bərdə",
+            "Füzuli",
+            "Xocalı",
+            "Xocavənd",
+            "Şuşa",
+            "Tərtər"
+        ],
+
+        "Qazax-Tovuz": [
+            "Ağstafa",
+            "Gədəbəy",
+            "Qazax",
+            "Şəmkir",
+            "Tovuz"
+        ],
+
+        "Quba-Xaçmaz": [
+            "Xaçmaz",
+            "Quba",
+            "Qusar",
+            "Siyəzən",
+            "Şabran"
+        ],
+
+        "Lənkəran-Astara": [
+            "Astara",
+            "Cəlilabad",
+            "Lerik",
+            "Lənkəran",
+            "Masallı",
+            "Yardımlı"
+        ],
+
+        "Mərkəzi Aran": [
+            "Mingəçevir",
+            "Ağdaş",
+            "Göyçay",
+            "Kürdəmir",
+            "Ucar",
+            "Yevlax",
+            "Zərdab"
+        ],
+
+        "Mil-Muğan": [
+            "Beyləqan",
+            "İmişli",
+            "Saatlı",
+            "Sabirabad"
+        ],
+
+        "Şəki-Zaqatala": [
+            "Balakən",
+            "Qax",
+            "Qəbələ",
+            "Oğuz",
+            "Şəki",
+            "Zaqatala"
+        ],
+
+        "Şərqi Zəngəzur": [
+            "Cəbrayıl",
+            "Kəlbəcər",
+            "Qubadlı",
+            "Laçın",
+            "Zəngilan"
+        ],
+
+        "Şirvan-Salyan": [
+            "Şirvan",
+            "Biləsuvar",
+            "Hacıqabul",
+            "Neftçala",
+            "Salyan"
+        ]
+
+    };
+
+
+    function normalize(text) {
+
+        return text
+            .toLowerCase()
+            .replace(/ə/g, "e")
+            .replace(/ı/g, "i")
+            .replace(/ö/g, "o")
+            .replace(/ü/g, "u")
+            .replace(/ş/g, "s")
+            .replace(/ç/g, "c")
+            .replace(/ğ/g, "g")
+            .trim();
+    }
+
+
+    function closeLocationMenu() {
+
+        locationPicker.classList.remove(
+            "location-open"
+        );
+    }
+
+
+    function openLocationMenu() {
+
+        locationPicker.classList.add(
+            "location-open"
+        );
+
+        locationSearch.focus();
+    }
+
+
+    function saveSelectedLocation(location) {
+
+        localStorage.setItem(
+            "a-usta-selected-location",
+            location
+        );
+
+        locationSelector.innerHTML =
+            "📍 " + location +
+            ' <span>⌄</span>';
+    }
+
+
+    function showRegions() {
+
+        locationList.innerHTML = "";
+
+        Object.keys(locations).forEach(
+            function (region) {
+
+                const button =
+                    document.createElement("button");
+
+                button.type = "button";
+
+                button.textContent =
+                    region;
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        showCities(region);
+
+                    }
+                );
+
+                locationList.appendChild(
+                    button
+                );
+
+            }
+        );
+    }
+
+
+    function showCities(region) {
+
+        locationList.innerHTML = "";
+
+        const backButton =
+            document.createElement("button");
+
+        backButton.type = "button";
+
+        backButton.textContent =
+            "← İqtisadi rayonlar";
+
+        backButton.addEventListener(
+            "click",
+            showRegions
+        );
+
+        locationList.appendChild(
+            backButton
+        );
+
+
+        locations[region].forEach(
+            function (city) {
+
+                const button =
+                    document.createElement("button");
+
+                button.type = "button";
+
+                button.textContent =
+                    city;
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        saveSelectedLocation(
+                            city
+                        );
+
+                        closeLocationMenu();
+
+                    }
+                );
+
+                locationList.appendChild(
+                    button
+                );
+
+            }
+        );
+
+    }
+
+
+    function searchLocations(value) {
+
+        const query =
+            normalize(value);
+
+        locationList.innerHTML = "";
+
+        if (!query) {
+
+            showRegions();
+
+            return;
+        }
+
+
+        Object.entries(locations)
+            .forEach(
+                function ([region, cities]) {
+
+                    cities.forEach(
+                        function (city) {
+
+                            if (
+                                normalize(city)
+                                    .includes(query)
+                                ||
+                                normalize(region)
+                                    .includes(query)
+                            ) {
+
+                                const button =
+                                    document.createElement(
+                                        "button"
+                                    );
+
+                                button.type =
+                                    "button";
+
+                                button.textContent =
+                                    city;
+
+                                button.addEventListener(
+                                    "click",
+                                    function () {
+
+                                        saveSelectedLocation(
+                                            city
+                                        );
+
+                                        closeLocationMenu();
+
+                                    }
+                                );
+
+                                locationList.appendChild(
+                                    button
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+        if (
+            locationList.children.length === 0
+        ) {
+
+            const empty =
+                document.createElement("div");
+
+            empty.textContent =
+                "Məkan tapılmadı.";
+
+            empty.style.color =
+                "#aaa";
+
+            empty.style.padding =
+                "12px";
+
+            locationList.appendChild(
+                empty
+            );
+
+        }
+
+    }
+
+
+    locationSelector.addEventListener(
+        "click",
+        function (event) {
+
+            event.stopPropagation();
+
+            if (
+                locationPicker.classList
+                    .contains("location-open")
+            ) {
+
+                closeLocationMenu();
+
+            } else {
+
+                openLocationMenu();
+
+            }
+
+        }
+    );
+
+
+    locationMenu.addEventListener(
+        "click",
+        function (event) {
+
+            event.stopPropagation();
+
+        }
+    );
+
+
+    document.addEventListener(
+        "click",
+        function () {
+
+            closeLocationMenu();
+
+        }
+    );
+
+
+    locationSearch.addEventListener(
+        "input",
+        function () {
+
+            searchLocations(
+                locationSearch.value
+            );
+
+        }
+    );
+
+
+    const savedLocation =
+        localStorage.getItem(
+            "a-usta-selected-location"
+        );
+
+
+    if (savedLocation) {
+
+        locationSelector.innerHTML =
+            "📍 " +
+            savedLocation +
+            ' <span>⌄</span>';
+
+    }
+
+
+    showRegions();
+
+})();
+</script>               
 </body>
 </html>
