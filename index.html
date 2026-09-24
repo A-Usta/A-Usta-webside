@@ -1250,26 +1250,14 @@
 
 
 <!-- =========================================================
-     FUTURE JAVASCRIPT
-     =========================================================
-     Buraya daha sonra:
-     - axtarış
-     - GPS
-     - xəritə
-     - usta seçimi
-     - qiymət sistemi
-     - login/register
-     - sifariş
-     - mesajlaşma
-     - bildiriş
-     - video feed
-     - ödəniş
-     - API
-     və digər funksiyalar əlavə ediləcək.
+     A-USTA LOCATION SYSTEM
+     LOCATION PICKER + SEARCH + GPS
      ========================================================= -->
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+    "use strict";
 
     const locationPicker =
         document.getElementById("locationPicker");
@@ -1299,11 +1287,12 @@ document.addEventListener("DOMContentLoaded", function () {
         !locationMenu ||
         !locationSearch ||
         !locationList ||
-        !selectedLocation
+        !selectedLocation ||
+        !locationGpsButton
     ) {
 
         console.error(
-            "A-USTA: Location sistemi üçün element tapılmadı."
+            "A-USTA: Location elementlərindən biri tapılmadı."
         );
 
         return;
@@ -1311,7 +1300,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* =====================================================
-       A-USTA
        AZƏRBAYCAN MƏKAN BAZASI
        ===================================================== */
 
@@ -1459,7 +1447,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* =====================================================
-       MENYUNU AÇ
+       MENYU AÇ
        ===================================================== */
 
     function openLocationMenu() {
@@ -1473,11 +1461,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         renderRegions();
 
+        setTimeout(function () {
+
+            locationSearch.focus();
+
+        }, 50);
+
     }
 
 
     /* =====================================================
-       MENYUNU BAĞLA
+       MENYU BAĞLA
        ===================================================== */
 
     function closeLocationMenu() {
@@ -1493,7 +1487,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* =====================================================
-       REGIONLARI GÖSTƏR
+       REGIONLAR
        ===================================================== */
 
     function renderRegions() {
@@ -1528,13 +1522,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* =====================================================
-       RAYONLARI GÖSTƏR
+       RAYONLAR
        ===================================================== */
 
     function renderDistricts(region) {
 
         locationList.innerHTML = "";
-
 
         const backButton =
             document.createElement("button");
@@ -1547,10 +1540,11 @@ document.addEventListener("DOMContentLoaded", function () {
         backButton.textContent =
             "← Bütün regionlar";
 
-
         backButton.addEventListener(
             "click",
-            function () {
+            function (event) {
+
+                event.stopPropagation();
 
                 locationSearch.value = "";
 
@@ -1558,7 +1552,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             }
         );
-
 
         locationList.appendChild(
             backButton
@@ -1581,7 +1574,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 button.dataset.location =
                     place;
-
 
                 locationList.appendChild(
                     button
@@ -1607,10 +1599,38 @@ document.addEventListener("DOMContentLoaded", function () {
             location
         );
 
+
+        if (
+            window.AUSTA_LOCATION_CORE
+        ) {
+
+            window.AUSTA_LOCATION_CORE.setManualLocation({
+
+                country:
+                    "Azərbaycan",
+
+                formatted:
+                    location,
+
+                city:
+                    location.includes("şəhəri")
+                        ? location
+                        : null,
+
+                district:
+                    location.includes("rayonu")
+                        ? location
+                        : null
+
+            });
+
+        }
+
+
         closeLocationMenu();
 
         console.log(
-            "A-USTA seçilmiş məkan:",
+            "A-USTA manual location:",
             location
         );
 
@@ -1625,7 +1645,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const normalizedQuery =
             normalizeText(query);
-
 
         locationList.innerHTML = "";
 
@@ -1673,22 +1692,17 @@ document.addEventListener("DOMContentLoaded", function () {
                                     "button"
                                 );
 
-
                             button.type =
                                 "button";
-
 
                             button.className =
                                 "location-item";
 
-
                             button.textContent =
                                 "📍 " + place;
 
-
                             button.dataset.location =
                                 place;
-
 
                             locationList.appendChild(
                                 button
@@ -1708,14 +1722,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const empty =
                 document.createElement("div");
 
-
             empty.className =
                 "location-empty";
 
-
             empty.textContent =
                 "Bu məkan tapılmadı.";
-
 
             locationList.appendChild(
                 empty
@@ -1727,21 +1738,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* =====================================================
-       LOCATION SELECTOR
+       LOCATION BUTTON
        ===================================================== */
 
     locationSelector.addEventListener(
         "click",
         function (event) {
 
+            event.preventDefault();
+
             event.stopPropagation();
 
 
-            if (locationMenu.hidden) {
+            if (
+                locationMenu.hidden
+            ) {
 
                 openLocationMenu();
 
-            } else {
+            }
+            else {
 
                 closeLocationMenu();
 
@@ -1752,7 +1768,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* =====================================================
-       SEARCH INPUT
+       SEARCH
        ===================================================== */
 
     locationSearch.addEventListener(
@@ -1767,10 +1783,6 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 
-    /* =====================================================
-       INPUTA BASANDA MENYU BAĞLANMASIN
-       ===================================================== */
-
     locationSearch.addEventListener(
         "click",
         function (event) {
@@ -1782,7 +1794,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* =====================================================
-       MENYUNUN İÇİNDƏ KLİK
+       LOCATION MENU
        ===================================================== */
 
     locationMenu.addEventListener(
@@ -1808,11 +1820,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
             if (!button) {
+
                 return;
+
             }
 
 
-            if (button.dataset.region) {
+            if (
+                button.dataset.region
+            ) {
 
                 renderDistricts(
                     button.dataset.region
@@ -1823,7 +1839,9 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
 
-            if (button.dataset.location) {
+            if (
+                button.dataset.location
+            ) {
 
                 selectLocation(
                     button.dataset.location
@@ -1839,156 +1857,215 @@ document.addEventListener("DOMContentLoaded", function () {
        GPS
        ===================================================== */
 
-    <script>
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+    locationGpsButton.addEventListener(
+        "click",
+        async function (event) {
 
-        const button =
-            document.getElementById(
-                "locationGpsButton"
-            );
+            event.preventDefault();
+
+            event.stopPropagation();
 
 
-        if (
-            !button
-        ) {
+            if (
+                !navigator.geolocation
+            ) {
 
-            console.error(
-                "A-USTA: GPS düyməsi tapılmadı."
-            );
+                alert(
+                    "Bu brauzerdə GPS dəstəklənmir."
+                );
 
-            return;
+                return;
 
-        }
+            }
 
 
-        button.addEventListener(
-            "click",
-            async function (event) {
+            locationGpsButton.disabled =
+                true;
 
-                event.stopPropagation();
+            locationGpsButton.textContent =
+                "📍 Məkan müəyyən edilir...";
+
+
+            try {
+
+                const position =
+                    await new Promise(
+                        function (
+                            resolve,
+                            reject
+                        ) {
+
+                            navigator.geolocation.getCurrentPosition(
+
+                                resolve,
+
+                                reject,
+
+                                {
+
+                                    enableHighAccuracy:
+                                        true,
+
+                                    timeout:
+                                        15000,
+
+                                    maximumAge:
+                                        0
+
+                                }
+
+                            );
+
+                        }
+                    );
+
+
+                const latitude =
+                    position.coords.latitude;
+
+                const longitude =
+                    position.coords.longitude;
+
+
+                console.log(
+                    "A-USTA GPS latitude:",
+                    latitude
+                );
+
+                console.log(
+                    "A-USTA GPS longitude:",
+                    longitude
+                );
+
+                console.log(
+                    "A-USTA GPS accuracy:",
+                    position.coords.accuracy
+                );
+
+
+                /* CORE varsa GPS məlumatını Core-a ötür */
+
+                if (
+                    window.AUSTA_LOCATION_CORE
+                ) {
+
+                    /*
+                     * Core-un öz GPS funksiyası
+                     * koordinatları yadda saxlayır.
+                     */
+
+                    try {
+
+                        await
+                            window.AUSTA_LOCATION_CORE
+                                .getCurrentPosition();
+
+                    }
+                    catch (
+                        coreError
+                    ) {
+
+                        console.warn(
+                            "Core GPS:",
+                            coreError
+                        );
+
+                    }
+
+                }
+
+
+                /*
+                 * Hazırda reverse-geocoding API istifadə etmirik.
+                 * Ona görə koordinatı göstəririk.
+                 */
+
+                selectedLocation.textContent =
+                    "📍 " +
+                    latitude.toFixed(5) +
+                    ", " +
+                    longitude.toFixed(5);
+
+
+                localStorage.setItem(
+                    "a-usta-location",
+                    selectedLocation.textContent
+                );
+
+
+                alert(
+                    "📍 Məkanınız müəyyən edildi!\n\n" +
+                    "Latitude: " +
+                    latitude.toFixed(6) +
+                    "\nLongitude: " +
+                    longitude.toFixed(6)
+                );
+
+
+                closeLocationMenu();
+
+
+            }
+            catch (
+                error
+            ) {
+
+                console.error(
+                    "A-USTA GPS error:",
+                    error
+                );
 
 
                 if (
-                    !window.AUSTA_LOCATION_CORE
+                    error.code === 1
                 ) {
 
-                    console.error(
-                        "A-USTA Location Core tapılmadı."
-                    );
-
                     alert(
-                        "Location sistemi hazır deyil."
-                    );
-
-                    return;
-
-                }
-
-
-                button.disabled =
-                    true;
-
-
-                button.textContent =
-                    "📍 Məkan müəyyən edilir...";
-
-
-                try {
-
-                    const position =
-                        await window
-                            .AUSTA_LOCATION_CORE
-                            .getCurrentPosition();
-
-
-                    console.log(
-                        "A-USTA GPS koordinatları:",
-                        position.coords
-                    );
-
-
-                    const location =
-                        window
-                            .AUSTA_LOCATION_CORE
-                            .getLocation();
-
-
-                    console.log(
-                        "A-USTA Location:",
-                        location
-                    );
-
-
-                    alert(
-                        "📍 Məkanınız müəyyən edildi."
+                        "🔐 Məkan icazəsi rədd edilib.\n\n" +
+                        "Chrome-da bu sayt üçün Location icazəsini Allow edin."
                     );
 
                 }
-                catch (
-                    error
+                else if (
+                    error.code === 2
                 ) {
 
-                    console.error(
-                        "A-USTA GPS xətası:",
-                        error
+                    alert(
+                        "📍 Məkan müəyyən edilə bilmədi."
                     );
 
+                }
+                else if (
+                    error.code === 3
+                ) {
 
-                    if (
-                        error.code === 1
-                    ) {
-
-                        alert(
-                            "🔐 Məkan icazəsi rədd edilib."
-                        );
-
-                    }
-                    else if (
-                        error.code === 2
-                    ) {
-
-                        alert(
-                            "📍 Məkan müəyyən edilə bilmədi."
-                        );
-
-                    }
-                    else if (
-                        error.code === 3
-                    ) {
-
-                        alert(
-                            "⏱️ GPS cavabı gecikdi."
-                        );
-
-                    }
-                    else {
-
-                        alert(
-                            "📍 Məkan müəyyən edilə bilmədi."
-                        );
-
-                    }
+                    alert(
+                        "⏱️ GPS cavabı gecikdi."
+                    );
 
                 }
-                finally {
+                else {
 
-                    button.disabled =
-                        false;
-
-
-                    button.textContent =
-                        "📍 Mənim yerimi müəyyən et";
+                    alert(
+                        "📍 Məkan müəyyən edilə bilmədi."
+                    );
 
                 }
 
             }
-        );
+            finally {
 
-    }
-);
-</script>
+                locationGpsButton.disabled =
+                    false;
+
+                locationGpsButton.textContent =
+                    "📍 Mənim yerimi müəyyən et";
+
+            }
+
+        }
+    );
+
 
     /* =====================================================
        ÇÖLDƏ KLİK
@@ -2022,19 +2099,22 @@ document.addEventListener(
         );
 
 
-    if (savedLocation) {
+    if (
+        savedLocation
+    ) {
 
         selectedLocation.textContent =
-            "📍 " + savedLocation;
+            savedLocation;
 
     }
 
 
     /* =====================================================
-       İLK BAŞLANĞIC
+       BAŞLANĞIC
        ===================================================== */
 
-    locationMenu.hidden = true;
+    locationMenu.hidden =
+        true;
 
     locationSelector.setAttribute(
         "aria-expanded",
@@ -2045,35 +2125,29 @@ document.addEventListener(
 
 
     console.log(
-        "A-USTA Location System hazırdır."
+        "A-USTA Location UI hazırdır."
     );
 
 });
 </script>
-   <script>
-/* =========================================================
-   A-USTA LOCATION & TRACKING CORE
-   Version: 1.0
-   ========================================================= */
 
+
+<!-- =========================================================
+     A-USTA LOCATION & TRACKING CORE
+     ========================================================= -->
+
+<script>
 (function () {
 
     "use strict";
 
 
-    /* =====================================================
-       CORE CONFIG
-       ===================================================== */
-
-    const AUSTA_CORE_VERSION = "1.0.0";
+    const AUSTA_CORE_VERSION =
+        "1.0.0";
 
     const STORAGE_KEY =
         "a-usta-location-core";
 
-
-    /* =====================================================
-       DEFAULT LOCATION OBJECT
-       ===================================================== */
 
     let locationState = {
 
@@ -2136,10 +2210,6 @@ document.addEventListener(
     };
 
 
-    /* =====================================================
-       PROVIDER / USTA OBJECT
-       ===================================================== */
-
     let providerLocation = {
 
         providerId:
@@ -2175,10 +2245,6 @@ document.addEventListener(
 
     };
 
-
-    /* =====================================================
-       CUSTOMER ↔ PROVIDER TRACKING
-       ===================================================== */
 
     let liveTracking = {
 
@@ -2218,10 +2284,6 @@ document.addEventListener(
     };
 
 
-    /* =====================================================
-       TRANSPORT / DAMAS / DOBLO
-       ===================================================== */
-
     let transport = {
 
         vehicleId:
@@ -2253,10 +2315,6 @@ document.addEventListener(
 
     };
 
-
-    /* =====================================================
-       SHIPMENT OBJECT
-       ===================================================== */
 
     function createShipment(
         shipmentType
@@ -2308,10 +2366,6 @@ document.addEventListener(
     }
 
 
-    /* =====================================================
-       SHIPMENT TYPES
-       ===================================================== */
-
     let sparePartsShipment =
         createShipment(
             "spare-parts"
@@ -2324,55 +2378,148 @@ document.addEventListener(
         );
 
 
-    /* =====================================================
-       STATUS HISTORY
-       ===================================================== */
+    function saveCore() {
 
-    function addStatusHistory(
-        shipment,
-        status,
-        note,
-        location
-    ) {
+        try {
 
-        const historyItem = {
+            localStorage.setItem(
 
-            status:
-                status,
+                STORAGE_KEY,
 
-            note:
-                note || null,
+                JSON.stringify({
 
-            location:
-                location || null,
+                    version:
+                        AUSTA_CORE_VERSION,
 
-            timestamp:
-                new Date().toISOString()
+                    location:
+                        locationState,
 
-        };
+                    provider:
+                        providerLocation,
 
+                    liveTracking:
+                        liveTracking,
 
-        shipment.history.push(
-            historyItem
-        );
+                    transport:
+                        transport,
 
+                    shipments: {
 
-        shipment.status =
-            status;
+                        spareParts:
+                            sparePartsShipment,
 
+                        vehicle:
+                            carShipment
 
-        shipment.updatedAt =
-            historyItem.timestamp;
+                    }
 
+                })
 
-        saveCore();
+            );
+
+        }
+        catch (
+            error
+        ) {
+
+            console.warn(
+                "A-USTA Core save error:",
+                error
+            );
+
+        }
 
     }
 
 
-    /* =====================================================
-       LOCATION PERMISSION
-       ===================================================== */
+    function loadCore() {
+
+        try {
+
+            const saved =
+                localStorage.getItem(
+                    STORAGE_KEY
+                );
+
+
+            if (!saved) {
+
+                return;
+
+            }
+
+
+            const data =
+                JSON.parse(saved);
+
+
+            if (data.location) {
+
+                locationState =
+                    data.location;
+
+            }
+
+
+            if (data.provider) {
+
+                providerLocation =
+                    data.provider;
+
+            }
+
+
+            if (data.liveTracking) {
+
+                liveTracking =
+                    data.liveTracking;
+
+            }
+
+
+            if (data.transport) {
+
+                transport =
+                    data.transport;
+
+            }
+
+
+            if (
+                data.shipments &&
+                data.shipments.spareParts
+            ) {
+
+                sparePartsShipment =
+                    data.shipments.spareParts;
+
+            }
+
+
+            if (
+                data.shipments &&
+                data.shipments.vehicle
+            ) {
+
+                carShipment =
+                    data.shipments.vehicle;
+
+            }
+
+        }
+        catch (
+            error
+        ) {
+
+            console.warn(
+                "A-USTA Core load error:",
+                error
+            );
+
+        }
+
+    }
+
 
     async function checkPermission() {
 
@@ -2380,12 +2527,7 @@ document.addEventListener(
             !navigator.permissions
         ) {
 
-            locationState.permission =
-                "unknown";
-
-            return (
-                locationState.permission
-            );
+            return "unknown";
 
         }
 
@@ -2393,12 +2535,12 @@ document.addEventListener(
         try {
 
             const permission =
-                await navigator.permissions.query(
-                    {
-                        name:
-                            "geolocation"
-                    }
-                );
+                await navigator.permissions.query({
+
+                    name:
+                        "geolocation"
+
+                });
 
 
             locationState.permission =
@@ -2411,11 +2553,15 @@ document.addEventListener(
                     locationState.permission =
                         permission.state;
 
-
                     saveCore();
 
                 };
 
+
+            saveCore();
+
+
+            return permission.state;
 
         }
         catch (
@@ -2423,115 +2569,16 @@ document.addEventListener(
         ) {
 
             console.warn(
-                "A-USTA: Permission yoxlanmadı.",
+                "A-USTA permission check:",
                 error
             );
 
-
-            locationState.permission =
-                "unknown";
+            return "unknown";
 
         }
 
-
-        saveCore();
-
-
-        return (
-            locationState.permission
-        );
-
     }
 
-
-    /* =====================================================
-       GPS POSITION
-       ===================================================== */
-
-    function getCurrentPosition() {
-
-        return new Promise(
-            function (
-                resolve,
-                reject
-            ) {
-
-                if (
-                    !navigator.geolocation
-                ) {
-
-                    locationState.gpsEnabled =
-                        false;
-
-
-                    reject(
-                        new Error(
-                            "Geolocation dəstəklənmir."
-                        )
-                    );
-
-
-                    return;
-
-                }
-
-
-                navigator.geolocation.getCurrentPosition(
-
-                    function (
-                        position
-                    ) {
-
-                        updateLocation(
-                            position
-                        );
-
-
-                        resolve(
-                            position
-                        );
-
-                    },
-
-                    function (
-                        error
-                    ) {
-
-                        handleLocationError(
-                            error
-                        );
-
-
-                        reject(
-                            error
-                        );
-
-                    },
-
-                    {
-
-                        enableHighAccuracy:
-                            true,
-
-                        timeout:
-                            15000,
-
-                        maximumAge:
-                            0
-
-                    }
-
-                );
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       UPDATE LOCATION
-       ===================================================== */
 
     function updateLocation(
         position
@@ -2544,10 +2591,8 @@ document.addEventListener(
         locationState.permission =
             "granted";
 
-
         locationState.gpsEnabled =
             true;
-
 
         locationState.source =
             "gps";
@@ -2583,165 +2628,102 @@ document.addEventListener(
         saveCore();
 
 
-        console.log(
-            "A-USTA GPS:",
-            locationState.coordinates
-        );
+        window.dispatchEvent(
 
-
-        dispatchLocationEvent();
-
-    }
-
-
-    /* =====================================================
-       LOCATION ERROR
-       ===================================================== */
-
-    function handleLocationError(
-        error
-    ) {
-
-        if (
-            error.code === 1
-        ) {
-
-            locationState.permission =
-                "denied";
-
-        }
-        else if (
-            error.code === 2
-        ) {
-
-            locationState.gpsEnabled =
-                false;
-
-        }
-        else if (
-            error.code === 3
-        ) {
-
-            console.warn(
-                "A-USTA: GPS timeout."
-            );
-
-        }
-
-
-        saveCore();
-
-
-        console.warn(
-            "A-USTA Location Error:",
-            error.code,
-            error.message
-        );
-
-    }
-
-
-    /* =====================================================
-       LIVE GPS WATCH
-       ===================================================== */
-
-    let watchId =
-        null;
-
-
-    function startLocationWatch() {
-
-        if (
-            !navigator.geolocation
-        ) {
-
-            return false;
-
-        }
-
-
-        if (
-            watchId !== null
-        ) {
-
-            return true;
-
-        }
-
-
-        watchId =
-            navigator.geolocation.watchPosition(
-
-                function (
-                    position
-                ) {
-
-                    updateLocation(
-                        position
-                    );
-
-
-                    updateLiveTracking();
-
-                },
-
-                function (
-                    error
-                ) {
-
-                    handleLocationError(
-                        error
-                    );
-
-                },
-
+            new CustomEvent(
+                "austa:locationchange",
                 {
+                    detail:
+                        getLocation()
+                }
+            )
 
-                    enableHighAccuracy:
-                        true,
+        );
 
-                    timeout:
-                        20000,
+    }
 
-                    maximumAge:
-                        5000
+
+    function getCurrentPosition() {
+
+        return new Promise(
+            function (
+                resolve,
+                reject
+            ) {
+
+                if (
+                    !navigator.geolocation
+                ) {
+
+                    reject(
+                        new Error(
+                            "Geolocation dəstəklənmir."
+                        )
+                    );
+
+                    return;
 
                 }
 
-            );
+
+                navigator.geolocation.getCurrentPosition(
+
+                    function (
+                        position
+                    ) {
+
+                        updateLocation(
+                            position
+                        );
+
+                        resolve(
+                            position
+                        );
+
+                    },
+
+                    function (
+                        error
+                    ) {
+
+                        if (
+                            error.code === 1
+                        ) {
+
+                            locationState.permission =
+                                "denied";
+
+                        }
 
 
-        return true;
+                        saveCore();
+
+                        reject(
+                            error
+                        );
+
+                    },
+
+                    {
+
+                        enableHighAccuracy:
+                            true,
+
+                        timeout:
+                            15000,
+
+                        maximumAge:
+                            0
+
+                    }
+
+                );
+
+            }
+        );
 
     }
 
-
-    /* =====================================================
-       STOP GPS WATCH
-       ===================================================== */
-
-    function stopLocationWatch() {
-
-        if (
-            watchId !== null
-        ) {
-
-            navigator.geolocation.clearWatch(
-                watchId
-            );
-
-
-            watchId =
-                null;
-
-        }
-
-    }
-
-
-    /* =====================================================
-       MANUAL LOCATION
-       ===================================================== */
 
     function setManualLocation(
         data
@@ -2798,589 +2780,31 @@ document.addEventListener(
         saveCore();
 
 
-        dispatchLocationEvent();
-
-    }
-
-
-    /* =====================================================
-       DISTANCE CALCULATION
-       ===================================================== */
-
-    function calculateDistance(
-        lat1,
-        lon1,
-        lat2,
-        lon2
-    ) {
-
-        const earthRadius =
-            6371000;
-
-
-        const toRadians =
-            function (
-                value
-            ) {
-
-                return (
-                    value *
-                    Math.PI /
-                    180
-                );
-
-            };
-
-
-        const dLat =
-            toRadians(
-                lat2 - lat1
-            );
-
-
-        const dLon =
-            toRadians(
-                lon2 - lon1
-            );
-
-
-        const a =
-            Math.sin(
-                dLat / 2
-            ) *
-            Math.sin(
-                dLat / 2
-            ) +
-
-            Math.cos(
-                toRadians(
-                    lat1
-                )
-            ) *
-
-            Math.cos(
-                toRadians(
-                    lat2
-                )
-            ) *
-
-            Math.sin(
-                dLon / 2
-            ) *
-            Math.sin(
-                dLon / 2
-            );
-
-
-        const c =
-            2 *
-            Math.atan2(
-                Math.sqrt(a),
-                Math.sqrt(
-                    1 - a
-                )
-            );
-
-
-        return (
-            earthRadius *
-            c
-        );
-
-    }
-
-
-    /* =====================================================
-       PROVIDER LOCATION
-       ===================================================== */
-
-    function setProviderLocation(
-        data
-    ) {
-
-        providerLocation =
-            {
-
-                providerId:
-                    data.providerId || null,
-
-                providerType:
-                    data.providerType || "usta",
-
-                name:
-                    data.name || null,
-
-                coordinates: {
-
-                    latitude:
-                        data.latitude ?? null,
-
-                    longitude:
-                        data.longitude ?? null
-
-                },
-
-                accuracy:
-                    data.accuracy ?? null,
-
-                availability:
-                    data.availability || "online",
-
-                lastLocationUpdate:
-                    new Date().toISOString(),
-
-                tracking:
-                    true
-
-            };
-
-
-        saveCore();
-
-        updateLiveTracking();
-
-    }
-
-
-    /* =====================================================
-       LIVE TRACKING
-       ===================================================== */
-
-    function startLiveTracking(
-        customerId,
-        providerId
-    ) {
-
-        liveTracking =
-            {
-
-                trackingId:
-                    "TRK-" +
-                    Date.now(),
-
-                type:
-                    "customer-provider",
-
-                customerId:
-                    customerId || null,
-
-                providerId:
-                    providerId || null,
-
-                customerLocation:
-                    null,
-
-                providerLocation:
-                    null,
-
-                distanceMeters:
-                    null,
-
-                status:
-                    "active",
-
-                startedAt:
-                    new Date().toISOString(),
-
-                updatedAt:
-                    new Date().toISOString(),
-
-                active:
-                    true
-
-            };
-
-
-        updateLiveTracking();
-
-
-        saveCore();
-
-
-        return (
-            liveTracking
-        );
-
-    }
-
-
-    /* =====================================================
-       UPDATE LIVE TRACKING
-       ===================================================== */
-
-    function updateLiveTracking() {
-
-        if (
-            !liveTracking.active
-        ) {
-
-            return;
-
-        }
-
-
-        const customer =
-            locationState.coordinates;
-
-
-        const provider =
-            providerLocation.coordinates;
-
-
-        if (
-            customer.latitude === null ||
-            customer.longitude === null ||
-            provider.latitude === null ||
-            provider.longitude === null
-        ) {
-
-            return;
-
-        }
-
-
-        const distance =
-            calculateDistance(
-
-                customer.latitude,
-
-                customer.longitude,
-
-                provider.latitude,
-
-                provider.longitude
-
-            );
-
-
-        liveTracking.customerLocation =
-            {
-
-                latitude:
-                    customer.latitude,
-
-                longitude:
-                    customer.longitude
-
-            };
-
-
-        liveTracking.providerLocation =
-            {
-
-                latitude:
-                    provider.latitude,
-
-                longitude:
-                    provider.longitude
-
-            };
-
-
-        liveTracking.distanceMeters =
-            Math.round(
-                distance
-            );
-
-
-        liveTracking.updatedAt =
-            new Date().toISOString();
-
-
-        saveCore();
-
-
-    }
-
-
-    /* =====================================================
-       STOP LIVE TRACKING
-       ===================================================== */
-
-    function stopLiveTracking() {
-
-        liveTracking.status =
-            "completed";
-
-
-        liveTracking.active =
-            false;
-
-
-        liveTracking.updatedAt =
-            new Date().toISOString();
-
-
-        saveCore();
-
-    }
-
-
-    /* =====================================================
-       GENERIC TRANSPORT UPDATE
-       ===================================================== */
-
-    function updateTransport(
-        data
-    ) {
-
-        transport =
-            {
-
-                vehicleId:
-                    data.vehicleId || null,
-
-                type:
-                    data.type || null,
-
-                driverId:
-                    data.driverId || null,
-
-                driverName:
-                    data.driverName || null,
-
-                currentLocation:
-                    data.currentLocation || null,
-
-                destination:
-                    data.destination || null,
-
-                status:
-                    data.status || "idle",
-
-                tracking:
-                    Boolean(
-                        data.tracking
-                    ),
-
-                updatedAt:
-                    new Date().toISOString()
-
-            };
-
-
-        saveCore();
-
-    }
-
-
-    /* =====================================================
-       SAVE CORE
-       ===================================================== */
-
-    function saveCore() {
-
-        const data = {
-
-            version:
-                AUSTA_CORE_VERSION,
-
-            location:
-                locationState,
-
-            provider:
-                providerLocation,
-
-            liveTracking:
-                liveTracking,
-
-            transport:
-                transport,
-
-            shipments: {
-
-                spareParts:
-                    sparePartsShipment,
-
-                vehicle:
-                    carShipment
-
-            }
-
-        };
-
-
-        try {
-
-            localStorage.setItem(
-
-                STORAGE_KEY,
-
-                JSON.stringify(
-                    data
-                )
-
-            );
-
-        }
-        catch (
-            error
-        ) {
-
-            console.warn(
-                "A-USTA Core localStorage error.",
-                error
-            );
-
-        }
-
-    }
-
-
-    /* =====================================================
-       LOAD CORE
-       ===================================================== */
-
-    function loadCore() {
-
-        try {
-
-            const saved =
-                localStorage.getItem(
-                    STORAGE_KEY
-                );
-
-
-            if (
-                !saved
-            ) {
-
-                return;
-
-            }
-
-
-            const data =
-                JSON.parse(
-                    saved
-                );
-
-
-            if (
-                data.location
-            ) {
-
-                locationState =
-                    data.location;
-
-            }
-
-
-            if (
-                data.provider
-            ) {
-
-                providerLocation =
-                    data.provider;
-
-            }
-
-
-            if (
-                data.liveTracking
-            ) {
-
-                liveTracking =
-                    data.liveTracking;
-
-            }
-
-
-            if (
-                data.transport
-            ) {
-
-                transport =
-                    data.transport;
-
-            }
-
-
-            if (
-                data.shipments
-            ) {
-
-                if (
-                    data.shipments.spareParts
-                ) {
-
-                    sparePartsShipment =
-                        data.shipments.spareParts;
-
-                }
-
-
-                if (
-                    data.shipments.vehicle
-                ) {
-
-                    carShipment =
-                        data.shipments.vehicle;
-
-                }
-
-            }
-
-        }
-        catch (
-            error
-        ) {
-
-            console.warn(
-                "A-USTA Core load error.",
-                error
-            );
-
-        }
-
-    }
-
-
-    /* =====================================================
-       LOCATION EVENT
-       ===================================================== */
-
-    function dispatchLocationEvent() {
-
         window.dispatchEvent(
 
             new CustomEvent(
                 "austa:locationchange",
-
                 {
-
                     detail:
                         getLocation()
-
                 }
-
             )
 
         );
 
     }
 
-
-    /* =====================================================
-       GET LOCATION
-       ===================================================== */
 
     function getLocation() {
 
-        return (
-            JSON.parse(
-                JSON.stringify(
-                    locationState
-                )
+        return JSON.parse(
+            JSON.stringify(
+                locationState
             )
         );
 
     }
 
-
-    /* =====================================================
-       GET CORE
-       ===================================================== */
 
     function getCore() {
 
@@ -3433,9 +2857,327 @@ document.addEventListener(
     }
 
 
-    /* =====================================================
-       PUBLIC A-USTA API
-       ===================================================== */
+    function calculateDistance(
+        lat1,
+        lon1,
+        lat2,
+        lon2
+    ) {
+
+        const earthRadius =
+            6371000;
+
+
+        const toRadians =
+            function (value) {
+
+                return (
+                    value *
+                    Math.PI /
+                    180
+                );
+
+            };
+
+
+        const dLat =
+            toRadians(
+                lat2 - lat1
+            );
+
+
+        const dLon =
+            toRadians(
+                lon2 - lon1
+            );
+
+
+        const a =
+            Math.sin(dLat / 2) *
+            Math.sin(dLat / 2) +
+
+            Math.cos(
+                toRadians(lat1)
+            ) *
+
+            Math.cos(
+                toRadians(lat2)
+            ) *
+
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+
+
+        const c =
+            2 *
+            Math.atan2(
+                Math.sqrt(a),
+                Math.sqrt(1 - a)
+            );
+
+
+        return (
+            earthRadius * c
+        );
+
+    }
+
+
+    function setProviderLocation(
+        data
+    ) {
+
+        providerLocation = {
+
+            providerId:
+                data.providerId || null,
+
+            providerType:
+                data.providerType || "usta",
+
+            name:
+                data.name || null,
+
+            coordinates: {
+
+                latitude:
+                    data.latitude ?? null,
+
+                longitude:
+                    data.longitude ?? null
+
+            },
+
+            accuracy:
+                data.accuracy ?? null,
+
+            availability:
+                data.availability || "online",
+
+            lastLocationUpdate:
+                new Date().toISOString(),
+
+            tracking:
+                true
+
+        };
+
+
+        saveCore();
+
+    }
+
+
+    function startLiveTracking(
+        customerId,
+        providerId
+    ) {
+
+        liveTracking = {
+
+            trackingId:
+                "TRK-" + Date.now(),
+
+            type:
+                "customer-provider",
+
+            customerId:
+                customerId || null,
+
+            providerId:
+                providerId || null,
+
+            customerLocation:
+                null,
+
+            providerLocation:
+                null,
+
+            distanceMeters:
+                null,
+
+            status:
+                "active",
+
+            startedAt:
+                new Date().toISOString(),
+
+            updatedAt:
+                new Date().toISOString(),
+
+            active:
+                true
+
+        };
+
+
+        saveCore();
+
+
+        return liveTracking;
+
+    }
+
+
+    function stopLiveTracking() {
+
+        liveTracking.status =
+            "completed";
+
+        liveTracking.active =
+            false;
+
+        liveTracking.updatedAt =
+            new Date().toISOString();
+
+        saveCore();
+
+    }
+
+
+    function updateTransport(
+        data
+    ) {
+
+        transport = {
+
+            vehicleId:
+                data.vehicleId || null,
+
+            type:
+                data.type || null,
+
+            driverId:
+                data.driverId || null,
+
+            driverName:
+                data.driverName || null,
+
+            currentLocation:
+                data.currentLocation || null,
+
+            destination:
+                data.destination || null,
+
+            status:
+                data.status || "idle",
+
+            tracking:
+                Boolean(
+                    data.tracking
+                ),
+
+            updatedAt:
+                new Date().toISOString()
+
+        };
+
+
+        saveCore();
+
+    }
+
+
+    function createShipmentWithId(
+        shipmentType
+    ) {
+
+        return {
+
+            shipmentId:
+                "SHP-" + Date.now(),
+
+            shipmentType:
+                shipmentType,
+
+            orderId:
+                null,
+
+            vehicleId:
+                null,
+
+            supplier:
+                null,
+
+            origin:
+                null,
+
+            destination:
+                null,
+
+            currentLocation:
+                null,
+
+            status:
+                "created",
+
+            estimatedDelivery:
+                null,
+
+            createdAt:
+                new Date().toISOString(),
+
+            updatedAt:
+                new Date().toISOString(),
+
+            history:
+                []
+
+        };
+
+    }
+
+
+    function addStatusHistory(
+        shipment,
+        status,
+        note,
+        location
+    ) {
+
+        if (
+            !shipment ||
+            !shipment.history
+        ) {
+
+            return;
+
+        }
+
+
+        const item = {
+
+            status:
+                status,
+
+            note:
+                note || null,
+
+            location:
+                location || null,
+
+            timestamp:
+                new Date().toISOString()
+
+        };
+
+
+        shipment.history.push(
+            item
+        );
+
+
+        shipment.status =
+            status;
+
+        shipment.updatedAt =
+            item.timestamp;
+
+
+        saveCore();
+
+    }
+
 
     window.AUSTA_LOCATION_CORE = {
 
@@ -3447,12 +3189,6 @@ document.addEventListener(
 
         getCurrentPosition:
             getCurrentPosition,
-
-        startLocationWatch:
-            startLocationWatch,
-
-        stopLocationWatch:
-            stopLocationWatch,
 
         setManualLocation:
             setManualLocation,
@@ -3469,9 +3205,6 @@ document.addEventListener(
         startLiveTracking:
             startLiveTracking,
 
-        updateLiveTracking:
-            updateLiveTracking,
-
         stopLiveTracking:
             stopLiveTracking,
 
@@ -3479,7 +3212,7 @@ document.addEventListener(
             updateTransport,
 
         createShipment:
-            createShipment,
+            createShipmentWithId,
 
         addStatusHistory:
             addStatusHistory,
@@ -3490,12 +3223,7 @@ document.addEventListener(
     };
 
 
-    /* =====================================================
-       INITIALIZE
-       ===================================================== */
-
     loadCore();
-
 
     checkPermission();
 
@@ -3507,6 +3235,6 @@ document.addEventListener(
 
 
 })();
-</script> 
+</script>
 </body>
 </html>
