@@ -1766,464 +1766,975 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
- <script>
+<script>
 /* =========================================================
-   A-USTA LOCATION PICKER
-   Azərbaycan şəhər və rayon sistemi
+   A-USTA MASTER LOCATION & GPS FOUNDATION
+   Müştəri + Usta + Damas/Doblo + Ehtiyat hissəsi
+   + Xaricdən avtomobil + gələcək xəritə sistemi
    ========================================================= */
 
 (function () {
 
-    const locationPicker =
-        document.querySelector(".location-picker");
+    "use strict";
 
-    const locationSelector =
-        document.querySelector(".location-selector");
+    const LOCATION_DATA_KEY =
+        "a-usta-location-data";
 
-    const locationMenu =
-        document.querySelector(".location-menu");
+    const LOCATION_PERMISSION_KEY =
+        "a-usta-location-permission";
 
-    const locationSearch =
-        document.querySelector(".location-search");
-
-    const locationList =
-        document.getElementById("location-list");
+    let activeTracking = {};
 
 
-    if (
-        !locationPicker ||
-        !locationSelector ||
-        !locationMenu ||
-        !locationSearch ||
-        !locationList
-    ) {
-        return;
-    }
+    /* =====================================================
+       ƏSAS LOCATION OBYEKTİ
+       ===================================================== */
 
+    let currentLocation = {
 
-    const locations = {
+        latitude: null,
+        longitude: null,
+        accuracy: null,
 
-        "Bakı şəhəri": [
-            "Bakı"
-        ],
+        address: "",
+        city: "",
+        district: "",
+        region: "",
 
-        "Naxçıvan": [
-            "Babək",
-            "Culfa",
-            "Kəngərli",
-            "Ordubad",
-            "Sədərək",
-            "Şahbuz",
-            "Şərur",
-            "Naxçıvan"
-        ],
+        locationSource: "manual",
 
-        "Abşeron-Xızı": [
-            "Sumqayıt",
-            "Abşeron",
-            "Xızı"
-        ],
+        permissionState: "unknown",
 
-        "Dağlıq-Şirvan": [
-            "Ağsu",
-            "İsmayıllı",
-            "Qobustan",
-            "Şamaxı"
-        ],
-
-        "Gəncə-Daşkəsən": [
-            "Gəncə",
-            "Naftalan",
-            "Daşkəsən",
-            "Goranboy",
-            "Göygöl",
-            "Samux"
-        ],
-
-        "Qarabağ": [
-            "Xankəndi",
-            "Ağcabədi",
-            "Ağdam",
-            "Ağdərə",
-            "Bərdə",
-            "Füzuli",
-            "Xocalı",
-            "Xocavənd",
-            "Şuşa",
-            "Tərtər"
-        ],
-
-        "Qazax-Tovuz": [
-            "Ağstafa",
-            "Gədəbəy",
-            "Qazax",
-            "Şəmkir",
-            "Tovuz"
-        ],
-
-        "Quba-Xaçmaz": [
-            "Xaçmaz",
-            "Quba",
-            "Qusar",
-            "Siyəzən",
-            "Şabran"
-        ],
-
-        "Lənkəran-Astara": [
-            "Astara",
-            "Cəlilabad",
-            "Lerik",
-            "Lənkəran",
-            "Masallı",
-            "Yardımlı"
-        ],
-
-        "Mərkəzi Aran": [
-            "Mingəçevir",
-            "Ağdaş",
-            "Göyçay",
-            "Kürdəmir",
-            "Ucar",
-            "Yevlax",
-            "Zərdab"
-        ],
-
-        "Mil-Muğan": [
-            "Beyləqan",
-            "İmişli",
-            "Saatlı",
-            "Sabirabad"
-        ],
-
-        "Şəki-Zaqatala": [
-            "Balakən",
-            "Qax",
-            "Qəbələ",
-            "Oğuz",
-            "Şəki",
-            "Zaqatala"
-        ],
-
-        "Şərqi Zəngəzur": [
-            "Cəbrayıl",
-            "Kəlbəcər",
-            "Qubadlı",
-            "Laçın",
-            "Zəngilan"
-        ],
-
-        "Şirvan-Salyan": [
-            "Şirvan",
-            "Biləsuvar",
-            "Hacıqabul",
-            "Neftçala",
-            "Salyan"
-        ]
+        timestamp: null
 
     };
 
 
-    function normalize(text) {
+    /* =====================================================
+       LOCATION YADDA SAXLAMA
+       ===================================================== */
 
-        return text
-            .toLowerCase()
-            .replace(/ə/g, "e")
-            .replace(/ı/g, "i")
-            .replace(/ö/g, "o")
-            .replace(/ü/g, "u")
-            .replace(/ş/g, "s")
-            .replace(/ç/g, "c")
-            .replace(/ğ/g, "g")
-            .trim();
-    }
+    function saveLocation(data) {
 
+        currentLocation = {
 
-    function closeLocationMenu() {
+            ...currentLocation,
+            ...data,
 
-        locationPicker.classList.remove(
-            "location-open"
-        );
-    }
+            timestamp: Date.now()
 
-
-    function openLocationMenu() {
-
-        locationPicker.classList.add(
-            "location-open"
-        );
-
-        locationSearch.focus();
-    }
-
-
-    function saveSelectedLocation(location) {
+        };
 
         localStorage.setItem(
-            "a-usta-selected-location",
-            location
-        );
-
-        locationSelector.innerHTML =
-            "📍 " + location +
-            ' <span>⌄</span>';
-    }
-
-
-    function showRegions() {
-
-        locationList.innerHTML = "";
-
-        Object.keys(locations).forEach(
-            function (region) {
-
-                const button =
-                    document.createElement("button");
-
-                button.type = "button";
-
-                button.textContent =
-                    region;
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        showCities(region);
-
-                    }
-                );
-
-                locationList.appendChild(
-                    button
-                );
-
-            }
-        );
-    }
-
-
-    function showCities(region) {
-
-        locationList.innerHTML = "";
-
-        const backButton =
-            document.createElement("button");
-
-        backButton.type = "button";
-
-        backButton.textContent =
-            "← İqtisadi rayonlar";
-
-        backButton.addEventListener(
-            "click",
-            showRegions
-        );
-
-        locationList.appendChild(
-            backButton
-        );
-
-
-        locations[region].forEach(
-            function (city) {
-
-                const button =
-                    document.createElement("button");
-
-                button.type = "button";
-
-                button.textContent =
-                    city;
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        saveSelectedLocation(
-                            city
-                        );
-
-                        closeLocationMenu();
-
-                    }
-                );
-
-                locationList.appendChild(
-                    button
-                );
-
-            }
+            LOCATION_DATA_KEY,
+            JSON.stringify(currentLocation)
         );
 
     }
 
 
-    function searchLocations(value) {
+    /* =====================================================
+       LOCATION YÜKLƏ
+       ===================================================== */
 
-        const query =
-            normalize(value);
+    function loadLocation() {
 
-        locationList.innerHTML = "";
+        const saved =
+            localStorage.getItem(
+                LOCATION_DATA_KEY
+            );
 
-        if (!query) {
+        if (!saved) return;
 
-            showRegions();
+        try {
 
-            return;
+            currentLocation =
+                JSON.parse(saved);
+
+        } catch (error) {
+
+            console.warn(
+                "A-USTA location data could not be loaded."
+            );
+
         }
 
+    }
 
-        Object.entries(locations)
-            .forEach(
-                function ([region, cities]) {
 
-                    cities.forEach(
-                        function (city) {
+    /* =====================================================
+       GPS İCAZƏT STATUSU
+       ===================================================== */
 
-                            if (
-                                normalize(city)
-                                    .includes(query)
-                                ||
-                                normalize(region)
-                                    .includes(query)
-                            ) {
+    async function checkLocationPermission() {
 
-                                const button =
-                                    document.createElement(
-                                        "button"
-                                    );
+        if (!navigator.permissions) {
 
-                                button.type =
-                                    "button";
+            return "unknown";
 
-                                button.textContent =
-                                    city;
+        }
 
-                                button.addEventListener(
-                                    "click",
-                                    function () {
+        try {
 
-                                        saveSelectedLocation(
-                                            city
-                                        );
+            const permission =
+                await navigator.permissions.query({
+                    name: "geolocation"
+                });
 
-                                        closeLocationMenu();
+            currentLocation.permissionState =
+                permission.state;
 
-                                    }
-                                );
+            localStorage.setItem(
+                LOCATION_PERMISSION_KEY,
+                permission.state
+            );
 
-                                locationList.appendChild(
-                                    button
-                                );
+            return permission.state;
 
-                            }
+        } catch (error) {
 
-                        }
+            return "unknown";
+
+        }
+
+    }
+
+
+    /* =====================================================
+       CARİ GPS MÖVQEYİNİ AL
+       ===================================================== */
+
+    window.AUSTA_getCurrentLocation =
+        function () {
+
+            if (!navigator.geolocation) {
+
+                console.warn(
+                    "Geolocation is not supported."
+                );
+
+                return;
+
+            }
+
+
+            navigator.geolocation.getCurrentPosition(
+
+                function (position) {
+
+                    const coords =
+                        position.coords;
+
+
+                    saveLocation({
+
+                        latitude:
+                            coords.latitude,
+
+                        longitude:
+                            coords.longitude,
+
+                        accuracy:
+                            coords.accuracy,
+
+                        locationSource:
+                            "gps",
+
+                        permissionState:
+                            "granted"
+
+                    });
+
+
+                    console.log(
+                        "A-USTA CURRENT LOCATION:",
+                        currentLocation
                     );
 
+                },
+
+
+                function (error) {
+
+                    console.warn(
+                        "A-USTA GPS ERROR:",
+                        error
+                    );
+
+
+                    saveLocation({
+
+                        permissionState:
+                            "denied-or-unavailable"
+
+                    });
+
+                },
+
+
+                {
+
+                    enableHighAccuracy: true,
+
+                    timeout: 15000,
+
+                    maximumAge: 30000
+
                 }
+
             );
+
+        };
+
+
+    /* =====================================================
+       TƏTBİQ/SAYT AÇILANDA GPSİ YOXLAMA
+       ===================================================== */
+
+    async function initializeLocation() {
+
+        loadLocation();
+
+        const permission =
+            await checkLocationPermission();
 
 
         if (
-            locationList.children.length === 0
+            permission === "granted"
         ) {
 
-            const empty =
-                document.createElement("div");
+            window.AUSTA_getCurrentLocation();
 
-            empty.textContent =
-                "Məkan tapılmadı.";
+            return;
 
-            empty.style.color =
-                "#aaa";
+        }
 
-            empty.style.padding =
-                "12px";
 
-            locationList.appendChild(
-                empty
-            );
+        /*
+         * İlk dəfədirsə GPS sorğusu edilir.
+         * Brauzer/telefon özü istifadəçidən
+         * location icazəsi istəyəcək.
+         */
+
+        if (
+            permission === "prompt"
+            ||
+            permission === "unknown"
+        ) {
+
+            window.AUSTA_getCurrentLocation();
 
         }
 
     }
 
 
-    locationSelector.addEventListener(
-        "click",
-        function (event) {
+    /* =====================================================
+       CANLI TRACKING
+       ===================================================== */
 
-            event.stopPropagation();
+    window.AUSTA_startTracking =
+        function (
+            trackingId,
+            trackingType = "provider"
+        ) {
 
             if (
-                locationPicker.classList
-                    .contains("location-open")
+                !navigator.geolocation
             ) {
 
-                closeLocationMenu();
-
-            } else {
-
-                openLocationMenu();
+                return null;
 
             }
 
-        }
-    );
+
+            if (
+                activeTracking[trackingId]
+            ) {
+
+                navigator.geolocation.clearWatch(
+                    activeTracking[trackingId]
+                );
+
+            }
 
 
-    locationMenu.addEventListener(
-        "click",
-        function (event) {
+            const watchId =
+                navigator.geolocation.watchPosition(
 
-            event.stopPropagation();
+                    function (position) {
 
-        }
-    );
-
-
-    document.addEventListener(
-        "click",
-        function () {
-
-            closeLocationMenu();
-
-        }
-    );
+                        const coords =
+                            position.coords;
 
 
-    locationSearch.addEventListener(
-        "input",
-        function () {
+                        const trackingData = {
 
-            searchLocations(
-                locationSearch.value
-            );
+                            trackingId:
+                                trackingId,
 
-        }
-    );
+                            trackingType:
+                                trackingType,
 
+                            latitude:
+                                coords.latitude,
 
-    const savedLocation =
-        localStorage.getItem(
-            "a-usta-selected-location"
-        );
+                            longitude:
+                                coords.longitude,
 
+                            accuracy:
+                                coords.accuracy,
 
-    if (savedLocation) {
+                            timestamp:
+                                Date.now()
 
-        locationSelector.innerHTML =
-            "📍 " +
-            savedLocation +
-            ' <span>⌄</span>';
-
-    }
+                        };
 
 
-    showRegions();
+                        console.log(
+                            "A-USTA LIVE TRACKING:",
+                            trackingData
+                        );
+
+
+                        /*
+                         * Gələcək backend/API
+                         * buraya qoşulacaq.
+                         */
+
+                    },
+
+
+                    function (error) {
+
+                        console.warn(
+                            "A-USTA tracking error:",
+                            error
+                        );
+
+                    },
+
+
+                    {
+
+                        enableHighAccuracy: true,
+
+                        maximumAge: 5000,
+
+                        timeout: 10000
+
+                    }
+
+                );
+
+
+            activeTracking[trackingId] =
+                watchId;
+
+
+            return watchId;
+
+        };
+
+
+    /* =====================================================
+       TRACKING DAYANDIR
+       ===================================================== */
+
+    window.AUSTA_stopTracking =
+        function (trackingId) {
+
+            if (
+                activeTracking[trackingId]
+            ) {
+
+                navigator.geolocation.clearWatch(
+                    activeTracking[trackingId]
+                );
+
+                delete activeTracking[
+                    trackingId
+                ];
+
+            }
+
+        };
+
+
+    /* =====================================================
+       MÜŞTƏRİ + USTA + PICKUP + DESTINATION
+       ===================================================== */
+
+    window.AUSTA_createOrder =
+        function (data = {}) {
+
+            return {
+
+                orderId:
+                    "AUSTA-" +
+                    Date.now(),
+
+                createdAt:
+                    Date.now(),
+
+                status:
+                    "new",
+
+
+                customer: {
+
+                    id: null,
+
+                    latitude: null,
+
+                    longitude: null,
+
+                    accuracy: null,
+
+                    address: "",
+
+                    note: ""
+
+                },
+
+
+                provider: {
+
+                    id: null,
+
+                    type: "",
+
+                    latitude: null,
+
+                    longitude: null,
+
+                    accuracy: null,
+
+                    serviceRadius: null
+
+                },
+
+
+                pickupLocation: {
+
+                    latitude: null,
+
+                    longitude: null,
+
+                    address: "",
+
+                    note: ""
+
+                },
+
+
+                destinationLocation: {
+
+                    latitude: null,
+
+                    longitude: null,
+
+                    address: "",
+
+                    note: ""
+
+                },
+
+
+                tracking: {
+
+                    enabled: false,
+
+                    trackingId: null,
+
+                    trackingType: "",
+
+                    startedAt: null,
+
+                    stoppedAt: null,
+
+                    currentLatitude: null,
+
+                    currentLongitude: null
+
+                },
+
+
+                service: {
+
+                    type: "",
+
+                    vehicleType: "",
+
+                    cargoWeight: null,
+
+                    cargoType: ""
+
+                },
+
+
+                ...data
+
+            };
+
+        };
+
+
+    /* =====================================================
+       DAMAS / DOBLO YÜKDAŞIMA
+       ===================================================== */
+
+    window.AUSTA_createLightCargoOrder =
+        function (data = {}) {
+
+            return window.AUSTA_createOrder({
+
+                service: {
+
+                    type:
+                        "light-cargo",
+
+                    vehicleType:
+                        data.vehicleType || "",
+
+                    cargoWeight:
+                        data.cargoWeight || null,
+
+                    cargoType:
+                        data.cargoType || ""
+
+                },
+
+
+                pickupLocation: {
+
+                    latitude:
+                        data.pickupLatitude || null,
+
+                    longitude:
+                        data.pickupLongitude || null,
+
+                    address:
+                        data.pickupAddress || "",
+
+                    note:
+                        data.pickupNote || ""
+
+                },
+
+
+                destinationLocation: {
+
+                    latitude:
+                        data.destinationLatitude ||
+                        null,
+
+                    longitude:
+                        data.destinationLongitude ||
+                        null,
+
+                    address:
+                        data.destinationAddress ||
+                        "",
+
+                    note:
+                        data.destinationNote ||
+                        ""
+
+                }
+
+            });
+
+        };
+
+
+    /* =====================================================
+       EHTİYAT HİSSƏLƏRİ SHIPMENT
+       ===================================================== */
+
+    window.AUSTA_createPartsShipment =
+        function (data = {}) {
+
+            return {
+
+                shipmentId:
+                    "PARTS-" +
+                    Date.now(),
+
+                createdAt:
+                    Date.now(),
+
+                type:
+                    "spare-parts",
+
+
+                product: {
+
+                    partId:
+                        data.partId || "",
+
+                    name:
+                        data.partName || "",
+
+                    quantity:
+                        data.quantity || 1
+
+                },
+
+
+                origin: {
+
+                    country:
+                        data.originCountry || "",
+
+                    city:
+                        data.originCity || "",
+
+                    latitude:
+                        data.originLatitude ||
+                        null,
+
+                    longitude:
+                        data.originLongitude ||
+                        null
+
+                },
+
+
+                destination: {
+
+                    country:
+                        "Azerbaijan",
+
+                    city:
+                        data.destinationCity ||
+                        "",
+
+                    latitude:
+                        data.destinationLatitude ||
+                        null,
+
+                    longitude:
+                        data.destinationLongitude ||
+                        null
+
+                },
+
+
+                logistics: {
+
+                    carrier:
+                        data.carrier || "",
+
+                    trackingNumber:
+                        data.trackingNumber || "",
+
+                    currentLatitude:
+                        null,
+
+                    currentLongitude:
+                        null
+
+                },
+
+
+                status:
+                    "ordered",
+
+
+                statusHistory: [
+
+                    {
+
+                        status:
+                            "ordered",
+
+                        timestamp:
+                            Date.now()
+
+                    }
+
+                ]
+
+            };
+
+        };
+
+
+    /* =====================================================
+       XARİCDƏN AVTOMOBİL SHIPMENT
+       ===================================================== */
+
+    window.AUSTA_createVehicleShipment =
+        function (data = {}) {
+
+            return {
+
+                shipmentId:
+                    "VEHICLE-" +
+                    Date.now(),
+
+                createdAt:
+                    Date.now(),
+
+                type:
+                    "vehicle-import",
+
+
+                vehicle: {
+
+                    make:
+                        data.make || "",
+
+                    model:
+                        data.model || "",
+
+                    year:
+                        data.year || "",
+
+                    vin:
+                        data.vin || ""
+
+                },
+
+
+                origin: {
+
+                    country:
+                        data.originCountry || "",
+
+                    city:
+                        data.originCity || "",
+
+                    latitude:
+                        data.originLatitude ||
+                        null,
+
+                    longitude:
+                        data.originLongitude ||
+                        null
+
+                },
+
+
+                destination: {
+
+                    country:
+                        "Azerbaijan",
+
+                    city:
+                        data.destinationCity ||
+                        "",
+
+                    latitude:
+                        data.destinationLatitude ||
+                        null,
+
+                    longitude:
+                        data.destinationLongitude ||
+                        null
+
+                },
+
+
+                logistics: {
+
+                    carrier:
+                        data.carrier || "",
+
+                    vessel:
+                        data.vessel || "",
+
+                    trackingNumber:
+                        data.trackingNumber || "",
+
+                    currentLatitude:
+                        null,
+
+                    currentLongitude:
+                        null
+
+                },
+
+
+                status:
+                    "purchased",
+
+
+                statusHistory: [
+
+                    {
+
+                        status:
+                            "purchased",
+
+                        timestamp:
+                            Date.now()
+
+                    }
+
+                ]
+
+            };
+
+        };
+
+
+    /* =====================================================
+       ÜMUMİ STATUSLAR
+       ===================================================== */
+
+    window.AUSTA_ORDER_STATUS = {
+
+        NEW:
+            "new",
+
+        ACCEPTED:
+            "accepted",
+
+        DRIVER_ON_WAY:
+            "driver-on-way",
+
+        ARRIVED_PICKUP:
+            "arrived-pickup",
+
+        CARGO_PICKED_UP:
+            "cargo-picked-up",
+
+        ON_ROUTE:
+            "on-route",
+
+        ARRIVED_DESTINATION:
+            "arrived-destination",
+
+        COMPLETED:
+            "completed",
+
+        CANCELLED:
+            "cancelled"
+
+    };
+
+
+    /* =====================================================
+       SHIPMENT STATUSLARI
+       ===================================================== */
+
+    window.AUSTA_SHIPMENT_STATUS = {
+
+        ORDERED:
+            "ordered",
+
+        PURCHASED:
+            "purchased",
+
+        PREPARING:
+            "preparing",
+
+        PICKED_UP:
+            "picked-up",
+
+        IN_TRANSIT:
+            "in-transit",
+
+        PORT:
+            "port",
+
+        CUSTOMS:
+            "customs",
+
+        AZERBAIJAN:
+            "azerbaijan",
+
+        LOCAL_WAREHOUSE:
+            "local-warehouse",
+
+        OUT_FOR_DELIVERY:
+            "out-for-delivery",
+
+        DELIVERED:
+            "delivered"
+
+    };
+
+
+    /* =====================================================
+       XƏRİTƏ ÜÇÜN VƏHDƏT FORMAT
+       ===================================================== */
+
+    window.AUSTA_createMapLocation =
+        function (data = {}) {
+
+            return {
+
+                id:
+                    data.id ||
+                    null,
+
+                type:
+                    data.type ||
+                    "unknown",
+
+                latitude:
+                    data.latitude ||
+                    null,
+
+                longitude:
+                    data.longitude ||
+                    null,
+
+                accuracy:
+                    data.accuracy ||
+                    null,
+
+                status:
+                    data.status ||
+                    "",
+
+                timestamp:
+                    Date.now()
+
+            };
+
+        };
+
+
+    /* =====================================================
+       GLOBAL ACCESS
+       ===================================================== */
+
+    window.AUSTA_LOCATION = {
+
+        getCurrent:
+            function () {
+
+                return {
+                    ...currentLocation
+                };
+
+            },
+
+        save:
+            saveLocation,
+
+        load:
+            loadLocation,
+
+        checkPermission:
+            checkLocationPermission
+
+    };
+
+
+    /* =====================================================
+       SİSTEMİ BAŞLAT
+       ===================================================== */
+
+    initializeLocation();
+
 
 })();
+</script>
 </script>               
 </body>
 </html>
