@@ -3897,5 +3897,1155 @@ document.addEventListener("DOMContentLoaded", function () {
 
 })();
 </script>
+   <!-- =========================================================
+     A-USTA ORDER CORE 1.0
+     Vahid Sifariş və Xidmət İdarəetmə Sistemi
+     ========================================================= -->
+
+<script>
+(function () {
+
+    "use strict";
+
+    const AUSTA_ORDER_CORE_VERSION = "1.0.0";
+    const STORAGE_KEY = "a-usta-order-core";
+
+    let orders = [];
+
+    /* =====================================================
+       ORDER ID
+       ===================================================== */
+
+    function generateOrderId() {
+        return "AUS-" + Date.now() + "-" +
+            Math.random().toString(36).substring(2, 7).toUpperCase();
+    }
+
+
+    /* =====================================================
+       TARİX
+       ===================================================== */
+
+    function now() {
+        return new Date().toISOString();
+    }
+
+
+    /* =====================================================
+       CLONE
+       ===================================================== */
+
+    function clone(data) {
+        return JSON.parse(JSON.stringify(data));
+    }
+
+
+    /* =====================================================
+       EVENT
+       ===================================================== */
+
+    function emitEvent(name, detail) {
+
+        try {
+
+            window.dispatchEvent(
+                new CustomEvent(name, {
+                    detail: clone(detail)
+                })
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "A-USTA Order event error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       SAVE
+       ===================================================== */
+
+    function saveOrders() {
+
+        try {
+
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify({
+                    version: AUSTA_ORDER_CORE_VERSION,
+                    orders: orders
+                })
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "A-USTA Order save error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       LOAD
+       ===================================================== */
+
+    function loadOrders() {
+
+        try {
+
+            const saved =
+                localStorage.getItem(STORAGE_KEY);
+
+            if (!saved) return;
+
+            const data =
+                JSON.parse(saved);
+
+            if (
+                data &&
+                Array.isArray(data.orders)
+            ) {
+
+                orders = data.orders;
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "A-USTA Order load error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       YENİ SİFARİŞ YARAT
+       ===================================================== */
+
+    function createOrder(data) {
+
+        data = data || {};
+
+        const order = {
+
+            orderId:
+                data.orderId ||
+                generateOrderId(),
+
+            customer: {
+
+                customerId:
+                    data.customerId ||
+                    null,
+
+                name:
+                    data.customerName ||
+                    null,
+
+                phone:
+                    data.customerPhone ||
+                    null
+
+            },
+
+            service: {
+
+                category:
+                    data.serviceCategory ||
+                    null,
+
+                serviceId:
+                    data.serviceId ||
+                    null,
+
+                title:
+                    data.serviceTitle ||
+                    null,
+
+                description:
+                    data.description ||
+                    null
+
+            },
+
+            vehicle: {
+
+                vehicleId:
+                    data.vehicleId ||
+                    null,
+
+                brand:
+                    data.vehicleBrand ||
+                    null,
+
+                model:
+                    data.vehicleModel ||
+                    null,
+
+                year:
+                    data.vehicleYear ||
+                    null,
+
+                plate:
+                    data.vehiclePlate ||
+                    null,
+
+                problem:
+                    data.vehicleProblem ||
+                    null
+
+            },
+
+            location: {
+
+                latitude:
+                    data.latitude ??
+                    null,
+
+                longitude:
+                    data.longitude ??
+                    null,
+
+                accuracy:
+                    data.accuracy ??
+                    null,
+
+                address:
+                    data.address ||
+                    null
+
+            },
+
+            provider: {
+
+                providerId:
+                    null,
+
+                type:
+                    null,
+
+                name:
+                    null,
+
+                phone:
+                    null,
+
+                status:
+                    "searching"
+
+            },
+
+            price: {
+
+                amount:
+                    Number(data.price) || 0,
+
+                currency:
+                    data.currency ||
+                    "AZN",
+
+                estimated:
+                    data.estimatedPrice !== undefined
+                        ? Boolean(data.estimatedPrice)
+                        : true
+
+            },
+
+            payment: {
+
+                method:
+                    data.paymentMethod ||
+                    null,
+
+                status:
+                    "pending",
+
+                transactionId:
+                    null
+
+            },
+
+            tracking: {
+
+                enabled:
+                    false,
+
+                trackingId:
+                    null,
+
+                distanceMeters:
+                    null,
+
+                status:
+                    "idle"
+
+            },
+
+            status:
+                "created",
+
+            history: [],
+
+            metadata: {
+
+                source:
+                    data.source ||
+                    "a-usta",
+
+                platform:
+                    data.platform ||
+                    "web",
+
+                notes:
+                    data.notes ||
+                    null
+
+            },
+
+            createdAt:
+                now(),
+
+            updatedAt:
+                now()
+
+        };
+
+
+        /* İlk tarixçə */
+
+        order.history.push({
+
+            status:
+                "created",
+
+            note:
+                "Sifariş yaradıldı",
+
+            timestamp:
+                order.createdAt
+
+        });
+
+
+        orders.push(order);
+
+        saveOrders();
+
+
+        emitEvent(
+            "austa:ordercreated",
+            order
+        );
+
+
+        return clone(order);
+
+    }
+
+
+    /* =====================================================
+       SİFARİŞ TAP
+       ===================================================== */
+
+    function getOrder(orderId) {
+
+        const order =
+            orders.find(function (item) {
+
+                return item.orderId === orderId;
+
+            });
+
+
+        return order
+            ? clone(order)
+            : null;
+
+    }
+
+
+    /* =====================================================
+       BÜTÜN SİFARİŞLƏR
+       ===================================================== */
+
+    function getOrders() {
+
+        return clone(orders);
+
+    }
+
+
+    /* =====================================================
+       STATUS DƏYİŞ
+       ===================================================== */
+
+    function updateOrderStatus(
+        orderId,
+        status,
+        note
+    ) {
+
+        const order =
+            orders.find(function (item) {
+
+                return item.orderId === orderId;
+
+            });
+
+
+        if (!order) {
+
+            console.warn(
+                "A-USTA Order tapılmadı:",
+                orderId
+            );
+
+            return null;
+
+        }
+
+
+        const timestamp = now();
+
+
+        order.status =
+            status;
+
+        order.updatedAt =
+            timestamp;
+
+
+        order.history.push({
+
+            status:
+                status,
+
+            note:
+                note ||
+                null,
+
+            timestamp:
+                timestamp
+
+        });
+
+
+        saveOrders();
+
+
+        emitEvent(
+            "austa:orderstatuschange",
+            order
+        );
+
+
+        return clone(order);
+
+    }
+
+
+    /* =====================================================
+       USTA / PROVIDER TƏYİN ET
+       ===================================================== */
+
+    function assignProvider(
+        orderId,
+        data
+    ) {
+
+        data = data || {};
+
+
+        const order =
+            orders.find(function (item) {
+
+                return item.orderId === orderId;
+
+            });
+
+
+        if (!order) return null;
+
+
+        order.provider = {
+
+            providerId:
+                data.providerId ||
+                null,
+
+            type:
+                data.type ||
+                "usta",
+
+            name:
+                data.name ||
+                null,
+
+            phone:
+                data.phone ||
+                null,
+
+            status:
+                "assigned"
+
+        };
+
+
+        order.updatedAt =
+            now();
+
+
+        order.history.push({
+
+            status:
+                "provider-assigned",
+
+            note:
+                data.name
+                    ? data.name +
+                      " sifarişə təyin edildi"
+                    : "Xidmətçi təyin edildi",
+
+            timestamp:
+                order.updatedAt
+
+        });
+
+
+        saveOrders();
+
+
+        emitEvent(
+            "austa:providerassigned",
+            order
+        );
+
+
+        emitEvent(
+            "austa:orderstatuschange",
+            order
+        );
+
+
+        return clone(order);
+
+    }
+
+
+    /* =====================================================
+       QİYMƏT YENİLƏ
+       ===================================================== */
+
+    function updateOrderPrice(
+        orderId,
+        amount,
+        estimated
+    ) {
+
+        const order =
+            orders.find(function (item) {
+
+                return item.orderId === orderId;
+
+            });
+
+
+        if (!order) return null;
+
+
+        order.price.amount =
+            Number(amount) || 0;
+
+
+        if (
+            estimated !== undefined
+        ) {
+
+            order.price.estimated =
+                Boolean(estimated);
+
+        }
+
+
+        order.updatedAt =
+            now();
+
+
+        order.history.push({
+
+            status:
+                "price-updated",
+
+            note:
+                "Sifariş qiyməti yeniləndi",
+
+            timestamp:
+                order.updatedAt
+
+        });
+
+
+        saveOrders();
+
+
+        emitEvent(
+            "austa:orderpricechange",
+            order
+        );
+
+
+        return clone(order);
+
+    }
+
+
+    /* =====================================================
+       ÖDƏNİŞ STATUSU
+       ===================================================== */
+
+    function updatePayment(
+        orderId,
+        data
+    ) {
+
+        data = data || {};
+
+
+        const order =
+            orders.find(function (item) {
+
+                return item.orderId === orderId;
+
+            });
+
+
+        if (!order) return null;
+
+
+        if (
+            data.method !== undefined
+        ) {
+
+            order.payment.method =
+                data.method;
+
+        }
+
+
+        if (
+            data.status !== undefined
+        ) {
+
+            order.payment.status =
+                data.status;
+
+        }
+
+
+        if (
+            data.transactionId !== undefined
+        ) {
+
+            order.payment.transactionId =
+                data.transactionId;
+
+        }
+
+
+        order.updatedAt =
+            now();
+
+
+        saveOrders();
+
+
+        emitEvent(
+            "austa:paymentchange",
+            order
+        );
+
+
+        return clone(order);
+
+    }
+
+
+    /* =====================================================
+       TRACKING BAĞLANTISI
+       ===================================================== */
+
+    function enableTracking(
+        orderId,
+        trackingId
+    ) {
+
+        const order =
+            orders.find(function (item) {
+
+                return item.orderId === orderId;
+
+            });
+
+
+        if (!order) return null;
+
+
+        order.tracking.enabled =
+            true;
+
+
+        order.tracking.trackingId =
+            trackingId ||
+            "TRK-" + Date.now();
+
+
+        order.tracking.status =
+            "active";
+
+
+        order.updatedAt =
+            now();
+
+
+        order.history.push({
+
+            status:
+                "tracking-started",
+
+            note:
+                "Canlı izləmə aktiv edildi",
+
+            timestamp:
+                order.updatedAt
+
+        });
+
+
+        saveOrders();
+
+
+        emitEvent(
+            "austa:ordertrackingstart",
+            order
+        );
+
+
+        return clone(order);
+
+    }
+
+
+    /* =====================================================
+       TRACKING YENİLƏ
+       ===================================================== */
+
+    function updateTracking(
+        orderId,
+        data
+    ) {
+
+        data = data || {};
+
+
+        const order =
+            orders.find(function (item) {
+
+                return item.orderId === orderId;
+
+            });
+
+
+        if (!order) return null;
+
+
+        if (
+            data.trackingId !== undefined
+        ) {
+
+            order.tracking.trackingId =
+                data.trackingId;
+
+        }
+
+
+        if (
+            data.distanceMeters !== undefined
+        ) {
+
+            order.tracking.distanceMeters =
+                data.distanceMeters;
+
+        }
+
+
+        if (
+            data.status !== undefined
+        ) {
+
+            order.tracking.status =
+                data.status;
+
+        }
+
+
+        order.updatedAt =
+            now();
+
+
+        saveOrders();
+
+
+        emitEvent(
+            "austa:ordertrackingchange",
+            order
+        );
+
+
+        return clone(order);
+
+    }
+
+
+    /* =====================================================
+       LOCATION CORE İLƏ BAĞLANTI
+       ===================================================== */
+
+    function syncLocation(orderId) {
+
+        const order =
+            orders.find(function (item) {
+
+                return item.orderId === orderId;
+
+            });
+
+
+        if (!order) return null;
+
+
+        const locationCore =
+            window.AUSTA_LOCATION_CORE;
+
+
+        if (
+            !locationCore ||
+            typeof locationCore.getLocation !==
+            "function"
+        ) {
+
+            console.warn(
+                "A-USTA Location Core tapılmadı."
+            );
+
+            return clone(order);
+
+        }
+
+
+        const location =
+            locationCore.getLocation();
+
+
+        if (
+            location &&
+            location.coordinates
+        ) {
+
+            order.location.latitude =
+                location.coordinates.latitude;
+
+            order.location.longitude =
+                location.coordinates.longitude;
+
+            order.location.accuracy =
+                location.coordinates.accuracy;
+
+        }
+
+
+        if (
+            location &&
+            location.address
+        ) {
+
+            order.location.address =
+                location.address.formatted ||
+                null;
+
+        }
+
+
+        order.updatedAt =
+            now();
+
+
+        saveOrders();
+
+
+        emitEvent(
+            "austa:ordersyncedwithlocation",
+            order
+        );
+
+
+        return clone(order);
+
+    }
+
+
+    /* =====================================================
+       LOCATION DƏYİŞƏNDƏ SİFARİŞİ YENİLƏ
+       ===================================================== */
+
+    window.addEventListener(
+        "austa:locationchange",
+        function () {
+
+            orders.forEach(function (order) {
+
+                if (
+                    order.status !==
+                    "service-completed" &&
+                    order.status !==
+                    "cancelled"
+                ) {
+
+                    syncLocation(
+                        order.orderId
+                    );
+
+                }
+
+            });
+
+        }
+    );
+
+
+    /* =====================================================
+       SİFARİŞİ LƏĞV ET
+       ===================================================== */
+
+    function cancelOrder(
+        orderId,
+        reason
+    ) {
+
+        return updateOrderStatus(
+            orderId,
+            "cancelled",
+            reason ||
+            "Sifariş ləğv edildi"
+        );
+
+    }
+
+
+    /* =====================================================
+       SİFARİŞİ TAMAMLA
+       ===================================================== */
+
+    function completeOrder(
+        orderId
+    ) {
+
+        const order =
+            updateOrderStatus(
+                orderId,
+                "service-completed",
+                "Xidmət tamamlandı"
+            );
+
+
+        if (!order) return null;
+
+
+        updateTracking(
+            orderId,
+            {
+                status:
+                    "completed"
+            }
+        );
+
+
+        return getOrder(
+            orderId
+        );
+
+    }
+
+
+    /* =====================================================
+       SİFARİŞİ SİL
+       ===================================================== */
+
+    function deleteOrder(
+        orderId
+    ) {
+
+        const index =
+            orders.findIndex(
+                function (item) {
+
+                    return item.orderId ===
+                        orderId;
+
+                }
+            );
+
+
+        if (index === -1) {
+
+            return false;
+
+        }
+
+
+        const deleted =
+            orders[index];
+
+
+        orders.splice(
+            index,
+            1
+        );
+
+
+        saveOrders();
+
+
+        emitEvent(
+            "austa:orderdeleted",
+            deleted
+        );
+
+
+        return true;
+
+    }
+
+
+    /* =====================================================
+       STATUSLAR
+       ===================================================== */
+
+    const statuses = {
+
+        CREATED:
+            "created",
+
+        SEARCHING_PROVIDER:
+            "searching-provider",
+
+        PROVIDER_ASSIGNED:
+            "provider-assigned",
+
+        PROVIDER_ACCEPTED:
+            "provider-accepted",
+
+        PROVIDER_EN_ROUTE:
+            "provider-en-route",
+
+        ARRIVED:
+            "arrived",
+
+        SERVICE_STARTED:
+            "service-started",
+
+        SERVICE_COMPLETED:
+            "service-completed",
+
+        CANCELLED:
+            "cancelled"
+
+    };
+
+
+    /* =====================================================
+       PUBLIC API
+       ===================================================== */
+
+    window.AUSTA_ORDER_CORE = {
+
+        version:
+            AUSTA_ORDER_CORE_VERSION,
+
+        statuses:
+            statuses,
+
+        createOrder:
+            createOrder,
+
+        getOrder:
+            getOrder,
+
+        getOrders:
+            getOrders,
+
+        updateOrderStatus:
+            updateOrderStatus,
+
+        assignProvider:
+            assignProvider,
+
+        updateOrderPrice:
+            updateOrderPrice,
+
+        updatePayment:
+            updatePayment,
+
+        enableTracking:
+            enableTracking,
+
+        updateTracking:
+            updateTracking,
+
+        syncLocation:
+            syncLocation,
+
+        cancelOrder:
+            cancelOrder,
+
+        completeOrder:
+            completeOrder,
+
+        deleteOrder:
+            deleteOrder,
+
+        save:
+            saveOrders
+
+    };
+
+
+    /* =====================================================
+       BAŞLAT
+       ===================================================== */
+
+    loadOrders();
+
+
+    console.log(
+        "A-USTA Order Core hazırdır.",
+        AUSTA_ORDER_CORE_VERSION
+    );
+
+
+})();
+</script> 
 </body>
 </html>
