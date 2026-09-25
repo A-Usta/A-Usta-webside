@@ -5046,6 +5046,2218 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 })();
+</script>
+   <script>
+(function () {
+    "use strict";
+
+    /* =========================================================
+       A-USTA PRICE / FLEET / PAYMENT / RISK CORE
+       Version: 1.0.0
+       ========================================================= */
+
+    const CORE_VERSION = "1.0.0";
+
+    const STORAGE_KEY = "a-usta-price-fleet-risk-core";
+
+    /* =========================================================
+       CONFIG
+       Bütün biznes qaydaları burada saxlanılır.
+       Sonradan bütün sistemi dəyişmədən yenilənə bilər.
+       ========================================================= */
+
+    const CONFIG = {
+
+        currency: "AZN",
+
+        /* -----------------------------------------------------
+           PLATFORM COMMISSION
+           FINAL faizlər hələ biznes qərarı deyil.
+           Dəyişdirilə bilən config kimi saxlanılır.
+           ----------------------------------------------------- */
+
+        commission: {
+
+            defaultProviderRate: 0.82,
+            defaultPlatformRate: 0.18,
+
+            categories: {
+
+                automotive_service: {
+                    providerRate: 0.82,
+                    platformRate: 0.18
+                },
+
+                roadside: {
+                    providerRate: 0.82,
+                    platformRate: 0.18
+                },
+
+                towing: {
+                    providerRate: 0.82,
+                    platformRate: 0.18
+                },
+
+                cargo_transport: {
+                    providerRate: 0.82,
+                    platformRate: 0.18
+                },
+
+                vehicle_transport: {
+                    providerRate: 0.82,
+                    platformRate: 0.18
+                },
+
+                parts: {
+                    providerRate: 0.82,
+                    platformRate: 0.18
+                }
+
+            }
+        },
+
+        /* -----------------------------------------------------
+           SERVICE LEVELS
+           ----------------------------------------------------- */
+
+        serviceLevels: {
+
+            standard: {
+                key: "standard",
+                title: "Standart",
+                multiplier: 1.00
+            },
+
+            priority: {
+                key: "priority",
+                title: "Prioritet",
+                multiplier: 1.15
+            },
+
+            premium: {
+                key: "premium",
+                title: "Premium",
+                multiplier: 1.35
+            }
+
+        },
+
+        /* -----------------------------------------------------
+           DISTANCE
+           ----------------------------------------------------- */
+
+        distance: {
+
+            includedKm: 3,
+
+            extraKmPrice: 1.00,
+
+            maximumTravelCharge: 50
+
+        },
+
+        /* -----------------------------------------------------
+           RISK
+           ----------------------------------------------------- */
+
+        risk: {
+
+            warningScore: 30,
+
+            restrictedScore: 60,
+
+            reviewScore: 75,
+
+            temporaryBlockScore: 90,
+
+            cancellationWeights: {
+
+                normal: 5,
+
+                late: 10,
+
+                veryLate: 15,
+
+                noShow: 25
+
+            },
+
+            completionReward: -1,
+
+            confirmedArrivalReward: -1,
+
+            suspiciousPatternWeight: 15
+
+        },
+
+        /* -----------------------------------------------------
+           CANCELLATION
+           ----------------------------------------------------- */
+
+        cancellation: {
+
+            warningAfter: 3,
+
+            reviewAfter: 5,
+
+            temporaryRestrictionAfter: 7
+
+        },
+
+        /* -----------------------------------------------------
+           LOAD
+           ----------------------------------------------------- */
+
+        load: {
+
+            maximumCalculatedWeight: 50000,
+
+            approximationWarning: true,
+
+            volumeTolerance: 0.90,
+
+            weightTolerance: 0.90
+
+        },
+
+        /* -----------------------------------------------------
+           PRICE LIMITS
+           ----------------------------------------------------- */
+
+        pricing: {
+
+            minimumPrice: 1,
+
+            maximumPrice: 10000,
+
+            maximumExtraWorkMultiplier: 2.5
+
+        }
+
+    };
+
+
+    /* =========================================================
+       STORAGE
+       ========================================================= */
+
+    let state = {
+
+        version: CORE_VERSION,
+
+        vehicles: [],
+
+        customerVehicles: [],
+
+        providers: {},
+
+        riskProfiles: {},
+
+        priceSnapshots: [],
+
+        calculations: [],
+
+        payments: {},
+
+        cancellations: [],
+
+        audit: [],
+
+        settings: CONFIG,
+
+        updatedAt: new Date().toISOString()
+
+    };
+
+
+    /* =========================================================
+       HELPERS
+       ========================================================= */
+
+    function now() {
+        return new Date().toISOString();
+    }
+
+
+    function generateId(prefix) {
+
+        return (
+            prefix +
+            "_" +
+            Date.now().toString(36) +
+            "_" +
+            Math.random().toString(36).slice(2, 8)
+        );
+
+    }
+
+
+    function round(value, decimals = 2) {
+
+        const factor = Math.pow(10, decimals);
+
+        return Math.round((Number(value) || 0) * factor) / factor;
+
+    }
+
+
+    function clamp(value, min, max) {
+
+        return Math.min(
+            Math.max(Number(value) || 0, min),
+            max
+        );
+
+    }
+
+
+    function saveState() {
+
+        state.updatedAt = now();
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(state)
+        );
+
+    }
+
+
+    function loadState() {
+
+        try {
+
+            const saved = localStorage.getItem(STORAGE_KEY);
+
+            if (!saved) return;
+
+            const parsed = JSON.parse(saved);
+
+            if (parsed && typeof parsed === "object") {
+
+                state = {
+                    ...state,
+                    ...parsed,
+                    settings: {
+                        ...CONFIG,
+                        ...(parsed.settings || {})
+                    }
+                };
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "A-USTA Price/Fleet/Risk Core: yaddaş məlumatı oxunmadı.",
+                error
+            );
+
+        }
+
+    }
+
+
+    function emit(eventName, detail = {}) {
+
+        document.dispatchEvent(
+            new CustomEvent(eventName, {
+                detail: {
+                    ...detail,
+                    coreVersion: CORE_VERSION,
+                    timestamp: now()
+                }
+            })
+        );
+
+    }
+
+
+    /* =========================================================
+       DISTANCE ENGINE
+       ========================================================= */
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+
+        const toRad = value =>
+            Number(value) * Math.PI / 180;
+
+        const R = 6371;
+
+        const dLat = toRad(lat2 - lat1);
+
+        const dLon = toRad(lon2 - lon1);
+
+        const a =
+            Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) *
+            Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) ** 2;
+
+        const c =
+            2 *
+            Math.atan2(
+                Math.sqrt(a),
+                Math.sqrt(1 - a)
+            );
+
+        return round(R * c, 2);
+
+    }
+
+
+    function calculateTravelCharge(distanceKm) {
+
+        const distance =
+            Math.max(0, Number(distanceKm) || 0);
+
+        const included =
+            CONFIG.distance.includedKm;
+
+        if (distance <= included) {
+
+            return 0;
+
+        }
+
+        const extraKm =
+            distance - included;
+
+        const charge =
+            extraKm *
+            CONFIG.distance.extraKmPrice;
+
+        return round(
+            Math.min(
+                charge,
+                CONFIG.distance.maximumTravelCharge
+            )
+        );
+
+    }
+
+
+    /* =========================================================
+       VEHICLE ENGINE
+       ========================================================= */
+
+    function registerVehicle(vehicleData = {}) {
+
+        const vehicle = {
+
+            vehicleId:
+                vehicleData.vehicleId ||
+                generateId("vehicle"),
+
+            ownerId:
+                vehicleData.ownerId || null,
+
+            ownerType:
+                vehicleData.ownerType ||
+                "provider",
+
+            category:
+                vehicleData.category ||
+                "cargo",
+
+            brand:
+                vehicleData.brand || "",
+
+            model:
+                vehicleData.model || "",
+
+            year:
+                vehicleData.year ||
+                null,
+
+            bodyType:
+                vehicleData.bodyType || "",
+
+            lengthMeters:
+                Number(vehicleData.lengthMeters) || 0,
+
+            widthMeters:
+                Number(vehicleData.widthMeters) || 0,
+
+            heightMeters:
+                Number(vehicleData.heightMeters) || 0,
+
+            ownWeightKg:
+                Number(vehicleData.ownWeightKg) || 0,
+
+            maxGrossWeightKg:
+                Number(vehicleData.maxGrossWeightKg) || 0,
+
+            payloadKg:
+                Number(vehicleData.payloadKg) || 0,
+
+            cargoLengthMeters:
+                Number(vehicleData.cargoLengthMeters) || 0,
+
+            cargoWidthMeters:
+                Number(vehicleData.cargoWidthMeters) || 0,
+
+            cargoHeightMeters:
+                Number(vehicleData.cargoHeightMeters) || 0,
+
+            cargoVolumeM3:
+                Number(vehicleData.cargoVolumeM3) || 0,
+
+            equipment:
+                Array.isArray(vehicleData.equipment)
+                    ? vehicleData.equipment
+                    : [],
+
+            services:
+                Array.isArray(vehicleData.services)
+                    ? vehicleData.services
+                    : [],
+
+            photos:
+                Array.isArray(vehicleData.photos)
+                    ? vehicleData.photos
+                    : [],
+
+            documents:
+                Array.isArray(vehicleData.documents)
+                    ? vehicleData.documents
+                    : [],
+
+            active:
+                vehicleData.active !== false,
+
+            verified:
+                vehicleData.verified === true,
+
+            createdAt:
+                vehicleData.createdAt ||
+                now(),
+
+            updatedAt:
+                now()
+
+        };
+
+
+        if (vehicle.cargoLengthMeters &&
+            vehicle.cargoWidthMeters &&
+            vehicle.cargoHeightMeters) {
+
+            vehicle.cargoVolumeM3 =
+                round(
+                    vehicle.cargoLengthMeters *
+                    vehicle.cargoWidthMeters *
+                    vehicle.cargoHeightMeters,
+                    3
+                );
+
+        }
+
+
+        state.vehicles.push(vehicle);
+
+        saveState();
+
+        emit(
+            "austa:vehiclecreated",
+            { vehicle }
+        );
+
+        return vehicle;
+
+    }
+
+
+    function getVehicle(vehicleId) {
+
+        return state.vehicles.find(
+            vehicle =>
+                vehicle.vehicleId === vehicleId
+        ) || null;
+
+    }
+
+
+    function getVehicles(filters = {}) {
+
+        return state.vehicles.filter(vehicle => {
+
+            if (
+                filters.ownerId &&
+                vehicle.ownerId !== filters.ownerId
+            ) {
+                return false;
+            }
+
+            if (
+                filters.category &&
+                vehicle.category !== filters.category
+            ) {
+                return false;
+            }
+
+            if (
+                filters.active !== undefined &&
+                vehicle.active !== filters.active
+            ) {
+                return false;
+            }
+
+            return true;
+
+        });
+
+    }
+
+
+    /* =========================================================
+       CUSTOMER VEHICLE
+       ========================================================= */
+
+    function registerCustomerVehicle(vehicleData = {}) {
+
+        const vehicle = {
+
+            vehicleId:
+                vehicleData.vehicleId ||
+                generateId("customerVehicle"),
+
+            customerId:
+                vehicleData.customerId ||
+                null,
+
+            brand:
+                vehicleData.brand || "",
+
+            model:
+                vehicleData.model || "",
+
+            year:
+                vehicleData.year || null,
+
+            bodyType:
+                vehicleData.bodyType || "",
+
+            estimatedWeightKg:
+                Number(vehicleData.estimatedWeightKg) || 0,
+
+            heightMeters:
+                Number(vehicleData.heightMeters) || 0,
+
+            plateNumber:
+                vehicleData.plateNumber || "",
+
+            createdAt:
+                now(),
+
+            updatedAt:
+                now()
+
+        };
+
+        state.customerVehicles.push(vehicle);
+
+        saveState();
+
+        emit(
+            "austa:customervehiclecreated",
+            { vehicle }
+        );
+
+        return vehicle;
+
+    }
+
+
+    function getCustomerVehicles(customerId) {
+
+        return state.customerVehicles.filter(
+            vehicle =>
+                vehicle.customerId === customerId
+        );
+
+    }
+
+
+    /* =========================================================
+       LOAD ENGINE
+       ========================================================= */
+
+    function calculateLoad(input = {}) {
+
+        const result = {
+
+            loadId:
+                generateId("load"),
+
+            weightKg: 0,
+
+            volumeM3: 0,
+
+            source: "unknown",
+
+            estimated: false,
+
+            warning: null,
+
+            items: [],
+
+            dimensions: {
+
+                lengthMeters:
+                    Number(input.lengthMeters) || 0,
+
+                widthMeters:
+                    Number(input.widthMeters) || 0,
+
+                heightMeters:
+                    Number(input.heightMeters) || 0
+
+            },
+
+            calculatedAt:
+                now()
+
+        };
+
+
+        /* -----------------------------------------------------
+           1. DIRECT WEIGHT
+           ----------------------------------------------------- */
+
+        if (
+            Number(input.weightKg) > 0
+        ) {
+
+            result.weightKg =
+                Number(input.weightKg);
+
+            result.source =
+                "customer_declared";
+
+        }
+
+
+        /* -----------------------------------------------------
+           2. ITEMS
+           ----------------------------------------------------- */
+
+        if (
+            Array.isArray(input.items) &&
+            input.items.length
+        ) {
+
+            let totalWeight = 0;
+
+            input.items.forEach(item => {
+
+                const quantity =
+                    Number(item.quantity) || 0;
+
+                const unitWeightKg =
+                    Number(item.unitWeightKg) || 0;
+
+                const itemWeight =
+                    quantity *
+                    unitWeightKg;
+
+                totalWeight += itemWeight;
+
+                result.items.push({
+
+                    name:
+                        item.name || "",
+
+                    quantity,
+
+                    unitWeightKg,
+
+                    totalWeightKg:
+                        round(itemWeight)
+
+                });
+
+            });
+
+
+            if (totalWeight > 0) {
+
+                result.weightKg =
+                    round(totalWeight);
+
+                result.source =
+                    "calculated_from_items";
+
+                result.estimated = true;
+
+            }
+
+        }
+
+
+        /* -----------------------------------------------------
+           3. VOLUME
+           ----------------------------------------------------- */
+
+        const {
+            lengthMeters,
+            widthMeters,
+            heightMeters
+        } = result.dimensions;
+
+
+        if (
+            lengthMeters > 0 &&
+            widthMeters > 0 &&
+            heightMeters > 0
+        ) {
+
+            result.volumeM3 =
+                round(
+                    lengthMeters *
+                    widthMeters *
+                    heightMeters,
+                    3
+                );
+
+        }
+
+
+        /* -----------------------------------------------------
+           4. DENSITY
+           ----------------------------------------------------- */
+
+        if (
+            result.weightKg <= 0 &&
+            result.volumeM3 > 0 &&
+            Number(input.densityKgM3) > 0
+        ) {
+
+            result.weightKg =
+                round(
+                    result.volumeM3 *
+                    Number(input.densityKgM3)
+                );
+
+            result.source =
+                "estimated_from_density";
+
+            result.estimated = true;
+
+        }
+
+
+        if (
+            result.estimated &&
+            CONFIG.load.approximationWarning
+        ) {
+
+            result.warning =
+                "Çəki təxmini hesablanıb. Son uyğunluq yükün real vəziyyətinə əsasən təsdiqlənməlidir.";
+
+        }
+
+
+        result.weightKg =
+            clamp(
+                result.weightKg,
+                0,
+                CONFIG.load.maximumCalculatedWeight
+            );
+
+
+        return result;
+
+    }
+
+
+    /* =========================================================
+       VEHICLE MATCHING
+       ========================================================= */
+
+    function matchVehicles(load = {}, options = {}) {
+
+        const weight =
+            Number(load.weightKg) || 0;
+
+        const volume =
+            Number(load.volumeM3) || 0;
+
+        const serviceType =
+            options.serviceType ||
+            "cargo";
+
+        const candidates =
+            state.vehicles.filter(vehicle => {
+
+                if (!vehicle.active) {
+                    return false;
+                }
+
+                if (
+                    vehicle.category !== serviceType &&
+                    serviceType !== "cargo"
+                ) {
+                    return false;
+                }
+
+                if (
+                    weight > 0 &&
+                    vehicle.payloadKg > 0 &&
+                    weight >
+                    vehicle.payloadKg *
+                    CONFIG.load.weightTolerance
+                ) {
+                    return false;
+                }
+
+                if (
+                    volume > 0 &&
+                    vehicle.cargoVolumeM3 > 0 &&
+                    volume >
+                    vehicle.cargoVolumeM3 *
+                    CONFIG.load.volumeTolerance
+                ) {
+                    return false;
+                }
+
+                return true;
+
+            });
+
+
+        return candidates.sort(
+            (a, b) => {
+
+                const aPayload =
+                    Number(a.payloadKg) || 0;
+
+                const bPayload =
+                    Number(b.payloadKg) || 0;
+
+                return aPayload - bPayload;
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       PRICE CATEGORY
+       ========================================================= */
+
+    const SERVICE_CATEGORIES = {
+
+        automotive_service: {
+            title: "Avtomobil xidməti",
+            basePrice: 20
+        },
+
+        roadside: {
+            title: "Yol yardımı",
+            basePrice: 15
+        },
+
+        diagnostics: {
+            title: "Diaqnostika",
+            basePrice: 20
+        },
+
+        towing: {
+            title: "Evakuator",
+            basePrice: 30
+        },
+
+        cargo_transport: {
+            title: "Yük daşıma",
+            basePrice: 30
+        },
+
+        vehicle_transport: {
+            title: "Avtomobil daşınması",
+            basePrice: 40
+        }
+
+    };
+
+
+    /* =========================================================
+       PRICE ENGINE
+       ========================================================= */
+
+    function calculatePrice(input = {}) {
+
+        const category =
+            input.category ||
+            "automotive_service";
+
+        const service =
+            SERVICE_CATEGORIES[category] ||
+            SERVICE_CATEGORIES.automotive_service;
+
+        const level =
+            input.level ||
+            "standard";
+
+        const levelConfig =
+            CONFIG.serviceLevels[level] ||
+            CONFIG.serviceLevels.standard;
+
+        const distanceKm =
+            Number(input.distanceKm) || 0;
+
+        const travelCharge =
+            calculateTravelCharge(distanceKm);
+
+        const diagnosticPrice =
+            Number(input.diagnosticPrice) || 0;
+
+        const repairPrice =
+            Number(input.repairPrice) || 0;
+
+        const partsPrice =
+            Number(input.partsPrice) || 0;
+
+        const extraWorkPrice =
+            Number(input.extraWorkPrice) || 0;
+
+        const basePrice =
+            Number(input.basePrice) ||
+            Number(service.basePrice) ||
+            0;
+
+
+        let calculatedBase =
+            basePrice *
+            levelConfig.multiplier;
+
+
+        /* -----------------------------------------------------
+           SPECIAL VEHICLE / SERVICE COMPLEXITY
+           ----------------------------------------------------- */
+
+        const complexityMultiplier =
+            Number(input.complexityMultiplier) > 0
+                ? Number(input.complexityMultiplier)
+                : 1;
+
+        calculatedBase *=
+            complexityMultiplier;
+
+
+        /* -----------------------------------------------------
+           CATEGORY SPECIFIC ADDITIONS
+           ----------------------------------------------------- */
+
+        let vehicleAdjustment =
+            Number(input.vehicleAdjustment) || 0;
+
+        let loadAdjustment =
+            Number(input.loadAdjustment) || 0;
+
+
+        const subtotal =
+            calculatedBase +
+            diagnosticPrice +
+            repairPrice +
+            partsPrice +
+            extraWorkPrice +
+            vehicleAdjustment +
+            loadAdjustment +
+            travelCharge;
+
+
+        let total =
+            round(subtotal);
+
+
+        total =
+            clamp(
+                total,
+                CONFIG.pricing.minimumPrice,
+                CONFIG.pricing.maximumPrice
+            );
+
+
+        const commissionRule =
+            CONFIG.commission.categories[category] ||
+            {
+                providerRate:
+                    CONFIG.commission.defaultProviderRate,
+
+                platformRate:
+                    CONFIG.commission.defaultPlatformRate
+            };
+
+
+        const providerAmount =
+            round(
+                total *
+                commissionRule.providerRate
+            );
+
+
+        const platformAmount =
+            round(
+                total *
+                commissionRule.platformRate
+            );
+
+
+        const result = {
+
+            calculationId:
+                generateId("price"),
+
+            category,
+
+            categoryTitle:
+                service.title,
+
+            service:
+                input.service || null,
+
+            level,
+
+            levelTitle:
+                levelConfig.title,
+
+            distanceKm,
+
+            basePrice:
+                round(calculatedBase),
+
+            diagnosticPrice:
+                round(diagnosticPrice),
+
+            repairPrice:
+                round(repairPrice),
+
+            partsPrice:
+                round(partsPrice),
+
+            extraWorkPrice:
+                round(extraWorkPrice),
+
+            vehicleAdjustment:
+                round(vehicleAdjustment),
+
+            loadAdjustment:
+                round(loadAdjustment),
+
+            travelCharge,
+
+            totalCustomerPrice:
+                total,
+
+            providerAmount,
+
+            platformAmount,
+
+            commissionRate:
+                commissionRule.platformRate,
+
+            currency:
+                CONFIG.currency,
+
+            priceEngineVersion:
+                CORE_VERSION,
+
+            calculatedAt:
+                now()
+
+        };
+
+
+        state.calculations.push(result);
+
+        saveState();
+
+        emit(
+            "austa:pricecalculated",
+            { result }
+        );
+
+        return result;
+
+    }
+
+
+    /* =========================================================
+       PRICE SNAPSHOT
+       ========================================================= */
+
+    function createPriceSnapshot(calculation, orderId = null) {
+
+        const snapshot = {
+
+            snapshotId:
+                generateId("pricesnapshot"),
+
+            orderId,
+
+            calculation:
+                JSON.parse(
+                    JSON.stringify(calculation)
+                ),
+
+            createdAt:
+                now()
+
+        };
+
+        state.priceSnapshots.push(snapshot);
+
+        saveState();
+
+        emit(
+            "austa:pricesnapshotcreated",
+            { snapshot }
+        );
+
+        return snapshot;
+
+    }
+
+
+    /* =========================================================
+       COMMISSION ENGINE
+       ========================================================= */
+
+    function calculateCommission(
+        amount,
+        category = "automotive_service"
+    ) {
+
+        const total =
+            Number(amount) || 0;
+
+        const rule =
+            CONFIG.commission.categories[category] ||
+            {
+                providerRate:
+                    CONFIG.commission.defaultProviderRate,
+
+                platformRate:
+                    CONFIG.commission.defaultPlatformRate
+            };
+
+
+        return {
+
+            grossAmount:
+                round(total),
+
+            providerRate:
+                rule.providerRate,
+
+            platformRate:
+                rule.platformRate,
+
+            providerAmount:
+                round(
+                    total *
+                    rule.providerRate
+                ),
+
+            platformAmount:
+                round(
+                    total *
+                    rule.platformRate
+                ),
+
+            currency:
+                CONFIG.currency
+
+        };
+
+    }
+
+
+    /* =========================================================
+       PAYMENT ENGINE
+       Bu real payment gateway deyil.
+       Payment state modelidir.
+       ========================================================= */
+
+    const PAYMENT_STATUSES = {
+
+        CREATED: "created",
+
+        PENDING: "pending",
+
+        AUTHORIZED: "authorized",
+
+        PAID: "paid",
+
+        COMPLETED: "completed",
+
+        REFUNDED: "refunded",
+
+        PARTIALLY_REFUNDED: "partially_refunded",
+
+        FAILED: "failed",
+
+        DISPUTED: "disputed",
+
+        CANCELLED: "cancelled"
+
+    };
+
+
+    function createPayment(input = {}) {
+
+        const paymentId =
+            input.paymentId ||
+            generateId("payment");
+
+        const payment = {
+
+            paymentId,
+
+            orderId:
+                input.orderId || null,
+
+            customerId:
+                input.customerId || null,
+
+            providerId:
+                input.providerId || null,
+
+            amount:
+                round(input.amount || 0),
+
+            currency:
+                CONFIG.currency,
+
+            status:
+                PAYMENT_STATUSES.CREATED,
+
+            method:
+                input.method || null,
+
+            providerReference:
+                input.providerReference || null,
+
+            createdAt:
+                now(),
+
+            updatedAt:
+                now()
+
+        };
+
+
+        state.payments[paymentId] =
+            payment;
+
+        saveState();
+
+        emit(
+            "austa:paymentcreated",
+            { payment }
+        );
+
+        return payment;
+
+    }
+
+
+    function updatePayment(
+        paymentId,
+        status,
+        extra = {}
+    ) {
+
+        const payment =
+            state.payments[paymentId];
+
+        if (!payment) {
+
+            return null;
+
+        }
+
+
+        payment.status =
+            status;
+
+        Object.assign(
+            payment,
+            extra
+        );
+
+        payment.updatedAt =
+            now();
+
+        saveState();
+
+        emit(
+            "austa:paymentchange",
+            { payment }
+        );
+
+        return payment;
+
+    }
+
+
+    /* =========================================================
+       RISK ENGINE
+       ========================================================= */
+
+    function getRiskProfile(userId, userType = "customer") {
+
+        const key =
+            userType +
+            ":" +
+            userId;
+
+
+        if (
+            !state.riskProfiles[key]
+        ) {
+
+            state.riskProfiles[key] = {
+
+                userId,
+
+                userType,
+
+                score: 0,
+
+                warnings: 0,
+
+                cancellations: 0,
+
+                lateCancellations: 0,
+
+                noShows: 0,
+
+                completedOrders: 0,
+
+                confirmedArrivals: 0,
+
+                suspiciousEvents: 0,
+
+                status: "active",
+
+                history: [],
+
+                createdAt:
+                    now(),
+
+                updatedAt:
+                    now()
+
+            };
+
+            saveState();
+
+        }
+
+
+        return state.riskProfiles[key];
+
+    }
+
+
+    function applyRiskEvent(
+        userId,
+        userType,
+        eventType,
+        metadata = {}
+    ) {
+
+        const profile =
+            getRiskProfile(
+                userId,
+                userType
+            );
+
+
+        let scoreChange = 0;
+
+
+        switch (eventType) {
+
+            case "normal_cancellation":
+
+                scoreChange =
+                    CONFIG.risk
+                        .cancellationWeights
+                        .normal;
+
+                profile.cancellations++;
+
+                break;
+
+
+            case "late_cancellation":
+
+                scoreChange =
+                    CONFIG.risk
+                        .cancellationWeights
+                        .late;
+
+                profile.cancellations++;
+
+                profile.lateCancellations++;
+
+                break;
+
+
+            case "very_late_cancellation":
+
+                scoreChange =
+                    CONFIG.risk
+                        .cancellationWeights
+                        .veryLate;
+
+                profile.cancellations++;
+
+                profile.lateCancellations++;
+
+                break;
+
+
+            case "no_show":
+
+                scoreChange =
+                    CONFIG.risk
+                        .cancellationWeights
+                        .noShow;
+
+                profile.noShows++;
+
+                break;
+
+
+            case "suspicious_pattern":
+
+                scoreChange =
+                    CONFIG.risk
+                        .suspiciousPatternWeight;
+
+                profile.suspiciousEvents++;
+
+                break;
+
+
+            case "completed_order":
+
+                scoreChange =
+                    CONFIG.risk
+                        .completionReward;
+
+                profile.completedOrders++;
+
+                break;
+
+
+            case "confirmed_arrival":
+
+                scoreChange =
+                    CONFIG.risk
+                        .confirmedArrivalReward;
+
+                profile.confirmedArrivals++;
+
+                break;
+
+
+            default:
+
+                scoreChange = 0;
+
+        }
+
+
+        profile.score =
+            clamp(
+                profile.score +
+                scoreChange,
+                0,
+                100
+            );
+
+
+        if (
+            profile.score >=
+            CONFIG.risk.temporaryBlockScore
+        ) {
+
+            profile.status =
+                "temporarily_blocked";
+
+        } else if (
+            profile.score >=
+            CONFIG.risk.reviewScore
+        ) {
+
+            profile.status =
+                "under_review";
+
+        } else if (
+            profile.score >=
+            CONFIG.risk.restrictedScore
+        ) {
+
+            profile.status =
+                "restricted";
+
+        } else if (
+            profile.score >=
+            CONFIG.risk.warningScore
+        ) {
+
+            profile.status =
+                "warning";
+
+        } else {
+
+            profile.status =
+                "active";
+
+        }
+
+
+        const event = {
+
+            eventId:
+                generateId("riskevent"),
+
+            eventType,
+
+            scoreChange,
+
+            scoreAfter:
+                profile.score,
+
+            metadata,
+
+            createdAt:
+                now()
+
+        };
+
+
+        profile.history.push(event);
+
+        profile.updatedAt =
+            now();
+
+
+        saveState();
+
+
+        emit(
+            "austa:riskevent",
+            {
+                userId,
+                userType,
+                profile,
+                event
+            }
+        );
+
+
+        return profile;
+
+    }
+
+
+    function getRiskStatus(
+        userId,
+        userType = "customer"
+    ) {
+
+        return getRiskProfile(
+            userId,
+            userType
+        );
+
+    }
+
+
+    /* =========================================================
+       CANCELLATION ENGINE
+       ========================================================= */
+
+    function registerCancellation(input = {}) {
+
+        const cancellation = {
+
+            cancellationId:
+                generateId("cancel"),
+
+            orderId:
+                input.orderId || null,
+
+            userId:
+                input.userId || null,
+
+            userType:
+                input.userType || "customer",
+
+            reason:
+                input.reason || "other",
+
+            timing:
+                input.timing || "normal",
+
+            createdAt:
+                now()
+
+        };
+
+
+        state.cancellations.push(
+            cancellation
+        );
+
+
+        let riskEvent =
+            "normal_cancellation";
+
+
+        if (
+            cancellation.timing ===
+            "late"
+        ) {
+
+            riskEvent =
+                "late_cancellation";
+
+        }
+
+
+        if (
+            cancellation.timing ===
+            "very_late"
+        ) {
+
+            riskEvent =
+                "very_late_cancellation";
+
+        }
+
+
+        if (
+            cancellation.timing ===
+            "no_show"
+        ) {
+
+            riskEvent =
+                "no_show";
+
+        }
+
+
+        const riskProfile =
+            applyRiskEvent(
+                cancellation.userId,
+                cancellation.userType,
+                riskEvent,
+                {
+                    orderId:
+                        cancellation.orderId,
+
+                    reason:
+                        cancellation.reason
+
+                }
+            );
+
+
+        saveState();
+
+
+        emit(
+            "austa:cancellation",
+            {
+                cancellation,
+                riskProfile
+            }
+        );
+
+
+        return {
+
+            cancellation,
+
+            riskProfile
+
+        };
+
+    }
+
+
+    /* =========================================================
+       ORDER COMPLETION RISK UPDATE
+       ========================================================= */
+
+    function registerCompletedOrder(
+        userId,
+        userType = "customer",
+        metadata = {}
+    ) {
+
+        return applyRiskEvent(
+            userId,
+            userType,
+            "completed_order",
+            metadata
+        );
+
+    }
+
+
+    function registerConfirmedArrival(
+        userId,
+        userType = "provider",
+        metadata = {}
+    ) {
+
+        return applyRiskEvent(
+            userId,
+            userType,
+            "confirmed_arrival",
+            metadata
+        );
+
+    }
+
+
+    /* =========================================================
+       PROVIDER REGISTRATION
+       ========================================================= */
+
+    function registerProvider(
+        providerData = {}
+    ) {
+
+        const providerId =
+            providerData.providerId ||
+            generateId("provider");
+
+
+        const provider = {
+
+            providerId,
+
+            name:
+                providerData.name || "",
+
+            phone:
+                providerData.phone || "",
+
+            services:
+                Array.isArray(
+                    providerData.services
+                )
+                    ? providerData.services
+                    : [],
+
+            verified:
+                providerData.verified === true,
+
+            vehicleIds:
+                Array.isArray(
+                    providerData.vehicleIds
+                )
+                    ? providerData.vehicleIds
+                    : [],
+
+            createdAt:
+                now(),
+
+            updatedAt:
+                now()
+
+        };
+
+
+        state.providers[providerId] =
+            provider;
+
+
+        getRiskProfile(
+            providerId,
+            "provider"
+        );
+
+
+        saveState();
+
+
+        emit(
+            "austa:providercreated",
+            { provider }
+        );
+
+
+        return provider;
+
+    }
+
+
+    /* =========================================================
+       PROVIDER VEHICLE ATTACHMENT
+       ========================================================= */
+
+    function attachVehicleToProvider(
+        providerId,
+        vehicleId
+    ) {
+
+        const provider =
+            state.providers[providerId];
+
+        const vehicle =
+            getVehicle(vehicleId);
+
+
+        if (!provider || !vehicle) {
+
+            return false;
+
+        }
+
+
+        if (
+            !provider.vehicleIds.includes(
+                vehicleId
+            )
+        ) {
+
+            provider.vehicleIds.push(
+                vehicleId
+            );
+
+        }
+
+
+        vehicle.ownerId =
+            providerId;
+
+        vehicle.ownerType =
+            "provider";
+
+        provider.updatedAt =
+            now();
+
+        vehicle.updatedAt =
+            now();
+
+
+        saveState();
+
+
+        emit(
+            "austa:vehicleattached",
+            {
+                provider,
+                vehicle
+            }
+        );
+
+
+        return true;
+
+    }
+
+
+    /* =========================================================
+       SERVICE PRICE RULES
+       ========================================================= */
+
+    function getServiceCategories() {
+
+        return JSON.parse(
+            JSON.stringify(
+                SERVICE_CATEGORIES
+            )
+        );
+
+    }
+
+
+    function getServiceLevels() {
+
+        return JSON.parse(
+            JSON.stringify(
+                CONFIG.serviceLevels
+            )
+        );
+
+    }
+
+
+    /* =========================================================
+       CONFIG UPDATE
+       ========================================================= */
+
+    function updateConfig(
+        path,
+        value
+    ) {
+
+        const parts =
+            String(path)
+                .split(".")
+                .filter(Boolean);
+
+
+        if (!parts.length) {
+
+            return false;
+
+        }
+
+
+        let target =
+            CONFIG;
+
+
+        for (
+            let i = 0;
+            i < parts.length - 1;
+            i++
+        ) {
+
+            if (
+                typeof target[parts[i]]
+                !== "object"
+            ) {
+
+                target[parts[i]] = {};
+
+            }
+
+            target =
+                target[parts[i]];
+
+        }
+
+
+        target[
+            parts[parts.length - 1]
+        ] = value;
+
+
+        state.settings =
+            CONFIG;
+
+
+        saveState();
+
+
+        emit(
+            "austa:configchange",
+            {
+                path,
+                value
+            }
+        );
+
+
+        return true;
+
+    }
+
+
+    /* =========================================================
+       AUDIT ENGINE
+       ========================================================= */
+
+    function createAudit(entry = {}) {
+
+        const audit = {
+
+            auditId:
+                generateId("audit"),
+
+            action:
+                entry.action || "unknown",
+
+            userId:
+                entry.userId || null,
+
+            userType:
+                entry.userType || null,
+
+            orderId:
+                entry.orderId || null,
+
+            calculationId:
+                entry.calculationId || null,
+
+            metadata:
+                entry.metadata || {},
+
+            createdAt:
+                now()
+
+        };
+
+
+        state.audit.push(audit);
+
+        saveState();
+
+        emit(
+            "austa:auditcreated",
+            { audit }
+        );
+
+        return audit;
+
+    }
+
+
+    /* =========================================================
+       CORE STATE
+       ========================================================= */
+
+    function getCore() {
+
+        return JSON.parse(
+            JSON.stringify({
+                version:
+                    CORE_VERSION,
+
+                state,
+
+                config:
+                    CONFIG
+
+            })
+        );
+
+    }
+
+
+    function getPaymentStatuses() {
+
+        return {
+            ...PAYMENT_STATUSES
+        };
+
+    }
+
+
+    function getRiskRules() {
+
+        return JSON.parse(
+            JSON.stringify(
+                CONFIG.risk
+            )
+        );
+
+    }
+
+
+    /* =========================================================
+       PUBLIC API
+       ========================================================= */
+
+    window.AUSTA_PRICE_CORE = {
+
+        version:
+            CORE_VERSION,
+
+        config:
+            CONFIG,
+
+        serviceCategories:
+            SERVICE_CATEGORIES,
+
+        paymentStatuses:
+            PAYMENT_STATUSES,
+
+        /* Price */
+        calculatePrice,
+        calculateCommission,
+        createPriceSnapshot,
+
+        /* Distance */
+        calculateDistance,
+        calculateTravelCharge,
+
+        /* Vehicles */
+        registerVehicle,
+        getVehicle,
+        getVehicles,
+
+        /* Customer vehicles */
+        registerCustomerVehicle,
+        getCustomerVehicles,
+
+        /* Load */
+        calculateLoad,
+        matchVehicles,
+
+        /* Provider */
+        registerProvider,
+        attachVehicleToProvider,
+
+        /* Payment */
+        createPayment,
+        updatePayment,
+        getPaymentStatuses,
+
+        /* Risk */
+        getRiskProfile,
+        getRiskStatus,
+        applyRiskEvent,
+        registerCompletedOrder,
+        registerConfirmedArrival,
+
+        /* Cancellation */
+        registerCancellation,
+
+        /* Configuration */
+        updateConfig,
+
+        /* Services */
+        getServiceCategories,
+        getServiceLevels,
+
+        /* Audit */
+        createAudit,
+
+        /* State */
+        getCore,
+
+        /* Save */
+        save: saveState
+
+    };
+
+
+    /* =========================================================
+       INIT
+       ========================================================= */
+
+    loadState();
+
+    console.log(
+        "A-USTA Price / Fleet / Payment / Risk Core hazırdır.",
+        CORE_VERSION
+    );
+
+
+    emit(
+        "austa:pricecore:ready",
+        {
+            version:
+                CORE_VERSION
+        }
+    );
+
+})();
 </script> 
 </body>
 </html>
