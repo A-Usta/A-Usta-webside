@@ -6188,25 +6188,37 @@ document.addEventListener("DOMContentLoaded", function () {
        PRICE SNAPSHOT
        ========================================================= */
 
-    function createPriceSnapshot(calculation, orderId = null) {
+   function createPriceSnapshot(calculation, orderId = null) {
 
-    const priceCore = getPriceCore();
+    const snapshot = {
 
-let priceSnapshot = null;
+        snapshotId:
+            generateId("pricesnapshot"),
 
-if (
-    priceCore &&
-    typeof priceCore.createPriceSnapshot ===
-    "function"
-) {
+        orderId,
 
-    priceSnapshot =
-        priceCore.createPriceSnapshot(
-            priceCalculation,
-            order.orderId
-        );
+        calculation:
+            JSON.parse(
+                JSON.stringify(calculation)
+            ),
+
+        createdAt:
+            now()
+
+    };
+
+    state.priceSnapshots.push(snapshot);
+
+    saveState();
+
+    emit(
+        "austa:pricesnapshotcreated",
+        { snapshot }
+    );
+
+    return snapshot;
+
 }
-
 
     /* =========================================================
        COMMISSION ENGINE
