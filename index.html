@@ -7258,6 +7258,2276 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 })();
+</script>
+   <script>
+(function () {
+    "use strict";
+
+    /* =========================================================
+       A-USTA SERVICE REQUEST / USTA ÇAĞIR CORE
+       Version: 1.0.0
+
+       Mövcud Core-lar:
+       - Location & Tracking Core 2.0
+       - Order Core 1.0
+       - Price / Fleet / Payment / Risk Core 1.0
+
+       Bu Core həmin sistemləri birləşdirir.
+       ========================================================= */
+
+    const CORE_VERSION = "1.0.0";
+
+    const STORAGE_KEY =
+        "a-usta-service-request-core";
+
+    /* =========================================================
+       STATUSLAR
+       ========================================================= */
+
+    const STATUSES = {
+
+        CREATED:
+            "created",
+
+        PRICE_CALCULATED:
+            "price-calculated",
+
+        SEARCHING_PROVIDER:
+            "searching-provider",
+
+        PROVIDER_ASSIGNED:
+            "provider-assigned",
+
+        PROVIDER_ACCEPTED:
+            "provider-accepted",
+
+        PROVIDER_EN_ROUTE:
+            "provider-en-route",
+
+        ARRIVED:
+            "arrived",
+
+        DIAGNOSIS:
+            "diagnosis",
+
+        WAITING_CUSTOMER_APPROVAL:
+            "waiting-customer-approval",
+
+        SERVICE_STARTED:
+            "service-started",
+
+        SERVICE_COMPLETED:
+            "service-completed",
+
+        PAYMENT_PENDING:
+            "payment-pending",
+
+        COMPLETED:
+            "completed",
+
+        CANCELLED:
+            "cancelled"
+
+    };
+
+
+    /* =========================================================
+       STATE
+       ========================================================= */
+
+    let state = {
+
+        requests: {},
+
+        updatedAt:
+            new Date().toISOString()
+
+    };
+
+
+    /* =========================================================
+       HELPERS
+       ========================================================= */
+
+    function now() {
+
+        return new Date().toISOString();
+
+    }
+
+
+    function generateId(prefix) {
+
+        return (
+            prefix +
+            "_" +
+            Date.now().toString(36) +
+            "_" +
+            Math.random()
+                .toString(36)
+                .slice(2, 8)
+        );
+
+    }
+
+
+    function clone(data) {
+
+        return JSON.parse(
+            JSON.stringify(data)
+        );
+
+    }
+
+
+    function save() {
+
+        state.updatedAt = now();
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(state)
+        );
+
+    }
+
+
+    function load() {
+
+        try {
+
+            const saved =
+                localStorage.getItem(
+                    STORAGE_KEY
+                );
+
+            if (!saved) return;
+
+            const parsed =
+                JSON.parse(saved);
+
+            if (
+                parsed &&
+                typeof parsed === "object"
+            ) {
+
+                state = {
+
+                    ...state,
+
+                    ...parsed
+
+                };
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "A-USTA Service Request load error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    function emit(
+        eventName,
+        detail = {}
+    ) {
+
+        document.dispatchEvent(
+            new CustomEvent(
+                eventName,
+                {
+                    detail: {
+
+                        ...detail,
+
+                        coreVersion:
+                            CORE_VERSION,
+
+                        timestamp:
+                            now()
+
+                    }
+
+                }
+            )
+        );
+
+    }
+
+
+    function getLocationCore() {
+
+        return (
+            window.AUSTA_LOCATION_CORE ||
+            null
+        );
+
+    }
+
+
+    function getOrderCore() {
+
+        return (
+            window.AUSTA_ORDER_CORE ||
+            null
+        );
+
+    }
+
+
+    function getPriceCore() {
+
+        return (
+            window.AUSTA_PRICE_CORE ||
+            null
+        );
+
+    }
+
+
+    /* =========================================================
+       CORE-LARIN HAZIRLIĞINI YOXLAYIR
+       ========================================================= */
+
+    function checkCores() {
+
+        return {
+
+            location:
+                Boolean(
+                    getLocationCore()
+                ),
+
+            order:
+                Boolean(
+                    getOrderCore()
+                ),
+
+            price:
+                Boolean(
+                    getPriceCore()
+                ),
+
+            ready:
+                Boolean(
+                    getLocationCore() &&
+                    getOrderCore() &&
+                    getPriceCore()
+                )
+
+        };
+
+    }
+
+
+    /* =========================================================
+       REQUEST TAP
+       ========================================================= */
+
+    function getRequest(
+        requestId
+    ) {
+
+        return (
+            state.requests[
+                requestId
+            ]
+                ? clone(
+                    state.requests[
+                        requestId
+                    ]
+                )
+                : null
+        );
+
+    }
+
+
+    /* =========================================================
+       REQUEST HISTORY
+       ========================================================= */
+
+    function addHistory(
+        request,
+        status,
+        note = null
+    ) {
+
+        request.history.push({
+
+            status,
+
+            note,
+
+            timestamp:
+                now()
+
+        });
+
+    }
+
+
+    /* =========================================================
+       LOCATION AL
+       ========================================================= */
+
+    function getCurrentLocation() {
+
+        const locationCore =
+            getLocationCore();
+
+        if (!locationCore) {
+
+            return null;
+
+        }
+
+        if (
+            typeof locationCore
+                .getLocation ===
+            "function"
+        ) {
+
+            return clone(
+                locationCore.getLocation()
+            );
+
+        }
+
+        return null;
+
+    }
+
+
+    /* =========================================================
+       MƏSAFƏ HESABLA
+       ========================================================= */
+
+    function calculateDistance(
+        lat1,
+        lon1,
+        lat2,
+        lon2
+    ) {
+
+        const priceCore =
+            getPriceCore();
+
+        if (
+            !priceCore ||
+            typeof priceCore
+                .calculateDistance !==
+            "function"
+        ) {
+
+            return 0;
+
+        }
+
+        return priceCore.calculateDistance(
+            lat1,
+            lon1,
+            lat2,
+            lon2
+        );
+
+    }
+
+
+    /* =========================================================
+       PRICE ENGINE
+       ========================================================= */
+
+    function calculateRequestPrice(
+        input = {}
+    ) {
+
+        const priceCore =
+            getPriceCore();
+
+        if (!priceCore) {
+
+            throw new Error(
+                "A-USTA Price Core hazır deyil."
+            );
+
+        }
+
+        return priceCore.calculatePrice({
+
+            category:
+                input.category ||
+                "automotive_service",
+
+            service:
+                input.service ||
+                null,
+
+            level:
+                input.level ||
+                "standard",
+
+            distanceKm:
+                Number(
+                    input.distanceKm
+                ) || 0,
+
+            basePrice:
+                input.basePrice,
+
+            diagnosticPrice:
+                input.diagnosticPrice,
+
+            repairPrice:
+                input.repairPrice,
+
+            partsPrice:
+                input.partsPrice,
+
+            extraWorkPrice:
+                input.extraWorkPrice,
+
+            vehicleAdjustment:
+                input.vehicleAdjustment,
+
+            loadAdjustment:
+                input.loadAdjustment,
+
+            complexityMultiplier:
+                input.complexityMultiplier
+
+        });
+
+    }
+
+
+    /* =========================================================
+       REQUEST YARAT
+       ========================================================= */
+
+    function createRequest(
+        input = {}
+    ) {
+
+        const cores =
+            checkCores();
+
+        if (!cores.ready) {
+
+            throw new Error(
+                "A-USTA əsas Core-ları hazır deyil."
+            );
+
+        }
+
+
+        /*
+         * LOCATION
+         */
+
+        let location =
+            input.location
+                ? clone(
+                    input.location
+                )
+                : getCurrentLocation();
+
+
+        location = location || {};
+
+
+        const latitude =
+            location.latitude ??
+            input.latitude ??
+            null;
+
+        const longitude =
+            location.longitude ??
+            input.longitude ??
+            null;
+
+        const accuracy =
+            location.accuracy ??
+            input.accuracy ??
+            null;
+
+        const address =
+            location.address ||
+            input.address ||
+            null;
+
+
+        /*
+         * DISTANCE
+         */
+
+        const distanceKm =
+            Number(
+                input.distanceKm
+            ) || 0;
+
+
+        /*
+         * PRICE
+         */
+
+        const priceCalculation =
+            calculateRequestPrice({
+
+                category:
+                    input.category ||
+                    "automotive_service",
+
+                service:
+                    input.service ||
+                    null,
+
+                level:
+                    input.level ||
+                    "standard",
+
+                distanceKm,
+
+                basePrice:
+                    input.basePrice,
+
+                diagnosticPrice:
+                    input.diagnosticPrice,
+
+                repairPrice:
+                    input.repairPrice,
+
+                partsPrice:
+                    input.partsPrice,
+
+                extraWorkPrice:
+                    input.extraWorkPrice,
+
+                vehicleAdjustment:
+                    input.vehicleAdjustment,
+
+                loadAdjustment:
+                    input.loadAdjustment,
+
+                complexityMultiplier:
+                    input.complexityMultiplier
+
+            });
+
+
+        /*
+         * ORDER
+         */
+
+        const orderCore =
+            getOrderCore();
+
+        const order =
+            orderCore.createOrder({
+
+                customerId:
+                    input.customerId ||
+                    null,
+
+                customerName:
+                    input.customerName ||
+                    null,
+
+                customerPhone:
+                    input.customerPhone ||
+                    null,
+
+                serviceCategory:
+                    input.category ||
+                    "automotive_service",
+
+                serviceId:
+                    input.service ||
+                    null,
+
+                serviceTitle:
+                    input.serviceTitle ||
+                    priceCalculation.categoryTitle ||
+                    null,
+
+                description:
+                    input.description ||
+                    input.problem ||
+                    null,
+
+                vehicleId:
+                    input.vehicleId ||
+                    null,
+
+                vehicleBrand:
+                    input.vehicleBrand ||
+                    null,
+
+                vehicleModel:
+                    input.vehicleModel ||
+                    null,
+
+                vehicleYear:
+                    input.vehicleYear ||
+                    null,
+
+                vehiclePlate:
+                    input.vehiclePlate ||
+                    null,
+
+                vehicleProblem:
+                    input.vehicleProblem ||
+                    input.problem ||
+                    null,
+
+                latitude,
+
+                longitude,
+
+                accuracy,
+
+                address,
+
+                price:
+                    priceCalculation
+                        .totalCustomerPrice,
+
+                currency:
+                    priceCalculation.currency,
+
+                estimatedPrice:
+                    true,
+
+                paymentMethod:
+                    input.paymentMethod ||
+                    null,
+
+                source:
+                    "a-usta-service-request",
+
+                platform:
+                    input.platform ||
+                    "web",
+
+                notes:
+                    input.notes ||
+                    null
+
+            });
+
+
+        /*
+         * PRICE SNAPSHOT
+         */
+
+        let priceSnapshot =
+            null;
+
+        if (
+            typeof priceCore
+                .createPriceSnapshot ===
+            "function"
+        ) {
+
+            priceSnapshot =
+                priceCore.createPriceSnapshot(
+                    priceCalculation,
+                    order.orderId
+                );
+
+        }
+
+
+        /*
+         * REQUEST
+         */
+
+        const requestId =
+            generateId(
+                "request"
+            );
+
+
+        const request = {
+
+            requestId,
+
+            orderId:
+                order.orderId,
+
+            status:
+                STATUSES.PRICE_CALCULATED,
+
+            customer: {
+
+                customerId:
+                    input.customerId ||
+                    null,
+
+                name:
+                    input.customerName ||
+                    null,
+
+                phone:
+                    input.customerPhone ||
+                    null
+
+            },
+
+            problem: {
+
+                text:
+                    input.problem ||
+                    input.description ||
+                    null,
+
+                known:
+                    Boolean(
+                        input.problem
+                    )
+
+            },
+
+            service: {
+
+                category:
+                    input.category ||
+                    "automotive_service",
+
+                serviceId:
+                    input.service ||
+                    null,
+
+                title:
+                    input.serviceTitle ||
+                    priceCalculation.categoryTitle ||
+                    null,
+
+                level:
+                    input.level ||
+                    "standard"
+
+            },
+
+            vehicle: {
+
+                vehicleId:
+                    input.vehicleId ||
+                    null,
+
+                brand:
+                    input.vehicleBrand ||
+                    null,
+
+                model:
+                    input.vehicleModel ||
+                    null,
+
+                year:
+                    input.vehicleYear ||
+                    null,
+
+                plate:
+                    input.vehiclePlate ||
+                    null,
+
+                problem:
+                    input.vehicleProblem ||
+                    input.problem ||
+                    null
+
+            },
+
+            location: {
+
+                latitude,
+
+                longitude,
+
+                accuracy,
+
+                address
+
+            },
+
+            distanceKm,
+
+            price: {
+
+                calculation:
+                    clone(
+                        priceCalculation
+                    ),
+
+                snapshot:
+                    priceSnapshot
+                        ? clone(
+                            priceSnapshot
+                        )
+                        : null,
+
+                approved:
+                    false,
+
+                approvedAt:
+                    null
+
+            },
+
+            provider: {
+
+                providerId:
+                    null,
+
+                name:
+                    null,
+
+                phone:
+                    null,
+
+                vehicleId:
+                    null,
+
+                status:
+                    "searching"
+
+            },
+
+            payment: {
+
+                paymentId:
+                    null,
+
+                status:
+                    "pending"
+
+            },
+
+            timestamps: {
+
+                createdAt:
+                    now(),
+
+                updatedAt:
+                    now(),
+
+                acceptedAt:
+                    null,
+
+                enRouteAt:
+                    null,
+
+                arrivedAt:
+                    null,
+
+                startedAt:
+                    null,
+
+                completedAt:
+                    null
+
+            },
+
+            history: [],
+
+            metadata: {
+
+                source:
+                    "a-usta",
+
+                platform:
+                    input.platform ||
+                    "web",
+
+                coreVersion:
+                    CORE_VERSION,
+
+                orderCoreVersion:
+                    orderCore.version,
+
+                priceCoreVersion:
+                    priceCore.version
+
+            }
+
+        };
+
+
+        addHistory(
+            request,
+            STATUSES.CREATED,
+            "Usta çağır sifarişi yaradıldı"
+        );
+
+
+        addHistory(
+            request,
+            STATUSES.PRICE_CALCULATED,
+            "İlkin qiymət hesablandı"
+        );
+
+
+        state.requests[
+            requestId
+        ] = request;
+
+        save();
+
+
+        emit(
+            "austa:servicerequestcreated",
+            {
+                request:
+                    clone(request)
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       MÜŞTƏRİ QİYMƏTİ TƏSDİQ EDİR
+       ========================================================= */
+
+    function approvePrice(
+        requestId
+    ) {
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (!request) {
+
+            return null;
+
+        }
+
+
+        request.price.approved =
+            true;
+
+        request.price.approvedAt =
+            now();
+
+        request.timestamps.updatedAt =
+            now();
+
+
+        addHistory(
+            request,
+            STATUSES.SEARCHING_PROVIDER,
+            "Müştəri qiyməti təsdiqlədi. Usta axtarışı başladı."
+        );
+
+
+        request.status =
+            STATUSES.SEARCHING_PROVIDER;
+
+        save();
+
+
+        const orderCore =
+            getOrderCore();
+
+        orderCore.updateOrderStatus(
+            request.orderId,
+            STATUSES.SEARCHING_PROVIDER,
+            "Müştəri qiyməti təsdiqlədi. Usta axtarılır."
+        );
+
+
+        emit(
+            "austa:servicerequestpriceapproved",
+            {
+                request:
+                    clone(request)
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       USTA TƏYİN ET
+       ========================================================= */
+
+    function assignProvider(
+        requestId,
+        provider = {}
+    ) {
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (!request) {
+
+            return null;
+
+        }
+
+
+        const orderCore =
+            getOrderCore();
+
+
+        request.provider = {
+
+            providerId:
+                provider.providerId ||
+                null,
+
+            name:
+                provider.name ||
+                null,
+
+            phone:
+                provider.phone ||
+                null,
+
+            vehicleId:
+                provider.vehicleId ||
+                null,
+
+            status:
+                "assigned"
+
+        };
+
+
+        request.status =
+            STATUSES.PROVIDER_ASSIGNED;
+
+        request.timestamps.updatedAt =
+            now();
+
+
+        addHistory(
+            request,
+            STATUSES.PROVIDER_ASSIGNED,
+            "Usta sifarişə təyin edildi."
+        );
+
+
+        orderCore.assignProvider(
+            request.orderId,
+            {
+
+                providerId:
+                    provider.providerId,
+
+                name:
+                    provider.name,
+
+                phone:
+                    provider.phone,
+
+                type:
+                    provider.type ||
+                    "usta"
+
+            }
+        );
+
+
+        orderCore.updateOrderStatus(
+            request.orderId,
+            STATUSES.PROVIDER_ASSIGNED,
+            "Usta təyin edildi."
+        );
+
+
+        save();
+
+
+        emit(
+            "austa:providerassigned",
+            {
+                request:
+                    clone(request)
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       USTA QƏBUL EDİR
+       ========================================================= */
+
+    function providerAccept(
+        requestId
+    ) {
+
+        return changeStatus(
+            requestId,
+            STATUSES.PROVIDER_ACCEPTED,
+            "Usta sifarişi qəbul etdi."
+        );
+
+    }
+
+
+    /* =========================================================
+       USTA YOLA ÇIXIR
+       ========================================================= */
+
+    function providerEnRoute(
+        requestId
+    ) {
+
+        const result =
+            changeStatus(
+                requestId,
+                STATUSES.PROVIDER_EN_ROUTE,
+                "Usta müştəriyə doğru yola çıxdı."
+            );
+
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (
+            request &&
+            request.location.latitude != null &&
+            request.location.longitude != null
+        ) {
+
+            const locationCore =
+                getLocationCore();
+
+            if (
+                locationCore &&
+                typeof locationCore
+                    .startLiveTracking ===
+                "function"
+            ) {
+
+                try {
+
+                    locationCore.startLiveTracking(
+                        request.provider.providerId
+                    );
+
+                } catch (error) {
+
+                    console.warn(
+                        "Live tracking başlatılmadı:",
+                        error
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        return result;
+
+    }
+
+
+    /* =========================================================
+       USTA ÇATDI
+       ========================================================= */
+
+    function providerArrived(
+        requestId
+    ) {
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (!request) {
+
+            return null;
+
+        }
+
+
+        request.timestamps.arrivedAt =
+            now();
+
+        request.status =
+            STATUSES.ARRIVED;
+
+        request.timestamps.updatedAt =
+            now();
+
+
+        addHistory(
+            request,
+            STATUSES.ARRIVED,
+            "Usta xidmət yerinə çatdı."
+        );
+
+
+        const orderCore =
+            getOrderCore();
+
+        orderCore.updateOrderStatus(
+            request.orderId,
+            STATUSES.ARRIVED,
+            "Usta xidmət yerinə çatdı."
+        );
+
+
+        /*
+         * Provider arrival risk event
+         */
+
+        const priceCore =
+            getPriceCore();
+
+        if (
+            priceCore &&
+            typeof priceCore
+                .registerConfirmedArrival ===
+            "function" &&
+            request.provider.providerId
+        ) {
+
+            priceCore.registerConfirmedArrival(
+                request.provider.providerId,
+                "provider",
+                {
+                    orderId:
+                        request.orderId,
+
+                    requestId
+
+                }
+            );
+
+        }
+
+
+        save();
+
+
+        emit(
+            "austa:providerarrived",
+            {
+                request:
+                    clone(request)
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       DİAQNOSTİKA BAŞLAYIR
+       ========================================================= */
+
+    function startDiagnosis(
+        requestId,
+        diagnosis = {}
+    ) {
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (!request) {
+
+            return null;
+
+        }
+
+
+        request.status =
+            STATUSES.DIAGNOSIS;
+
+        request.diagnosis = {
+
+            result:
+                diagnosis.result ||
+                null,
+
+            category:
+                diagnosis.category ||
+                null,
+
+            service:
+                diagnosis.service ||
+                null,
+
+            notes:
+                diagnosis.notes ||
+                null,
+
+            createdAt:
+                now()
+
+        };
+
+
+        request.timestamps.updatedAt =
+            now();
+
+
+        addHistory(
+            request,
+            STATUSES.DIAGNOSIS,
+            "İlkin diaqnostika aparılır."
+        );
+
+
+        const orderCore =
+            getOrderCore();
+
+        orderCore.updateOrderStatus(
+            request.orderId,
+            STATUSES.DIAGNOSIS,
+            "İlkin diaqnostika aparılır."
+        );
+
+
+        save();
+
+
+        emit(
+            "austa:diagnosisstarted",
+            {
+                request:
+                    clone(request)
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       YENİ QİYMƏT HESABLA
+       ========================================================= */
+
+    function recalculatePrice(
+        requestId,
+        input = {}
+    ) {
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (!request) {
+
+            return null;
+
+        }
+
+
+        const calculation =
+            calculateRequestPrice({
+
+                category:
+                    input.category ||
+                    request.service.category,
+
+                service:
+                    input.service ||
+                    request.service.serviceId,
+
+                level:
+                    input.level ||
+                    request.service.level ||
+                    "standard",
+
+                distanceKm:
+                    input.distanceKm ??
+                    request.distanceKm,
+
+                basePrice:
+                    input.basePrice,
+
+                diagnosticPrice:
+                    input.diagnosticPrice,
+
+                repairPrice:
+                    input.repairPrice,
+
+                partsPrice:
+                    input.partsPrice,
+
+                extraWorkPrice:
+                    input.extraWorkPrice,
+
+                vehicleAdjustment:
+                    input.vehicleAdjustment,
+
+                loadAdjustment:
+                    input.loadAdjustment,
+
+                complexityMultiplier:
+                    input.complexityMultiplier
+
+            });
+
+
+        request.price.calculation =
+            clone(calculation);
+
+        request.price.approved =
+            false;
+
+        request.price.approvedAt =
+            null;
+
+        request.status =
+            STATUSES.WAITING_CUSTOMER_APPROVAL;
+
+        request.timestamps.updatedAt =
+            now();
+
+
+        addHistory(
+            request,
+            STATUSES.WAITING_CUSTOMER_APPROVAL,
+            "Diaqnostikadan sonra yeni qiymət müştərinin təsdiqinə göndərildi."
+        );
+
+
+        const priceCore =
+            getPriceCore();
+
+        let snapshot = null;
+
+        if (
+            typeof priceCore
+                .createPriceSnapshot ===
+            "function"
+        ) {
+
+            snapshot =
+                priceCore.createPriceSnapshot(
+                    calculation,
+                    request.orderId
+                );
+
+            request.price.snapshot =
+                clone(snapshot);
+
+        }
+
+
+        const orderCore =
+            getOrderCore();
+
+        orderCore.updateOrderPrice(
+            request.orderId,
+            calculation.totalCustomerPrice,
+            true
+        );
+
+
+        orderCore.updateOrderStatus(
+            request.orderId,
+            STATUSES.WAITING_CUSTOMER_APPROVAL,
+            "Yeni qiymət müştəri təsdiqini gözləyir."
+        );
+
+
+        save();
+
+
+        emit(
+            "austa:priceapprovalrequired",
+            {
+                request:
+                    clone(request)
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       YENİ QİYMƏTİ TƏSDİQ ET
+       ========================================================= */
+
+    function approveRecalculatedPrice(
+        requestId
+    ) {
+
+        return approvePrice(
+            requestId
+        );
+
+    }
+
+
+    /* =========================================================
+       XİDMƏT BAŞLAYIR
+       ========================================================= */
+
+    function startService(
+        requestId
+    ) {
+
+        return changeStatus(
+            requestId,
+            STATUSES.SERVICE_STARTED,
+            "Müştərinin təsdiqindən sonra xidmət başladı."
+        );
+
+    }
+
+
+    /* =========================================================
+       ÖDƏNİŞ YARAT
+       ========================================================= */
+
+    function createPayment(
+        requestId,
+        method = "card"
+    ) {
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (!request) {
+
+            return null;
+
+        }
+
+
+        const priceCore =
+            getPriceCore();
+
+        if (!priceCore) {
+
+            return null;
+
+        }
+
+
+        const payment =
+            priceCore.createPayment({
+
+                orderId:
+                    request.orderId,
+
+                customerId:
+                    request.customer.customerId,
+
+                amount:
+                    request.price
+                        .calculation
+                        .totalCustomerPrice,
+
+                currency:
+                    "AZN",
+
+                method
+
+            });
+
+
+        request.payment = {
+
+            paymentId:
+                payment.paymentId,
+
+            status:
+                payment.status
+
+        };
+
+
+        request.status =
+            STATUSES.PAYMENT_PENDING;
+
+
+        request.timestamps.updatedAt =
+            now();
+
+
+        addHistory(
+            request,
+            STATUSES.PAYMENT_PENDING,
+            "Ödəniş yaradıldı."
+        );
+
+
+        const orderCore =
+            getOrderCore();
+
+        orderCore.updatePayment(
+            request.orderId,
+            {
+
+                method,
+
+                status:
+                    payment.status,
+
+                transactionId:
+                    payment.paymentId
+
+            }
+        );
+
+
+        save();
+
+
+        emit(
+            "austa:paymentcreated",
+            {
+                request:
+                    clone(request),
+
+                payment:
+                    clone(payment)
+
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       ÖDƏNİŞ STATUSU
+       ========================================================= */
+
+    function updatePayment(
+        requestId,
+        status,
+        extra = {}
+    ) {
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (!request) {
+
+            return null;
+
+        }
+
+
+        const priceCore =
+            getPriceCore();
+
+        const orderCore =
+            getOrderCore();
+
+
+        if (
+            request.payment.paymentId &&
+            priceCore &&
+            typeof priceCore
+                .updatePayment ===
+            "function"
+        ) {
+
+            priceCore.updatePayment(
+                request.payment.paymentId,
+                status,
+                extra
+            );
+
+        }
+
+
+        request.payment.status =
+            status;
+
+        request.timestamps.updatedAt =
+            now();
+
+
+        addHistory(
+            request,
+            status,
+            "Ödəniş statusu yeniləndi."
+        );
+
+
+        orderCore.updatePayment(
+            request.orderId,
+            {
+
+                method:
+                    extra.method ||
+                    "card",
+
+                status,
+
+                transactionId:
+                    request.payment
+                        .paymentId
+
+            }
+        );
+
+
+        save();
+
+
+        emit(
+            "austa:paymentupdated",
+            {
+                request:
+                    clone(request)
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       XİDMƏTİ TAMAMLA
+       ========================================================= */
+
+    function completeService(
+        requestId
+    ) {
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (!request) {
+
+            return null;
+
+        }
+
+
+        request.status =
+            STATUSES.COMPLETED;
+
+        request.timestamps.completedAt =
+            now();
+
+        request.timestamps.updatedAt =
+            now();
+
+
+        addHistory(
+            request,
+            STATUSES.SERVICE_COMPLETED,
+            "Xidmət tamamlandı."
+        );
+
+
+        addHistory(
+            request,
+            STATUSES.COMPLETED,
+            "Sifariş prosesi tamamlandı."
+        );
+
+
+        const orderCore =
+            getOrderCore();
+
+        orderCore.updateOrderStatus(
+            request.orderId,
+            STATUSES.SERVICE_COMPLETED,
+            "Xidmət tamamlandı."
+        );
+
+
+        const priceCore =
+            getPriceCore();
+
+
+        /*
+         * CUSTOMER COMPLETION
+         */
+
+        if (
+            priceCore &&
+            typeof priceCore
+                .registerCompletedOrder ===
+            "function" &&
+            request.customer.customerId
+        ) {
+
+            priceCore.registerCompletedOrder(
+                request.customer.customerId,
+                "customer",
+                {
+                    orderId:
+                        request.orderId,
+
+                    requestId
+
+                }
+            );
+
+        }
+
+
+        /*
+         * PROVIDER COMPLETION
+         */
+
+        if (
+            priceCore &&
+            typeof priceCore
+                .registerCompletedOrder ===
+            "function" &&
+            request.provider.providerId
+        ) {
+
+            priceCore.registerCompletedOrder(
+                request.provider.providerId,
+                "provider",
+                {
+                    orderId:
+                        request.orderId,
+
+                    requestId
+
+                }
+            );
+
+        }
+
+
+        /*
+         * AUDIT
+         */
+
+        if (
+            priceCore &&
+            typeof priceCore
+                .createAudit ===
+            "function"
+        ) {
+
+            priceCore.createAudit({
+
+                action:
+                    "service_completed",
+
+                orderId:
+                    request.orderId,
+
+                requestId,
+
+                customerId:
+                    request.customer.customerId,
+
+                providerId:
+                    request.provider.providerId,
+
+                amount:
+                    request.price
+                        .calculation
+                        .totalCustomerPrice
+
+            });
+
+        }
+
+
+        save();
+
+
+        emit(
+            "austa:servicerequestcompleted",
+            {
+                request:
+                    clone(request)
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       STATUS DƏYİŞ
+       ========================================================= */
+
+    function changeStatus(
+        requestId,
+        status,
+        note = null
+    ) {
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (!request) {
+
+            return null;
+
+        }
+
+
+        request.status =
+            status;
+
+        request.timestamps.updatedAt =
+            now();
+
+
+        addHistory(
+            request,
+            status,
+            note
+        );
+
+
+        const orderCore =
+            getOrderCore();
+
+        if (orderCore) {
+
+            orderCore.updateOrderStatus(
+                request.orderId,
+                status,
+                note
+            );
+
+        }
+
+
+        save();
+
+
+        emit(
+            "austa:servicerequeststatuschange",
+            {
+                request:
+                    clone(request)
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       LƏĞV ET
+       ========================================================= */
+
+    function cancelRequest(
+        requestId,
+        input = {}
+    ) {
+
+        const request =
+            state.requests[
+                requestId
+            ];
+
+        if (!request) {
+
+            return null;
+
+        }
+
+
+        const reason =
+            input.reason ||
+            "other";
+
+        const timing =
+            input.timing ||
+            "normal";
+
+        const userId =
+            input.userId ||
+            request.customer.customerId;
+
+        const userType =
+            input.userType ||
+            "customer";
+
+
+        const priceCore =
+            getPriceCore();
+
+
+        let cancellation =
+            null;
+
+
+        if (
+            priceCore &&
+            typeof priceCore
+                .registerCancellation ===
+            "function"
+        ) {
+
+            cancellation =
+                priceCore.registerCancellation({
+
+                    orderId:
+                        request.orderId,
+
+                    userId,
+
+                    userType,
+
+                    reason,
+
+                    timing
+
+                });
+
+        }
+
+
+        request.status =
+            STATUSES.CANCELLED;
+
+        request.timestamps.updatedAt =
+            now();
+
+
+        addHistory(
+            request,
+            STATUSES.CANCELLED,
+            reason
+        );
+
+
+        const orderCore =
+            getOrderCore();
+
+        orderCore.cancelOrder(
+            request.orderId,
+            reason
+        );
+
+
+        save();
+
+
+        emit(
+            "austa:servicerequestcancelled",
+            {
+
+                request:
+                    clone(request),
+
+                cancellation:
+                    cancellation
+                        ? clone(cancellation)
+                        : null
+
+            }
+        );
+
+
+        return clone(
+            request
+        );
+
+    }
+
+
+    /* =========================================================
+       REQUESTLƏR
+       ========================================================= */
+
+    function getRequests() {
+
+        return clone(
+            Object.values(
+                state.requests
+            )
+        );
+
+    }
+
+
+    /* =========================================================
+       CORE MƏLUMATI
+       ========================================================= */
+
+    function getCore() {
+
+        return {
+
+            version:
+                CORE_VERSION,
+
+            statuses:
+                clone(STATUSES),
+
+            cores:
+                checkCores(),
+
+            requestCount:
+                Object.keys(
+                    state.requests
+                ).length,
+
+            updatedAt:
+                state.updatedAt
+
+        };
+
+    }
+
+
+    /* =========================================================
+       PUBLIC API
+       ========================================================= */
+
+    window.AUSTA_SERVICE_REQUEST_CORE = {
+
+        version:
+            CORE_VERSION,
+
+        statuses:
+            STATUSES,
+
+        checkCores,
+
+        createRequest,
+
+        getRequest,
+
+        getRequests,
+
+        calculateRequestPrice,
+
+        approvePrice,
+
+        assignProvider,
+
+        providerAccept,
+
+        providerEnRoute,
+
+        providerArrived,
+
+        startDiagnosis,
+
+        recalculatePrice,
+
+        approveRecalculatedPrice,
+
+        startService,
+
+        createPayment,
+
+        updatePayment,
+
+        completeService,
+
+        changeStatus,
+
+        cancelRequest,
+
+        getCurrentLocation,
+
+        getCore,
+
+        save
+
+    };
+
+
+    /* =========================================================
+       INIT
+       ========================================================= */
+
+    load();
+
+
+    console.log(
+        "A-USTA Service Request Core hazırdır.",
+        CORE_VERSION
+    );
+
+
+    emit(
+        "austa:servicerequest:ready",
+        {
+
+            version:
+                CORE_VERSION,
+
+            cores:
+                checkCores()
+
+        }
+    );
+
+
+})();
 </script> 
 </body>
 </html>
