@@ -7909,16 +7909,19 @@ if (
             });
 
 
-        /*
+      /*
          * PRICE SNAPSHOT
          */
+
+        const priceCore =
+            getPriceCore();
 
         let priceSnapshot =
             null;
 
         if (
-            typeof priceCore
-                .createPriceSnapshot ===
+            priceCore &&
+            typeof priceCore.createPriceSnapshot ===
             "function"
         ) {
 
@@ -7928,8 +7931,7 @@ if (
                     order.orderId
                 );
 
-        }
-
+        } 
 
         /*
          * REQUEST
