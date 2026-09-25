@@ -6190,35 +6190,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function createPriceSnapshot(calculation, orderId = null) {
 
-        const snapshot = {
+    const priceCore = getPriceCore();
 
-            snapshotId:
-                generateId("pricesnapshot"),
+let priceSnapshot = null;
 
-            orderId,
+if (
+    priceCore &&
+    typeof priceCore.createPriceSnapshot ===
+    "function"
+) {
 
-            calculation:
-                JSON.parse(
-                    JSON.stringify(calculation)
-                ),
-
-            createdAt:
-                now()
-
-        };
-
-        state.priceSnapshots.push(snapshot);
-
-        saveState();
-
-        emit(
-            "austa:pricesnapshotcreated",
-            { snapshot }
+    priceSnapshot =
+        priceCore.createPriceSnapshot(
+            priceCalculation,
+            order.orderId
         );
-
-        return snapshot;
-
-    }
+}
 
 
     /* =========================================================
