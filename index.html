@@ -8091,10 +8091,40 @@ document.addEventListener("DOMContentLoaded", function () {
 <script>
 (function(){"use strict";
 const services=[
-['🔧','Usta çağır','Peşəkar ustalar'],['🚨','Yol yardımı','24/7 dəstək'],['🚚','Evakuator','Avtomobil daşıma'],['🩺','Diaqnostika','Elektron diaqnostika'],['🔨','Təmir','Ümumi təmir'],['🛞','Təkər','Təkər xidməti'],['🔋','Akkumulyator','Akkumulyator dəyişmə'],['🔑','Açar təmiri','Açar və immobilayzer'],['💻','Proqramlaşdırma','ECU proqramlaşdırma'],['🏎','Stage tuning','Performans artırımı'],['🔥','Katalizator təmiri','Katalizator bərpası'],['🧰','Press təmiri','Press və mexanizm'],['📐','Razval','Təkər düzülüşü'],['⚖','Balans','Təkər balansı'],['🧽','Mobil avtoyuma','Küçədə avtoyuma'],['🔍','Alışdan əvvəl yoxlama','Ekspert yoxlama'],['🚗','Avtomobil satışı','Bütün elanlar'],['🌍','Xaricdən sifariş','Avtomobil sifarişi'],['⚙','Ehtiyat hissələri','Original və universal'],['🚘','Avtomobil icarəsi','Gündəlik və aylıq'],['🚌','Avtobus','Satış və icarə'],['🏍','Motosiklet / Moped','Satış və servis'],['🏗','Ağır yük maşınları','Satış və icarə'],['🏗','Tikinti texnikası','Kirayə və satış'],['🏗','Kran','Kirayə və satış'],['🛥','Su nəqliyyatı','Qayıq və gəmi'],['🚛','Qoşqu / Treyler','Daşıma'],['📦','Tikinti materialı daşınması','Yük və material'],['🚐','Ayıq sürücü','Təhlükəsiz yol'],['🔢','Nömrə nişanları','Elan, alqı-satqı və qeydiyyat yönləndirməsi'],['⚖','Notariat','Avtomobil əməliyyatları']
+['🔧','Usta çağır','Peşəkar ustalar','automotive_service'],
+['🚨','Yol yardımı','24/7 dəstək','roadside'],
+['🚚','Evakuator','Avtomobil daşıma','towing'],
+['🩺','Diaqnostika','Elektron diaqnostika','diagnostics'],
+['🔨','Təmir','Ümumi təmir','automotive_service'],
+['🛞','Təkər','Təkər xidməti','automotive_service'],
+['🔋','Akkumulyator','Akkumulyator dəyişmə','automotive_service'],
+['🔑','Açar təmiri','Açar və immobilayzer','automotive_service'],
+['💻','Proqramlaşdırma','ECU proqramlaşdırma','automotive_service'],
+['🏎','Stage tuning','Performans artırımı','automotive_service'],
+['🔥','Katalizator təmiri','Katalizator bərpası','automotive_service'],
+['🧰','Press təmiri','Press və mexanizm','automotive_service'],
+['📐','Razval','Təkər düzülüşü','automotive_service'],
+['⚖','Balans','Təkər balansı','automotive_service'],
+['🧽','Mobil avtoyuma','Küçədə avtoyuma','automotive_service'],
+['🔍','Alışdan əvvəl yoxlama','Ekspert yoxlama','diagnostics'],
+['🚗','Avtomobil satışı','Bütün elanlar','automotive_service'],
+['🌍','Xaricdən sifariş','Avtomobil sifarişi','automotive_service'],
+['⚙','Ehtiyat hissələri','Original və universal','automotive_service'],
+['🚘','Avtomobil icarəsi','Gündəlik və aylıq','vehicle_transport'],
+['🚌','Avtobus','Satış və icarə','vehicle_transport'],
+['🏍','Motosiklet / Moped','Satış və servis','automotive_service'],
+['🏗','Ağır yük maşınları','Satış və icarə','vehicle_transport'],
+['🏗','Tikinti texnikası','Kirayə və satış','vehicle_transport'],
+['🏗','Kran','Kirayə və satış','towing'],
+['🛥','Su nəqliyyatı','Qayıq və gəmi','vehicle_transport'],
+['🚛','Qoşqu / Treyler','Daşıma','vehicle_transport'],
+['📦','Tikinti materialı daşınması','Yük və material','cargo_transport'],
+['🚐','Ayıq sürücü','Təhlükəsiz yol','automotive_service'],
+['🔢','Nömrə nişanları','Elan, alqı-satqı və qeydiyyat yönləndirməsi','automotive_service'],
+['⚖','Notariat','Avtomobil əməliyyatları','automotive_service']
 ];
 const logistics=[['🚚','Yük daşıma','Doblo / Damas 150–300 kq'],['🚛','Ağır yük','Böyük yük və kommersiya'],['🏗','Tikinti materialı','Materialın çatdırılması'],['🚗','Avtomobil daşınması','Şəhərarası və şəhərdaxili'],['🚨','Evakuator','Yolda qalan avtomobil'],['🧑‍✈️','Ayıq sürücü','Təhlükəsiz sürüş'],['🏗','Kran sifarişi','Qaldırma və texnika'],['🚌','Avtobus icarəsi','Sərnişin və qrup'],['🏍','Moto / skuter','Satış və servis'],['🚛','Qoşqu / treyler','Daşıma xidməti'],['🛥','Su nəqliyyatı','Qayıq və yaxt'],['🏗','Ağır texnika','Ekskavator və digər']];
-const sg=document.getElementById('serviceGrid'); sg.innerHTML=services.map((x,i)=>`<article class="service-card" data-service="${x[1].toLowerCase()}"><span class="service-icon">${x[0]}</span><h3>${x[1]}</h3><p>${x[2]}</p><span class="service-arrow">→</span></article>`).join('');
+const sg=document.getElementById('serviceGrid'); sg.innerHTML=services.map((x,i)=>`<article class="service-card" data-service="${x[1].toLowerCase()}" data-category="${x[3]}"><span class="service-icon">${x[0]}</span><h3>${x[1]}</h3><p>${x[2]}</p><span class="service-arrow">→</span></article>`).join('');
 const lg=document.getElementById('logisticsGrid'); lg.innerHTML=logistics.map(x=>`<article class="logistics-card"><h3>${x[0]} ${x[1]}</h3><p>${x[2]}</p><button class="btn" style="margin-top:12px">Sifariş et →</button></article>`).join('');
 const vids=[['BMW 5 Series','2019 • 2.0 • 60,000 AZN'],['Mercedes-Benz','2021 • 2.0 • 42,000 AZN'],['Toyota Prado','2020 • 4.0 • 63,000 AZN'],['Range Rover','2022 • 3.0 • 120,000 AZN']];
 let videoState=JSON.parse(localStorage.getItem('austa-video-social-v2')||'{}');
@@ -8104,8 +8134,12 @@ const search=document.getElementById('globalSearch'); document.getElementById('g
 const formIds=['requestProblem','requestCategory','requestLevel','requestBrand','requestModel','requestYear','requestPlate','requestPhone'];
 document.getElementById('requestGps').onclick=async()=>{try{if(window.AUSTA_LOCATION_CORE?.getCurrentPosition){let p=await window.AUSTA_LOCATION_CORE.getCurrentPosition();document.getElementById('requestResult').style.display='block';document.getElementById('requestResult').textContent=`GPS hazırdır: ${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)}`}else throw Error('Location Core hazır deyil')}catch(e){document.getElementById('requestResult').style.display='block';document.getElementById('requestResult').textContent='GPS icazəsi alınmadı: '+e.message}};
 document.getElementById('requestSubmit').onclick=()=>{let problem=document.getElementById('requestProblem').value.trim();if(!problem){alert('Əvvəlcə problemi yazın.');return}let input={description:problem,problem,category:document.getElementById('requestCategory').value,level:document.getElementById('requestLevel').value,vehicleBrand:document.getElementById('requestBrand').value,vehicleModel:document.getElementById('requestModel').value,vehicleYear:document.getElementById('requestYear').value,vehiclePlate:document.getElementById('requestPlate').value,customerPhone:document.getElementById('requestPhone').value};try{let r=window.AUSTA_SERVICE_REQUEST_CORE?.createRequest(input);let box=document.getElementById('requestResult');box.style.display='block';box.textContent=r?.requestId?`Sifariş yaradıldı: ${r.requestId} • İlkin qiymət: ${r.priceCalculation?.totalCustomerPrice??'hesablanır'} AZN`:'Sifariş Core hazır deyil.'}catch(e){console.error(e);document.getElementById('requestResult').style.display='block';document.getElementById('requestResult').textContent='Sifariş yaradıla bilmədi: '+e.message}};
-document.querySelectorAll('.service-card').forEach(c=>c.onclick=()=>{document.getElementById('requestCategory').value='automotive_service';document.getElementById('requestProblem').value=c.querySelector('h3').textContent+' xidməti lazımdır.';document.getElementById('mechanic').scrollIntoView({behavior:'smooth'})});
-document.getElementById('createVideoBtn').onclick=()=>alert('Video elan yaratma pəncərəsi account/backend və media upload mərhələsində tam aktiv ediləcək.');
+document.querySelectorAll('.service-card').forEach(c=>c.onclick=()=>{
+const category=c.dataset.category||'automotive_service';
+document.getElementById('requestCategory').value=category;
+document.getElementById('requestProblem').value=c.querySelector('h3').textContent+' xidməti lazımdır.';
+document.getElementById('mechanic').scrollIntoView({behavior:'smooth'});
+});
 })();
 </script>
 </body>
