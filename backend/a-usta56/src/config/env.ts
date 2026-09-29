@@ -15,6 +15,5 @@ export const env = {
   host: process.env.HOST ?? "0.0.0.0",
 
   supabaseUrl: required("SUPABASE_URL"),
-  supabaseAnonKey: required("SUPABASE_ANON_KEY"),
-  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""
+  supabaseServiceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY"),
 };
