@@ -1,6 +1,5 @@
 import Fastify from "fastify";
-import { env } from "./config/env";
-import { supabase } from "./supabase";
+import { env } from "./env";
 
 const app = Fastify({
   logger: true,
@@ -12,8 +11,6 @@ app.get("/health", async () => {
     service: "A-USTA backend",
   };
 });
-
-
 
 const start = async () => {
   try {
