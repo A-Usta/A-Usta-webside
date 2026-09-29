@@ -556,4 +556,363 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
       });
     },
   );
+   /*
+   * =====================================================
+   * PATCH /service-order-assignments/:assignmentId/start
+   * Provider qəbul etdiyi sifarişə başlayır
+   * =====================================================
+   */
+  app.patch(
+    "/service-order-assignments/:assignmentId/start",
+    async (request, reply) => {
+      const params = request.params as {
+        assignmentId?: string;
+      };
+
+      if (!params.assignmentId) {
+        return reply.code(400).send({
+          error: "assignmentId is required",
+        });
+      }
+
+      const { data: assignment, error: assignmentError } =
+        await supabase
+          .from("service_order_assignments")
+          .select("*")
+          .eq("id", params.assignmentId)
+          .single();
+
+      if (assignmentError || !assignment) {
+        return reply.code(404).send({
+          error: "Service order assignment not found",
+        });
+      }
+
+      if (assignment.status !== "accepted") {
+        return reply.code(409).send({
+          error:
+            "Only accepted assignments can be started",
+        });
+      }
+
+      const { data: order, error: orderError } =
+        await supabase
+          .from("service_orders")
+          .select("*")
+          .eq("id", assignment.order_id)
+          .single();
+
+      if (orderError || !order) {
+        return reply.code(404).send({
+          error: "Service order not found",
+        });
+      }
+
+      if (order.status !== "accepted") {
+        return reply.code(409).send({
+          error:
+            "Only accepted service orders can be started",
+        });
+      }
+
+      const { data: startedOrder, error: startError } =
+        await supabase
+          .from("service_orders")
+          .update({
+            status: "in_progress",
+          })
+          .eq("id", assignment.order_id)
+          .eq("status", "accepted")
+          .select("*")
+          .single();
+
+      if (startError || !startedOrder) {
+        app.log.error(startError);
+
+        return reply.code(409).send({
+          error:
+            "Service order could not be started",
+        });
+      }
+
+      return reply.send({
+        message: "Service order started successfully",
+        order: startedOrder,
+        assignment,
+      });
+    },
+  );
+
+  /*
+   * =====================================================
+   * PATCH /service-order-assignments/:assignmentId/complete
+   * Provider sifarişi tamamlayır
+   * =====================================================
+   */
+  app.patch(
+    "/service-order-assignments/:assignmentId/complete",
+    async (request, reply) => {
+      const params = request.params as {
+        assignmentId?: string;
+      };
+
+      const body = (request.body ?? {}) as {
+        final_price?: number;
+        price_status?: string;
+      };
+
+      if (!params.assignmentId) {
+        return reply.code(400).send({
+          error: "assignmentId is required",
+        });
+      }
+
+      const { data: assignment, error: assignmentError } =
+        await supabase
+          .from("service_order_assignments")
+          .select("*")
+          .eq("id", params.assignmentId)
+          .single();
+
+      if (assignmentError || !assignment) {
+        return reply.code(404).send({
+          error: "Service order assignment not found",
+        });
+      }
+
+      if (assignment.status !== "accepted") {
+        return reply.code(409).send({
+          error:
+            "Only accepted assignments can be completed",
+        });
+      }
+
+      const { data: order, error: orderError } =
+        await supabase
+          .from("service_orders")
+          .select("*")
+          .eq("id", assignment.order_id)
+          .single();
+
+      if (orderError || !order) {
+        return reply.code(404).send({
+          error: "Service order not found",
+        });
+      }
+
+      if (order.status !== "in_progress") {
+        return reply.code(409).send({
+          error:
+            "Only in-progress service orders can be completed",
+        });
+      }
+
+      const finalPrice =
+        body.final_price !== undefined
+          ? Number(body.final_price)
+          : undefined;
+
+      if (
+        finalPrice !== undefined &&
+        (!Number.isFinite(finalPrice) || finalPrice < 0)
+      ) {
+        return reply.code(400).send({
+          error:
+            "final_price must be a valid non-negative number",
+        });
+      }
+
+      const priceStatus =
+        body.price_status ??
+        (finalPrice !== undefined
+          ? "final"
+          : order.price_status ?? "unknown");
+
+      if (!allowedPriceStatuses.includes(priceStatus)) {
+        return reply.code(400).send({
+          error:
+            "Invalid price_status",
+        });
+      }
+
+      if (
+        ["confirmed", "final"].includes(priceStatus) &&
+        finalPrice === undefined &&
+        order.final_price === null
+      ) {
+        return reply.code(400).send({
+          error:
+            "final_price is required when price_status is confirmed or final",
+        });
+      }
+
+      /*
+       * Əvvəl assignment tamamlanır.
+       * Əgər order tamamlanmasa, assignment geri accepted vəziyyətinə qaytarılır.
+       */
+      const { data: completedAssignment, error: assignmentCompleteError } =
+        await supabase
+          .from("service_order_assignments")
+          .update({
+            status: "completed",
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", params.assignmentId)
+          .eq("status", "accepted")
+          .select("*")
+          .single();
+
+      if (
+        assignmentCompleteError ||
+        !completedAssignment
+      ) {
+        app.log.error(assignmentCompleteError);
+
+        return reply.code(409).send({
+          error:
+            "Service order assignment could not be completed",
+        });
+      }
+
+      const orderUpdate: Record<string, unknown> = {
+        status: "completed",
+        price_status: priceStatus,
+      };
+
+      if (finalPrice !== undefined) {
+        orderUpdate.final_price = finalPrice;
+      }
+
+      const { data: completedOrder, error: orderCompleteError } =
+        await supabase
+          .from("service_orders")
+          .update(orderUpdate)
+          .eq("id", assignment.order_id)
+          .eq("status", "in_progress")
+          .select("*")
+          .single();
+
+      if (orderCompleteError || !completedOrder) {
+        app.log.error(orderCompleteError);
+
+        /*
+         * Order tamamlanmadısa assignment-i əvvəlki vəziyyətinə qaytarırıq.
+         */
+        await supabase
+          .from("service_order_assignments")
+          .update({
+            status: "accepted",
+            completed_at: null,
+          })
+          .eq("id", params.assignmentId)
+          .eq("status", "completed");
+
+        return reply.code(409).send({
+          error:
+            "Service order could not be completed",
+        });
+      }
+
+      return reply.send({
+        message: "Service order completed successfully",
+        order: completedOrder,
+        assignment: completedAssignment,
+      });
+    },
+  );
+
+  /*
+   * =====================================================
+   * PATCH /service-orders/:orderId/cancel
+   * Sifarişin təhlükəsiz ləğvi
+   * =====================================================
+   */
+  app.patch(
+    "/service-orders/:orderId/cancel",
+    async (request, reply) => {
+      const params = request.params as {
+        orderId?: string;
+      };
+
+      if (!params.orderId) {
+        return reply.code(400).send({
+          error: "orderId is required",
+        });
+      }
+
+      const { data: order, error: orderError } =
+        await supabase
+          .from("service_orders")
+          .select("*")
+          .eq("id", params.orderId)
+          .single();
+
+      if (orderError || !order) {
+        return reply.code(404).send({
+          error: "Service order not found",
+        });
+      }
+
+      if (order.status === "completed") {
+        return reply.code(409).send({
+          error:
+            "Completed service orders cannot be cancelled",
+        });
+      }
+
+      if (order.status === "cancelled") {
+        return reply.code(409).send({
+          error:
+            "Service order is already cancelled",
+        });
+      }
+
+      const { data: cancelledOrder, error: cancelError } =
+        await supabase
+          .from("service_orders")
+          .update({
+            status: "cancelled",
+          })
+          .eq("id", params.orderId)
+          .not("status", "in", "(completed,cancelled)")
+          .select("*")
+          .single();
+
+      if (cancelError || !cancelledOrder) {
+        app.log.error(cancelError);
+
+        return reply.code(409).send({
+          error:
+            "Service order could not be cancelled",
+        });
+      }
+
+      /*
+       * Açıq assignment-ləri də ləğv edirik.
+       */
+      const { error: assignmentCancelError } =
+        await supabase
+          .from("service_order_assignments")
+          .update({
+            status: "cancelled",
+          })
+          .eq("order_id", params.orderId)
+          .in("status", ["offered", "accepted"]);
+
+      if (assignmentCancelError) {
+        app.log.error(assignmentCancelError);
+
+        return reply.code(500).send({
+          error:
+            "Service order cancelled, but assignments could not be fully cancelled",
+          order: cancelledOrder,
+        });
+      }
+
+      return reply.send({
+        message: "Service order cancelled successfully",
+        order: cancelledOrder,
+      });
+    },
+  );
 }
