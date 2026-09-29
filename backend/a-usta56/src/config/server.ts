@@ -1,6 +1,5 @@
 import Fastify from "fastify";
-import { env } from "./env";
-
+import { env } from "./env.js";
 const app = Fastify({
   logger: true,
 });
