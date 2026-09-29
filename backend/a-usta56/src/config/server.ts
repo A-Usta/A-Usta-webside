@@ -1,8 +1,10 @@
 import Fastify from "fastify";
 import { env } from "./env.js";
+import { serviceOrderRoutes } from "../routes/service-orders.js";
 const app = Fastify({
   logger: true,
 });
+app.register(serviceOrderRoutes);
 
 app.get("/health", async () => {
   return {
