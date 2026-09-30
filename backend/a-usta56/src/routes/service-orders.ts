@@ -1,5 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { supabase } from "../config/supabase.js";
+import {
+  requireAuth,
+  type AuthenticatedRequest,
+} from "../middleware/auth.js";
 
 const allowedCategories = [
   "mechanic_service",
@@ -33,10 +37,19 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
    * Bütün service order-ləri gətir
    * =====================================================
    */
-  app.get("/service-orders", async () => {
+ app.get(
+  "/service-orders",
+  {
+    preHandler: requireAuth,
+  },
+  async (request) => {
+    const authenticatedRequest = request as AuthenticatedRequest;
+
+    
     const { data, error } = await supabase
       .from("service_orders")
       .select("*")
+      .eq("customer_id", authenticatedRequest.user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -50,7 +63,8 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
     return {
       orders: data ?? [],
     };
-  });
+  },
+);
 
   /*
    * =====================================================
@@ -58,9 +72,15 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
    * Yeni service order yarat
    * =====================================================
    */
-  app.post("/service-orders", async (request, reply) => {
+app.post(
+  "/service-orders",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
+    const authenticatedRequest = request as AuthenticatedRequest;
+
     const body = request.body as {
-      customer_id?: string;
       vehicle_id?: string;
       service_category?: string;
       service_description?: string;
@@ -77,15 +97,9 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
       customer_note?: string;
     };
 
-    if (!body.customer_id) {
-      return reply.code(400).send({
-        error: "customer_id is required",
-      });
-    }
-
     if (
       !body.service_category ||
-      !allowedCategories.includes(
+      allowedCategories.includes(
         body.service_category as (typeof allowedCategories)[number],
       )
     ) {
@@ -145,7 +159,7 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
     const { data, error } = await supabase
       .from("service_orders")
       .insert({
-        customer_id: body.customer_id,
+       customer_id: authenticatedRequest.user.id,
         vehicle_id: body.vehicle_id ?? null,
         service_category: body.service_category,
         service_description: body.service_description ?? null,
@@ -185,8 +199,11 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
    * =====================================================
    */
   app.post(
-    "/service-orders/:orderId/assignments",
-    async (request, reply) => {
+  "/service-orders/:orderId/assignments",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
       const params = request.params as {
         orderId?: string;
       };
@@ -233,17 +250,25 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
       /*
        * Sifariş mövcuddurmu?
        */
-      const { data: order, error: orderError } = await supabase
-        .from("service_orders")
-        .select("id, status")
-        .eq("id", params.orderId)
-        .single();
+    const authenticatedRequest = request as AuthenticatedRequest;
+    
+     const { data: order, error: orderError } = await supabase
+  .from("service_orders")
+  .select("id, status, customer_id")
+  .eq("id", params.orderId)
+  .single();
 
       if (orderError || !order) {
         return reply.code(404).send({
           error: "Service order not found",
         });
       }
+    
+    if (order.customer_id !== authenticatedRequest.user.id) {
+  return reply.code(403).send({
+    error: "You are not allowed to assign providers to this service order",
+  });
+}
 
       /*
        * Artıq qəbul edilmiş sifarişə yeni provider
@@ -341,13 +366,19 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
    * Provider sifarişi qəbul edir
    * =====================================================
    */
-  app.patch(
-    "/service-order-assignments/:assignmentId/accept",
-    async (request, reply) => {
+ app.patch(
+  "/service-order-assignments/:assignmentId/accept",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
       const params = request.params as {
         assignmentId?: string;
       };
 
+    
+    const authenticatedRequest = request as AuthenticatedRequest;
+    
       if (!params.assignmentId) {
         return reply.code(400).send({
           error: "assignmentId is required",
@@ -364,11 +395,17 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
           .eq("id", params.assignmentId)
           .single();
 
-      if (assignmentError || !assignment) {
-        return reply.code(404).send({
-          error: "Service order assignment not found",
-        });
-      }
+  if (assignmentError || !assignment) {
+  return reply.code(404).send({
+    error: "Service order assignment not found",
+  });
+}
+
+if (assignment.provider_id !== authenticatedRequest.user.id) {
+  return reply.code(403).send({
+    error: "You are not allowed to accept this assignment",
+  });
+}
 
       /*
        * Yalnız offered assignment qəbul edilə bilər.
@@ -497,11 +534,16 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
    * =====================================================
    */
   app.patch(
-    "/service-order-assignments/:assignmentId/reject",
-    async (request, reply) => {
-      const params = request.params as {
-        assignmentId?: string;
-      };
+  "/service-order-assignments/:assignmentId/reject",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
+     const params = request.params as {
+  assignmentId?: string;
+};
+
+const authenticatedRequest = request as AuthenticatedRequest;
 
       if (!params.assignmentId) {
         return reply.code(400).send({
@@ -522,6 +564,12 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
         });
       }
 
+    if (assignment.provider_id !== authenticatedRequest.user.id) {
+  return reply.code(403).send({
+    error: "You are not allowed to reject this assignment",
+  });
+}
+    
       if (assignment.status !== "offered") {
         return reply.code(409).send({
           error:
@@ -562,12 +610,17 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
    * Provider qəbul etdiyi sifarişə başlayır
    * =====================================================
    */
-  app.patch(
-    "/service-order-assignments/:assignmentId/start",
-    async (request, reply) => {
-      const params = request.params as {
-        assignmentId?: string;
-      };
+ app.patch(
+  "/service-order-assignments/:assignmentId/start",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
+     const params = request.params as {
+  assignmentId?: string;
+};
+
+const authenticatedRequest = request as AuthenticatedRequest;
 
       if (!params.assignmentId) {
         return reply.code(400).send({
@@ -582,11 +635,17 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
           .eq("id", params.assignmentId)
           .single();
 
-      if (assignmentError || !assignment) {
-        return reply.code(404).send({
-          error: "Service order assignment not found",
-        });
-      }
+     if (assignmentError || !assignment) {
+  return reply.code(404).send({
+    error: "Service order assignment not found",
+  });
+}
+
+if (assignment.provider_id !== authenticatedRequest.user.id) {
+  return reply.code(403).send({
+    error: "You are not allowed to start this assignment",
+  });
+}
 
       if (assignment.status !== "accepted") {
         return reply.code(409).send({
@@ -649,12 +708,17 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
    * Provider sifarişi tamamlayır
    * =====================================================
    */
-  app.patch(
-    "/service-order-assignments/:assignmentId/complete",
-    async (request, reply) => {
+ app.patch(
+  "/service-order-assignments/:assignmentId/complete",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
       const params = request.params as {
-        assignmentId?: string;
-      };
+  assignmentId?: string;
+};
+
+const authenticatedRequest = request as AuthenticatedRequest;
 
       const body = (request.body ?? {}) as {
         final_price?: number;
@@ -674,11 +738,17 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
           .eq("id", params.assignmentId)
           .single();
 
-      if (assignmentError || !assignment) {
-        return reply.code(404).send({
-          error: "Service order assignment not found",
-        });
-      }
+  if (assignmentError || !assignment) {
+  return reply.code(404).send({
+    error: "Service order assignment not found",
+  });
+}
+
+if (assignment.provider_id !== authenticatedRequest.user.id) {
+  return reply.code(403).send({
+    error: "You are not allowed to complete this assignment",
+  });
+}
 
       if (assignment.status !== "accepted") {
         return reply.code(409).send({
@@ -827,12 +897,17 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
    * Sifarişin təhlükəsiz ləğvi
    * =====================================================
    */
-  app.patch(
-    "/service-orders/:orderId/cancel",
-    async (request, reply) => {
-      const params = request.params as {
-        orderId?: string;
-      };
+ app.patch(
+  "/service-orders/:orderId/cancel",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
+     const params = request.params as {
+  orderId?: string;
+};
+
+const authenticatedRequest = request as AuthenticatedRequest;
 
       if (!params.orderId) {
         return reply.code(400).send({
@@ -847,11 +922,17 @@ export async function serviceOrderRoutes(app: FastifyInstance) {
           .eq("id", params.orderId)
           .single();
 
-      if (orderError || !order) {
-        return reply.code(404).send({
-          error: "Service order not found",
-        });
-      }
+     if (orderError || !order) {
+  return reply.code(404).send({
+    error: "Service order not found",
+  });
+}
+
+if (order.customer_id !== authenticatedRequest.user.id) {
+  return reply.code(403).send({
+    error: "You are not allowed to cancel this service order",
+  });
+}
 
       if (order.status === "completed") {
         return reply.code(409).send({
