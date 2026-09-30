@@ -1,9 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { supabase } from "../config/supabase.js";
-import {
-  requireAuth,
-  type AuthenticatedRequest,
-} from "../middleware/auth.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const allowedCategories = [
   "mechanic_service",
@@ -29,209 +26,343 @@ const allowedProviderTypes = [
   "cargo",
 ] as const;
 
+type ServiceCategory = (typeof allowedCategories)[number];
+type Urgency = (typeof allowedUrgencies)[number];
+type ServiceMode = (typeof allowedServiceModes)[number];
+type PriceStatus = (typeof allowedPriceStatuses)[number];
+type ProviderType = (typeof allowedProviderTypes)[number];
+
+type ServiceOrderBody = {
+  vehicle_id?: string;
+  service_category?: string;
+  service_description?: string;
+  urgency?: string;
+  service_mode?: string;
+  address?: string;
+  region?: string;
+  district?: string;
+  latitude?: number;
+  longitude?: number;
+  estimated_price_min?: number;
+  estimated_price_max?: number;
+  price_status?: string;
+  customer_note?: string;
+};
+
+type AssignmentBody = {
+  provider_id?: string;
+  provider_type?: string;
+  distance_km?: number;
+};
+
+type CompleteBody = {
+  final_price?: number;
+  price_status?: string;
+};
+
+function isUuid(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value,
+    )
+  );
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isAllowed<T extends readonly string[]>(
+  value: unknown,
+  values: T,
+): value is T[number] {
+  return typeof value === "string" && values.includes(value);
+}
+
+function isValidLatitude(value: unknown): boolean {
+  return isFiniteNumber(value) && value >= -90 && value <= 90;
+}
+
+function isValidLongitude(value: unknown): boolean {
+  return isFiniteNumber(value) && value >= -180 && value <= 180;
+}
+
+function isValidNonNegativeNumber(value: unknown): boolean {
+  return isFiniteNumber(value) && value >= 0;
+}
+
+function providerRoleMatches(
+  providerType: ProviderType,
+  role: string | null | undefined,
+): boolean {
+  if (!role) {
+    return false;
+  }
+
+  const aliases: Record<ProviderType, string[]> = {
+    mechanic: ["mechanic", "usta"],
+    shop: ["shop", "service"],
+    tow: ["tow", "evakuator"],
+    cargo: ["cargo", "logistics"],
+  };
+
+  return aliases[providerType].includes(role);
+}
 
 export async function serviceOrderRoutes(app: FastifyInstance) {
   /*
    * =====================================================
    * GET /service-orders
-   * Bütün service order-ləri gətir
+   * Customer öz sifarişlərini görür
    * =====================================================
    */
- app.get(
-  "/service-orders",
-  {
-    preHandler: requireAuth,
-  },
-  async (request) => {
-    const authenticatedRequest = request as AuthenticatedRequest;
+  app.get(
+    "/service-orders",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
 
-    
-    const { data, error } = await supabase
-      .from("service_orders")
-      .select("*")
-      .eq("customer_id", authenticatedRequest.user.id)
-      .order("created_at", { ascending: false });
+      if (!userId) {
+        return reply.code(401).send({
+          error: "Unauthorized",
+          message: "Authenticated user is required",
+        });
+      }
 
-    if (error) {
-      app.log.error(error);
+      const { data, error } = await supabase
+        .from("service_orders")
+        .select("*")
+        .eq("customer_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        request.log.error(error);
+
+        return reply.code(500).send({
+          error: "Service orders could not be loaded",
+        });
+      }
 
       return {
-        error: "Service orders could not be loaded",
+        orders: data ?? [],
       };
-    }
-
-    return {
-      orders: data ?? [],
-    };
-  },
-);
+    },
+  );
 
   /*
    * =====================================================
    * POST /service-orders
-   * Yeni service order yarat
-   * =====================================================
-   */
-app.post(
-  "/service-orders",
-  {
-    preHandler: requireAuth,
-  },
-  async (request, reply) => {
-    const authenticatedRequest = request as AuthenticatedRequest;
-
-    const body = request.body as {
-      vehicle_id?: string;
-      service_category?: string;
-      service_description?: string;
-      urgency?: string;
-      service_mode?: string;
-      address?: string;
-      region?: string;
-      district?: string;
-      latitude?: number;
-      longitude?: number;
-      estimated_price_min?: number;
-      estimated_price_max?: number;
-      price_status?: string;
-      customer_note?: string;
-    };
-
-    if (
-      !body.service_category ||
-      allowedCategories.includes(
-        body.service_category as (typeof allowedCategories)[number],
-      )
-    ) {
-      return reply.code(400).send({
-        error:
-          "service_category must be mechanic_service, tow_service, or cargo_service",
-      });
-    }
-
-    const urgency = body.urgency ?? "normal";
-
-    if (
-      !allowedUrgencies.includes(
-        urgency as (typeof allowedUrgencies)[number],
-      )
-    ) {
-      return reply.code(400).send({
-        error: "urgency must be normal or urgent",
-      });
-    }
-
-    const serviceMode = body.service_mode ?? "mobile";
-
-    if (
-      !allowedServiceModes.includes(
-        serviceMode as (typeof allowedServiceModes)[number],
-      )
-    ) {
-      return reply.code(400).send({
-        error: "service_mode must be mobile or shop",
-      });
-    }
-
-    const priceStatus = body.price_status ?? "unknown";
-
-    if (
-      !allowedPriceStatuses.includes(
-        priceStatus as (typeof allowedPriceStatuses)[number],
-      )
-    ) {
-      return reply.code(400).send({
-        error:
-          "price_status must be unknown, estimated, confirmed, or final",
-      });
-    }
-
-    if (
-      body.estimated_price_min !== undefined &&
-      body.estimated_price_max !== undefined &&
-      body.estimated_price_min > body.estimated_price_max
-    ) {
-      return reply.code(400).send({
-        error: "estimated_price_min cannot be greater than estimated_price_max",
-      });
-    }
-
-    const { data, error } = await supabase
-      .from("service_orders")
-      .insert({
-       customer_id: authenticatedRequest.user.id,
-        vehicle_id: body.vehicle_id ?? null,
-        service_category: body.service_category,
-        service_description: body.service_description ?? null,
-        urgency,
-        service_mode: serviceMode,
-        address: body.address ?? null,
-        region: body.region ?? null,
-        district: body.district ?? null,
-        latitude: body.latitude ?? null,
-        longitude: body.longitude ?? null,
-        estimated_price_min: body.estimated_price_min ?? null,
-        estimated_price_max: body.estimated_price_max ?? null,
-        price_status: priceStatus,
-        customer_note: body.customer_note ?? null,
-      })
-      .select("*")
-      .single();
-
-    if (error) {
-      app.log.error(error);
-
-      return reply.code(500).send({
-        error: "Service order could not be created",
-      });
-    }
-
-    return reply.code(201).send({
-      message: "Service order created successfully",
-      order: data,
-    });
-  });
-
-  /*
-   * =====================================================
-   * POST /service-orders/:orderId/assignments
-   * Sifarişi provider-ə təklif et
+   * Yeni sifariş yarat
    * =====================================================
    */
   app.post(
-  "/service-orders/:orderId/assignments",
-  {
-    preHandler: requireAuth,
-  },
-  async (request, reply) => {
-      const params = request.params as {
-        orderId?: string;
-      };
+    "/service-orders",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
 
-      const body = request.body as {
-        provider_id?: string;
-        provider_type?: string;
-        distance_km?: number;
-      };
-
-      if (!params.orderId) {
-        return reply.code(400).send({
-          error: "orderId is required",
+      if (!userId) {
+        return reply.code(401).send({
+          error: "Unauthorized",
         });
       }
 
-      if (!body.provider_id) {
+      const body = (request.body ?? {}) as ServiceOrderBody;
+
+      /*
+       * service_category
+       */
+      if (!isAllowed(body.service_category, allowedCategories)) {
         return reply.code(400).send({
-          error: "provider_id is required",
+          error:
+            "service_category must be mechanic_service, tow_service, or cargo_service",
+        });
+      }
+
+      /*
+       * urgency
+       */
+      const urgency = body.urgency ?? "normal";
+
+      if (!isAllowed(urgency, allowedUrgencies)) {
+        return reply.code(400).send({
+          error: "urgency must be normal or urgent",
+        });
+      }
+
+      /*
+       * service_mode
+       */
+      const serviceMode = body.service_mode ?? "mobile";
+
+      if (!isAllowed(serviceMode, allowedServiceModes)) {
+        return reply.code(400).send({
+          error: "service_mode must be mobile or shop",
+        });
+      }
+
+      /*
+       * price_status
+       */
+      const priceStatus = body.price_status ?? "unknown";
+
+      if (!isAllowed(priceStatus, allowedPriceStatuses)) {
+        return reply.code(400).send({
+          error:
+            "price_status must be unknown, estimated, confirmed, or final",
+        });
+      }
+
+      /*
+       * vehicle_id
+       */
+      if (body.vehicle_id !== undefined && body.vehicle_id !== null) {
+        if (!isUuid(body.vehicle_id)) {
+          return reply.code(400).send({
+            error: "vehicle_id must be a valid UUID",
+          });
+        }
+      }
+
+      /*
+       * Coordinates
+       */
+      if (
+        body.latitude !== undefined &&
+        body.latitude !== null &&
+        !isValidLatitude(body.latitude)
+      ) {
+        return reply.code(400).send({
+          error: "latitude must be between -90 and 90",
         });
       }
 
       if (
-        !body.provider_type ||
-        !allowedProviderTypes.includes(
-          body.provider_type as (typeof allowedProviderTypes)[number],
-        )
+        body.longitude !== undefined &&
+        body.longitude !== null &&
+        !isValidLongitude(body.longitude)
       ) {
+        return reply.code(400).send({
+          error: "longitude must be between -180 and 180",
+        });
+      }
+
+      /*
+       * Estimated price
+       */
+      if (
+        body.estimated_price_min !== undefined &&
+        !isValidNonNegativeNumber(body.estimated_price_min)
+      ) {
+        return reply.code(400).send({
+          error: "estimated_price_min must be a non-negative number",
+        });
+      }
+
+      if (
+        body.estimated_price_max !== undefined &&
+        !isValidNonNegativeNumber(body.estimated_price_max)
+      ) {
+        return reply.code(400).send({
+          error: "estimated_price_max must be a non-negative number",
+        });
+      }
+
+      if (
+        body.estimated_price_min !== undefined &&
+        body.estimated_price_max !== undefined &&
+        body.estimated_price_min > body.estimated_price_max
+      ) {
+        return reply.code(400).send({
+          error: "estimated_price_min cannot be greater than estimated_price_max",
+        });
+      }
+
+      /*
+       * Yeni sifariş həmişə authenticated customer-a bağlanır.
+       * customer_id request body-dən QƏBUL EDİLMİR.
+       */
+      const { data, error } = await supabase
+        .from("service_orders")
+        .insert({
+          customer_id: userId,
+          vehicle_id: body.vehicle_id ?? null,
+          service_category: body.service_category as ServiceCategory,
+          service_description: body.service_description?.trim() || null,
+          urgency: urgency as Urgency,
+          service_mode: serviceMode as ServiceMode,
+          address: body.address?.trim() || null,
+          region: body.region?.trim() || null,
+          district: body.district?.trim() || null,
+          latitude: body.latitude ?? null,
+          longitude: body.longitude ?? null,
+          estimated_price_min: body.estimated_price_min ?? null,
+          estimated_price_max: body.estimated_price_max ?? null,
+          price_status: priceStatus as PriceStatus,
+          customer_note: body.customer_note?.trim() || null,
+        })
+        .select("*")
+        .single();
+
+      if (error) {
+        request.log.error(error);
+
+        return reply.code(500).send({
+          error: "Service order could not be created",
+        });
+      }
+
+      return reply.code(201).send({
+        message: "Service order created successfully",
+        order: data,
+      });
+    },
+  );
+
+  /*
+   * =====================================================
+   * POST /service-orders/:orderId/assignments
+   * Customer provider-ə sifariş təklif edir
+   * =====================================================
+   */
+  app.post(
+    "/service-orders/:orderId/assignments",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
+
+      if (!userId) {
+        return reply.code(401).send({
+          error: "Unauthorized",
+        });
+      }
+
+      const params = request.params as {
+        orderId?: string;
+      };
+
+      const body = (request.body ?? {}) as AssignmentBody;
+
+      if (!params.orderId || !isUuid(params.orderId)) {
+        return reply.code(400).send({
+          error: "orderId must be a valid UUID",
+        });
+      }
+
+      if (!body.provider_id || !isUuid(body.provider_id)) {
+        return reply.code(400).send({
+          error: "provider_id must be a valid UUID",
+        });
+      }
+
+      if (!isAllowed(body.provider_type, allowedProviderTypes)) {
         return reply.code(400).send({
           error:
             "provider_type must be mechanic, shop, tow, or cargo",
@@ -240,40 +371,34 @@ app.post(
 
       if (
         body.distance_km !== undefined &&
-        body.distance_km < 0
+        !isValidNonNegativeNumber(body.distance_km)
       ) {
         return reply.code(400).send({
-          error: "distance_km cannot be negative",
+          error: "distance_km must be a non-negative number",
         });
       }
 
       /*
-       * Sifariş mövcuddurmu?
+       * Sifariş yalnız sahibinə məxsusdur.
        */
-    const authenticatedRequest = request as AuthenticatedRequest;
-    
-     const { data: order, error: orderError } = await supabase
-  .from("service_orders")
-  .select("id, status, customer_id")
-  .eq("id", params.orderId)
-  .single();
+      const { data: order, error: orderError } = await supabase
+        .from("service_orders")
+        .select("id, status, customer_id")
+        .eq("id", params.orderId)
+        .single();
 
       if (orderError || !order) {
         return reply.code(404).send({
           error: "Service order not found",
         });
       }
-    
-    if (order.customer_id !== authenticatedRequest.user.id) {
-  return reply.code(403).send({
-    error: "You are not allowed to assign providers to this service order",
-  });
-}
 
-      /*
-       * Artıq qəbul edilmiş sifarişə yeni provider
-       * təklif edilmir.
-       */
+      if (order.customer_id !== userId) {
+        return reply.code(403).send({
+          error: "You are not allowed to assign providers to this service order",
+        });
+      }
+
       if (order.status !== "pending") {
         return reply.code(409).send({
           error:
@@ -282,7 +407,7 @@ app.post(
       }
 
       /*
-       * Provider mövcuddurmu və aktivdirmi?
+       * Provider-i yoxla
        */
       const { data: provider, error: providerError } = await supabase
         .from("profiles")
@@ -302,9 +427,16 @@ app.post(
         });
       }
 
+      const providerType = body.provider_type as ProviderType;
+
+      if (!providerRoleMatches(providerType, provider.role)) {
+        return reply.code(400).send({
+          error: "Provider type does not match provider profile role",
+        });
+      }
+
       /*
-       * Eyni sifariş + provider artıq mövcuddursa,
-       * ikinci assignment yaratma.
+       * Duplicate assignment
        */
       const { data: existingAssignment, error: existingError } =
         await supabase
@@ -315,7 +447,7 @@ app.post(
           .maybeSingle();
 
       if (existingError) {
-        app.log.error(existingError);
+        request.log.error(existingError);
 
         return reply.code(500).send({
           error: "Existing assignment could not be checked",
@@ -329,16 +461,13 @@ app.post(
         });
       }
 
-      /*
-       * Yeni assignment
-       */
       const { data: assignment, error: assignmentError } =
         await supabase
           .from("service_order_assignments")
           .insert({
             order_id: params.orderId,
             provider_id: body.provider_id,
-            provider_type: body.provider_type,
+            provider_type: providerType,
             status: "offered",
             distance_km: body.distance_km ?? null,
           })
@@ -346,7 +475,7 @@ app.post(
           .single();
 
       if (assignmentError) {
-        app.log.error(assignmentError);
+        request.log.error(assignmentError);
 
         return reply.code(500).send({
           error: "Service order assignment could not be created",
@@ -366,28 +495,30 @@ app.post(
    * Provider sifarişi qəbul edir
    * =====================================================
    */
- app.patch(
-  "/service-order-assignments/:assignmentId/accept",
-  {
-    preHandler: requireAuth,
-  },
-  async (request, reply) => {
+  app.patch(
+    "/service-order-assignments/:assignmentId/accept",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
+
+      if (!userId) {
+        return reply.code(401).send({
+          error: "Unauthorized",
+        });
+      }
+
       const params = request.params as {
         assignmentId?: string;
       };
 
-    
-    const authenticatedRequest = request as AuthenticatedRequest;
-    
-      if (!params.assignmentId) {
+      if (!params.assignmentId || !isUuid(params.assignmentId)) {
         return reply.code(400).send({
-          error: "assignmentId is required",
+          error: "assignmentId must be a valid UUID",
         });
       }
 
-      /*
-       * Assignment-i tap
-       */
       const { data: assignment, error: assignmentError } =
         await supabase
           .from("service_order_assignments")
@@ -395,30 +526,26 @@ app.post(
           .eq("id", params.assignmentId)
           .single();
 
-  if (assignmentError || !assignment) {
-  return reply.code(404).send({
-    error: "Service order assignment not found",
-  });
-}
+      if (assignmentError || !assignment) {
+        return reply.code(404).send({
+          error: "Service order assignment not found",
+        });
+      }
 
-if (assignment.provider_id !== authenticatedRequest.user.id) {
-  return reply.code(403).send({
-    error: "You are not allowed to accept this assignment",
-  });
-}
+      if (assignment.provider_id !== userId) {
+        return reply.code(403).send({
+          error: "You are not allowed to accept this assignment",
+        });
+      }
 
-      /*
-       * Yalnız offered assignment qəbul edilə bilər.
-       */
       if (assignment.status !== "offered") {
         return reply.code(409).send({
-          error:
-            "Only offered assignments can be accepted",
+          error: "Only offered assignments can be accepted",
         });
       }
 
       /*
-       * Sifarişi yoxla
+       * Sifariş pending olmalıdır.
        */
       const { data: order, error: orderError } = await supabase
         .from("service_orders")
@@ -432,10 +559,6 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
         });
       }
 
-      /*
-       * Sifariş artıq başqa provider tərəfindən qəbul edilibsə,
-       * ikinci qəbulun qarşısını al.
-       */
       if (order.status !== "pending") {
         return reply.code(409).send({
           error:
@@ -444,7 +567,7 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
       }
 
       /*
-       * Assignment-i accepted et
+       * Assignment-i yalnız offered vəziyyətdə accepted et.
        */
       const { data: acceptedAssignment, error: acceptError } =
         await supabase
@@ -454,21 +577,21 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
             accepted_at: new Date().toISOString(),
           })
           .eq("id", params.assignmentId)
+          .eq("provider_id", userId)
           .eq("status", "offered")
           .select("*")
           .single();
 
       if (acceptError || !acceptedAssignment) {
-        app.log.error(acceptError);
+        request.log.error(acceptError);
 
         return reply.code(409).send({
-          error:
-            "Service order assignment could not be accepted",
+          error: "Service order assignment could not be accepted",
         });
       }
 
       /*
-       * Əsas sifariş statusunu accepted et
+       * Əsas sifariş pending -> accepted
        */
       const { data: updatedOrder, error: updateOrderError } =
         await supabase
@@ -482,19 +605,17 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
           .single();
 
       if (updateOrderError || !updatedOrder) {
-        app.log.error(updateOrderError);
+        request.log.error(updateOrderError);
 
-        /*
-         * Əsas sifariş accepted ola bilmədisə,
-         * assignment-i geri offered vəziyyətinə qaytar.
-         */
         await supabase
           .from("service_order_assignments")
           .update({
             status: "offered",
             accepted_at: null,
           })
-          .eq("id", params.assignmentId);
+          .eq("id", params.assignmentId)
+          .eq("provider_id", userId)
+          .eq("status", "accepted");
 
         return reply.code(409).send({
           error:
@@ -503,8 +624,7 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
       }
 
       /*
-       * Eyni sifarişə göndərilmiş digər offered
-       * assignment-ləri ləğv et.
+       * Digər offered assignment-lər artıq keçərli deyil.
        */
       const { error: cancelOtherError } = await supabase
         .from("service_order_assignments")
@@ -516,7 +636,7 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
         .neq("id", params.assignmentId);
 
       if (cancelOtherError) {
-        app.log.error(cancelOtherError);
+        request.log.error(cancelOtherError);
       }
 
       return reply.send({
@@ -534,20 +654,26 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
    * =====================================================
    */
   app.patch(
-  "/service-order-assignments/:assignmentId/reject",
-  {
-    preHandler: requireAuth,
-  },
-  async (request, reply) => {
-     const params = request.params as {
-  assignmentId?: string;
-};
+    "/service-order-assignments/:assignmentId/reject",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
 
-const authenticatedRequest = request as AuthenticatedRequest;
+      if (!userId) {
+        return reply.code(401).send({
+          error: "Unauthorized",
+        });
+      }
 
-      if (!params.assignmentId) {
+      const params = request.params as {
+        assignmentId?: string;
+      };
+
+      if (!params.assignmentId || !isUuid(params.assignmentId)) {
         return reply.code(400).send({
-          error: "assignmentId is required",
+          error: "assignmentId must be a valid UUID",
         });
       }
 
@@ -564,16 +690,15 @@ const authenticatedRequest = request as AuthenticatedRequest;
         });
       }
 
-    if (assignment.provider_id !== authenticatedRequest.user.id) {
-  return reply.code(403).send({
-    error: "You are not allowed to reject this assignment",
-  });
-}
-    
+      if (assignment.provider_id !== userId) {
+        return reply.code(403).send({
+          error: "You are not allowed to reject this assignment",
+        });
+      }
+
       if (assignment.status !== "offered") {
         return reply.code(409).send({
-          error:
-            "Only offered assignments can be rejected",
+          error: "Only offered assignments can be rejected",
         });
       }
 
@@ -585,16 +710,16 @@ const authenticatedRequest = request as AuthenticatedRequest;
             rejected_at: new Date().toISOString(),
           })
           .eq("id", params.assignmentId)
+          .eq("provider_id", userId)
           .eq("status", "offered")
           .select("*")
           .single();
 
       if (rejectError || !rejectedAssignment) {
-        app.log.error(rejectError);
+        request.log.error(rejectError);
 
         return reply.code(409).send({
-          error:
-            "Service order assignment could not be rejected",
+          error: "Service order assignment could not be rejected",
         });
       }
 
@@ -604,27 +729,34 @@ const authenticatedRequest = request as AuthenticatedRequest;
       });
     },
   );
-   /*
+
+  /*
    * =====================================================
    * PATCH /service-order-assignments/:assignmentId/start
-   * Provider qəbul etdiyi sifarişə başlayır
+   * Provider sifarişə başlayır
    * =====================================================
    */
- app.patch(
-  "/service-order-assignments/:assignmentId/start",
-  {
-    preHandler: requireAuth,
-  },
-  async (request, reply) => {
-     const params = request.params as {
-  assignmentId?: string;
-};
+  app.patch(
+    "/service-order-assignments/:assignmentId/start",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
 
-const authenticatedRequest = request as AuthenticatedRequest;
+      if (!userId) {
+        return reply.code(401).send({
+          error: "Unauthorized",
+        });
+      }
 
-      if (!params.assignmentId) {
+      const params = request.params as {
+        assignmentId?: string;
+      };
+
+      if (!params.assignmentId || !isUuid(params.assignmentId)) {
         return reply.code(400).send({
-          error: "assignmentId is required",
+          error: "assignmentId must be a valid UUID",
         });
       }
 
@@ -635,31 +767,29 @@ const authenticatedRequest = request as AuthenticatedRequest;
           .eq("id", params.assignmentId)
           .single();
 
-     if (assignmentError || !assignment) {
-  return reply.code(404).send({
-    error: "Service order assignment not found",
-  });
-}
-
-if (assignment.provider_id !== authenticatedRequest.user.id) {
-  return reply.code(403).send({
-    error: "You are not allowed to start this assignment",
-  });
-}
-
-      if (assignment.status !== "accepted") {
-        return reply.code(409).send({
-          error:
-            "Only accepted assignments can be started",
+      if (assignmentError || !assignment) {
+        return reply.code(404).send({
+          error: "Service order assignment not found",
         });
       }
 
-      const { data: order, error: orderError } =
-        await supabase
-          .from("service_orders")
-          .select("*")
-          .eq("id", assignment.order_id)
-          .single();
+      if (assignment.provider_id !== userId) {
+        return reply.code(403).send({
+          error: "You are not allowed to start this assignment",
+        });
+      }
+
+      if (assignment.status !== "accepted") {
+        return reply.code(409).send({
+          error: "Only accepted assignments can be started",
+        });
+      }
+
+      const { data: order, error: orderError } = await supabase
+        .from("service_orders")
+        .select("id, status")
+        .eq("id", assignment.order_id)
+        .single();
 
       if (orderError || !order) {
         return reply.code(404).send({
@@ -669,8 +799,7 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
 
       if (order.status !== "accepted") {
         return reply.code(409).send({
-          error:
-            "Only accepted service orders can be started",
+          error: "Only accepted service orders can be started",
         });
       }
 
@@ -686,11 +815,10 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
           .single();
 
       if (startError || !startedOrder) {
-        app.log.error(startError);
+        request.log.error(startError);
 
         return reply.code(409).send({
-          error:
-            "Service order could not be started",
+          error: "Service order could not be started",
         });
       }
 
@@ -708,26 +836,29 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
    * Provider sifarişi tamamlayır
    * =====================================================
    */
- app.patch(
-  "/service-order-assignments/:assignmentId/complete",
-  {
-    preHandler: requireAuth,
-  },
-  async (request, reply) => {
+  app.patch(
+    "/service-order-assignments/:assignmentId/complete",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
+
+      if (!userId) {
+        return reply.code(401).send({
+          error: "Unauthorized",
+        });
+      }
+
       const params = request.params as {
-  assignmentId?: string;
-};
-
-const authenticatedRequest = request as AuthenticatedRequest;
-
-      const body = (request.body ?? {}) as {
-        final_price?: number;
-        price_status?: string;
+        assignmentId?: string;
       };
 
-      if (!params.assignmentId) {
+      const body = (request.body ?? {}) as CompleteBody;
+
+      if (!params.assignmentId || !isUuid(params.assignmentId)) {
         return reply.code(400).send({
-          error: "assignmentId is required",
+          error: "assignmentId must be a valid UUID",
         });
       }
 
@@ -738,31 +869,29 @@ const authenticatedRequest = request as AuthenticatedRequest;
           .eq("id", params.assignmentId)
           .single();
 
-  if (assignmentError || !assignment) {
-  return reply.code(404).send({
-    error: "Service order assignment not found",
-  });
-}
-
-if (assignment.provider_id !== authenticatedRequest.user.id) {
-  return reply.code(403).send({
-    error: "You are not allowed to complete this assignment",
-  });
-}
-
-      if (assignment.status !== "accepted") {
-        return reply.code(409).send({
-          error:
-            "Only accepted assignments can be completed",
+      if (assignmentError || !assignment) {
+        return reply.code(404).send({
+          error: "Service order assignment not found",
         });
       }
 
-      const { data: order, error: orderError } =
-        await supabase
-          .from("service_orders")
-          .select("*")
-          .eq("id", assignment.order_id)
-          .single();
+      if (assignment.provider_id !== userId) {
+        return reply.code(403).send({
+          error: "You are not allowed to complete this assignment",
+        });
+      }
+
+      if (assignment.status !== "accepted") {
+        return reply.code(409).send({
+          error: "Only accepted assignments can be completed",
+        });
+      }
+
+      const { data: order, error: orderError } = await supabase
+        .from("service_orders")
+        .select("*")
+        .eq("id", assignment.order_id)
+        .single();
 
       if (orderError || !order) {
         return reply.code(404).send({
@@ -772,11 +901,13 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
 
       if (order.status !== "in_progress") {
         return reply.code(409).send({
-          error:
-            "Only in-progress service orders can be completed",
+          error: "Only in-progress service orders can be completed",
         });
       }
 
+      /*
+       * final_price
+       */
       const finalPrice =
         body.final_price !== undefined
           ? Number(body.final_price)
@@ -784,11 +915,10 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
 
       if (
         finalPrice !== undefined &&
-        (!Number.isFinite(finalPrice) || finalPrice < 0)
+        !isValidNonNegativeNumber(finalPrice)
       ) {
         return reply.code(400).send({
-          error:
-            "final_price must be a valid non-negative number",
+          error: "final_price must be a valid non-negative number",
         });
       }
 
@@ -798,10 +928,10 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
           ? "final"
           : order.price_status ?? "unknown");
 
-      if (!allowedPriceStatuses.includes(priceStatus)) {
+      if (!isAllowed(priceStatus, allowedPriceStatuses)) {
         return reply.code(400).send({
           error:
-            "Invalid price_status",
+            "price_status must be unknown, estimated, confirmed, or final",
         });
       }
 
@@ -817,8 +947,7 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
       }
 
       /*
-       * Əvvəl assignment tamamlanır.
-       * Əgər order tamamlanmasa, assignment geri accepted vəziyyətinə qaytarılır.
+       * Assignment tamamlanır
        */
       const { data: completedAssignment, error: assignmentCompleteError } =
         await supabase
@@ -828,22 +957,22 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
             completed_at: new Date().toISOString(),
           })
           .eq("id", params.assignmentId)
+          .eq("provider_id", userId)
           .eq("status", "accepted")
           .select("*")
           .single();
 
-      if (
-        assignmentCompleteError ||
-        !completedAssignment
-      ) {
-        app.log.error(assignmentCompleteError);
+      if (assignmentCompleteError || !completedAssignment) {
+        request.log.error(assignmentCompleteError);
 
         return reply.code(409).send({
-          error:
-            "Service order assignment could not be completed",
+          error: "Service order assignment could not be completed",
         });
       }
 
+      /*
+       * Əsas order tamamlanır
+       */
       const orderUpdate: Record<string, unknown> = {
         status: "completed",
         price_status: priceStatus,
@@ -863,11 +992,8 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
           .single();
 
       if (orderCompleteError || !completedOrder) {
-        app.log.error(orderCompleteError);
+        request.log.error(orderCompleteError);
 
-        /*
-         * Order tamamlanmadısa assignment-i əvvəlki vəziyyətinə qaytarırıq.
-         */
         await supabase
           .from("service_order_assignments")
           .update({
@@ -875,11 +1001,11 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
             completed_at: null,
           })
           .eq("id", params.assignmentId)
+          .eq("provider_id", userId)
           .eq("status", "completed");
 
         return reply.code(409).send({
-          error:
-            "Service order could not be completed",
+          error: "Service order could not be completed",
         });
       }
 
@@ -894,57 +1020,60 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
   /*
    * =====================================================
    * PATCH /service-orders/:orderId/cancel
-   * Sifarişin təhlükəsiz ləğvi
+   * Customer öz sifarişini ləğv edir
    * =====================================================
    */
- app.patch(
-  "/service-orders/:orderId/cancel",
-  {
-    preHandler: requireAuth,
-  },
-  async (request, reply) => {
-     const params = request.params as {
-  orderId?: string;
-};
+  app.patch(
+    "/service-orders/:orderId/cancel",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
 
-const authenticatedRequest = request as AuthenticatedRequest;
-
-      if (!params.orderId) {
-        return reply.code(400).send({
-          error: "orderId is required",
+      if (!userId) {
+        return reply.code(401).send({
+          error: "Unauthorized",
         });
       }
 
-      const { data: order, error: orderError } =
-        await supabase
-          .from("service_orders")
-          .select("*")
-          .eq("id", params.orderId)
-          .single();
+      const params = request.params as {
+        orderId?: string;
+      };
 
-     if (orderError || !order) {
-  return reply.code(404).send({
-    error: "Service order not found",
-  });
-}
+      if (!params.orderId || !isUuid(params.orderId)) {
+        return reply.code(400).send({
+          error: "orderId must be a valid UUID",
+        });
+      }
 
-if (order.customer_id !== authenticatedRequest.user.id) {
-  return reply.code(403).send({
-    error: "You are not allowed to cancel this service order",
-  });
-}
+      const { data: order, error: orderError } = await supabase
+        .from("service_orders")
+        .select("*")
+        .eq("id", params.orderId)
+        .single();
+
+      if (orderError || !order) {
+        return reply.code(404).send({
+          error: "Service order not found",
+        });
+      }
+
+      if (order.customer_id !== userId) {
+        return reply.code(403).send({
+          error: "You are not allowed to cancel this service order",
+        });
+      }
 
       if (order.status === "completed") {
         return reply.code(409).send({
-          error:
-            "Completed service orders cannot be cancelled",
+          error: "Completed service orders cannot be cancelled",
         });
       }
 
       if (order.status === "cancelled") {
         return reply.code(409).send({
-          error:
-            "Service order is already cancelled",
+          error: "Service order is already cancelled",
         });
       }
 
@@ -955,21 +1084,21 @@ if (order.customer_id !== authenticatedRequest.user.id) {
             status: "cancelled",
           })
           .eq("id", params.orderId)
+          .eq("customer_id", userId)
           .not("status", "in", "(completed,cancelled)")
           .select("*")
           .single();
 
       if (cancelError || !cancelledOrder) {
-        app.log.error(cancelError);
+        request.log.error(cancelError);
 
         return reply.code(409).send({
-          error:
-            "Service order could not be cancelled",
+          error: "Service order could not be cancelled",
         });
       }
 
       /*
-       * Açıq assignment-ləri də ləğv edirik.
+       * Açıq assignment-lər ləğv edilir.
        */
       const { error: assignmentCancelError } =
         await supabase
@@ -981,7 +1110,7 @@ if (order.customer_id !== authenticatedRequest.user.id) {
           .in("status", ["offered", "accepted"]);
 
       if (assignmentCancelError) {
-        app.log.error(assignmentCancelError);
+        request.log.error(assignmentCancelError);
 
         return reply.code(500).send({
           error:
