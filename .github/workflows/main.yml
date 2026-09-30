@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - backend-auth-security
     paths:
       - "backend/a-usta56/**"
       - ".github/workflows/main.yml"
+
   pull_request:
     branches:
       - main
@@ -31,10 +33,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-         
 
       - name: Install dependencies
         run: npm install
+
+      - name: TypeScript typecheck
+        run: npm run typecheck
 
       - name: Build backend
         run: npm run build
