@@ -1,8 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import {
-  requireAuth,
-  type AuthenticatedRequest,
-} from "../middleware/auth.js";
+import { requireAuth } from "../middleware/auth.js";
 
 export async function authRoutes(app: FastifyInstance) {
   app.get(
@@ -11,11 +8,12 @@ export async function authRoutes(app: FastifyInstance) {
       preHandler: requireAuth,
     },
     async (request) => {
-      const authenticatedRequest = request as AuthenticatedRequest;
-
       return {
         authenticated: true,
-        user: authenticatedRequest.user,
+        user: {
+          id: request.user!.id,
+          email: request.user!.email ?? null,
+        },
       };
     },
   );
