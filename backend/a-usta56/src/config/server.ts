@@ -1,4 +1,6 @@
-import Fastify from "fastify";
+import Fastify, {
+  type FastifyError,
+} from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import sensible from "@fastify/sensible";
@@ -60,37 +62,43 @@ await app.register(authRoutes);
 // GLOBAL ERROR HANDLER
 // ---------------------------------------------------------
 
-app.setErrorHandler((error, request, reply) => {
-  request.log.error(
-    {
-      err: error,
-      requestId: request.id,
-    },
-    "Unhandled backend error",
-  );
+app.setErrorHandler(
+  (error: FastifyError, request, reply) => {
+    request.log.error(
+      {
+        err: error,
+        requestId: request.id,
+      },
+      "Unhandled backend error",
+    );
 
-  if (error.validation) {
-    return reply.code(400).send({
-      error: "Bad Request",
-      message: "Request məlumatları düzgün deyil.",
+    if (error.validation) {
+      return reply.code(400).send({
+        error: "Bad Request",
+        message: "Request məlumatları düzgün deyil.",
+        requestId: request.id,
+      });
+    }
+
+    if (
+      error.statusCode &&
+      error.statusCode >= 400 &&
+      error.statusCode < 500
+    ) {
+      return reply.code(error.statusCode).send({
+        error: error.name || "Request Error",
+        message: error.message,
+        requestId: request.id,
+      });
+    }
+
+    return reply.code(500).send({
+      error: "Internal Server Error",
+      message: "Server tərəfində gözlənilməyən xəta baş verdi.",
       requestId: request.id,
     });
-  }
-
-  if (error.statusCode && error.statusCode >= 400 && error.statusCode < 500) {
-    return reply.code(error.statusCode).send({
-      error: error.name || "Request Error",
-      message: error.message,
-      requestId: request.id,
-    });
-  }
-
-  return reply.code(500).send({
-    error: "Internal Server Error",
-    message: "Server tərəfində gözlənilməyən xəta baş verdi.",
-    requestId: request.id,
-  });
-});
+  },
+);
 
 // ---------------------------------------------------------
 // START SERVER
@@ -110,8 +118,14 @@ const start = async () => {
       },
       "A-USTA backend started",
     );
-  } catch (error) {
-    app.log.error(error, "Failed to start A-USTA backend");
+  } catch (error: unknown) {
+    app.log.error(
+      {
+        err: error,
+      },
+      "Failed to start A-USTA backend",
+    );
+
     process.exit(1);
   }
 };
