@@ -470,12 +470,13 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
       /*
        * Əsas sifariş statusunu accepted et
        */
-      const { data: updatedOrder, error: updateOrderError } =
-        await supabase
-          .from("service_orders")
-          .update({
-            status: "accepted",
-          })
+     const { data: updatedOrder, error: updateOrderError } =
+  await supabase
+    .from("service_orders")
+    .update({
+      status: "accepted",
+      accepted_at: new Date().toISOString(),
+    })
           .eq("id", assignment.order_id)
           .eq("status", "pending")
           .select("*")
@@ -675,11 +676,12 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
       }
 
       const { data: startedOrder, error: startError } =
-        await supabase
-          .from("service_orders")
-          .update({
-            status: "in_progress",
-          })
+  await supabase
+    .from("service_orders")
+    .update({
+      status: "in_progress",
+      started_at: new Date().toISOString(),
+    })
           .eq("id", assignment.order_id)
           .eq("status", "accepted")
           .select("*")
@@ -844,10 +846,11 @@ if (assignment.provider_id !== authenticatedRequest.user.id) {
         });
       }
 
-      const orderUpdate: Record<string, unknown> = {
-        status: "completed",
-        price_status: priceStatus,
-      };
+     const orderUpdate: Record<string, unknown> = {
+  status: "completed",
+  completed_at: new Date().toISOString(),
+  price_status: priceStatus,
+};
 
       if (finalPrice !== undefined) {
         orderUpdate.final_price = finalPrice;
