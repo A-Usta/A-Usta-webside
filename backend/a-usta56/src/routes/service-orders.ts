@@ -97,17 +97,17 @@ app.post(
       customer_note?: string;
     };
 
-    if (
-      !body.service_category ||
-      allowedCategories.includes(
-        body.service_category as (typeof allowedCategories)[number],
-      )
-    ) {
-      return reply.code(400).send({
-        error:
-          "service_category must be mechanic_service, tow_service, or cargo_service",
-      });
-    }
+   if (
+  !body.service_category ||
+  !allowedCategories.includes(
+    body.service_category as (typeof allowedCategories)[number],
+  )
+) {
+  return reply.code(400).send({
+    error:
+      "service_category must be mechanic_service, tow_service, or cargo_service",
+  });
+}
 
     const urgency = body.urgency ?? "normal";
 
