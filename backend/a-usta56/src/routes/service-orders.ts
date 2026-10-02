@@ -286,7 +286,7 @@ app.post(
        */
       const { data: provider, error: providerError } = await supabase
         .from("profiles")
-        .select("id, role, is_active")
+        .select("id, full_name, role, is_active")
         .eq("id", body.provider_id)
         .single();
 
@@ -296,11 +296,17 @@ app.post(
         });
       }
 
-      if (!provider.is_active) {
-        return reply.code(409).send({
-          error: "Provider is not active",
-        });
-      }
+     if (!provider.is_active) {
+  return reply.code(409).send({
+    error: "Provider is not active",
+  });
+}
+
+if (provider.role !== body.provider_type) {
+  return reply.code(409).send({
+    error: "Provider type does not match provider profile role",
+  });
+}
 
       /*
        * Eyni sifariş + provider artıq mövcuddursa,
