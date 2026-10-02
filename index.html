@@ -114,24 +114,50 @@
 .austa-market-feed{border-top:1px solid #135c89;margin-top:18px}.feed-actions{display:flex;gap:8px;flex-wrap:wrap}.feed-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.feed-tab{border:1px solid #1a567b;background:#071827;color:#cfe0ee;border-radius:999px;padding:8px 12px;cursor:pointer;font-size:11px}.feed-tab.active{background:#c9163e;border-color:#f02750;color:#fff}.austa-feed-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.austa-feed-card{border:1px solid #174e73;border-radius:13px;overflow:hidden;background:#061521;min-width:0}.austa-feed-media{height:155px;background-size:cover;background-position:center;position:relative}.austa-feed-media.video:after{content:'▶';position:absolute;inset:0;display:grid;place-items:center;font-size:36px;text-shadow:0 4px 18px #000}.feed-badge{position:absolute;top:7px;left:7px;background:#d91642;color:#fff;border-radius:6px;padding:4px 7px;font-size:8px;font-weight:800}.feed-body{padding:9px}.feed-body b{font-size:12px}.feed-body p{font-size:9px;color:#91a7ba;margin:4px 0}.feed-meta{display:flex;justify-content:space-between;gap:5px;font-size:8px;color:#7891a5}.feed-actions-row{display:flex;gap:5px;margin-top:7px}.feed-actions-row button{flex:1;border:1px solid #174e73;background:#081b2b;color:#dceaf4;border-radius:7px;padding:6px 3px;font-size:9px;cursor:pointer}.feed-status{text-align:center;color:#89a3b8;font-size:10px;padding:12px}.austa-search-hit{outline:2px solid #ff1235!important;box-shadow:0 0 0 5px rgba(255,18,53,.12)!important}.austa-search-panel{position:absolute;z-index:9999;top:calc(100% + 5px);left:0;right:0;background:#061521;border:1px solid #1b638e;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.45);max-height:360px;overflow:auto;display:none}.global-search{position:relative}.austa-search-panel.open{display:block}.austa-search-result{display:block;width:100%;text-align:left;background:transparent;color:#eaf4fb;border:0;border-bottom:1px solid #12384f;padding:10px 12px;cursor:pointer}.austa-search-result small{display:block;color:#7fa0b5;margin-top:3px}.austa-search-result:hover{background:#0b263a}
 @media(max-width:1100px){.austa-feed-grid{grid-template-columns:repeat(4,1fr)}}@media(max-width:800px){.austa-feed-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
-<style id="austa-listing-safety-v15">.austa-flow-warning{margin:12px 0;padding:12px 14px;border:1px solid rgba(255,193,7,.45);background:rgba(255,193,7,.08);color:#ffe8a3;border-radius:10px;font-size:12px;line-height:1.5}.austa-flow-warning strong{color:#fff}</style>
+<style id="austa-listing-safety-v15">
+.austa-flow-warning{
+    margin:12px 0;
+    padding:12px 14px;
+    border:1px solid rgba(255,193,7,.45);
+    background:rgba(255,193,7,.08);
+    color:#ffe8a3;
+    border-radius:10px;
+    font-size:12px;
+    line-height:1.5
+}
+.austa-flow-warning strong{color:#fff}
+</style>
+
+<style id="austa-v22-cleanup">
 /* V22 cleanup: compact horizontal automotive video strip and clean market sectors */
 .austa-market-central-actions{display:flex;justify-content:flex-end;margin:0 0 8px}
 .austa-v21-video-top{margin:0 0 12px;padding:8px 0 0}
 .austa-v21-video-top h3{margin:0 0 8px;font-size:16px}
-.austa-v21-video-top&gt;p{display:none}
+.austa-v21-video-top>p{display:none}
 .austa-video-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;overflow:visible!important;padding:0!important}
 .austa-v21-video-top .austa-video-card{min-width:0;border:1px solid #174e73;border-radius:10px;overflow:hidden;background:#061421}
 .austa-v21-video-top .austa-video-thumb{height:125px;background:linear-gradient(135deg,#142d42,#0a0d14);display:grid;place-items:center;font-size:28px}
-.austa-v21-video-top .austa-video-card strong,.austa-v21-video-top .austa-video-card small,.austa-v21-video-top .austa-video-card div{display:block;padding:0 9px}
+.austa-v21-video-top .austa-video-card strong,
+.austa-v21-video-top .austa-video-card small,
+.austa-v21-video-top .austa-video-card div{display:block;padding:0 9px}
 .austa-v21-video-top .austa-video-card strong{padding-top:8px;font-size:12px}
 .austa-v21-video-top .austa-video-card small{padding-top:3px;color:#91a8bc;font-size:9px}
-.austa-v21-video-top .austa-video-card&gt;div:last-child{padding:7px 9px 9px;color:#9fb3c7;font-size:9px}
+.austa-v21-video-top .austa-video-card>div:last-child{padding:7px 9px 9px;color:#9fb3c7;font-size:9px}
 .austa-v21-sector-tabs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin-top:8px}
 .austa-v21-sector-tabs .btn{font-size:10px;padding:9px 6px;white-space:nowrap}
-.austa-v21-sector-panels{margin-top:9px}.austa-v21-sector-panels h4{margin:0 0 8px;font-size:14px}
-@media(max-width:1000px){.austa-video-grid{grid-template-columns:repeat(4,1fr)}.austa-v21-sector-tabs{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:650px){.austa-video-grid{grid-template-columns:repeat(2,1fr)}.austa-v21-sector-tabs{grid-template-columns:repeat(2,1fr)}.austa-v21-video-top .austa-video-thumb{height:110px}}
+.austa-v21-sector-panels{margin-top:9px}
+.austa-v21-sector-panels h4{margin:0 0 8px;font-size:14px}
+
+@media(max-width:1000px){
+    .austa-video-grid{grid-template-columns:repeat(4,1fr)}
+    .austa-v21-sector-tabs{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:650px){
+    .austa-video-grid{grid-template-columns:repeat(2,1fr)}
+    .austa-v21-sector-tabs{grid-template-columns:repeat(2,1fr)}
+    .austa-v21-video-top .austa-video-thumb{height:110px}
+}
+</style>
 <style id="austa-v25-final-overrides">#austaV22VideoGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}#austaV22VideoGrid .austa-v22-video-card{aspect-ratio:16/7!important;min-height:0!important}#austaV22VideoGrid .austa-v22-video-card img{width:100%;height:100%;object-fit:cover}@media(max-width:1000px){#austaV22VideoGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}@media(max-width:650px){#austaV22VideoGrid{grid-template-columns:1fr!important}#austaV22VideoGrid .austa-v22-video-card{aspect-ratio:16/8!important}}</style>
 <style id="austa-v26-final-css">
 /* Always horizontal video cards */
