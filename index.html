@@ -8458,10 +8458,66 @@ if(vg){
         renderVideos();
     });
 }
-const search=document.getElementById('globalSearch'); document.getElementById('globalSearchBtn').onclick=()=>{let q=(search.value||'').trim().toLowerCase();if(!q){document.getElementById('services').scrollIntoView();return}let card=[...document.querySelectorAll('.service-card')].find(x=>x.dataset.service.includes(q));if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.style.outline='2px solid #ff1235';setTimeout(()=>card.style.outline='',1400)}else alert('Bu axtarış üçün frontend nəticəsi tapılmadı. Backend axtarışı növbəti mərhələdə qoşulacaq.')};
-const formIds=['requestProblem','requestCategory','requestLevel','requestBrand','requestModel','requestYear','requestPlate','requestPhone'];
-document.getElementById('requestGps').onclick=async()=>{try{if(window.AUSTA_LOCATION_CORE?.getCurrentPosition){let p=await window.AUSTA_LOCATION_CORE.getCurrentPosition();document.getElementById('requestResult').style.display='block';document.getElementById('requestResult').textContent=`GPS hazırdır: ${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)}`}else throw Error('Location Core hazır deyil')}catch(e){document.getElementById('requestResult').style.display='block';document.getElementById('requestResult').textContent='GPS icazəsi alınmadı: '+e.message}};
+            const search = document.getElementById('globalSearch');
+const searchBtn = document.getElementById('globalSearchBtn');
 
+if(searchBtn){
+    searchBtn.onclick = ()=>{
+        let q = (search?.value || '').trim().toLowerCase();
+
+        if(!q){
+            document.getElementById('services')?.scrollIntoView();
+            return;
+        }
+
+        let card = [...document.querySelectorAll('.service-card')]
+            .find(x => (x.dataset.service || '').toLowerCase().includes(q));
+
+        if(card){
+            card.scrollIntoView({
+                behavior:'smooth',
+                block:'center'
+            });
+
+            card.style.outline = '2px solid #ff1235';
+
+            setTimeout(()=>{
+                card.style.outline = '';
+            },1400);
+        }else{
+            alert('Bu axtarış üçün frontend nəticəsi tapılmadı. Backend axtarışı növbəti mərhələdə qoşulacaq.');
+        }
+    };
+}
+const requestGpsBtn = document.getElementById('requestGps');
+
+if(requestGpsBtn){
+    requestGpsBtn.onclick = async ()=>{
+        try{
+            if(window.AUSTA_LOCATION_CORE?.getCurrentPosition){
+                let p = await window.AUSTA_LOCATION_CORE.getCurrentPosition();
+
+                const requestResult = document.getElementById('requestResult');
+
+                if(requestResult){
+                    requestResult.style.display = 'block';
+                    requestResult.textContent =
+                        `GPS hazırdır: ${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)}`;
+                }
+            }else{
+                throw Error('Location Core hazır deyil');
+            }
+        }catch(e){
+            const requestResult = document.getElementById('requestResult');
+
+            if(requestResult){
+                requestResult.style.display = 'block';
+                requestResult.textContent =
+                    'GPS icazəsi alınmadı: ' + e.message;
+            }
+        }
+    };
+}
 function updateRequestMode(){
   const category=document.getElementById('requestCategory').value;
   const cargo=category==='cargo_transport';
@@ -8488,11 +8544,206 @@ function selectService(title,category){
 document.querySelectorAll('.logistics-order-btn').forEach(btn=>btn.onclick=()=>selectService(btn.dataset.logisticsTitle,btn.dataset.logisticsCategory));
 
 let lastRequestId=null; window.AUSTA_ACTIVE_REQUEST_ID=null; window.__AUSTA_LAST_REQUEST_ID=null;
-document.getElementById('requestApprovePrice').onclick=()=>{if(!lastRequestId){alert('Əvvəlcə sifariş yaradın.');return}try{const r=window.AUSTA_SERVICE_REQUEST_CORE?.approvePrice(lastRequestId);if(!r)throw new Error('Sifariş tapılmadı.');document.getElementById('requestResult').innerHTML=`💰 Qiymət təsdiqləndi: <strong>${r.price?.calculation?.totalCustomerPrice??document.getElementById('requestPrice').value} AZN</strong><br>🔎 Status: <strong>${r.status}</strong>`}catch(e){alert('Qiymət təsdiqlənmədi: '+e.message)}};
-document.getElementById('requestAssignProvider').onclick=()=>{if(!lastRequestId){alert('Əvvəlcə sifariş yaradın.');return}try{const r=window.AUSTA_SERVICE_REQUEST_CORE?.assignProvider(lastRequestId,{providerId:document.getElementById('requestProviderId').value.trim(),name:document.getElementById('requestProviderName').value.trim(),phone:document.getElementById('requestProviderPhone').value.trim(),vehicleId:document.getElementById('requestProviderVehicleId').value.trim(),type:'usta'});if(!r)throw new Error('Sifariş tapılmadı.');document.getElementById('requestResult').innerHTML=`👨‍🔧 Usta təyin edildi: <strong>${r.provider?.name||'Usta'}</strong><br>🆔 Usta ID: <strong>${r.provider?.providerId||'-'}</strong><br>🔎 Status: <strong>${r.status}</strong>`}catch(e){alert('Usta təyin edilmədi: '+e.message)}};
-document.getElementById('requestSubmit').onclick=()=>{let problem=document.getElementById('requestProblem').value.trim();if(!problem){alert('Əvvəlcə problemi yazın.');return}let paymentMethod=document.getElementById('requestPayment')?.value||'cash';let category=document.getElementById('requestCategory').value;let cargo={weightKg:Number(document.getElementById('requestCargoWeight')?.value)||0,lengthMeters:Number(document.getElementById('requestCargoLength')?.value)||0,widthMeters:Number(document.getElementById('requestCargoWidth')?.value)||0,heightMeters:Number(document.getElementById('requestCargoHeight')?.value)||0};let load=category==='cargo_transport'&&window.AUSTA_PRICE_CORE?.calculateLoad?window.AUSTA_PRICE_CORE.calculateLoad(cargo):null;let matchedVehicles=category==='cargo_transport'&&window.AUSTA_PRICE_CORE?.matchVehicles?window.AUSTA_PRICE_CORE.matchVehicles(load||{}):[];let input={description:problem,problem,category,level:document.getElementById('requestLevel').value,paymentMethod,serviceTitle:problem.replace(/\s+xidməti lazımdır\.$/i,''),vehicleBrand:document.getElementById('requestBrand').value,vehicleModel:document.getElementById('requestModel').value,vehicleYear:document.getElementById('requestYear').value,vehiclePlate:document.getElementById('requestPlate').value,customerPhone:document.getElementById('requestPhone').value,pickupAddress:document.getElementById('requestPickupAddress')?.value||'',destinationAddress:document.getElementById('requestDestinationAddress')?.value||'',load,matchedVehicles};try{if(!window.AUSTA_SERVICE_REQUEST_CORE?.createRequest)throw new Error('Service Request Core hazır deyil.');let r=window.AUSTA_SERVICE_REQUEST_CORE.createRequest(input);lastRequestId=r?.requestId||null; window.AUSTA_ACTIVE_REQUEST_ID=lastRequestId; window.__AUSTA_LAST_REQUEST_ID=lastRequestId;let box=document.getElementById('requestResult');box.style.display='block';let total=r?.price?.calculation?.totalCustomerPrice;let cargoInfo=category==='cargo_transport'?`<br>📦 Yük: <strong>${load?.weightKg||0} kq</strong> • həcm: <strong>${load?.volumeM3||0} m³</strong><br>🚚 Uyğun nəqliyyat: <strong>${matchedVehicles.length}</strong>`:'';box.innerHTML=r?.requestId?`Sifariş yaradıldı: <strong>${r.requestId}</strong><br>💰 İlkin qiymət: <strong>${total??'hesablanır'} AZN</strong><br>💳 Ödəniş: <strong>${paymentMethod==='card'?'Bank kartı':'Nağd'}</strong>${cargoInfo}`:'Sifariş Core hazır deyil.'}catch(e){console.error(e);let box=document.getElementById('requestResult');box.style.display='block';box.textContent='Sifariş yaradıla bilmədi: '+e.message}};
-document.querySelectorAll('.service-card').forEach(c=>c.onclick=()=>{let title=c.querySelector('h3').textContent.trim();let t=title.toLowerCase();let category=t.includes('evakuator')||t.includes('kran')?'towing':t.includes('diaqnostika')||t.includes('yoxlama')?'diagnostics':t.includes('yük')?'cargo_transport':t.includes('avtomobil daşın')||t.includes('icarə')||t.includes('qoşqu')||t.includes('avtobus')||t.includes('motosiklet')||t.includes('ağır')||t.includes('su nəqliyyat')||t.includes('tikinti texnika')?'vehicle_transport':'automotive_service';selectService(title,category)});
-document.getElementById('createVideoBtn').onclick=()=>alert('Video elan yaratma pəncərəsi account/backend və media upload mərhələsində tam aktiv ediləcək.');
+const requestApprovePriceBtn = document.getElementById('requestApprovePrice');
+
+if(requestApprovePriceBtn){
+    requestApprovePriceBtn.onclick = ()=>{
+        if(!lastRequestId){
+            alert('Əvvəlcə sifariş yaradın.');
+            return;
+        }
+
+        try{
+            const r = window.AUSTA_SERVICE_REQUEST_CORE?.approvePrice(lastRequestId);
+
+            if(!r){
+                throw new Error('Sifariş tapılmadı.');
+            }
+
+            const requestResult = document.getElementById('requestResult');
+
+            if(requestResult){
+                requestResult.innerHTML =
+                    `💰 Qiymət təsdiqləndi: <strong>${r.price?.calculation?.totalCustomerPrice ?? document.getElementById('requestPrice')?.value ?? '-'} AZN</strong><br>🔎 Status: <strong>${r.status}</strong>`;
+            }
+        }catch(e){
+            alert('Qiymət təsdiqlənmədi: ' + e.message);
+        }
+    };
+}
+const assignProviderBtn = document.getElementById('requestAssignProvider');
+
+if (assignProviderBtn) {
+    assignProviderBtn.onclick = () => {
+        if (!lastRequestId) {
+            alert('Əvvəlcə sifariş yaradın.');
+            return;
+        }
+
+        try {
+            const r = window.AUSTA_SERVICE_REQUEST_CORE?.assignProvider(
+                lastRequestId,
+                {
+                    providerId: document.getElementById('requestProviderId')?.value.trim() || '',
+                    name: document.getElementById('requestProviderName')?.value.trim() || '',
+                    phone: document.getElementById('requestProviderPhone')?.value.trim() || '',
+                    vehicleId: document.getElementById('requestProviderVehicleId')?.value.trim() || '',
+                    type: 'usta'
+                }
+            );
+
+            if (!r) throw new Error('Sifariş tapılmadı.');
+
+            const resultBox = document.getElementById('requestResult');
+
+            if (resultBox) {
+                resultBox.style.display = 'block';
+                resultBox.innerHTML =
+                    `👨‍🔧 Usta təyin edildi: <strong>${r.provider?.name || 'Usta'}</strong><br>` +
+                    `🆔 Usta ID: <strong>${r.provider?.providerId || '-'}</strong><br>` +
+                    `🔎 Status: <strong>${r.status}</strong>`;
+            }
+
+        } catch (e) {
+            alert('Usta təyin edilmədi: ' + e.message);
+        }
+    };
+}
+const requestSubmitBtn = document.getElementById('requestSubmit');
+
+if (requestSubmitBtn) {
+    requestSubmitBtn.onclick = () => {
+        const problemEl = document.getElementById('requestProblem');
+        const problem = problemEl?.value.trim() || '';
+
+        if (!problem) {
+            alert('Əvvəlcə problemi yazın.');
+            return;
+        }
+
+        const paymentMethod = document.getElementById('requestPayment')?.value || 'cash';
+        const category = document.getElementById('requestCategory')?.value || 'automotive_service';
+
+        const cargo = {
+            weightKg: Number(document.getElementById('requestCargoWeight')?.value) || 0,
+            lengthMeters: Number(document.getElementById('requestCargoLength')?.value) || 0,
+            widthMeters: Number(document.getElementById('requestCargoWidth')?.value) || 0,
+            heightMeters: Number(document.getElementById('requestCargoHeight')?.value) || 0
+        };
+
+        const load =
+            category === 'cargo_transport' &&
+            window.AUSTA_PRICE_CORE?.calculateLoad
+                ? window.AUSTA_PRICE_CORE.calculateLoad(cargo)
+                : null;
+
+        const matchedVehicles =
+            category === 'cargo_transport' &&
+            window.AUSTA_PRICE_CORE?.matchVehicles
+                ? window.AUSTA_PRICE_CORE.matchVehicles(load || {})
+                : [];
+
+        const input = {
+            description: problem,
+            problem,
+            category,
+            level: document.getElementById('requestLevel')?.value || '',
+            paymentMethod,
+            serviceTitle: problem.replace(/\s+xidməti lazımdır\.$/i, ''),
+            vehicleBrand: document.getElementById('requestBrand')?.value || '',
+            vehicleModel: document.getElementById('requestModel')?.value || '',
+            vehicleYear: document.getElementById('requestYear')?.value || '',
+            vehiclePlate: document.getElementById('requestPlate')?.value || '',
+            customerPhone: document.getElementById('requestPhone')?.value || '',
+            pickupAddress: document.getElementById('requestPickupAddress')?.value || '',
+            destinationAddress: document.getElementById('requestDestinationAddress')?.value || '',
+            load,
+            matchedVehicles
+        };
+
+        try {
+            if (!window.AUSTA_SERVICE_REQUEST_CORE?.createRequest) {
+                throw new Error('Service Request Core hazır deyil.');
+            }
+
+            const r = window.AUSTA_SERVICE_REQUEST_CORE.createRequest(input);
+
+            lastRequestId = r?.requestId || null;
+            window.AUSTA_ACTIVE_REQUEST_ID = lastRequestId;
+            window.__AUSTA_LAST_REQUEST_ID = lastRequestId;
+
+            const box = document.getElementById('requestResult');
+
+            if (!box) {
+                console.warn('requestResult elementi tapılmadı.');
+                return;
+            }
+
+            box.style.display = 'block';
+
+            const total = r?.price?.calculation?.totalCustomerPrice;
+
+            const cargoInfo =
+                category === 'cargo_transport'
+                    ? `<br>📦 Yük: <strong>${load?.weightKg || 0} kq</strong> • həcm: <strong>${load?.volumeM3 || 0} m³</strong><br>🚚 Uyğun nəqliyyat: <strong>${matchedVehicles.length}</strong>`
+                    : '';
+
+            box.innerHTML = r?.requestId
+                ? `Sifariş yaradıldı: <strong>${r.requestId}</strong><br>💰 İlkin qiymət: <strong>${total ?? 'hesablanır'} AZN</strong><br>💳 Ödəniş: <strong>${paymentMethod === 'card' ? 'Bank kartı' : 'Nağd'}</strong>${cargoInfo}`
+                : 'Sifariş Core hazır deyil.';
+
+        } catch (e) {
+            console.error(e);
+
+            const box = document.getElementById('requestResult');
+
+            if (box) {
+                box.style.display = 'block';
+                box.textContent = 'Sifariş yaradıla bilmədi: ' + e.message;
+            }
+        }
+    };
+}
+document.querySelectorAll('.service-card').forEach(c => {
+    c.onclick = () => {
+        const titleEl = c.querySelector('h3');
+
+        if (!titleEl) {
+            console.warn('service-card daxilində h3 tapılmadı.', c);
+            return;
+        }
+
+        const title = titleEl.textContent.trim();
+        const t = title.toLowerCase();
+
+        const category =
+            t.includes('evakuator') || t.includes('kran')
+                ? 'towing'
+                : t.includes('diaqnostika') || t.includes('yoxlama')
+                ? 'diagnostics'
+                : t.includes('yük')
+                ? 'cargo_transport'
+                : t.includes('avtomobil daşın') ||
+                  t.includes('icarə') ||
+                  t.includes('qoşqu') ||
+                  t.includes('avtobus') ||
+                  t.includes('motosiklet') ||
+                  t.includes('ağır') ||
+                  t.includes('su nəqliyyat') ||
+                  t.includes('tikinti texnika')
+                ? 'vehicle_transport'
+                : 'automotive_service';
+
+        selectService(title, category);
+    };
+});
+const createVideoBtn = document.getElementById('createVideoBtn');
+
+if (createVideoBtn) {
+    createVideoBtn.onclick = () => {
+        alert('Video elan yaratma pəncərəsi account/backend və media upload mərhələsində tam aktiv ediləcək.');
+    };
+}            
 })();
 </script>
 <script id="austa-marketplace-modules">
