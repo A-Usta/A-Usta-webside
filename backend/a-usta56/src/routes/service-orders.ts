@@ -252,9 +252,9 @@ app.post(
        */
     const authenticatedRequest = request as AuthenticatedRequest;
     
-     const { data: order, error: orderError } = await supabase
+    const { data: order, error: orderError } = await supabase
   .from("service_orders")
-  .select("id, status, customer_id")
+  .select("id, status, customer_id, service_category, service_mode")
   .eq("id", params.orderId)
   .single();
 
@@ -305,6 +305,34 @@ app.post(
 if (provider.role !== body.provider_type) {
   return reply.code(409).send({
     error: "Provider type does not match provider profile role",
+  });
+}
+
+   let expectedProviderType: "mechanic" | "shop" | "tow" | "cargo";
+
+switch (order.service_category) {
+  case "mechanic_service":
+    expectedProviderType =
+      order.service_mode === "shop" ? "shop" : "mechanic";
+    break;
+
+  case "tow_service":
+    expectedProviderType = "tow";
+    break;
+
+  case "cargo_service":
+    expectedProviderType = "cargo";
+    break;
+
+  default:
+    return reply.code(409).send({
+      error: "Service category is not supported for provider assignment",
+    });
+}
+
+if (body.provider_type !== expectedProviderType) {
+  return reply.code(409).send({
+    error: "Provider type is not compatible with this service order",
   });
 }
 
