@@ -8406,8 +8406,58 @@ const sg=document.getElementById('serviceGrid'); sg.innerHTML=services.map((x,i)
 const lg=document.getElementById('logisticsGrid'); const logisticsCategories={'Yük daşıma':'cargo_transport','Ağır yük':'cargo_transport','Tikinti materialı':'cargo_transport','Avtomobil daşınması':'vehicle_transport','Evakuator':'towing','Ayıq sürücü':'automotive_service','Kran sifarişi':'towing','Avtobus icarəsi':'vehicle_transport','Moto / skuter':'automotive_service','Qoşqu / treyler':'vehicle_transport','Su nəqliyyatı':'vehicle_transport','Ağır texnika':'vehicle_transport'}; lg.innerHTML=logistics.map(x=>`<article class="logistics-card"><h3>${x[0]} ${x[1]}</h3><p>${x[2]}</p><button class="btn logistics-order-btn" data-logistics-title="${x[1]}" data-logistics-category="${logisticsCategories[x[1]]||'vehicle_transport'}" style="margin-top:12px">Sifariş et →</button></article>`).join('');
 const vids=[['BMW 5 Series','2019 • 2.0 • 60,000 AZN','A-USTA Auto Seller','https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1000&q=80'],['Mercedes-Benz','2021 • 2.0 • 42,000 AZN','Premium Auto','https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1000&q=80'],['Toyota Prado','2020 • 4.0 • 63,000 AZN','4x4 Baku','https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1000&q=80'],['Range Rover','2022 • 3.0 • 120,000 AZN','Auto Gallery','https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1000&q=80']];
 let videoState=JSON.parse(localStorage.getItem('austa-video-social-v2')||'{}');
-const vg=document.getElementById('videoGrid'); function renderVideos(){vg.innerHTML=vids.map((v,i)=>{let z=videoState[i]||{l:0,s:false,views:0,comments:[]};return `<article class="video-card austa-video-social-card"><div class="video-poster" style="background-image:url('${v[3]}')"><span class="play">▶</span></div><div class="video-info"><b>${v[0]}</b><p>${v[1]}</p><div class="austa-video-owner">👤 ${v[2]} • Təsdiqlənmiş profil</div><div class="austa-video-counts"><span>👁 ${(z.views||0)+Math.floor(120+i*73)}</span><span>💬 ${(z.comments||[]).length}</span><span>❤ ${z.l||0}</span></div><div class="video-actions"><button data-v="${i}" data-a="like" class="${z.l?'active':''}">❤ ${z.l||0}</button><button data-v="${i}" data-a="comment">💬 Şərh</button><button data-v="${i}" data-a="share">↗ Paylaş</button><button data-v="${i}" data-a="save" class="${z.s?'active':''}">🔖 Saxla</button></div></div></article>`}).join('')}; renderVideos();
-vg.addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;let i=b.dataset.v,a=b.dataset.a;videoState[i]=videoState[i]||{l:0,s:false};if(a==='like')videoState[i].l=videoState[i].l?0:1;if(a==='save')videoState[i].s=!videoState[i].s;if(a==='comment')alert('Şərh bölməsi backend/account mərhələsində aktiv ediləcək.');if(a==='share')navigator.clipboard?.writeText(location.href+'#video-listings').then(()=>alert('Paylaşım linki kopyalandı.'));localStorage.setItem('austa-video-social-v2',JSON.stringify(videoState));renderVideos()});
+const vg=document.getElementById('videoGrid');
+
+function renderVideos(){
+    if(!vg) return;
+
+    vg.innerHTML=vids.map((v,i)=>{
+        let z=videoState[i]||{l:0,s:false,views:0,comments:[]};
+
+        return `<article class="video-card austa-video-social-card">
+            <div class="video-poster" style="background-image:url('${v[3]}')">
+                <span class="play">▶</span>
+            </div>
+            <div class="video-info">
+                <b>${v[0]}</b>
+                <p>${v[1]}</p>
+                <div class="austa-video-owner">👤 ${v[2]} • Təsdiqlənmiş profil</div>
+                <div class="austa-video-counts">
+                    <span>👁 ${(z.views||0)+Math.floor(120+i*73)}</span>
+                    <span>💬 ${(z.comments||[]).length}</span>
+                    <span>❤ ${z.l||0}</span>
+                </div>
+                <div class="video-actions">
+                    <button data-v="${i}" data-a="like" class="${z.l?'active':''}">❤ ${z.l||0}</button>
+                    <button data-v="${i}" data-a="comment">💬 Şərh</button>
+                    <button data-v="${i}" data-a="share">↗ Paylaş</button>
+                    <button data-v="${i}" data-a="save" class="${z.s?'active':''}">🔖 Saxla</button>
+                </div>
+            </div>
+        </article>`;
+    }).join('');
+}
+
+renderVideos();
+if(vg){
+    vg.addEventListener('click',e=>{
+        let b=e.target.closest('button');
+        if(!b)return;
+
+        let i=b.dataset.v,a=b.dataset.a;
+
+        videoState[i]=videoState[i]||{l:0,s:false};
+
+        if(a==='like')videoState[i].l=videoState[i].l?0:1;
+        if(a==='save')videoState[i].s=!videoState[i].s;
+        if(a==='comment')alert('Şərh bölməsi backend/account mərhələsində aktiv ediləcək.');
+        if(a==='share')navigator.clipboard?.writeText(location.href+'#video-listings')
+            .then(()=>alert('Paylaşım linki kopyalandı.'));
+
+        localStorage.setItem('austa-video-social-v2',JSON.stringify(videoState));
+        renderVideos();
+    });
+}
 const search=document.getElementById('globalSearch'); document.getElementById('globalSearchBtn').onclick=()=>{let q=(search.value||'').trim().toLowerCase();if(!q){document.getElementById('services').scrollIntoView();return}let card=[...document.querySelectorAll('.service-card')].find(x=>x.dataset.service.includes(q));if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.style.outline='2px solid #ff1235';setTimeout(()=>card.style.outline='',1400)}else alert('Bu axtarış üçün frontend nəticəsi tapılmadı. Backend axtarışı növbəti mərhələdə qoşulacaq.')};
 const formIds=['requestProblem','requestCategory','requestLevel','requestBrand','requestModel','requestYear','requestPlate','requestPhone'];
 document.getElementById('requestGps').onclick=async()=>{try{if(window.AUSTA_LOCATION_CORE?.getCurrentPosition){let p=await window.AUSTA_LOCATION_CORE.getCurrentPosition();document.getElementById('requestResult').style.display='block';document.getElementById('requestResult').textContent=`GPS hazırdır: ${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)}`}else throw Error('Location Core hazır deyil')}catch(e){document.getElementById('requestResult').style.display='block';document.getElementById('requestResult').textContent='GPS icazəsi alınmadı: '+e.message}};
@@ -8883,7 +8933,9 @@ const grid=document.getElementById('austaFeedGrid'), status=document.getElementB
 const imgs=['https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=900&q=82','https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=900&q=82','https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=82','https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=82','https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=900&q=82'];
 const names=['BMW 5 Series','Mercedes-Benz E-Class','Toyota Prado','Range Rover Sport','Porsche Cayenne','Audi Q7','Mercedes Sprinter','Toyota Camry'];
 function data(){let a=[]; for(let i=0;i<120;i++){let video=i%3===0, vip=i<8, mode=i%4===0?'İcarə':'Satış'; a.push({id:'DEMO-'+i,title:names[i%names.length]+' • '+(2020+i%6),brand:names[i%names.length].split(' ')[0],model:names[i%names.length].split(' ').slice(1).join(' '),year:2020+i%6,condition:i%5===0?'Yeni':'Sürülmüş',region:['Bakı','Sumqayıt','Gəncə','Mingəçevir'][i%4],body:['Sedan','SUV','Hetçbek'][i%3],payment:['Nağd','Kredit','Barter'][i%3],mode,video,vip,price:(25000+i*730),img:imgs[i%imgs.length],ts:Date.now()-i*1000*60});} try{const u=JSON.parse(localStorage.getItem('austa-listings')||'[]'); if(Array.isArray(u)) a=[...u.map((x,i)=>({...x,ts:new Date(x.createdAt||0).getTime()||0})),...a]}catch(e){} try{const m=JSON.parse(localStorage.getItem('austa-marketplace-modules-v1')||'{}'); const cars=Array.isArray(m.cars)?m.cars:[]; const parts=Array.isArray(m.parts)?m.parts:[]; const mapped=[...cars.map((x,i)=>({...x,title:[x.brand,x.model,x.year].filter(Boolean).join(' ')||'Avtomobil',mode:x.listingMode||'Satış',video:!!x.videoUrl,img:x.photoUrl||((x.photos||[])[0]||''),ts:new Date(x.createdAt||0).getTime()||0})),...parts.map(x=>({...x,title:x.name||'Ehtiyat hissəsi',mode:'Satış',video:false,img:(x.photos||[])[0]||'',ts:new Date(x.createdAt||0).getTime()||0}))]; a=[...mapped,...a]}catch(e){} return a}
-function render(reset=true){let all=data().sort((a,b)=>(b.vip-a.vip)||((b.ts||0)-(a.ts||0))); if(filter!=='all')all=all.filter(x=>filter==='vip'?x.vip:filter==='video'?x.video:filter==='rental-video'?(x.video&&x.mode==='İcarə'):filter==='sale'?(x.mode==='Satış'&&!x.video):filter==='rental'?(x.mode==='İcarə'&&!x.video):true); let take=all.slice(0,(page+1)*PAGE); grid.innerHTML=take.map(x=>`<article class="austa-feed-card" data-brand="${x.brand||''}" data-model="${x.model||''}" data-year="${x.year||''}" data-condition="${x.condition||''}" data-city="${x.region||''}" data-body="${x.body||''}" data-payment="${x.payment||''}" data-mode="${x.mode||''}" data-created="${x.ts||0}"><div class="austa-feed-media ${x.video?'video':''}" style="background-image:url('${x.img}')">${x.vip?'<span class="feed-badge">VIP / İRƏLİ ÇƏKİLİB</span>':''}</div><div class="feed-body"><b>${x.title}</b><p>${x.mode} • ${Number(x.price||0).toLocaleString('az-AZ')} AZN</p><div class="feed-meta"><span>👁 ${120+iRand(x.id)} baxış</span><span>♡  ${x.video?'Video':''}</span></div><div class="feed-actions-row"><button data-action="view" data-id="${x.id}">Bax</button><button data-action="save" data-id="${x.id}">♡</button><button data-action="share" data-id="${x.id}">↗</button></div></div></article>`).join(''); status.textContent=`${take.length.toLocaleString('az-AZ')} elan göstərilir • platforma miqyası: ${MAX.toLocaleString('az-AZ')}+ elan • yalnız səhifə üzrə məlumat yüklənir`;
+function render(reset=true){
+  if(!grid) return;
+  let all=data().sort((a,b)=>(b.vip-a.vip)||((b.ts||0)-(a.ts||0))); if(filter!=='all')all=all.filter(x=>filter==='vip'?x.vip:filter==='video'?x.video:filter==='rental-video'?(x.video&&x.mode==='İcarə'):filter==='sale'?(x.mode==='Satış'&&!x.video):filter==='rental'?(x.mode==='İcarə'&&!x.video):true); let take=all.slice(0,(page+1)*PAGE); grid.innerHTML=take.map(x=>`<article class="austa-feed-card" data-brand="${x.brand||''}" data-model="${x.model||''}" data-year="${x.year||''}" data-condition="${x.condition||''}" data-city="${x.region||''}" data-body="${x.body||''}" data-payment="${x.payment||''}" data-mode="${x.mode||''}" data-created="${x.ts||0}"><div class="austa-feed-media ${x.video?'video':''}" style="background-image:url('${x.img}')">${x.vip?'<span class="feed-badge">VIP / İRƏLİ ÇƏKİLİB</span>':''}</div><div class="feed-body"><b>${x.title}</b><p>${x.mode} • ${Number(x.price||0).toLocaleString('az-AZ')} AZN</p><div class="feed-meta"><span>👁 ${120+iRand(x.id)} baxış</span><span>♡  ${x.video?'Video':''}</span></div><div class="feed-actions-row"><button data-action="view" data-id="${x.id}">Bax</button><button data-action="save" data-id="${x.id}">♡</button><button data-action="share" data-id="${x.id}">↗</button></div></div></article>`).join(''); status.textContent=`${take.length.toLocaleString('az-AZ')} elan göstərilir • platforma miqyası: ${MAX.toLocaleString('az-AZ')}+ elan • yalnız səhifə üzrə məlumat yüklənir`;
  grid.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{if(b.dataset.action==='share')navigator.clipboard?.writeText(location.href+'#austaMarketFeed');else if(b.dataset.action==='save')alert('Elan yadda saxlanıldı.');else alert('Elan: '+b.dataset.id)});
 }
 function iRand(id){let n=0;for(let c of id)n=(n*31+c.charCodeAt(0))%900;return n+100}
