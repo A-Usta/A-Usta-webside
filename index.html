@@ -10393,6 +10393,266 @@ function renderPromotedFirst(){
 }
 renderPromotedFirst();setInterval(renderPromotedFirst,1000);
   </script>
+<script id="austa-rent-video-actions">
+(function(){
+"use strict";
+
+function qa(s,r=document){
+    return [...r.querySelectorAll(s)];
+}
+
+function getRentCard(card){
+    return card.closest(
+        '[data-listing-mode="İcarə"],' +
+        '[data-listing-type="rent"],' +
+        '.austa-rent-card,' +
+        '.austa-rental-card'
+    ) || card;
+}
+
+function getListingUrl(card){
+    const rentCard=getRentCard(card);
+
+    return (
+        rentCard.dataset.url ||
+        rentCard.dataset.href ||
+        rentCard.dataset.listingUrl ||
+        rentCard.querySelector("a[href]")?.href ||
+        ""
+    );
+}
+
+function bindRentVideoActions(){
+
+    qa("#austaV22VideoGrid .austa-v22-video-card").forEach(card=>{
+
+        /*
+         * Rent a Car olub-olmadığını müəyyən et
+         */
+        const text=(card.innerText||"").toLocaleLowerCase("az-AZ");
+
+        const isRent =
+            card.matches(
+                '[data-listing-mode="İcarə"],' +
+                '[data-listing-type="rent"],' +
+                '.austa-rent-card,' +
+                '.austa-rental-card'
+            ) ||
+            text.includes("rent a car") ||
+            text.includes("icarə");
+
+        if(!isRent)return;
+
+        /*
+         * Action düymələri yoxdursa yarat
+         */
+        let actions=card.querySelector(".austa-v34-video-actions");
+
+        if(!actions){
+            actions=document.createElement("div");
+            actions.className="austa-v34-video-actions";
+
+            actions.innerHTML=
+                '<button type="button" data-v34-video-action="like">♥ <span class="v34-count">0</span></button>'+
+                '<button type="button" data-v34-video-action="comment">💬</button>'+
+                '<button type="button" data-v34-video-action="save">🔖</button>'+
+                '<button type="button" data-v34-video-action="share">↗</button>';
+
+            card.appendChild(actions);
+        }
+
+        /*
+         * Video / thumbnail → Rent a Car elanına keç
+         */
+        const thumb=card.querySelector(".austa-v22-video-thumb");
+
+        if(thumb && !thumb.dataset.rentNavigation){
+
+            thumb.dataset.rentNavigation="1";
+            thumb.style.cursor="pointer";
+
+            thumb.addEventListener("click",function(e){
+
+                if(e.target.closest("button"))return;
+
+                const url=getListingUrl(card);
+
+                if(url){
+                    window.location.href=url;
+                    return;
+                }
+
+                /*
+                 * URL yoxdursa elan məlumatını saxla
+                 * və mövcud marketplace funksiyasına ötür.
+                 */
+                const id=
+                    card.dataset.listingId ||
+                    card.dataset.id ||
+                    card.dataset.videoId ||
+                    "";
+
+                if(id && typeof window.AUSTA_OPEN_LISTING==="function"){
+                    window.AUSTA_OPEN_LISTING(id);
+                }
+
+            });
+        }
+
+        /*
+         * Action eventləri
+         */
+        if(card.dataset.rentVideoActionsBound)return;
+        card.dataset.rentVideoActionsBound="1";
+
+        actions.addEventListener("click",function(e){
+
+            const button=e.target.closest("[data-v34-video-action]");
+            if(!button)return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const action=button.dataset.v34VideoAction;
+
+            /*
+             * LIKE
+             */
+            if(action==="like"){
+
+                const count=button.querySelector(".v34-count");
+
+                if(button.dataset.liked==="1"){
+                    button.dataset.liked="0";
+                    count.textContent=String(
+                        Math.max(0,(Number(count.textContent)||0)-1)
+                    );
+                }else{
+                    button.dataset.liked="1";
+                    count.textContent=String(
+                        (Number(count.textContent)||0)+1
+                    );
+                }
+
+                return;
+            }
+
+            /*
+             * COMMENT
+             */
+            if(action==="comment"){
+
+                let box=card.querySelector(".v34-comment-box");
+
+                if(box){
+                    box.remove();
+                    return;
+                }
+
+                box=document.createElement("div");
+                box.className="v34-comment-box";
+
+                box.style.cssText=
+                    "padding:8px;background:#071725;border-top:1px solid rgba(255,255,255,.08)";
+
+                box.innerHTML=
+                    '<input type="text" placeholder="Rəyinizi yazın..." '+
+                    'style="width:100%;box-sizing:border-box;background:#0b2233;color:#fff;border:1px solid #294b60;border-radius:7px;padding:7px">'+
+                    '<button type="button" style="margin-top:6px;border:1px solid #ff2448;background:#ff2448;color:#fff;border-radius:7px;padding:6px 10px">Göndər</button>';
+
+                card.appendChild(box);
+
+                box.querySelector("button").onclick=function(){
+
+                    const input=box.querySelector("input");
+
+                    if(!input.value.trim())return;
+
+                    input.value="";
+                    input.placeholder="✓ Rəy əlavə edildi";
+                };
+
+                return;
+            }
+
+            /*
+             * SAVE
+             */
+            if(action==="save"){
+
+                const saved=button.dataset.saved==="1";
+
+                button.dataset.saved=saved?"0":"1";
+
+                button.textContent=saved?"🔖":"✓ 🔖";
+
+                return;
+            }
+
+            /*
+             * SHARE
+             */
+            if(action==="share"){
+
+                const title=
+                    card.querySelector("b")?.textContent ||
+                    "A-USTA Rent a Car";
+
+                const url=getListingUrl(card)||window.location.href;
+
+                if(navigator.share){
+
+                    navigator.share({
+                        title:title,
+                        text:"A-USTA Rent a Car elanına baxın",
+                        url:url
+                    }).catch(()=>{});
+
+                }else if(navigator.clipboard){
+
+                    navigator.clipboard.writeText(url);
+
+                    const old=button.textContent;
+                    button.textContent="✓";
+
+                    setTimeout(()=>{
+                        button.textContent=old;
+                    },1000);
+                }
+
+                return;
+            }
+
+        },true);
+
+    });
+}
+
+/*
+ * Dinamik yaradılan Rent a Car videoları üçün
+ */
+function init(){
+
+    bindRentVideoActions();
+
+    setTimeout(bindRentVideoActions,300);
+    setTimeout(bindRentVideoActions,1000);
+    setTimeout(bindRentVideoActions,2000);
+}
+
+if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",init);
+}else{
+    init();
+}
+
+window.AUSTA_RENT_VIDEO_ACTIONS={
+    bind:bindRentVideoActions
+};
+
+})();
+</script>
+
 <script id="austa-v16-professional-flow-final">
 (function(){
 "use strict";
