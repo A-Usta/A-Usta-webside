@@ -10392,38 +10392,1761 @@ function renderPromotedFirst(){
  }
 }
 renderPromotedFirst();setInterval(renderPromotedFirst,1000);
-// Professional Usta workflow explanation at price stage.
-window.AUSTA_USTA_PRICE_ENGINE=function(title,data){
- const ref=benchmark(title,data);
- const unknown=data?.problemMode==="Problemi bilmirəm — usta diaqnostika etsin"||data?.problemMode==="Avtomobil işə düşmür / yolda qalıb";
- const arrival=unknown?10:0;
- return {reference:ref,arrivalFee:arrival,unknown,mode:unknown?"diaqnostika": "quote"};
+<script id="austa-v16-professional-flow-final">
+(function(){
+"use strict";
+
+/* =========================================================
+   A-USTA V16 — PROFESSIONAL SERVICE + PRICE NEGOTIATION
+   ========================================================= */
+
+const esc2=v=>String(v??"").replace(
+    /[&<>"']/g,
+    m=>({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+    }[m])
+);
+
+const norm2=v=>String(v||"")
+    .toLocaleLowerCase("az-AZ")
+    .replace(/ə/g,"e")
+    .replace(/ı/g,"i")
+    .replace(/ö/g,"o")
+    .replace(/ü/g,"u")
+    .replace(/ş/g,"s")
+    .replace(/ç/g,"c")
+    .replace(/ğ/g,"g");
+
+
+/* =========================================================
+   1. A-USTA İSTİNAD QİYMƏTLƏRİ
+   ========================================================= */
+
+const priceRef={
+    "yağ dəyişimi":[25,45],
+    "fren sistemi":[40,120],
+    "təkər təmiri":[10,50],
+    "razval":[20,40],
+    "balans":[15,35],
+    "akkumulyator":[10,40],
+    "katalizator təmiri":[50,250],
+    "press təmiri":[30,150],
+    "diaqnostika":[20,50],
+    "kondisioner":[30,120],
+    "mühərrik":[100,800],
+    "karopka":[100,900]
 };
-// When unified price panel renders, enrich it without replacing the underlying order core.
-const overlay=document.getElementById("austaUnifiedOverlay");
-if(overlay){const obs=new MutationObserver(()=>{
- const box=document.getElementById("austaFlowPriceBox");if(!box||!overlay.classList.contains("open"))return;
- const mode=document.getElementById("austaFlowMode")?.value;
- if(mode==="transport"){
-  const data={};document.querySelectorAll("#austaDynamicQuestions [data-austa-q]").forEach(x=>data[x.dataset.austaQ]=x.value);
-  const ct=norm2(data.cargoType||"");const km=Number(data.routeDistanceKm||0);
-  if((ct.includes("evakuator")||ct.includes("tikinti material"))&&km>0){
-   let total=ct.includes("evakuator")?25+km*1.20:20+km*0.90+(Number(data.cargoWeight||0)>300?Math.ceil(Number(data.cargoWeight||0)/300)*5:0);
-   total=Math.round(total*100)/100;
-   box.innerHTML=`<strong>💰 A-USTA avtomatik ilkin qiymət təklifi</strong><br><strong>${total.toLocaleString("az-AZ")} AZN</strong><div class="austa-flow-note full">${ct.includes("evakuator")?'🚨 Evakuator':'🏗 Yüngül tikinti materialı'} • ${km} km. İlkin avtomatik təklifdir; real yük, gözləmə və marşrut yoxlanandan sonra daşıyıcı təsdiqləyir.</div>`;
-  }else box.innerHTML='<strong>💰 Avtomatik ilkin qiymət üçün məsafəni daxil edin.</strong><div class="austa-flow-note full">Evakuator və yüngül tikinti materialı daşınmasında məsafə əsasında ilkin təklif hesablanır.</div>';
-  return;
- }
- if(mode!=="service")return;
- const title=document.getElementById("austaFlowTitle")?.value||"Usta çağır";
- const fields=[...document.querySelectorAll("#austaDynamicQuestions [data-austa-q]")];const data={};fields.forEach(x=>data[x.dataset.austaQ]=x.value);
- const e=window.AUSTA_USTA_PRICE_ENGINE(title,data);const ref=e.reference;
- const extra=e.unknown?`<div class="austa-flow-note full">🔎 Problem dəqiq bilinmirsə: <strong>10 AZN usta gəlişi / ilkin diaqnostika</strong>. Yerində təmir mümkündürsə, usta təmiri təklif edir; mümkün deyilsə avtomobil təmir məntəqəsinə yönləndirilir və yekun qiymət baxışdan sonra təsdiqlənir.</div>`:
- `<div class="austa-flow-note full">📊 A-USTA istinad aralığı: <strong>${ref?ref[0]+'–'+ref[1]+' AZN':'usta baxışından sonra qiymət'}</strong>. Bu rəqəm yekun qiymət deyil; usta konkret işə görə öz təklifini verir və müştəri təsdiqləmədən iş başlamır.</div>`;
- const existing=box.querySelector("[data-usta-price-note]");if(!existing){const d=document.createElement("div");d.dataset.ustaPriceNote="1";d.innerHTML=extra;box.appendChild(d);}
-});obs.observe(overlay,{subtree:true,childList:true,characterData:true});}
-// Prevent any card/listing from silently failing: open the correct flow.
-window.AUSTA_OPEN_FUNCTION_V16=name=>openFlow("service",name);
+
+function benchmark(title,data){
+    const n=norm2(title||"");
+
+    for(const k of Object.keys(priceRef)){
+        if(n.includes(norm2(k))){
+            return priceRef[k];
+        }
+    }
+
+    if(data?.batteryService?.includes("Tok")){
+        return [10,40];
+    }
+
+    if(data?.fuelType){
+        return [15,60];
+    }
+
+    if(data?.wheelService?.includes("Təkər")){
+        return [10,60];
+    }
+
+    return null;
+}
+
+
+/* =========================================================
+   2. UNIFIED FLOW AÇILIŞI
+   ========================================================= */
+
+function openFlow(type,title){
+    if(window.AUSTA_UNIFIED_FLOW?.open){
+        window.AUSTA_UNIFIED_FLOW.open(type,title);
+        return true;
+    }
+
+    return false;
+}
+
+
+/* =========================================================
+   3. FUNKSİYA KARTLARINI UNIFIED FLOW-A BAĞLA
+   ========================================================= */
+
+document.addEventListener(
+    "click",
+    e=>{
+
+        const b=e.target.closest(
+            ".austa-function-btn,"+
+            ".service-card,"+
+            ".premium-service-card,"+
+            ".logistics-order-btn,"+
+            "[data-inner-service]"
+        );
+
+        if(!b) return;
+
+        const title=
+            b.dataset.topService ||
+            b.dataset.logisticsTitle ||
+            b.dataset.innerService ||
+            b.querySelector("h3")?.textContent?.trim() ||
+            b.textContent.trim();
+
+        if(!title) return;
+
+        const t=norm2(title);
+
+        let type="service";
+
+        if(
+            t.includes("evakuator") ||
+            t.includes("benzin") ||
+            t.includes("yanacaq") ||
+            t.includes("akkumulyator") ||
+            t.includes("teker") ||
+            t.includes("təkər")
+        ){
+            type="service";
+        }
+        else if(
+            t.includes("yuk") ||
+            t.includes("tikinti material") ||
+            t.includes("xususi texnika") ||
+            t.includes("ağır texnika")
+        ){
+            type="transport";
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        openFlow(type,title);
+    },
+    true
+);
+
+
+/* =========================================================
+   4. ELAN NÖVLƏRİ
+   ========================================================= */
+
+const lk=document.getElementById("austaListingKind");
+
+if(lk){
+
+    lk.innerHTML=`
+        <option value="Avtomobil satışı">
+            🚗 Avtomobil satışı — Yeni / İkinci əl
+        </option>
+
+        <option value="Avtomobil icarəsi">
+            🚘 Rent a Car / Avtomobil icarəsi
+        </option>
+
+        <option value="Ehtiyat hissələri elanı">
+            ⚙ Ehtiyat hissələri elanı
+        </option>
+
+        <option value="Aksesuar elanı">
+            🧰 Aksesuar elanı
+        </option>
+
+        <option value="Xüsusi texnika elanı">
+            🏗 Xüsusi texnika elanı
+        </option>
+
+        <option value="Moto / Moped / Skuter elanı">
+            🏍 Moto / Moped / Skuter elanı
+        </option>
+
+        <option value="Qeydiyyat nömrəsi elanı">
+            🔢 Qeydiyyat nömrəsi elanı
+        </option>
+    `;
+}
+
+
+/* =========================================================
+   5. PARTS / ACCESSORIES MARKETPLACE
+   ========================================================= */
+
+const pm=document.getElementById("partsModule");
+
+if(
+    pm &&
+    !document.getElementById("austaPartsAccessoryTabs")
+){
+
+    const d=document.createElement("div");
+
+    d.id="austaPartsAccessoryTabs";
+    d.className="austa-flow-grid";
+
+    d.innerHTML=`
+        <button
+            type="button"
+            class="btn"
+            data-pcat="Ehtiyat hissələri">
+            ⚙ Ehtiyat hissələri
+        </button>
+
+        <button
+            type="button"
+            class="btn"
+            data-pcat="Aksesuarlar">
+            🧰 Aksesuarlar
+        </button>
+
+        <div
+            id="austaPartsCategoryNote"
+            class="austa-flow-note full">
+            Ehtiyat hissələri və aksesuarlar marketplace-də
+            ayrıca kateqoriyadır.
+        </div>
+    `;
+
+    pm.insertBefore(
+        d,
+        pm.firstChild?.nextSibling || pm.firstChild
+    );
+
+    d.addEventListener(
+        "click",
+        e=>{
+
+            const b=e.target.closest("[data-pcat]");
+
+            if(!b) return;
+
+            const n=
+                document.getElementById(
+                    "austaPartsCategoryNote"
+                );
+
+            if(n){
+
+                n.textContent=
+                    b.dataset.pcat+
+                    " seçildi. Marka, model, OEM/kod və uyğunluq məlumatı daxil ediləcək.";
+
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   6. GENERIC SECTOR SELECTOR GÖRÜNÜŞÜNÜ GİZLƏ
+   ========================================================= */
+
+document
+.querySelectorAll("select,input,label,p,h3")
+.forEach(el=>{
+
+    if(
+        /sektor/i.test(
+            el.textContent ||
+            el.placeholder ||
+            ""
+        )
+    ){
+
+        if(
+            el.tagName==="LABEL" ||
+            el.tagName==="P"
+        ){
+            el.style.display="none";
+        }
+    }
+});
+
+
+/* =========================================================
+   7. PROMOTED LISTINGS
+   ========================================================= */
+
+function renderPromotedFirst(){
+
+    const box=
+        document.getElementById(
+            "austaFeaturedGrid"
+        );
+
+    if(!box) return;
+
+    let st={};
+
+    try{
+
+        st=JSON.parse(
+            localStorage.getItem(
+                "austa-marketplace-modules-v1"
+            ) || "{}"
+        );
+
+    }catch(e){
+
+        return;
+    }
+
+    const all=(st.cars||[])
+        .filter(
+            x=>x.status!=="deleted"
+        );
+
+    const promoted=all
+        .filter(
+            x=>
+                x.promotedUntil &&
+                new Date(
+                    x.promotedUntil
+                ).getTime()>Date.now()
+        )
+        .sort(
+            (a,b)=>
+                new Date(
+                    b.promotedAt ||
+                    b.createdAt ||
+                    0
+                )-
+                new Date(
+                    a.promotedAt ||
+                    a.createdAt ||
+                    0
+                )
+        );
+
+    const rent=
+        promoted.filter(
+            x=>x.listingMode==="İcarə"
+        );
+
+    const sale=
+        promoted.filter(
+            x=>x.listingMode!=="İcarə"
+        );
+
+    if(promoted.length){
+
+        const note=
+            document.getElementById(
+                "austaPromotedNote"
+            ) ||
+            document.createElement("div");
+
+        note.id="austaPromotedNote";
+        note.className="austa-flow-note";
+
+        note.innerHTML=`
+            ⭐ İrəli çəkilmiş elanlar —
+            ${sale.length} satış •
+            ${rent.length} Rent a Car —
+            ilk səhifədə göstərilir.
+        `;
+
+        if(!note.parentNode){
+
+            box.parentNode.insertBefore(
+                note,
+                box
+            );
+        }
+    }
+}
+
+renderPromotedFirst();
+
+setInterval(
+    renderPromotedFirst,
+    1000
+);
+
+
+/* =========================================================
+   8. USTA QİYMƏT MƏNTİQİ
+   ========================================================= */
+
+window.AUSTA_USTA_PRICE_ENGINE=function(
+    title,
+    data
+){
+
+    const ref=
+        benchmark(title,data);
+
+    const unknown=
+        data?.problemMode===
+            "Problemi bilmirəm — usta diaqnostika etsin" ||
+
+        data?.problemMode===
+            "Avtomobil işə düşmür / yolda qalıb";
+
+    const arrival=
+        unknown ? 10 : 0;
+
+    return {
+
+        reference:ref,
+
+        arrivalFee:arrival,
+
+        unknown:unknown,
+
+        mode:
+            unknown
+            ? "diaqnostika"
+            : "quote",
+
+        /* ÇOX VACİB:
+           Bu rəqəm yekun qiymət deyil. */
+        status:"initial_quote",
+
+        /* Usta cavab verə bilər. */
+        providerCanRespond:true,
+
+        providerResponseRequired:true,
+
+        /* Müştəri təsdiqi olmadan yekunlaşmır. */
+        customerApprovalRequired:true,
+
+        finalPriceConfirmed:false
+    };
+};
+
+
+/* =========================================================
+   9. UNIFIED PRICE PANEL
+   ========================================================= */
+
+const overlay=
+    document.getElementById(
+        "austaUnifiedOverlay"
+    );
+
+if(overlay){
+
+    const obs=
+        new MutationObserver(()=>{
+
+            const box=
+                document.getElementById(
+                    "austaFlowPriceBox"
+                );
+
+            if(
+                !box ||
+                !overlay.classList.contains("open")
+            ){
+                return;
+            }
+
+            const mode=
+                document.getElementById(
+                    "austaFlowMode"
+                )?.value;
+
+
+            /* ------------------------------------------------
+               TRANSPORT
+               ------------------------------------------------ */
+
+            if(mode==="transport"){
+
+                const data={};
+
+                document
+                .querySelectorAll(
+                    "#austaDynamicQuestions [data-austa-q]"
+                )
+                .forEach(
+                    x=>{
+                        data[x.dataset.austaQ]=x.value;
+                    }
+                );
+
+                const ct=
+                    norm2(
+                        data.cargoType || ""
+                    );
+
+                const km=
+                    Number(
+                        data.routeDistanceKm || 0
+                    );
+
+
+                if(
+                    (
+                        ct.includes("evakuator") ||
+                        ct.includes("tikinti material")
+                    ) &&
+                    km>0
+                ){
+
+                    let total=
+                        ct.includes("evakuator")
+                        ?
+                        25 + km*1.20
+                        :
+                        20 +
+                        km*0.90 +
+                        (
+                            Number(
+                                data.cargoWeight||0
+                            )>300
+                            ?
+                            Math.ceil(
+                                Number(
+                                    data.cargoWeight||0
+                                )/300
+                            )*5
+                            :
+                            0
+                        );
+
+                    total=
+                        Math.round(
+                            total*100
+                        )/100;
+
+                    box.innerHTML=`
+
+                        <strong>
+                            💰 A-USTA avtomatik ilkin qiymət
+                        </strong>
+
+                        <br>
+
+                        <strong>
+                            ${total.toLocaleString("az-AZ")}
+                            AZN
+                        </strong>
+
+                        <div
+                            class="austa-flow-note full">
+
+                            ${
+                                ct.includes("evakuator")
+                                ?
+                                "🚨 Evakuator"
+                                :
+                                "🏗 Yüngül tikinti materialı"
+                            }
+
+                            • ${km} km.
+
+                            İlkin avtomatik təklifdir.
+                            Real yük, gözləmə və marşrut
+                            yoxlanandan sonra daşıyıcı
+                            yekun təklifi təsdiqləyir.
+
+                        </div>
+                    `;
+
+                }
+                else{
+
+                    box.innerHTML=`
+                        <strong>
+                            💰 Avtomatik ilkin qiymət
+                            üçün məsafəni daxil edin.
+                        </strong>
+
+                        <div
+                            class="austa-flow-note full">
+
+                            Evakuator və yüngül tikinti
+                            materialı daşınmasında məsafə
+                            əsasında ilkin təklif hesablanır.
+
+                        </div>
+                    `;
+                }
+
+                return;
+            }
+
+
+            if(mode!=="service"){
+                return;
+            }
+
+
+            /* ------------------------------------------------
+               SERVICE
+               ------------------------------------------------ */
+
+            const title=
+                document.getElementById(
+                    "austaFlowTitle"
+                )?.value ||
+                "Usta çağır";
+
+
+            const fields=[
+                ...document.querySelectorAll(
+                    "#austaDynamicQuestions [data-austa-q]"
+                )
+            ];
+
+
+            const data={};
+
+            fields.forEach(
+                x=>{
+                    data[x.dataset.austaQ]=x.value;
+                }
+            );
+
+
+            const e=
+                window.AUSTA_USTA_PRICE_ENGINE(
+                    title,
+                    data
+                );
+
+
+            const ref=e.reference;
+
+
+            let extra;
+
+
+            /* Problem məlum deyil */
+            if(e.unknown){
+
+                extra=`
+
+                    <div
+                        class="austa-flow-note full"
+                        data-usta-price-note>
+
+                        🔎
+                        <strong>
+                            İlkin diaqnostika: 10 AZN
+                        </strong>
+
+                        <br>
+
+                        Problem dəqiq müəyyən edilməyib.
+
+                        Usta yerində diaqnostika etdikdən
+                        sonra təmir üçün ayrıca qiymət
+                        təklifi göndərə bilər.
+
+                        <br><br>
+
+                        👨‍🔧
+                        <strong>
+                            Usta cavab verə bilər:
+                        </strong>
+
+                        sifarişi qəbul et,
+                        öz qiymətini təklif et
+                        və ya imtina et.
+
+                    </div>
+                `;
+            }
+            else{
+
+                extra=`
+
+                    <div
+                        class="austa-flow-note full"
+                        data-usta-price-note>
+
+                        📊
+                        <strong>
+                            A-USTA ilkin qiymət aralığı:
+                        </strong>
+
+                        ${
+                            ref
+                            ?
+                            ref[0]+"–"+ref[1]+" AZN"
+                            :
+                            "usta baxışından sonra qiymət"
+                        }
+
+                        <br>
+
+                        Bu rəqəm
+                        <strong>
+                            yekun qiymət deyil.
+                        </strong>
+
+                        Usta sifarişi qəbul etdikdən
+                        sonra öz qiymət təklifini
+                        göndərə bilər.
+
+                        Müştəri həmin təklifi
+                        təsdiqləmədən yekun qiymət
+                        qəbul edilmiş sayılmır.
+
+                        <br><br>
+
+                        👨‍🔧
+                        <strong>
+                            Usta cavabı:
+                        </strong>
+
+                        sifarişi qəbul et •
+                        öz qiymətini təklif et •
+                        imtina et
+
+                    </div>
+                `;
+            }
+
+
+            const existing=
+                box.querySelector(
+                    "[data-usta-price-note]"
+                );
+
+
+            if(!existing){
+
+                const d=
+                    document.createElement("div");
+
+                d.dataset.ustaPriceNote="1";
+
+                d.innerHTML=extra;
+
+                box.appendChild(d);
+            }
+
+        });
+
+
+    obs.observe(
+        overlay,
+        {
+            subtree:true,
+            childList:true,
+            characterData:true
+        }
+    );
+}
+
+
+/* =========================================================
+   10. USTA QİYMƏT TƏKLİFİ YARADIR
+   ========================================================= */
+
+window.AUSTA_PROVIDER_PRICE_RESPONSE=function(
+    requestId,
+    providerPrice,
+    providerNote
+){
+
+    if(!requestId){
+
+        throw new Error(
+            "Sifariş ID-si yoxdur."
+        );
+    }
+
+
+    const price=
+        Number(providerPrice);
+
+
+    if(
+        !Number.isFinite(price) ||
+        price<=0
+    ){
+
+        throw new Error(
+            "Usta qiyməti düzgün daxil edilməyib."
+        );
+    }
+
+
+    const response={
+
+        requestId:String(
+            requestId
+        ),
+
+        providerPrice:
+            Math.round(
+                price*100
+            )/100,
+
+        providerNote:
+            String(
+                providerNote||""
+            ).trim(),
+
+        status:
+            "provider_offer",
+
+        customerApprovalRequired:
+            true,
+
+        finalPriceConfirmed:
+            false,
+
+        respondedAt:
+            new Date().toISOString()
+    };
+
+
+    window.AUSTA_LAST_PROVIDER_PRICE=
+        response;
+
+
+    try{
+
+        const key=
+            "austa-provider-offer-"+
+            response.requestId;
+
+
+        localStorage.setItem(
+            key,
+            JSON.stringify(response)
+        );
+
+
+        localStorage.setItem(
+            "austa-provider-price-response",
+            JSON.stringify(response)
+        );
+
+    }catch(_){}
+
+
+    window.dispatchEvent(
+        new CustomEvent(
+            "austa:provider:price-response",
+            {
+                detail:response
+            }
+        )
+    );
+
+
+    return response;
+};
+
+
+/* =========================================================
+   11. MÜŞTƏRİDƏ USTA TƏKLİFİ
+   ========================================================= */
+
+window.AUSTA_SHOW_PROVIDER_OFFER=function(
+    response
+){
+
+    if(
+        !response ||
+        !response.requestId
+    ){
+        return;
+    }
+
+
+    const old=
+        document.getElementById(
+            "austaProviderOfferBox"
+        );
+
+
+    if(old){
+        old.remove();
+    }
+
+
+    const box=
+        document.createElement("div");
+
+
+    box.id=
+        "austaProviderOfferBox";
+
+    box.className=
+        "austa-flow-note full";
+
+
+    const price=
+        Number(
+            response.providerPrice||0
+        ).toLocaleString(
+            "az-AZ",
+            {
+                minimumFractionDigits:2,
+                maximumFractionDigits:2
+            }
+        );
+
+
+    box.innerHTML=`
+
+        <div
+            style="
+                font-size:16px;
+                font-weight:900;
+                margin-bottom:8px;
+            ">
+
+            🛠 Ustanın qiymət təklifi
+
+        </div>
+
+
+        <div
+            style="
+                font-size:24px;
+                font-weight:900;
+                margin-bottom:8px;
+            ">
+
+            ${price} AZN
+
+        </div>
+
+
+        ${
+            response.providerNote
+            ?
+            `
+            <div
+                style="
+                    margin-bottom:10px;
+                    padding:8px;
+                    border-radius:8px;
+                    background:rgba(255,255,255,.05);
+                ">
+
+                💬
+                ${esc2(response.providerNote)}
+
+            </div>
+            `
+            :
+            ""
+        }
+
+
+        <div
+            style="
+                font-size:12px;
+                opacity:.8;
+                margin-bottom:12px;
+            ">
+
+            Sifariş:
+            ${esc2(response.requestId)}
+
+            <br>
+
+            Bu qiymət ustanın təklifidir.
+
+            Müştəri təsdiqləmədən yekun qiymət
+            təsdiqlənmir.
+
+        </div>
+
+
+        <div
+            style="
+                display:flex;
+                gap:8px;
+                flex-wrap:wrap;
+            ">
+
+            <button
+                type="button"
+                id="austaAcceptProviderPrice"
+                class="austa-v55-btn">
+
+                ✓ Qiyməti qəbul edirəm
+
+            </button>
+
+
+            <button
+                type="button"
+                id="austaRejectProviderPrice"
+                class="austa-v55-btn secondary">
+
+                ✕ Rədd et
+
+            </button>
+
+        </div>
+
+
+        <div
+            id="austaProviderOfferResult"
+            style="margin-top:10px;">
+        </div>
+    `;
+
+
+    const target=
+        document.getElementById(
+            "austaFlowPriceBox"
+        ) ||
+
+        document.getElementById(
+            "austaFlowFinal"
+        ) ||
+
+        document.querySelector(
+            ".austa-flow-panel"
+        );
+
+
+    if(!target){
+        return;
+    }
+
+
+    target.appendChild(box);
+
+
+    /* =====================================================
+       MÜŞTƏRİ QƏBUL EDİR
+       ===================================================== */
+
+    document
+    .getElementById(
+        "austaAcceptProviderPrice"
+    )
+    ?.addEventListener(
+        "click",
+        function(){
+
+            const approval={
+
+                requestId:
+                    String(
+                        response.requestId
+                    ),
+
+                providerPrice:
+                    Number(
+                        response.providerPrice
+                    ),
+
+                status:
+                    "customer_approved",
+
+                customerApprovalRequired:
+                    false,
+
+                finalPriceConfirmed:
+                    true,
+
+                approvedAt:
+                    new Date().toISOString()
+            };
+
+
+            window.AUSTA_LAST_CUSTOMER_PRICE_APPROVAL=
+                approval;
+
+
+            try{
+
+                localStorage.setItem(
+                    "austa-customer-price-approval",
+                    JSON.stringify(
+                        approval
+                    )
+                );
+
+
+                localStorage.setItem(
+                    "austa-order-status-"+
+                    approval.requestId,
+
+                    JSON.stringify({
+
+                        requestId:
+                            approval.requestId,
+
+                        status:
+                            "price_confirmed",
+
+                        finalPrice:
+                            approval.providerPrice,
+
+                        updatedAt:
+                            approval.approvedAt
+                    })
+                );
+
+            }catch(_){}
+
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    "austa:customer:price-approved",
+                    {
+                        detail:
+                            approval
+                    }
+                )
+            );
+
+
+            const result=
+                document.getElementById(
+                    "austaProviderOfferResult"
+                );
+
+
+            if(result){
+
+                result.innerHTML=`
+
+                    <strong
+                        style="color:#72e6a3">
+
+                        ✓ Qiymət qəbul edildi —
+                        ${price} AZN
+
+                    </strong>
+
+                    <br>
+
+                    <span
+                        style="font-size:12px">
+
+                        Ustaya təsdiq göndərildi.
+
+                    </span>
+                `;
+            }
+
+
+            this.disabled=true;
+
+
+            document
+            .getElementById(
+                "austaRejectProviderPrice"
+            )
+            ?.remove();
+
+        }
+    );
+
+
+    /* =====================================================
+       MÜŞTƏRİ RƏDD EDİR
+       ===================================================== */
+
+    document
+    .getElementById(
+        "austaRejectProviderPrice"
+    )
+    ?.addEventListener(
+        "click",
+        function(){
+
+            const rejection={
+
+                requestId:
+                    String(
+                        response.requestId
+                    ),
+
+                providerPrice:
+                    Number(
+                        response.providerPrice
+                    ),
+
+                status:
+                    "customer_rejected",
+
+                customerApprovalRequired:
+                    true,
+
+                finalPriceConfirmed:
+                    false,
+
+                rejectedAt:
+                    new Date().toISOString()
+            };
+
+
+            window.AUSTA_LAST_CUSTOMER_PRICE_APPROVAL=
+                rejection;
+
+
+            try{
+
+                localStorage.setItem(
+                    "austa-customer-price-approval",
+                    JSON.stringify(
+                        rejection
+                    )
+                );
+
+
+                localStorage.setItem(
+                    "austa-order-status-"+
+                    rejection.requestId,
+
+                    JSON.stringify({
+
+                        requestId:
+                            rejection.requestId,
+
+                        status:
+                            "price_rejected",
+
+                        updatedAt:
+                            rejection.rejectedAt
+                    })
+                );
+
+            }catch(_){}
+
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    "austa:customer:price-rejected",
+                    {
+                        detail:
+                            rejection
+                    }
+                )
+            );
+
+
+            const result=
+                document.getElementById(
+                    "austaProviderOfferResult"
+                );
+
+
+            if(result){
+
+                result.innerHTML=`
+
+                    <strong
+                        style="color:#ff6878">
+
+                        ✕ Qiymət rədd edildi.
+
+                    </strong>
+
+                    <br>
+
+                    <span
+                        style="font-size:12px">
+
+                        Usta yeni qiymət təklifi
+                        verə bilər.
+
+                    </span>
+                `;
+            }
+
+
+            this.disabled=true;
+
+
+            document
+            .getElementById(
+                "austaAcceptProviderPrice"
+            )
+            ?.remove();
+
+        }
+    );
+};
+
+
+/* =========================================================
+   12. USTA ÜÇÜN QİYMƏT TƏKLİF FORMASI
+   ========================================================= */
+
+window.AUSTA_OPEN_PROVIDER_PRICE_FORM=function(
+    requestId
+){
+
+    if(!requestId){
+
+        throw new Error(
+            "Sifariş ID-si yoxdur."
+        );
+    }
+
+
+    const old=
+        document.getElementById(
+            "austaProviderPriceForm"
+        );
+
+
+    if(old){
+        old.remove();
+    }
+
+
+    const box=
+        document.createElement("div");
+
+
+    box.id=
+        "austaProviderPriceForm";
+
+    box.className=
+        "austa-flow-note full";
+
+
+    box.innerHTML=`
+
+        <div
+            style="
+                font-size:16px;
+                font-weight:900;
+                margin-bottom:10px;
+            ">
+
+            🛠 Müştəriyə qiymət təklifi göndər
+
+        </div>
+
+
+        <div
+            style="
+                font-size:12px;
+                opacity:.8;
+                margin-bottom:10px;
+            ">
+
+            Sifariş:
+            <strong>
+                ${esc2(requestId)}
+            </strong>
+
+        </div>
+
+
+        <label
+            style="
+                display:block;
+                margin-bottom:6px;
+                font-weight:800;
+            ">
+
+            💰 Təklif etdiyiniz qiymət (AZN)
+
+        </label>
+
+
+        <input
+            id="austaProviderPriceInput"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="Məsələn: 80"
+            style="
+                width:100%;
+                box-sizing:border-box;
+                margin-bottom:10px;
+            "
+        >
+
+
+        <label
+            style="
+                display:block;
+                margin-bottom:6px;
+                font-weight:800;
+            ">
+
+            💬 Usta qeydi
+
+        </label>
+
+
+        <textarea
+            id="austaProviderPriceNote"
+            rows="3"
+            placeholder="Görüləcək iş, ehtiyat hissəsi və ya əlavə məlumat..."
+            style="
+                width:100%;
+                box-sizing:border-box;
+                margin-bottom:10px;
+            "
+        ></textarea>
+
+
+        <button
+            type="button"
+            id="austaProviderSendPrice"
+            class="austa-v55-btn">
+
+            ✓ Qiymət təklifini müştəriyə göndər
+
+        </button>
+
+
+        <div
+            id="austaProviderPriceResult"
+            style="margin-top:10px;">
+        </div>
+
+    `;
+
+
+    const target=
+        document.getElementById(
+            "austaFlowFinal"
+        ) ||
+
+        document.getElementById(
+            "austaFlowPriceBox"
+        ) ||
+
+        document.querySelector(
+            ".austa-flow-panel"
+        );
+
+
+    if(!target){
+        return;
+    }
+
+
+    target.appendChild(box);
+
+
+    document
+    .getElementById(
+        "austaProviderSendPrice"
+    )
+    ?.addEventListener(
+        "click",
+        function(){
+
+            const priceInput=
+                document.getElementById(
+                    "austaProviderPriceInput"
+                );
+
+            const noteInput=
+                document.getElementById(
+                    "austaProviderPriceNote"
+                );
+
+            const result=
+                document.getElementById(
+                    "austaProviderPriceResult"
+                );
+
+
+            const price=
+                Number(
+                    priceInput?.value||0
+                );
+
+
+            const note=
+                String(
+                    noteInput?.value||""
+                ).trim();
+
+
+            if(
+                !Number.isFinite(price) ||
+                price<=0
+            ){
+
+                if(result){
+
+                    result.innerHTML=`
+
+                        <strong
+                            style="color:#ff6878">
+
+                            ⚠ Düzgün qiymət daxil edin.
+
+                        </strong>
+
+                    `;
+                }
+
+                return;
+            }
+
+
+            try{
+
+                const response=
+                    window.AUSTA_PROVIDER_PRICE_RESPONSE(
+                        requestId,
+                        price,
+                        note
+                    );
+
+
+                if(result){
+
+                    result.innerHTML=`
+
+                        <strong
+                            style="color:#72e6a3">
+
+                            ✓ Qiymət təklifi göndərildi
+
+                        </strong>
+
+                        <br>
+
+                        <span
+                            style="font-size:12px">
+
+                            ${price.toLocaleString("az-AZ")}
+                            AZN —
+                            müştərinin təsdiqi gözlənilir.
+
+                        </span>
+
+                    `;
+                }
+
+
+                if(priceInput){
+                    priceInput.disabled=true;
+                }
+
+
+                if(noteInput){
+                    noteInput.disabled=true;
+                }
+
+
+                this.disabled=true;
+
+            }
+            catch(error){
+
+                if(result){
+
+                    result.innerHTML=`
+
+                        <strong
+                            style="color:#ff6878">
+
+                            ⚠
+                            ${esc2(
+                                error.message
+                            )}
+
+                        </strong>
+
+                    `;
+                }
+            }
+        }
+    );
+};
+
+
+/* =========================================================
+   13. USTA SİFARİŞİNDƏ QİYMƏT TƏKLİF ET DÜYMƏSİ
+   ========================================================= */
+
+window.AUSTA_ATTACH_PROVIDER_PRICE_BUTTON=function(
+    requestId
+){
+
+    if(!requestId){
+        return;
+    }
+
+
+    if(
+        document.getElementById(
+            "austaProviderPriceButton"
+        )
+    ){
+        return;
+    }
+
+
+    const target=
+        document.getElementById(
+            "austaFlowFinal"
+        ) ||
+
+        document.getElementById(
+            "austaFlowPriceBox"
+        ) ||
+
+        document.querySelector(
+            ".austa-flow-panel"
+        );
+
+
+    if(!target){
+        return;
+    }
+
+
+    const button=
+        document.createElement(
+            "button"
+        );
+
+
+    button.type="button";
+
+    button.id=
+        "austaProviderPriceButton";
+
+    button.className=
+        "austa-v55-btn";
+
+    button.style.marginTop=
+        "10px";
+
+    button.textContent=
+        "💰 Müştəriyə qiymət təklif et";
+
+
+    button.addEventListener(
+        "click",
+        function(){
+
+            window.AUSTA_OPEN_PROVIDER_PRICE_FORM(
+                requestId
+            );
+
+        }
+    );
+
+
+    target.appendChild(button);
+};
+
+
+/* =========================================================
+   14. USTA TƏKLİFİ MÜŞTƏRİYƏ ÇATDI
+   ========================================================= */
+
+window.addEventListener(
+    "austa:provider:price-response",
+    function(e){
+
+        if(!e.detail){
+            return;
+        }
+
+        window.AUSTA_SHOW_PROVIDER_OFFER(
+            e.detail
+        );
+    }
+);
+
+
+/* =========================================================
+   15. MÜŞTƏRİ QƏBUL ETDİ → USTAYA BİLDİR
+   ========================================================= */
+
+window.addEventListener(
+    "austa:customer:price-approved",
+    function(e){
+
+        const data=e.detail;
+
+        if(
+            !data ||
+            !data.requestId
+        ){
+            return;
+        }
+
+
+        window.AUSTA_LAST_PROVIDER_NOTIFICATION={
+
+            requestId:
+                data.requestId,
+
+            status:
+                "customer_approved",
+
+            finalPrice:
+                data.providerPrice,
+
+            notifiedAt:
+                new Date().toISOString()
+        };
+    }
+);
+
+
+/* =========================================================
+   16. MÜŞTƏRİ RƏDD ETDİ → USTA YENİ TƏKLİF VERƏ BİLƏR
+   ========================================================= */
+
+window.addEventListener(
+    "austa:customer:price-rejected",
+    function(e){
+
+        const data=e.detail;
+
+        if(
+            !data ||
+            !data.requestId
+        ){
+            return;
+        }
+
+
+        window.AUSTA_LAST_PROVIDER_NOTIFICATION={
+
+            requestId:
+                data.requestId,
+
+            status:
+                "customer_rejected",
+
+            providerCanResubmit:
+                true,
+
+            notifiedAt:
+                new Date().toISOString()
+        };
+    }
+);
+
+
+/* =========================================================
+   17. FUNKSİYA AÇILIŞINI SAXLA
+   ========================================================= */
+
+window.AUSTA_OPEN_FUNCTION_V16=
+    name=>openFlow(
+        "service",
+        name
+    );
+
 })();
 </script>
 <style id="austa-v27-video-9-wide">
