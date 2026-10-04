@@ -9266,6 +9266,8 @@ function collectVideos(){
     return out;
 }
 
+  window.AUSTA_GET_VIDEO_LIST = collectVideos;
+  
 function openVideo(v){
  let m=document.getElementById('austaVideoDetailModal');if(!m){m=document.createElement('div');m.id='austaVideoDetailModal';document.body.appendChild(m)}
  const raw=v.raw||{};const video=v.videoUrl?`<video controls preload="metadata" poster="${esc(v.img||imgFallback)}" src="${esc(v.videoUrl)}"></video>`:`<div style="width:100%;height:100%;min-height:520px;background:url('${esc(v.img||imgFallback)}') center/cover;display:grid;place-items:center"><span style="background:#ff1235;padding:16px 20px;border-radius:50%;font-size:25px">▶</span></div>`;
@@ -9275,6 +9277,9 @@ function openVideo(v){
  m.querySelector('[data-detail-share]').onclick=()=>navigator.clipboard?.writeText(location.href+'#austaPremiumTop').then(()=>alert('Paylaşım linki kopyalandı.'));
  m.querySelector('[data-detail-save]').onclick=()=>{let f=read('austa-favorites');if(!Array.isArray(f))f=[];if(!f.includes(v.id))f.push(v.id);localStorage.setItem('austa-favorites',JSON.stringify(f));alert('Avtomobil yadda saxlanıldı.');};
 }
+
+window.AUSTA_OPEN_VIDEO = openVideo;
+  
 function renderTop(){
  const old=document.getElementById('austaPremiumTop');if(old)old.remove();
  const anchor=document.getElementById('austaMarketFeed');if(!anchor)return;
@@ -9468,20 +9473,168 @@ const imgs=[
 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=82',
 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=82'
 ];
-const videos=[
-['2015 BMW 528','29,500 ₼','AVTOMOBİL','https://ilex.az/storage/24906/conversions/image_picker_638A960B-BEE0-42AA-8190-DEFE1AD4DF11-1291-0000005453CC7DD7-card.webp'],
-['2010 Hyundai Sonata','17,900 ₼','AVTOMOBİL','https://ilex.az/storage/3787/conversions/scaled_1000251671-card.webp'],
-['2021 Hyundai Sonata','37,500 ₼','AVTOMOBİL','https://ilex.az/storage/1446/conversions/image_picker_40F2EF6E-0AED-4245-8A14-E6C81E8C5B83-5782-000002DEE9916AAB-card.webp'],
-['2013 Nissan Leaf','12,400 ₼','AVTOMOBİL','https://ilex.az/storage/35015/conversions/01M2SNM3S3Y9P01NPTRZG5DY8T-card.webp'],
-['2023 Tesla Model X','80,000 ₼','AVTOMOBİL','https://ilex.az/storage/37893/conversions/WhatsApp-Image-2026-09-20-at-01.03.30-card.webp'],
-['2016 Mercedes-Benz E 300 4MATIC','42,000 ₼','AVTOMOBİL','https://ilex.az/storage/39301/conversions/scaled_1000181664-card.webp'],
-['2017 Hyundai Elantra','Elan üçün bax','AVTOMOBİL','https://ilex.az/storage/34115/conversions/1000239082-card.webp']
-];
-const grid=document.getElementById('austaV22VideoGrid');
-if(grid){
- grid.innerHTML=videos.map((v,i)=>`<article class="austa-v22-video-card" data-v22-video="${i}"><div class="austa-v22-video-thumb" style="background-image:url('${v[3]}')"><span class="austa-v22-video-tag">${v[2]}</span><span class="austa-v22-video-play">▶</span></div><div class="austa-v22-video-body"><b>${E(v[0])}</b><strong>${E(v[1])}</strong><span>🎬 Video elan • A-USTA</span></div></article>`).join('');
- grid.addEventListener('click',e=>{const c=e.target.closest('[data-v22-video]');if(!c)return;const i=Number(c.dataset.v22Video);const v=videos[i];const m=document.getElementById('austaVideoDetailModal');if(m){m.classList.add('open');const media=m.querySelector('.austa-detail-media');const info=m.querySelector('.austa-detail-info');if(media)media.style.backgroundImage=`url('${v[3]}')`;if(info){const h=info.querySelector('h2');if(h)h.textContent=v[0];const p=info.querySelector('p');if(p)p.textContent=`${v[1]} • ${v[2]} • A-USTA video elan`;}}else{document.getElementById('carsModule')?.scrollIntoView({behavior:'smooth'});}});
+const grid = document.getElementById('austaV22VideoGrid');
+
+function renderRealAustaVideos(){
+
+    if(!grid) return;
+
+    const getVideos = window.AUSTA_GET_VIDEO_LIST;
+
+    if(typeof getVideos !== 'function'){
+        console.warn('A-USTA: real video API hələ hazır deyil.');
+        return;
+    }
+
+    const videos = getVideos();
+
+    console.log('A-USTA REAL VIDEO LIST:', videos);
+
+    if(!Array.isArray(videos) || !videos.length){
+
+        grid.innerHTML = `
+            <div style="
+                grid-column:1/-1;
+                padding:25px;
+                text-align:center;
+                color:#8fa5ba;
+                border:1px solid #174d70;
+                border-radius:12px;
+                background:#061725;
+            ">
+                Hazırda video elan yoxdur.
+            </div>
+        `;
+
+        return;
+    }
+
+    grid.innerHTML = videos.map((v,i)=>{
+
+        const title = E(v.title || 'Avtomobil');
+        const meta = E(v.meta || 'Elan');
+        const img = E(v.img || '');
+
+        const tag =
+            v.mode === 'İcarə' ||
+            v.mode === 'Rent a Car'
+                ? 'RENT A CAR'
+                : 'AVTOMOBİL';
+
+        return `
+            <article
+                class="austa-v22-video-card"
+                data-v22-video-index="${i}"
+                data-video-id="${E(v.id || '')}"
+                data-video-url="${E(v.videoUrl || '')}"
+            >
+
+                <div
+                    class="austa-v22-video-thumb"
+                    style="
+                        background-image:url('${img}');
+                        background-size:cover;
+                        background-position:center;
+                    "
+                >
+                    <span class="austa-v22-video-tag">
+                        ${tag}
+                    </span>
+
+                    <span class="austa-v22-video-play">
+                        ▶
+                    </span>
+                </div>
+
+                <div class="austa-v22-video-body">
+                    <b>${title}</b>
+
+                    <strong>
+                        ${meta}
+                    </strong>
+
+                    <span>
+                        🎬 Real A-USTA video elan
+                    </span>
+                </div>
+
+                <div class="austa-v34-video-actions">
+
+                    <button
+                        type="button"
+                        data-v34-video-action="like"
+                        aria-label="Bəyən"
+                    >
+                        ♥ <span class="v34-count">0</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        data-v34-video-action="comment"
+                        aria-label="Şərh"
+                    >
+                        💬
+                    </button>
+
+                    <button
+                        type="button"
+                        data-v34-video-action="save"
+                        aria-label="Yadda saxla"
+                    >
+                        🔖
+                    </button>
+
+                    <button
+                        type="button"
+                        data-v34-video-action="share"
+                        aria-label="Paylaş"
+                    >
+                        ↗
+                    </button>
+
+                </div>
+
+            </article>
+        `;
+
+    }).join('');
+
+    grid.querySelectorAll('[data-v22-video-index]').forEach(card=>{
+
+        card.addEventListener('click',function(e){
+
+            if(e.target.closest('[data-v34-video-action]')){
+                return;
+            }
+
+            const index = Number(this.dataset.v22VideoIndex);
+            const videosNow = getVideos();
+            const video = videosNow[index];
+
+            if(!video) return;
+
+            if(typeof window.AUSTA_OPEN_VIDEO === 'function'){
+
+                window.AUSTA_OPEN_VIDEO(video);
+
+            }else{
+
+                console.warn(
+                    'A-USTA: AUSTA_OPEN_VIDEO hələ hazır deyil.'
+                );
+
+            }
+
+        });
+
+    });
 }
+
+renderRealAustaVideos();
+
+setTimeout(renderRealAustaVideos, 500);
+setTimeout(renderRealAustaVideos, 1500);
+setTimeout(renderRealAustaVideos, 3000);
 function openListing(title){
  if(window.AUSTA_UNIFIED_FLOW?.open){window.AUSTA_UNIFIED_FLOW.open('listing',title);return}
  const b=[...document.querySelectorAll('[data-top-flow="listing"]')].find(x=String(x.dataset.topTitle||'').includes(title));
