@@ -9581,9 +9581,67 @@ function renderTop(){
  const anchor=document.getElementById('austaMarketFeed');if(!anchor)return;
  const sec=document.createElement('section');sec.className='section';sec.id='austaPremiumTop';
  const vids=collectVideos();
- sec.innerHTML=`<div class="section-heading"><div><h2>🎬 Avtomobil videoları • Rent a Car videoları</h2><p>Videolar birinci görünür. Ekran ölçüsünə uyğun 9 / 6 / 4 / 2 kart. Kartı kliklədikdə avtomobilin tam məlumatı, şəkli və varsa videosu açılır.</p></div><button class="btn btn-primary" type="button" id="austaOpenListingTop">＋ Elan yerləşdir</button></div><div class="austa-video-grid-9">${vids.map(v=>`<article class="austa-video-tile" data-video-id="${esc(v.id)}"><div class="austa-video-thumb" style="background-image:url('${esc(v.img||imgFallback)}')"><span class="austa-video-tag">${v.mode==='Rent a Car' || v.mode==='İcarə'?'RENT A CAR':'AVTOMOBİL'}</span></div><div class="austa-video-tile-body"><b>${esc(v.title)}</b><span>${esc(v.meta)}</span></div></article>`).join('')}</div>`;
+sec.innerHTML=`<div class="section-heading"><div><h2>🎬 Avtomobil videoları • Rent a Car videoları</h2><p>Videolar birinci görünür. Ekran ölçüsünə uyğun 9 / 6 / 4 / 2 kart. Kartı kliklədikdə avtomobilin tam məlumatı, şəkli və varsa videosu açılır.</p></div><button class="btn btn-primary" type="button" id="austaOpenListingTop">＋ Elan yerləşdir</button></div><div class="austa-video-grid-9">${vids.map(v=>`<article class="austa-video-tile" data-video-id="${esc(v.id)}"><div class="austa-video-thumb" style="background-image:url('${esc(v.img||imgFallback)}')"><span class="austa-video-tag">${v.mode==='Rent a Car' || v.mode==='İcarə'?'RENT A CAR':'AVTOMOBİL'}</span></div><div class="austa-video-tile-body"><b>${esc(v.title)}</b><span>${esc(v.meta)}</span></div><div class="austa-video-actions"><button type="button" class="austa-video-action" data-video-action="like" data-video-id="${esc(v.id)}">♡ <span>Bəyən</span></button><button type="button" class="austa-video-action" data-video-action="comment" data-video-id="${esc(v.id)}">💬 <span>Şərh</span></button><button type="button" class="austa-video-action" data-video-action="share" data-video-id="${esc(v.id)}">↗ <span>Paylaş</span></button><button type="button" class="austa-video-action" data-video-action="save" data-video-id="${esc(v.id)}">🔖 <span>Yadda saxla</span></button></div></article>`).join('')}</div>`;
  anchor.parentNode.insertBefore(sec,anchor);
  sec.querySelectorAll('[data-video-id]').forEach(card=>card.onclick=()=>{const v=vids.find(x=>x.id===card.dataset.videoId);if(v)openVideo(v)});
+  sec.querySelectorAll('.austa-video-action').forEach(btn=>{
+ btn.addEventListener('click',e=>{
+   e.preventDefault();
+   e.stopPropagation();
+
+   const id=btn.dataset.videoId;
+   const action=btn.dataset.videoAction;
+   const v=vids.find(x=>x.id===id);
+   if(!v)return;
+
+   const key='austa-video-'+action+'-'+id;
+
+   if(action==='like'){
+     const liked=localStorage.getItem(key)==='1';
+     localStorage.setItem(key,liked?'0':'1');
+     btn.classList.toggle('active',!liked);
+     btn.firstChild.textContent=liked?'♡ ':'♥ ';
+     return;
+   }
+
+   if(action==='save'){
+     const saved=localStorage.getItem(key)==='1';
+     localStorage.setItem(key,saved?'0':'1');
+     btn.classList.toggle('active',!saved);
+     btn.firstChild.textContent=saved?'🔖 ':'✅ ';
+     return;
+   }
+
+   if(action==='comment'){
+     const comment=prompt('Bu video üçün şərhinizi yazın:');
+     if(comment&&comment.trim()){
+       const comments=read('austa-video-comments-'+id);
+       comments.push({
+         text:comment.trim(),
+         date:new Date().toISOString()
+       });
+       localStorage.setItem('austa-video-comments-'+id,JSON.stringify(comments));
+       alert('Şərhiniz əlavə edildi.');
+     }
+     return;
+   }
+
+   if(action==='share'){
+     const url=location.origin+location.pathname+'#austa-video-'+encodeURIComponent(id);
+     if(navigator.share){
+       navigator.share({
+         title:v.title,
+         text:'A-USTA avtomobil videosu',
+         url:url
+       }).catch(()=>{});
+     }else{
+       navigator.clipboard?.writeText(url).then(()=>{
+         alert('Video paylaşım linki kopyalandı.');
+       });
+     }
+   }
+ });
+});
  sec.querySelector('#austaOpenListingTop').onclick=()=>window.AUSTA_UNIFIED_FLOW?.open('listing','Elan yerləşdir');
 }
 // 4) Compact lower marketplace: parts, accessories, special equipment, rent listings.
