@@ -9220,21 +9220,52 @@ if(originalCreate && !window.__AUSTA_V17_CORE_PATCHED){
 }
 // 3) Replace the old lower feed with the requested order: videos first, then market sections and listings.
 function collectVideos(){
- const out=[];
- const demo=[
-  ['BMW 5 Series','2019 • 2.0 • 60,000 AZN','A-USTA Auto Seller','https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=900&q=82','Satış'],
-  ['Mercedes-Benz E-Class','2021 • 2.0 • 42,000 AZN','Premium Auto','https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=900&q=82','Satış'],
-  ['Toyota Prado','2020 • 4.0 • 63,000 AZN','4x4 Baku','https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=900&q=82','Satış'],
-  ['Range Rover Sport','2022 • 3.0 • 120,000 AZN','Auto Gallery','https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=900&q=82','Satış'],
-  ['Porsche Cayenne','2023 • 3.0 • 95,000 AZN','Premium Cars','https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=82','Rent a Car'],
-  ['Audi Q7','2022 • 3.0 • 88,000 AZN','Auto Baku','https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=900&q=82','Rent a Car'],
-  ['Toyota Camry','2024 • 2.5 • 55,000 AZN','Rent Auto','https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=82','Rent a Car'],
-  ['Mercedes Sprinter','2021 • 2.2 • icarə','Commercial Rent','https://images.unsplash.com/photo-1581579185169-1d1b7f2f5b0b?auto=format&fit=crop&w=900&q=82','Rent a Car']
- ];
- demo.forEach((d,i)=>out.push({id:'VIDEO-DEMO-'+i,title:d[0],meta:d[1],owner:d[2],img:d[3],mode:d[4],year:d[1].slice(0,4),videoUrl:'',description:'Avtomobil videosu / vitrin təqdimatı. Üstünə klikləyərək tam məlumatı açın.'}));
- const s=state();(s.cars||[]).filter(x=>x.videoUrl).forEach(x=>out.unshift({id:x.id,title:[x.brand,x.model,x.year].filter(Boolean).join(' ')||'Avtomobil',meta:x.listingMode==='İcarə'?'Rent a Car / İcarə':'Satış',owner:'A-USTA elan sahibi',img:x.photoUrl||(x.photos||[])[0]||imgFallback,mode:x.listingMode||'Satış',videoUrl:x.videoUrl,description:x.description||'',raw:x}));
- return out;
+    const out=[];
+    const s=state();
+
+    (s.cars||[])
+        .filter(x => x && x.videoUrl)
+        .forEach(x => {
+
+            const photos = Array.isArray(x.photos) ? x.photos : [];
+
+            out.push({
+                id: x.id || x.listingId || ('VIDEO-' + Date.now()),
+                title: [x.brand, x.model, x.year]
+                    .filter(Boolean)
+                    .join(' ') || 'Avtomobil',
+
+                meta:
+                    x.listingMode === 'İcarə'
+                        ? 'Rent a Car / İcarə'
+                        : (x.price
+                            ? Number(x.price).toLocaleString('az-AZ') + ' AZN'
+                            : 'Elan'),
+
+                owner: x.ownerName || x.sellerName || 'A-USTA elan sahibi',
+
+                img:
+                    x.photoUrl ||
+                    photos[0] ||
+                    x.thumbnailUrl ||
+                    imgFallback,
+
+                mode: x.listingMode || 'Satış',
+
+                year: x.year || '',
+
+                videoUrl: x.videoUrl,
+
+                description: x.description || '',
+
+                raw: x
+            });
+
+        });
+
+    return out;
 }
+
 function openVideo(v){
  let m=document.getElementById('austaVideoDetailModal');if(!m){m=document.createElement('div');m.id='austaVideoDetailModal';document.body.appendChild(m)}
  const raw=v.raw||{};const video=v.videoUrl?`<video controls preload="metadata" poster="${esc(v.img||imgFallback)}" src="${esc(v.videoUrl)}"></video>`:`<div style="width:100%;height:100%;min-height:520px;background:url('${esc(v.img||imgFallback)}') center/cover;display:grid;place-items:center"><span style="background:#ff1235;padding:16px 20px;border-radius:50%;font-size:25px">▶</span></div>`;
