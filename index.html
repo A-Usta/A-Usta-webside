@@ -13961,17 +13961,18 @@ function bindPage(page, role) {
     };
   });
 
-  /*
-   * ============================================================
-   * PROVIDER / USTA REGISTRATION
-   * ============================================================
-   */
+/*
+ * ============================================================
+ * PROVIDER / USTA REGISTRATION
+ * ============================================================
+ */
 
-  const p =
-    $('[data-action="provider-save"]');
+const p =
+  $('[data-action="provider-save"]');
 
-  if (p) {
-    p.onclick = async () => {
+if (p) {
+  p.onclick = async () => {
+    try {
       const sessionResult =
         await supabaseClient.auth
           .getSession();
@@ -14021,11 +14022,61 @@ function bindPage(page, role) {
         return;
       }
 
-      const fin =
-        vals[4];
+      const file =
+        photo.files[0];
 
       if (
-        !/^[A-Za-z0-9]{7}$/.test(
+        !file.type ||
+        !file.type.startsWith('image/')
+      ) {
+        alert(
+          'Şəxsiyyət vəsiqəsinin yalnız şəkil faylını yükləyin.'
+        );
+
+        return;
+      }
+
+      if (
+        file.size >
+        10 * 1024 * 1024
+      ) {
+        alert(
+          'Şəxsiyyət vəsiqəsinin şəkli 10 MB-dan böyük ola bilməz.'
+        );
+
+        return;
+      }
+
+      let phone =
+        vals[1]
+          .replace(/[^\d+]/g, '');
+
+      if (
+        phone.startsWith('0')
+      ) {
+        phone =
+          '+994' +
+          phone.slice(1);
+      }
+
+      if (
+        !/^\+\d{8,15}$/.test(
+          phone
+        )
+      ) {
+        alert(
+          'Telefon nömrəsini düzgün formatda daxil edin. Məsələn: +994501234567'
+        );
+
+        return;
+      }
+
+      const fin =
+        vals[4]
+          .toUpperCase();
+
+      if (
+        !/^[A-Z0-9]{7}$/.test(
           fin
         )
       ) {
@@ -14036,21 +14087,300 @@ function bindPage(page, role) {
         return;
       }
 
+      const sectorText =
+        String(
+          vals[6] || ''
+        ).toLowerCase();
+
+      let requestedRole =
+        'mechanic';
+
+      if (
+        sectorText.includes('tow') ||
+        sectorText.includes('evaku') ||
+        sectorText.includes('yol yardım')
+      ) {
+        requestedRole =
+          'tow';
+      } else if (
+        sectorText.includes('cargo') ||
+        sectorText.includes('yük') ||
+        sectorText.includes('daşı')
+      ) {
+        requestedRole =
+          'cargo';
+      } else if (
+        sectorText.includes('shop') ||
+        sectorText.includes('mağaza')
+      ) {
+        requestedRole =
+          'shop';
+      }
+
+      const userId =
+        session.user.id;
+
       /*
-       * Bu mərhələdə KYC məlumatını localStorage-a
-       * yazmırıq.
-       *
-       * FIN və şəxsiyyət vəsiqəsinin fotosu kimi
-       * həssas məlumatlar yalnız təhlükəsiz
-       * backend/KYC endpoint üzərindən saxlanmalıdır.
+       * --------------------------------------------------------
+       * PROFILE
+       * --------------------------------------------------------
        */
 
-      alert(
-        '✓ Usta məlumatları yoxlamaya hazırdır. KYC server bağlantısı əlavə edildikdən sonra FIN və şəxsiyyət vəsiqəsi fotosu təhlükəsiz backend-ə göndəriləcək.'
-      );
-    };
-  }
+      const profileUpdate =
+        await supabaseClient
+          .from('profiles')
+          .update({
+            full_name:
+              vals[0],
+            phone:
+              phone,
+            region:
+              vals[7],
+            is_active:
+              true
+          })
+          .eq(
+            'id',
+            userId
+          );
 
+      if (
+        profileUpdate.error
+      ) {
+        throw new Error(
+          'Profil məlumatları yadda saxlanmadı: ' +
+          profileUpdate.error.message
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * EXISTING KYC CHECK
+       * --------------------------------------------------------
+       */
+
+      const existingResult =
+        await supabaseClient
+          .from('provider_profiles')
+          .select(
+            'user_id, kyc_status, id_document_path'
+          )
+          .eq(
+            'user_id',
+            userId
+          )
+          .maybeSingle();
+
+      if (
+        existingResult.error
+      ) {
+        throw new Error(
+          'KYC məlumatı yoxlanmadı: ' +
+          existingResult.error.message
+        );
+      }
+
+      const existing =
+        existingResult.data;
+
+      if (
+        existing?.kyc_status ===
+        'approved'
+      ) {
+        alert(
+          '✓ Sizin usta KYC müraciətiniz artıq təsdiqlənib.'
+        );
+
+        return;
+      }
+
+      /*
+       * --------------------------------------------------------
+       * PROVIDER PROFILE
+       * --------------------------------------------------------
+       */
+
+      const providerData = {
+        user_id:
+          userId,
+        requested_role:
+          requestedRole,
+        fin_code:
+          fin,
+        experience:
+          vals[5],
+        sector:
+          vals[6],
+        region:
+          vals[7],
+        address:
+          vals[8],
+        kyc_status:
+          'pending',
+        updated_at:
+          new Date().toISOString()
+      };
+
+      if (!existing) {
+        const insertResult =
+          await supabaseClient
+            .from('provider_profiles')
+            .insert(
+              providerData
+            );
+
+        if (
+          insertResult.error
+        ) {
+          throw new Error(
+            'KYC müraciəti yaradılmadı: ' +
+            insertResult.error.message
+          );
+        }
+      } else {
+        const updateResult =
+          await supabaseClient
+            .from('provider_profiles')
+            .update(
+              providerData
+            )
+            .eq(
+              'user_id',
+              userId
+            )
+            .eq(
+              'kyc_status',
+              'pending'
+            );
+
+        if (
+          updateResult.error
+        ) {
+          throw new Error(
+            'KYC məlumatları yenilənmədi: ' +
+            updateResult.error.message
+          );
+        }
+      }
+
+      /*
+       * --------------------------------------------------------
+       * ID DOCUMENT UPLOAD
+       * --------------------------------------------------------
+       */
+
+      const safeName =
+        file.name
+          .replace(
+            /[^a-zA-Z0-9._-]/g,
+            '_'
+          );
+
+      const fileId =
+        (
+          typeof crypto !==
+          'undefined' &&
+          crypto.randomUUID
+        )
+          ? crypto.randomUUID()
+          : String(
+              Date.now()
+            );
+
+      const filePath =
+        userId +
+        '/' +
+        fileId +
+        '-' +
+        safeName;
+
+      const uploadResult =
+        await supabaseClient
+          .storage
+          .from('austa-kyc')
+          .upload(
+            filePath,
+            file,
+            {
+              contentType:
+                file.type,
+              cacheControl:
+                '3600',
+              upsert:
+                false
+            }
+          );
+
+      if (
+        uploadResult.error
+      ) {
+        throw new Error(
+          'Şəxsiyyət vəsiqəsi yüklənmədi: ' +
+          uploadResult.error.message
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * SAVE FILE PATH
+       * --------------------------------------------------------
+       */
+
+      const pathUpdate =
+        await supabaseClient
+          .from('provider_profiles')
+          .update({
+            id_document_path:
+              filePath,
+            kyc_status:
+              'pending',
+            updated_at:
+              new Date().toISOString()
+          })
+          .eq(
+            'user_id',
+            userId
+          )
+          .eq(
+            'kyc_status',
+            'pending'
+          );
+
+      if (
+        pathUpdate.error
+      ) {
+        throw new Error(
+          'Sənəd yolu yadda saxlanmadı: ' +
+          pathUpdate.error.message
+        );
+      }
+
+      alert(
+        '✓ Usta KYC müraciəti qəbul edildi.\n\n' +
+        'Telefon: ' +
+        phone +
+        '\n' +
+        'FIN: ' +
+        fin +
+        '\n\n' +
+        'Status: Yoxlamada (pending)'
+      );
+    } catch (error) {
+      console.error(
+        'A-USTA KYC ERROR:',
+        error
+      );
+
+      alert(
+        '⚠ Usta qeydiyyatı zamanı xəta baş verdi.\n\n' +
+        (
+          error?.message ||
+          'Naməlum xəta'
+        )
+      );
+    }
+  };
+}
   /*
    * ============================================================
    * STORE REGISTRATION
