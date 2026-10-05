@@ -14115,7 +14115,434 @@ const Q={
 const O={'Xidmət növü':['Stasionar','Mobil — usta ünvana gəlir','Yerində xidmət'],'Yuma paketi':['Standart','Premium','Dərin təmizləmə / xımçıstka','Salon + kuzov','Ustanın təklifi'],'Yuma xidməti':['Stasionar avtoyuma','Mobil avtoyuma — usta ünvana gəlir'],'Ön və ya arxa bufer':['Ön','Arxa'],'Zədə növü':['Çat','Qırıq','Cızıq','Deformasiya','Bərkidici qırılıb','Digər'],'Rəngləmə lazımdır?':['Bəli','Xeyr','Usta müəyyən etsin'],'Filtr növü':['Hava','Kabin','DPF','Yanacaq','EGR / hava sistemi','Digər'],'Təmizləmə üsulu':['Yerdə','Sökülüb','Usta müəyyən etsin'],'Elektrik hissəsi':['Starter','Generator','Akkumulyator xətti','İşıq sistemi','Şüşəqaldıran','Sensorlar','ECU','Digər'],'Açar növü':['Adi açar','Smart key','Keyless','Kart açar','İmmobilayzer'],'Açar yanınızdadır?':['Bəli','Xeyr','Qırıqdır','İçəridə qalıb'],'Fara hissəsi':['Sol ön','Sağ ön','Arxa','Duman','Gündüz işığı'],'İstənilən quruluş':['Street Performance','Track','Drift','Drag','Power','Torque','Sound','Görünüş + performans','Kompleks','Usta təklifi'],'Dyno ölçümü istəyirsiniz?':['Bəli','Xeyr','Sonra qərar verəcəyəm'],'Kuzovun hansı hissəsi':['Qapı','Kapot','Bağaj','Bufer','Qanad','Dam','Eşik','Arxa hissə','Digər'],'Görünüş xidməti':['Polirovka','PPF','Wrap','Detailing','Keramika','Xımçıstka','Fara','Bufer','Digər'],'Təkər sayı':['1','2','4'],'Rəngləmə də lazımdır?':['Bəli','Xeyr','Usta müəyyən etsin'],'Filtr dəyişdirilsin?':['Bəli','Xeyr'],'Check Engine varmı?':['Bəli','Xeyr','Bilmirəm'],'Paneldə xəta işığı varmı?':['Bəli','Xeyr','Bilmirəm'],'Yanacaq təzyiqi ölçülüb?':['Bəli — normal deyil','Bəli — normaldır','Xeyr']};
 function serviceKey(raw){const x=N(raw);if(/sukan|hidravlik/.test(x))return'Sükan sistemi – Hidravlik';if(/filtr/.test(x))return'Filtr təmizlənməsi';if(/bufer|bamper/.test(x))return'Bufer təmiri';if(/benzin nasosu|yanacaq nasosu/.test(x))return'Benzin nasosu təmiri';if(/^elektrik$| elektrik/.test(x))return'Elektrik';if(/cilinger|ciling/.test(x))return'Çilingər';if(/fara/.test(x))return'Fara təmiri';if(/tuning|stage/.test(x))return'Tuning';if(/kuzov/.test(x))return'Kuzov';if(/gorunus|görünüş|ppf|wrap/.test(x))return/Görünüş|gorunus/.test(raw)?'Görünüş':'PPF / Wrap';if(/acar|qapi ac|smart key|kilid/.test(x))return'Açar təmiri';if(/avtoyuma|mobil avtoyuma|yuma/.test(x))return'Avtoyuma';if(/muherrik|motor/.test(x))return'Mühərrik';if(/karopka/.test(x))return'Karopka';if(/fren|eylec/.test(x))return'Fren sistemi';if(/teker/.test(x))return'Təkər';if(/razval/.test(x))return'Razval';if(/balans/.test(x))return'Balans';if(/akkumulyator/.test(x))return'Akkumulyator';if(/katalizator/.test(x))return'Katalizator təmiri';if(/press/.test(x))return'Press təmiri';if(/polirovka/.test(x))return'Polirovka';if(/malyar|boya/.test(x))return'Malyar';if(/demirci|deyirmi/.test(x))return'Dəmirçi';if(/yag/.test(x))return'Yağ dəyişimi';if(/kondisioner/.test(x))return'Kondisioner';if(/proqram/.test(x))return'Proqramlaşdırma';if(/diaqnostika/.test(x))return'Diaqnostika';return null}
 function type(q){if(q==='Şəkil / video')return'file';if(q==='Tarix')return'date';if(q==='Saat')return'time';if(O[q])return'select';if(/məlumat|problem|vəziyyət|dəyişiklik|nəticə|təsviri|sahəsi|istəyirsiniz|qeyd/.test(N(q)))return'textarea';return'text'}
-function openService(raw){const name=serviceKey(raw)||raw;const qs=Q[name];if(!qs)return false;document.querySelectorAll('.austa-v54-service-overlay,.austa-v45-master-overlay,.austa-v51-overlay,.austa-v50-overlay,.austa-v49-overlay').forEach(x=>x.remove());const o=document.createElement('div');o.className='austa-v54-service-overlay';const c=document.createElement('div');c.className='austa-v54-service-box';c.innerHTML='<button type="button" data-x style="float:right;background:#ff2448;color:#fff;border:0;border-radius:7px;padding:6px 10px;font-size:18px;cursor:pointer">×</button><small style="color:#ff536c;font-weight:900">A-USTA YENİ TƏRKİBLİ SUAL FORMASI</small><h2 style="margin:5px 0">🛠 '+E(name)+'</h2><p style="color:#9db2c4;font-size:12px">Bu xidmət üçün sualları cavablandırın. Cavablar sifarişə qeyd olunur.</p><div class="austa-v54-service-grid"></div><div class="austa-v54-service-actions"><button class="send" type="button">✓ Sifarişi göndər</button><button class="close" type="button">Bağla</button></div><div data-r style="margin-top:10px"></div>';o.appendChild(c);document.body.appendChild(o);const g=c.querySelector('.austa-v54-service-grid');qs.forEach((q,i)=>{const l=document.createElement('label');l.textContent=q;let e;if(O[q]){e=document.createElement('select');e.innerHTML='<option value="">Seçin</option>'+O[q].map(v=>'<option>'+E(v)+'</option>').join('')}else if(type(q)==='textarea'){e=document.createElement('textarea')}else if(type(q)==='file'){e=document.createElement('input');e.type='file';e.accept='image/*,video/*'}else{e=document.createElement('input');e.type=type(q)}e.dataset.i=i;l.appendChild(e);if(e.type==='file'||e.tagName==='TEXTAREA')l.classList.add('full');g.appendChild(l)});const close=()=>o.remove();c.querySelector('[data-x]').onclick=close;c.querySelector('.close').onclick=close;o.onclick=e=>{if(e.target===o)close()};c.querySelector('.send').onclick=()=>{const es=[...g.querySelectorAll('[data-i]')];const bad=es.some(e=>e.type!=='file'&&!String(e.value||'').trim());if(bad){c.querySelector('[data-r]').innerHTML='<b style="color:#ff6878">⚠ Bütün sualları cavablandırın.</b>';return}const order={id:'AU-V54-'+Date.now(),service:name,answers:es.map((e,i)=>({question:qs[i],value:e.type==='file'?(e.files[0]?.name||''):e.value})),createdAt:new Date().toISOString(),status:'Yeni sifariş'};let a=[];try{a=JSON.parse(localStorage.getItem('austa-service-orders')||'[]')}catch(_){}a.unshift(order);localStorage.setItem('austa-service-orders',JSON.stringify(a.slice(0,500)));c.querySelector('[data-r]').innerHTML='<b style="color:#72e6a3">✓ Sifariş yaradıldı — '+E(order.id)+'</b>'};return true}
+function openService(raw) {
+  const name = serviceKey(raw) || raw;
+  const qs = Q[name];
+
+  if (!qs) {
+    return false;
+  }
+
+  document
+    .querySelectorAll(
+      '.austa-v54-service-overlay,' +
+      '.austa-v45-master-overlay,' +
+      '.austa-v51-overlay,' +
+      '.austa-v50-overlay,' +
+      '.austa-v49-overlay'
+    )
+    .forEach(x => x.remove());
+
+  const o = document.createElement('div');
+
+  o.className = 'austa-v54-service-overlay';
+
+  const c = document.createElement('div');
+
+  c.className = 'austa-v54-service-box';
+
+  c.innerHTML =
+    '<button type="button" data-x ' +
+    'style="float:right;background:#ff2448;color:#fff;' +
+    'border:0;border-radius:7px;padding:6px 10px;' +
+    'font-size:18px;cursor:pointer">×</button>' +
+
+    '<small style="color:#ff536c;font-weight:900">' +
+    'A-USTA YENİ TƏRKİBLİ SUAL FORMASI' +
+    '</small>' +
+
+    '<h2 style="margin:5px 0">🛠 ' +
+    E(name) +
+    '</h2>' +
+
+    '<p style="color:#9db2c4;font-size:12px">' +
+    'Bu xidmət üçün sualları cavablandırın. ' +
+    'Cavablar sifarişə qeyd olunur.' +
+    '</p>' +
+
+    '<div class="austa-v54-service-grid"></div>' +
+
+    '<div class="austa-v54-service-actions">' +
+    '<button class="send" type="button">' +
+    '✓ Sifarişi göndər' +
+    '</button>' +
+
+    '<button class="close" type="button">' +
+    'Bağla' +
+    '</button>' +
+
+    '</div>' +
+
+    '<div data-r style="margin-top:10px"></div>';
+
+  o.appendChild(c);
+
+  document.body.appendChild(o);
+
+  const g =
+    c.querySelector(
+      '.austa-v54-service-grid'
+    );
+
+  qs.forEach((q, i) => {
+    const l = document.createElement('label');
+
+    l.textContent = q;
+
+    let e;
+
+    if (O[q]) {
+      e = document.createElement('select');
+
+      e.innerHTML =
+        '<option value="">Seçin</option>' +
+        O[q]
+          .map(
+            v =>
+              '<option>' +
+              E(v) +
+              '</option>'
+          )
+          .join('');
+
+    } else if (type(q) === 'textarea') {
+      e = document.createElement('textarea');
+
+    } else if (type(q) === 'file') {
+      e = document.createElement('input');
+
+      e.type = 'file';
+
+      e.accept =
+        'image/*,video/*';
+
+    } else {
+      e = document.createElement('input');
+
+      e.type = type(q);
+    }
+
+    e.dataset.i = i;
+
+    l.appendChild(e);
+
+    if (
+      e.type === 'file' ||
+      e.tagName === 'TEXTAREA'
+    ) {
+      l.classList.add('full');
+    }
+
+    g.appendChild(l);
+  });
+
+  const close = () => o.remove();
+
+  c.querySelector(
+    '[data-x]'
+  ).onclick = close;
+
+  c.querySelector(
+    '.close'
+  ).onclick = close;
+
+  o.onclick = e => {
+    if (e.target === o) {
+      close();
+    }
+  };
+
+  c.querySelector(
+    '.send'
+  ).onclick = async () => {
+
+    const resultBox =
+      c.querySelector('[data-r]');
+
+    const es = [
+      ...g.querySelectorAll('[data-i]')
+    ];
+
+    const bad = es.some(
+      e =>
+        e.type !== 'file' &&
+        !String(
+          e.value || ''
+        ).trim()
+    );
+
+    if (bad) {
+      resultBox.innerHTML =
+        '<b style="color:#ff6878">' +
+        '⚠ Bütün sualları cavablandırın.' +
+        '</b>';
+
+      return;
+    }
+
+    resultBox.innerHTML =
+      '<b style="color:#ffd166">' +
+      '⏳ Sifariş göndərilir...' +
+      '</b>';
+
+    try {
+
+      const {
+        data: {
+          session
+        },
+        error: sessionError
+      } =
+        await window
+          .AUSTA_SUPABASE
+          .auth
+          .getSession();
+
+      if (sessionError) {
+        throw new Error(
+          'Sessiya yoxlanarkən xəta baş verdi: ' +
+          sessionError.message
+        );
+      }
+
+      if (!session) {
+        resultBox.innerHTML =
+          '<b style="color:#ff6878">' +
+          '⚠ Sifariş göndərmək üçün əvvəlcə ' +
+          'A-USTA hesabınıza daxil olun.' +
+          '</b>';
+
+        return;
+      }
+
+      let serviceCategory =
+        'mechanic_service';
+
+      const lowerName =
+        String(
+          name || ''
+        ).toLowerCase();
+
+      if (
+        lowerName.includes('evakuator') ||
+        lowerName.includes('yol yardım') ||
+        lowerName.includes('yol yardımı') ||
+        lowerName.includes('dartma')
+      ) {
+        serviceCategory =
+          'tow_service';
+      }
+
+      if (
+        lowerName.includes('yük') ||
+        lowerName.includes('yükdaşıma') ||
+        lowerName.includes('yük daşıma') ||
+        lowerName.includes('doblo') ||
+        lowerName.includes('damas') ||
+        lowerName.includes('kran') ||
+        lowerName.includes('kamyon')
+      ) {
+        serviceCategory =
+          'cargo_service';
+      }
+
+      const answers =
+        es.map((e, i) => ({
+          question: qs[i],
+          value:
+            e.type === 'file'
+              ? (
+                  e.files[0]?.name || ''
+                )
+              : e.value
+        }));
+
+      const serviceDescription = [
+        'A-USTA xidmət sifarişi',
+        `Xidmət: ${name}`,
+        ...answers
+          .filter(
+            x =>
+              String(
+                x.value || ''
+              ).trim()
+          )
+          .map(
+            x =>
+              `${x.question}: ${x.value}`
+          )
+      ].join(' | ');
+
+      const customerNote =
+        JSON.stringify({
+          service: name,
+          answers
+        });
+
+      const response =
+        await fetch(
+          'https://a-usta-webside.onrender.com/service-orders',
+          {
+            method: 'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+
+              'Authorization':
+                `Bearer ${session.access_token}`
+            },
+
+            body: JSON.stringify({
+              service_category:
+                serviceCategory,
+
+              service_description:
+                serviceDescription,
+
+              urgency:
+                'normal',
+
+              service_mode:
+                'mobile',
+
+              address:
+                'Bakı',
+
+              region:
+                'Bakı',
+
+              district:
+                '',
+
+              latitude:
+                null,
+
+              longitude:
+                null,
+
+              price_status:
+                'unknown',
+
+              customer_note:
+                customerNote
+            })
+          }
+        );
+
+      const responseText =
+        await response.text();
+
+      let responseData =
+        null;
+
+      try {
+        responseData =
+          JSON.parse(
+            responseText
+          );
+      } catch (_) {
+        responseData =
+          null;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          responseData?.message ||
+          responseData?.error ||
+          responseText ||
+          `HTTP ${response.status}`
+        );
+      }
+
+      const backendOrder =
+        responseData?.order;
+
+      if (!backendOrder?.id) {
+        throw new Error(
+          'Backend sifarişi yaratdı, ' +
+          'amma sifariş ID-si qaytarılmadı.'
+        );
+      }
+
+      const localOrder = {
+        id:
+          backendOrder.id,
+
+        service:
+          name,
+
+        answers:
+          answers,
+
+        createdAt:
+          backendOrder.created_at,
+
+        status:
+          backendOrder.status,
+
+        backend:
+          true
+      };
+
+      let localOrders =
+        [];
+
+      try {
+        localOrders =
+          JSON.parse(
+            localStorage.getItem(
+              'austa-service-orders'
+            ) || '[]'
+          );
+      } catch (_) {
+        localOrders =
+          [];
+      }
+
+      localOrders.unshift(
+        localOrder
+      );
+
+      localStorage.setItem(
+        'austa-service-orders',
+        JSON.stringify(
+          localOrders.slice(
+            0,
+            500
+          )
+        )
+      );
+
+      resultBox.innerHTML =
+        '<b style="color:#72e6a3">' +
+        '✓ Sifariş uğurla yaradıldı' +
+        '<br>' +
+        'Sifariş № ' +
+        E(backendOrder.id) +
+        '</b>';
+
+    } catch (error) {
+
+      console.error(
+        'A-USTA SERVICE ORDER ERROR:',
+        error
+      );
+
+      resultBox.innerHTML =
+        '<b style="color:#ff6878">' +
+        '⚠ Sifariş göndərilmədi.' +
+        '<br>' +
+        E(
+          error?.message ||
+          'Naməlum xəta'
+        ) +
+        '</b>';
+    }
+  };
+
+  return true;
+}
 function serviceClick(e){if(e.defaultPrevented)return;const b=e.target.closest?.('.austa-function-btn,.premium-chip,.austa-v36-service-btn,.austa-v36-service,.service-card,[data-service],[data-top-service]');if(!b)return;if(b.matches('[data-top-flow="listing"]'))return;const raw=b.dataset.topService||b.dataset.service||b.textContent||'';if(!serviceKey(raw))return;e.preventDefault();e.stopImmediatePropagation();openService(raw)}
 window.addEventListener('click',serviceClick,true);
 const imgs={cars:'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80',rent:'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=900&q=80',parts:'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&fit=crop&w=900&q=80',accessories:'https://images.unsplash.com/photo-1600712242803-9f8c4b4f3b55?auto=format&fit=crop&w=900&q=80',special:'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80',moto:'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80',plate:'https://images.unsplash.com/photo-1504215680853-026ed2a45def?auto=format&fit=crop&w=900&q=80',bus:'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=900&q=80',trailer:'https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=900&q=80',water:'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=900&q=80',service:'https://images.unsplash.com/photo-1486006920555-c77dcf18193c?auto=format&fit=crop&w=900&q=80',usta:'https://images.unsplash.com/photo-1530046339913-4a9f3b7c5a9d?auto=format&fit=crop&w=900&q=80'};
