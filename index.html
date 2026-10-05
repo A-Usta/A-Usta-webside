@@ -13114,16 +13114,1156 @@ function init(){
    const types=['Avtomobil satışı','Avtomobil icarəsi','Ehtiyat hissələri elanı','Aksesuar elanı','Xüsusi texnika elanı','Moto / Moped / Skuter elanı','Qeydiyyat nömrəsi elanı','Avtobus elanı','Qoşqu / Treyler elanı','Su nəqliyyatı elanı','Avtoservis / Servis mərkəzi elanı'];
    const o=document.createElement('div');o.className='austa-account-overlay';o.style.cssText='position:fixed;inset:0;z-index:2100000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px';o.innerHTML=`<div style="width:min(650px,96vw);max-height:92vh;overflow:auto;background:#071725;border:1px solid #1b628e;border-radius:16px;padding:18px;color:#fff"><h3>＋ Yeni elan yerləşdir</h3><div class="austa-v39-form"><label>Elan növü<select id="v39lt">${types.map(x=>'<option>'+esc(x)+'</option>').join('')}</select></label><label>Elanın adı<input id="v39ln" placeholder="Məsələn: BMW X5 2022"></label><label>Şəhər / rayon<input id="v39ll" placeholder="Bakı"></label><label>Telefon<input id="v39lp" placeholder="Telefon"></label><label class="full">Təsvir<textarea id="v39ld" placeholder="Əsas məlumatlar"></textarea></label></div><div class="austa-v39-note"><span class="austa-v39-free">1 ay ödənişsiz elan.</span> Elan aktivləşdiyi andan 1 ay ərzində yerləşdirmə haqqı tutulmur. Sonrakı ödəniş qaydaları ayrıca göstərilməlidir.</div><div class="austa-v39-actions"><button class="austa-v39-btn primary" id="v39ls">Elanı yerləşdir</button><button class="austa-v39-btn" id="v39lc">Bağla</button></div><div id="v39lr" class="austa-v39-note" hidden></div></div>`;document.body.appendChild(o);$('#v39lc',o).onclick=()=>o.remove();$('#v39ls',o).onclick=()=>{const x={id:'AU-LIST-'+Date.now(),type:$('#v39lt',o).value,title:$('#v39ln',o).value.trim(),location:$('#v39ll',o).value.trim(),phone:$('#v39lp',o).value.trim(),description:$('#v39ld',o).value.trim(),createdAt:new Date().toISOString(),freeUntil:monthFree(),rating:0,reviewCount:0};if(!x.title||!x.location||!x.phone){$('#v39lr',o).hidden=false;$('#v39lr',o).textContent='⚠ Elan adı, şəhər/rayon və telefon doldurulmalıdır.';return}const arr=read('austa-user-listings',[]);arr.unshift(x);save('austa-user-listings',arr);o.remove();showPage('listings',currentRole)};
  }
- function bindPage(page,role){
-   $$('[data-role-switch]').forEach(b=>b.onclick=()=>showRole(b.dataset.role));
-   $$('[data-page-open]').forEach(b=>b.onclick=()=>showPage(b.dataset.pageOpen,role));
-   $$('[data-action="new-listing"]').forEach(b=>b.onclick=newListing);
-   $$('[data-remove-listing]').forEach(b=>b.onclick=()=>{const arr=read('austa-user-listings',[]);arr.splice(+b.dataset.removeListing,1);save('austa-user-listings',arr);showPage('listings',role)});
-   const p=$('[data-action="provider-save"]');if(p)p.onclick=()=>{const vals=['v39pName','v39pPhone','v39pMail','v39pId','v39pFin','v39pExp','v39pSector','v39pRegion','v39pAddr'].map(id=>$('#'+id)?.value.trim());const photo=$('#v39pIdPhoto');if(vals.some(v=>!v)||!photo?.files?.length){alert('Usta qeydiyyatı üçün bütün xanaları və şəxsiyyət vəsiqəsinin şəklini doldurun.');return}save('austa-provider-profile',{name:vals[0],phone:vals[1],gmail:vals[2],idSeries:vals[3],fin:vals[4],experience:vals[5],sector:vals[6],region:vals[7],address:vals[8],idPhotoProvided:true,rating:0});alert('✓ Usta qeydiyyat məlumatları qəbul edildi. Şəxsiyyət vəsiqəsi fotosu demo versiyada saxlanılmır; istehsalatda təhlükəsiz KYC serverinə göndərilməlidir.')};
-   const s=$('[data-action="store-save"]');if(s)s.onclick=()=>{const vals=['v39sName','v39sPhone','v39sMail','v39sRegion','v39sAddr','v39sCats'].map(id=>$('#'+id)?.value.trim());if(vals.some(v=>!v)){alert('Mağaza qeydiyyatı üçün bütün xanaları doldurun.');return}save('austa-store-profile',{name:vals[0],phone:vals[1],gmail:vals[2],region:vals[3],address:vals[4],categories:vals[5]});alert('✓ Mağaza profili yaradıldı.')};
-   const t=$('[data-action="partner-save"]');if(t)t.onclick=()=>{const vals=['v39tName','v39tPhone','v39tMail','v39tRegion','v39tSector','v39tAddr'].map(id=>$('#'+id)?.value.trim());if(vals.some(v=>!v)){alert('Tərəfdaş qeydiyyatı üçün bütün xanaları doldurun.');return}save('austa-partner-profile',{name:vals[0],phone:vals[1],gmail:vals[2],region:vals[3],sector:vals[4],address:vals[5]});alert('✓ Tərəfdaş qeydiyyat məlumatları qəbul edildi.')};
-   $$('[data-video-action]').forEach(b=>b.onclick=()=>{const action=b.dataset.videoAction;if(action==='comment'){const text=prompt('Rəyinizi yazın:');if(text){const arr=read('austa-reviews',[]);arr.unshift({subject:'Avtomobil videosu',rating:5,text,author:'Müştəri'});save('austa-reviews',arr);alert('✓ Rəy əlavə edildi.')}}else if(action==='share'){navigator.clipboard?.writeText(location.href);alert('✓ Video paylaşım bağlantısı hazırlandı.')}else{b.textContent=action==='like'?'♥ Bəyənildi':action==='save'?'✓ Saxlanıldı':'✓';}});
+function bindPage(page, role) {
+  $$('[data-role-switch]').forEach((b) => {
+    b.onclick = () => {
+      showRole(b.dataset.role);
+    };
+  });
+
+  $$('[data-page-open]').forEach((b) => {
+    b.onclick = () => {
+      showPage(
+        b.dataset.pageOpen,
+        role
+      );
+    };
+  });
+
+  $$('[data-action="new-listing"]').forEach((b) => {
+    b.onclick = newListing;
+  });
+
+  $$('[data-remove-listing]').forEach((b) => {
+    b.onclick = () => {
+      const arr = read(
+        'austa-user-listings',
+        []
+      );
+
+      arr.splice(
+        +b.dataset.removeListing,
+        1
+      );
+
+      save(
+        'austa-user-listings',
+        arr
+      );
+
+      showPage(
+        'listings',
+        role
+      );
+    };
+  });
+
+  /*
+   * ============================================================
+   * A-USTA AUTH CORE
+   * Supabase Auth: Email + Password
+   * ============================================================
+   */
+
+  const supabaseClient =
+    window.AUSTA_SUPABASE;
+
+  const loginButtons =
+    $$('[data-action="login"]');
+
+  loginButtons.forEach((button) => {
+    button.onclick = async () => {
+      if (!supabaseClient?.auth) {
+        alert(
+          'A-USTA giriş sistemi hazır deyil. Supabase bağlantısını yoxlayın.'
+        );
+
+        return;
+      }
+
+      const existing =
+        document.getElementById(
+          'austa-v39-auth-modal'
+        );
+
+      if (existing) {
+        existing.remove();
+      }
+
+      const authModal =
+        document.createElement(
+          'div'
+        );
+
+      authModal.id =
+        'austa-v39-auth-modal';
+
+      authModal.style.cssText = `
+        position:fixed;
+        inset:0;
+        z-index:999999;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+        background:rgba(0,0,0,.78);
+        backdrop-filter:blur(8px);
+      `;
+
+      authModal.innerHTML = `
+        <div
+          style="
+            width:min(520px,100%);
+            max-height:90vh;
+            overflow:auto;
+            background:#111;
+            border:1px solid rgba(255,255,255,.12);
+            border-radius:20px;
+            padding:24px;
+            box-shadow:0 30px 80px rgba(0,0,0,.55);
+            color:#fff;
+          "
+        >
+
+          <div
+            style="
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:15px;
+              margin-bottom:20px;
+            "
+          >
+            <div>
+              <div
+                style="
+                  font-size:22px;
+                  font-weight:800;
+                "
+              >
+                A-USTA Hesab
+              </div>
+
+              <div
+                id="austa-v39-auth-subtitle"
+                style="
+                  margin-top:6px;
+                  color:#9aa7b2;
+                  font-size:14px;
+                "
+              >
+                Hesabınıza daxil olun
+              </div>
+            </div>
+
+            <button
+              id="austa-v39-auth-close"
+              type="button"
+              style="
+                width:38px;
+                height:38px;
+                border:0;
+                border-radius:50%;
+                background:#222;
+                color:#fff;
+                font-size:20px;
+                cursor:pointer;
+              "
+            >
+              ×
+            </button>
+          </div>
+
+          <div
+            style="
+              display:flex;
+              gap:8px;
+              margin-bottom:20px;
+            "
+          >
+            <button
+              id="austa-v39-auth-login-tab"
+              type="button"
+              style="
+                flex:1;
+                padding:12px;
+                border:0;
+                border-radius:10px;
+                background:#b00020;
+                color:#fff;
+                font-weight:700;
+                cursor:pointer;
+              "
+            >
+              Giriş
+            </button>
+
+            <button
+              id="austa-v39-auth-register-tab"
+              type="button"
+              style="
+                flex:1;
+                padding:12px;
+                border:1px solid #333;
+                border-radius:10px;
+                background:#181818;
+                color:#fff;
+                font-weight:700;
+                cursor:pointer;
+              "
+            >
+              Qeydiyyat
+            </button>
+          </div>
+
+          <form
+            id="austa-v39-auth-form"
+          >
+
+            <label
+              style="
+                display:block;
+                margin-bottom:14px;
+              "
+            >
+              <span
+                style="
+                  display:block;
+                  margin-bottom:7px;
+                  color:#dce3e8;
+                  font-size:13px;
+                "
+              >
+                Email / Gmail
+              </span>
+
+              <input
+                id="austa-v39-auth-email"
+                type="email"
+                autocomplete="email"
+                required
+                placeholder="example@gmail.com"
+                style="
+                  width:100%;
+                  box-sizing:border-box;
+                  padding:13px;
+                  border-radius:10px;
+                  border:1px solid #333;
+                  background:#181818;
+                  color:#fff;
+                  outline:none;
+                "
+              >
+            </label>
+
+            <label
+              style="
+                display:block;
+                margin-bottom:14px;
+              "
+            >
+              <span
+                style="
+                  display:block;
+                  margin-bottom:7px;
+                  color:#dce3e8;
+                  font-size:13px;
+                "
+              >
+                Şifrə
+              </span>
+
+              <input
+                id="austa-v39-auth-password"
+                type="password"
+                autocomplete="current-password"
+                required
+                minlength="6"
+                placeholder="Minimum 6 simvol"
+                style="
+                  width:100%;
+                  box-sizing:border-box;
+                  padding:13px;
+                  border-radius:10px;
+                  border:1px solid #333;
+                  background:#181818;
+                  color:#fff;
+                  outline:none;
+                "
+              >
+            </label>
+
+            <div
+              id="austa-v39-auth-phone-wrap"
+              style="
+                display:none;
+                margin-bottom:14px;
+              "
+            >
+              <label>
+                <span
+                  style="
+                    display:block;
+                    margin-bottom:7px;
+                    color:#dce3e8;
+                    font-size:13px;
+                  "
+                >
+                  Telefon nömrəsi
+                </span>
+
+                <input
+                  id="austa-v39-auth-phone"
+                  type="tel"
+                  autocomplete="tel"
+                  placeholder="+994501234567"
+                  style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:13px;
+                    border-radius:10px;
+                    border:1px solid #333;
+                    background:#181818;
+                    color:#fff;
+                    outline:none;
+                  "
+                />
+              </label>
+            </div>
+
+            <div
+              id="austa-v39-auth-role-wrap"
+              style="
+                display:none;
+                margin-bottom:14px;
+              "
+            >
+              <label>
+                <span
+                  style="
+                    display:block;
+                    margin-bottom:7px;
+                    color:#dce3e8;
+                    font-size:13px;
+                  "
+                >
+                  Hesab tipi
+                </span>
+
+                <select
+                  id="austa-v39-auth-role"
+                  style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:13px;
+                    border-radius:10px;
+                    border:1px solid #333;
+                    background:#181818;
+                    color:#fff;
+                    outline:none;
+                  "
+                >
+                  <option value="customer">
+                    Müştəri
+                  </option>
+
+                  <option value="provider">
+                    Usta
+                  </option>
+
+                  <option value="store">
+                    Mağaza
+                  </option>
+
+                  <option value="partner">
+                    Tərəfdaş
+                  </option>
+                </select>
+              </label>
+            </div>
+
+            <button
+              id="austa-v39-auth-submit"
+              type="submit"
+              style="
+                width:100%;
+                padding:14px;
+                border:0;
+                border-radius:11px;
+                background:#c40024;
+                color:#fff;
+                font-weight:800;
+                cursor:pointer;
+                font-size:15px;
+              "
+            >
+              Daxil ol
+            </button>
+
+          </form>
+
+          <div
+            id="austa-v39-auth-message"
+            style="
+              display:none;
+              margin-top:15px;
+              padding:12px;
+              border-radius:10px;
+              background:#191919;
+              color:#dce3e8;
+              font-size:13px;
+              line-height:1.5;
+            "
+          ></div>
+
+          <div
+            style="
+              margin-top:18px;
+              padding-top:15px;
+              border-top:1px solid #292929;
+              color:#788691;
+              font-size:12px;
+              line-height:1.5;
+            "
+          >
+            Müştəri hesabı üçün FIN və şəxsiyyət
+            vəsiqəsi tələb olunmur. Usta hesabının
+            KYC mərhələsində əlavə məlumatlar ayrıca
+            toplanacaq.
+          </div>
+
+        </div>
+      `;
+
+      document.body.appendChild(
+        authModal
+      );
+
+      const closeButton =
+        document.getElementById(
+          'austa-v39-auth-close'
+        );
+
+      const loginTab =
+        document.getElementById(
+          'austa-v39-auth-login-tab'
+        );
+
+      const registerTab =
+        document.getElementById(
+          'austa-v39-auth-register-tab'
+        );
+
+      const form =
+        document.getElementById(
+          'austa-v39-auth-form'
+        );
+
+      const emailInput =
+        document.getElementById(
+          'austa-v39-auth-email'
+        );
+
+      const passwordInput =
+        document.getElementById(
+          'austa-v39-auth-password'
+        );
+
+      const phoneWrap =
+        document.getElementById(
+          'austa-v39-auth-phone-wrap'
+        );
+
+      const phoneInput =
+        document.getElementById(
+          'austa-v39-auth-phone'
+        );
+
+      const roleWrap =
+        document.getElementById(
+          'austa-v39-auth-role-wrap'
+        );
+
+      const roleInput =
+        document.getElementById(
+          'austa-v39-auth-role'
+        );
+
+      const submitButton =
+        document.getElementById(
+          'austa-v39-auth-submit'
+        );
+
+      const messageBox =
+        document.getElementById(
+          'austa-v39-auth-message'
+        );
+
+      const subtitle =
+        document.getElementById(
+          'austa-v39-auth-subtitle'
+        );
+
+      let mode = 'login';
+
+      const showMessage = (
+        text,
+        type = 'info'
+      ) => {
+        messageBox.style.display =
+          'block';
+
+        messageBox.textContent =
+          text;
+
+        if (type === 'error') {
+          messageBox.style.border =
+            '1px solid #8f1730';
+        } else if (
+          type === 'success'
+        ) {
+          messageBox.style.border =
+            '1px solid #287a4a';
+        } else {
+          messageBox.style.border =
+            '1px solid #333';
+        }
+      };
+
+      const clearMessage = () => {
+        messageBox.style.display =
+          'none';
+
+        messageBox.textContent =
+          '';
+
+        messageBox.style.border =
+          '0';
+      };
+
+      const setMode = (
+        nextMode
+      ) => {
+        mode = nextMode;
+
+        clearMessage();
+
+        if (mode === 'login') {
+          loginTab.style.background =
+            '#b00020';
+
+          loginTab.style.border =
+            '0';
+
+          registerTab.style.background =
+            '#181818';
+
+          registerTab.style.border =
+            '1px solid #333';
+
+          submitButton.textContent =
+            'Daxil ol';
+
+          subtitle.textContent =
+            'A-USTA hesabınıza daxil olun';
+
+          phoneWrap.style.display =
+            'none';
+
+          roleWrap.style.display =
+            'none';
+
+          passwordInput.autocomplete =
+            'current-password';
+
+          return;
+        }
+
+        loginTab.style.background =
+          '#181818';
+
+        loginTab.style.border =
+          '1px solid #333';
+
+        registerTab.style.background =
+          '#b00020';
+
+        registerTab.style.border =
+          '0';
+
+        submitButton.textContent =
+          'Hesab yarat';
+
+        subtitle.textContent =
+          'Yeni A-USTA hesabı yaradın';
+
+        phoneWrap.style.display =
+          'block';
+
+        roleWrap.style.display =
+          'block';
+
+        passwordInput.autocomplete =
+          'new-password';
+      };
+
+      closeButton.onclick = () => {
+        authModal.remove();
+      };
+
+      authModal.onclick = (event) => {
+        if (
+          event.target ===
+          authModal
+        ) {
+          authModal.remove();
+        }
+      };
+
+      loginTab.onclick = () => {
+        setMode('login');
+      };
+
+      registerTab.onclick = () => {
+        setMode('register');
+      };
+
+      form.onsubmit = async (
+        event
+      ) => {
+        event.preventDefault();
+
+        clearMessage();
+
+        const email =
+          emailInput.value
+            .trim()
+            .toLowerCase();
+
+        const password =
+          passwordInput.value;
+
+        const phone =
+          phoneInput.value.trim();
+
+        const selectedRole =
+          roleInput.value;
+
+        if (!email) {
+          showMessage(
+            'Email / Gmail daxil edin.',
+            'error'
+          );
+
+          return;
+        }
+
+        if (!password) {
+          showMessage(
+            'Şifrə daxil edin.',
+            'error'
+          );
+
+          return;
+        }
+
+        if (
+          password.length < 6
+        ) {
+          showMessage(
+            'Şifrə minimum 6 simvol olmalıdır.',
+            'error'
+          );
+
+          return;
+        }
+
+        if (
+          mode === 'register' &&
+          !phone
+        ) {
+          showMessage(
+            'Qeydiyyat üçün telefon nömrəsi daxil edin.',
+            'error'
+          );
+
+          return;
+        }
+
+        submitButton.disabled =
+          true;
+
+        submitButton.style.opacity =
+          '0.65';
+
+        try {
+          if (
+            mode === 'login'
+          ) {
+            const result =
+              await supabaseClient.auth
+                .signInWithPassword({
+                  email,
+                  password
+                });
+
+            if (
+              result.error
+            ) {
+              throw result.error;
+            }
+
+            const sessionResult =
+              await supabaseClient.auth
+                .getSession();
+
+            const session =
+              sessionResult.data
+                ?.session;
+
+            if (!session) {
+              throw new Error(
+                'Giriş tamamlandı, amma aktiv Supabase session yaradılmadı.'
+              );
+            }
+
+            const user =
+              session.user;
+
+            const savedRole =
+              localStorage.getItem(
+                'austa-account-role-v39'
+              ) ||
+              user.user_metadata
+                ?.austa_role ||
+              'customer';
+
+            localStorage.setItem(
+              'austa-account-role-v39',
+              savedRole
+            );
+
+            localStorage.setItem(
+              'austa-auth-user-id',
+              user.id
+            );
+
+            showMessage(
+              '✓ Uğurla daxil oldunuz. A-USTA session aktivdir.',
+              'success'
+            );
+
+            setTimeout(() => {
+              authModal.remove();
+
+              showRole(
+                savedRole
+              );
+            }, 700);
+
+            return;
+          }
+
+          const signUpResult =
+            await supabaseClient.auth
+              .signUp({
+                email,
+                password,
+                options: {
+                  data: {
+                    austa_role:
+                      selectedRole,
+                    phone:
+                      phone,
+                    phone_verified:
+                      false,
+                    account_status:
+                      'active'
+                  }
+                }
+              });
+
+          if (
+            signUpResult.error
+          ) {
+            throw signUpResult.error;
+          }
+
+          const createdUser =
+            signUpResult.data
+              ?.user;
+
+          const createdSession =
+            signUpResult.data
+              ?.session;
+
+          if (
+            createdUser
+          ) {
+            localStorage.setItem(
+              'austa-auth-user-id',
+              createdUser.id
+            );
+
+            localStorage.setItem(
+              'austa-account-role-v39',
+              selectedRole
+            );
+          }
+
+          if (
+            createdSession
+          ) {
+            showMessage(
+              '✓ Hesab yaradıldı və session aktivdir.',
+              'success'
+            );
+          } else {
+            showMessage(
+              '✓ Hesab yaradıldı. Email təsdiqi tələb olunursa, email qutunuzu yoxlayın.',
+              'success'
+            );
+          }
+
+          setTimeout(() => {
+            authModal.remove();
+
+            showRole(
+              selectedRole
+            );
+          }, 1000);
+        } catch (error) {
+          console.error(
+            'A-USTA AUTH ERROR:',
+            error
+          );
+
+          const errorMessage =
+            error?.message ||
+            'Giriş / qeydiyyat zamanı naməlum xəta baş verdi.';
+
+          showMessage(
+            errorMessage,
+            'error'
+          );
+        } finally {
+          submitButton.disabled =
+            false;
+
+          submitButton.style.opacity =
+            '1';
+        }
+      };
+
+      setMode('login');
+
+      emailInput.focus();
+    };
+  });
+
+  /*
+   * ============================================================
+   * PROVIDER / USTA REGISTRATION
+   * ============================================================
+   */
+
+  const p =
+    $('[data-action="provider-save"]');
+
+  if (p) {
+    p.onclick = async () => {
+      const sessionResult =
+        await supabaseClient.auth
+          .getSession();
+
+      const session =
+        sessionResult.data
+          ?.session;
+
+      if (!session) {
+        alert(
+          'Usta qeydiyyatını göndərmək üçün əvvəlcə A-USTA hesabına daxil olun.'
+        );
+
+        return;
+      }
+
+      const vals = [
+        'v39pName',
+        'v39pPhone',
+        'v39pMail',
+        'v39pId',
+        'v39pFin',
+        'v39pExp',
+        'v39pSector',
+        'v39pRegion',
+        'v39pAddr'
+      ].map(
+        (id) =>
+          $('#' + id)
+            ?.value
+            .trim()
+      );
+
+      const photo =
+        $('#v39pIdPhoto');
+
+      if (
+        vals.some(
+          (v) => !v
+        ) ||
+        !photo?.files?.length
+      ) {
+        alert(
+          'Usta qeydiyyatı üçün bütün xanaları və şəxsiyyət vəsiqəsinin şəklini doldurun.'
+        );
+
+        return;
+      }
+
+      const fin =
+        vals[4];
+
+      if (
+        !/^[A-Za-z0-9]{7}$/.test(
+          fin
+        )
+      ) {
+        alert(
+          'FIN kodu 7 simvoldan ibarət olmalıdır.'
+        );
+
+        return;
+      }
+
+      /*
+       * Bu mərhələdə KYC məlumatını localStorage-a
+       * yazmırıq.
+       *
+       * FIN və şəxsiyyət vəsiqəsinin fotosu kimi
+       * həssas məlumatlar yalnız təhlükəsiz
+       * backend/KYC endpoint üzərindən saxlanmalıdır.
+       */
+
+      alert(
+        '✓ Usta məlumatları yoxlamaya hazırdır. KYC server bağlantısı əlavə edildikdən sonra FIN və şəxsiyyət vəsiqəsi fotosu təhlükəsiz backend-ə göndəriləcək.'
+      );
+    };
+  }
+
+  /*
+   * ============================================================
+   * STORE REGISTRATION
+   * ============================================================
+   */
+
+  const s =
+    $('[data-action="store-save"]');
+
+  if (s) {
+    s.onclick = async () => {
+      const sessionResult =
+        await supabaseClient.auth
+          .getSession();
+
+      const session =
+        sessionResult.data
+          ?.session;
+
+      if (!session) {
+        alert(
+          'Mağaza qeydiyyatını göndərmək üçün əvvəlcə A-USTA hesabına daxil olun.'
+        );
+
+        return;
+      }
+
+      const vals = [
+        'v39sName',
+        'v39sPhone',
+        'v39sMail',
+        'v39sRegion',
+        'v39sAddr',
+        'v39sCats'
+      ].map(
+        (id) =>
+          $('#' + id)
+            ?.value
+            .trim()
+      );
+
+      if (
+        vals.some(
+          (v) => !v
+        )
+      ) {
+        alert(
+          'Mağaza qeydiyyatı üçün bütün xanaları doldurun.'
+        );
+
+        return;
+      }
+
+      save(
+        'austa-store-profile',
+        {
+          name: vals[0],
+          phone: vals[1],
+          gmail: vals[2],
+          region: vals[3],
+          address: vals[4],
+          categories: vals[5]
+        }
+      );
+
+      alert(
+        '✓ Mağaza profili yaradıldı.'
+      );
+    };
+  }
+
+  /*
+   * ============================================================
+   * PARTNER REGISTRATION
+   * ============================================================
+   */
+
+  const t =
+    $('[data-action="partner-save"]');
+
+  if (t) {
+    t.onclick = async () => {
+      const sessionResult =
+        await supabaseClient.auth
+          .getSession();
+
+      const session =
+        sessionResult.data
+          ?.session;
+
+      if (!session) {
+        alert(
+          'Tərəfdaş qeydiyyatını göndərmək üçün əvvəlcə A-USTA hesabına daxil olun.'
+        );
+
+        return;
+      }
+
+      const vals = [
+        'v39tName',
+        'v39tPhone',
+        'v39tMail',
+        'v39tRegion',
+        'v39tSector',
+        'v39tAddr'
+      ].map(
+        (id) =>
+          $('#' + id)
+            ?.value
+            .trim()
+      );
+
+      if (
+        vals.some(
+          (v) => !v
+        )
+      ) {
+        alert(
+          'Tərəfdaş qeydiyyatı üçün bütün xanaları doldurun.'
+        );
+
+        return;
+      }
+
+      save(
+        'austa-partner-profile',
+        {
+          name: vals[0],
+          phone: vals[1],
+          gmail: vals[2],
+          region: vals[3],
+          sector: vals[4],
+          address: vals[5]
+        }
+      );
+
+      alert(
+        '✓ Tərəfdaş qeydiyyat məlumatları qəbul edildi.'
+      );
+    };
+  }
+
+  /*
+   * ============================================================
+   * VIDEO ACTIONS
+   * ============================================================
+   */
+
+  $$('[data-video-action]').forEach(
+    (b) => {
+      b.onclick = () => {
+        const action =
+          b.dataset.videoAction;
+
+        if (
+          action ===
+          'comment'
+        ) {
+          const text =
+            prompt(
+              'Rəyinizi yazın:'
+            );
+
+          if (text) {
+            const arr =
+              read(
+                'austa-reviews',
+                []
+              );
+
+            arr.unshift({
+              subject:
+                'Avtomobil videosu',
+              rating: 5,
+              text,
+              author:
+                'Müştəri'
+            });
+
+            save(
+              'austa-reviews',
+              arr
+            );
+
+            alert(
+              '✓ Rəy əlavə edildi.'
+            );
+          }
+        } else if (
+          action ===
+          'share'
+        ) {
+          navigator.clipboard
+            ?.writeText(
+              location.href
+            );
+
+          alert(
+            '✓ Video paylaşım bağlantısı hazırlandı.'
+          );
+        } else {
+          b.textContent =
+            action === 'like'
+              ? '♥ Bəyənildi'
+              : action === 'save'
+                ? '✓ Saxlanıldı'
+                : '✓';
+        }
+      };
+    }
+  );
  }
+  
  // Close/open: clicking Hesab always opens the account center, never scrolls to the old account block.
  const link=$('#headerAccountLink'); if(link&&!link.dataset.v39Bound){link.dataset.v39Bound='1';link.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();modal.classList.add('open');document.body.classList.add('austa-account-open');showRole(localStorage.getItem('austa-account-role-v39')||'customer');},true)}
  $('.austa-v39-close',modal).onclick=()=>{modal.classList.remove('open');document.body.classList.remove('austa-account-open')};
