@@ -1,12 +1,26 @@
 import Fastify from "fastify";
-import { env } from "./env.js";
+import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
+import sensible from "@fastify/sensible";
+
 import { serviceOrderRoutes } from "../routes/service-orders.js";
 import { authRoutes } from "../routes/auth.js";
+
 const app = Fastify({
   logger: true,
 });
-app.register(serviceOrderRoutes);
-app.register(authRoutes);
+
+await app.register(cors, {
+  origin: [
+    "https://a-usta.github.io",
+    "https://a-usta-webside.onrender.com",
+  ],
+  credentials: true,
+});
+
+await app.register(helmet);
+
+await app.register(sensible);
 
 app.get("/health", async () => {
   return {
@@ -15,16 +29,13 @@ app.get("/health", async () => {
   };
 });
 
-const start = async () => {
-  try {
-    await app.listen({
-      port: env.port,
-      host: env.host,
-    });
-  } catch (error) {
-    app.log.error(error);
-    process.exit(1);
-  }
-};
+await app.register(serviceOrderRoutes);
 
-start();
+await app.register(authRoutes);
+
+const port = Number(process.env.PORT || 3000);
+
+await app.listen({
+  port,
+  host: "0.0.0.0",
+});
