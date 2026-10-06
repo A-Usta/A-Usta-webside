@@ -14679,25 +14679,60 @@ function bindPage(page, role) {
 
             const user =
               session.user;
+ /*
+ * ========================================================
+ * LOAD REAL PROFILE ROLE
+ * ========================================================
+ */
 
-            const savedRole =
-              localStorage.getItem(
-                'austa-account-role-v39'
-              ) ||
-              user.user_metadata
-                ?.austa_role ||
-              'customer';
+const profileResult =
+  await supabaseClient
+    .from('profiles')
+    .select(
+      'role, is_active'
+    )
+    .eq(
+      'id',
+      user.id
+    )
+    .maybeSingle();
 
-            localStorage.setItem(
-              'austa-account-role-v39',
-              savedRole
-            );
+if (
+  profileResult.error
+) {
+  throw new Error(
+    'A-USTA profil rolu oxunmadı: ' +
+    profileResult.error.message
+  );
+}
 
-            localStorage.setItem(
-              'austa-auth-user-id',
-              user.id
-            );
+const profile =
+  profileResult.data;
 
+if (
+  profile &&
+  profile.is_active === false
+) {
+  throw new Error(
+    'A-USTA hesabı aktiv deyil.'
+  );
+}
+
+const savedRole =
+  profile?.role ||
+  user.user_metadata
+    ?.austa_role ||
+  'customer';
+
+localStorage.setItem(
+  'austa-account-role-v39',
+  savedRole
+);
+
+localStorage.setItem(
+  'austa-auth-user-id',
+  user.id
+);
             showMessage(
               '✓ Uğurla daxil oldunuz. A-USTA session aktivdir.',
               'success'
