@@ -14355,16 +14355,71 @@ if (p) {
         );
       }
 
-      alert(
-        '✓ Usta KYC müraciəti qəbul edildi.\n\n' +
-        'Telefon: ' +
-        phone +
-        '\n' +
-        'FIN: ' +
-        fin +
-        '\n\n' +
-        'Status: Yoxlamada (pending)'
-      );
+        /*
+       * --------------------------------------------------------
+       * AUTOMATIC KYC TECHNICAL CHECK
+       * --------------------------------------------------------
+       */
+
+      const autoCheckResult =
+        await supabaseClient
+          .rpc(
+            'run_provider_auto_check',
+            {
+              p_user_id:
+                userId
+            }
+          );
+
+      if (
+        autoCheckResult.error
+      ) {
+        throw new Error(
+          'Avtomatik KYC yoxlaması baş tutmadı: ' +
+          autoCheckResult.error.message
+        );
+      }
+
+      const autoCheck =
+        autoCheckResult.data;
+
+      if (
+        autoCheck?.status ===
+        'passed'
+      ) {
+        alert(
+          '✓ Usta müraciəti qəbul edildi.\n\n' +
+          'Telefon: ' +
+          phone +
+          '\n' +
+          'FIN: ' +
+          fin +
+          '\n\n' +
+          '✓ Avtomatik texniki yoxlama keçdi.\n' +
+          'Status: Yoxlamadan keçdi'
+        );
+
+      } else if (
+        autoCheck?.status ===
+        'manual_review'
+      ) {
+        alert(
+          '⚠ Usta müraciəti qəbul edildi.\n\n' +
+          'FIN əlavə yoxlama tələb edir.\n' +
+          'Status: Manual yoxlama'
+        );
+
+      } else {
+        alert(
+          '⚠ Usta müraciəti qəbul edildi, ' +
+          'lakin avtomatik yoxlama keçmədi.\n\n' +
+          'Səbəb: ' +
+          (
+            autoCheck?.reason ||
+            'Naməlum səbəb'
+          )
+        );
+      }
     } catch (error) {
       console.error(
         'A-USTA KYC ERROR:',
