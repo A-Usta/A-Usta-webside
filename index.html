@@ -13079,7 +13079,162 @@ function init(){
  const nav=$('#austaV39Nav'), main=$('#austaV39Main');
  const roles=[['customer','👤','Müştəri'],['provider','🛠','Usta'],['store','🏪','Mağaza'],['partner','🤝','Tərəfdaş']];
  const rolePages={customer:{title:'Müştəri hesabı',desc:'Gmail və ya telefonla giriş. FIN/ID tələb edilmir.'},provider:{title:'Usta qeydiyyatı və paneli',desc:'Usta kimi xidmət göstərmək üçün profil, KYC, xidmət sahəsi və iş məkanı qeydiyyatı.'},store:{title:'Mağaza qeydiyyatı və paneli',desc:'Ehtiyat hissələri və aksesuar mağazası üçün ayrıca mağaza profili.'},partner:{title:'Tərəfdaş qeydiyyatı və paneli',desc:'Tərəfdaş şirkət və xidmət təminatçıları üçün ayrıca iş profili.'}};
- function buildNav(role){nav.innerHTML='';roles.forEach(([id,ic,name])=>{const b=document.createElement('button');b.dataset.role=id;b.innerHTML='<span class="role-icon">'+ic+'</span><span>'+name+'</span>';b.className=id===role?'active':'';b.onclick=()=>showRole(id);nav.appendChild(b)});const extra=[['home','⌂','Hesabın ana səhifəsi'],['listings','📋','Elanlarım'],['orders','📦','Sifarişlərim'],['ratings','⭐','Reytinq və rəylər']];extra.forEach(([id,ic,name])=>{const b=document.createElement('button');b.dataset.page=id;b.innerHTML='<span class="role-icon">'+ic+'</span><span>'+name+'</span>';b.onclick=()=>showPage(id,currentRole);nav.appendChild(b)});}
+function buildNav(role) {
+  nav.innerHTML = '';
+
+  roles.forEach(([id, ic, name]) => {
+    const b = document.createElement('button');
+
+    b.dataset.role = id;
+
+    b.innerHTML =
+      '<span class="role-icon">' +
+      ic +
+      '</span><span>' +
+      name +
+      '</span>';
+
+    b.className =
+      id === role
+        ? 'active'
+        : '';
+
+    b.onclick = () =>
+      showRole(id);
+
+    nav.appendChild(b);
+  });
+
+  const extra = [
+    [
+      'home',
+      '⌂',
+      'Hesabın ana səhifəsi'
+    ],
+    [
+      'listings',
+      '📋',
+      'Elanlarım'
+    ],
+    [
+      'orders',
+      '📦',
+      'Sifarişlərim'
+    ],
+    [
+      'ratings',
+      '⭐',
+      'Reytinq və rəylər'
+    ]
+  ];
+
+  extra.forEach(
+    ([id, ic, name]) => {
+      const b =
+        document.createElement(
+          'button'
+        );
+
+      b.dataset.page = id;
+
+      b.innerHTML =
+        '<span class="role-icon">' +
+        ic +
+        '</span><span>' +
+        name +
+        '</span>';
+
+      b.onclick = () =>
+        showPage(
+          id,
+          currentRole
+        );
+
+      nav.appendChild(b);
+    }
+  );
+
+  /*
+   * ========================================================
+   * LOGOUT
+   * ========================================================
+   */
+
+  const logoutButton =
+    document.createElement(
+      'button'
+    );
+
+  logoutButton.dataset.action =
+    'logout';
+
+  logoutButton.innerHTML =
+    '<span class="role-icon">↪</span>' +
+    '<span>Hesabdan çıxış</span>';
+
+  logoutButton.onclick =
+    async () => {
+      logoutButton.disabled =
+        true;
+
+      try {
+        const result =
+          await window
+            .AUSTA_SUPABASE
+            .auth
+            .signOut();
+
+        if (result.error) {
+          throw result.error;
+        }
+
+        localStorage.removeItem(
+          'austa-account-role-v39'
+        );
+
+        localStorage.removeItem(
+          'austa-auth-user-id'
+        );
+
+        currentRole =
+          'customer';
+
+        buildNav(
+          'customer'
+        );
+
+        showPage(
+          'home',
+          'customer'
+        );
+
+        alert(
+          '✓ A-USTA hesabından çıxış edildi.'
+        );
+
+      } catch (error) {
+        console.error(
+          'A-USTA LOGOUT ERROR:',
+          error
+        );
+
+        alert(
+          'Hesabdan çıxış zamanı xəta baş verdi.\n\n' +
+          (
+            error?.message ||
+            'Naməlum xəta'
+          )
+        );
+
+        logoutButton.disabled =
+          false;
+      }
+    };
+
+  nav.appendChild(
+    logoutButton
+  );
+}
  let currentRole=localStorage.getItem('austa-account-role-v39')||'customer';
  function showRole(role){currentRole=role;localStorage.setItem('austa-account-role-v39',role);buildNav(role);showPage('home',role)}
  window.AUSTA_V39_SHOW_ROLE=showRole;
