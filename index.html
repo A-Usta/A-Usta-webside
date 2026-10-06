@@ -13153,6 +13153,38 @@ function buildNav(role) {
       nav.appendChild(b);
     }
   );
+    /*
+   * ========================================================
+   * ADMIN KYC
+   * ========================================================
+   */
+
+  if (
+    role === 'admin'
+  ) {
+    const kycButton =
+      document.createElement(
+        'button'
+      );
+
+    kycButton.dataset.page =
+      'admin-kyc';
+
+    kycButton.innerHTML =
+      '<span class="role-icon">🛡️</span>' +
+      '<span>KYC Paneli</span>';
+
+    kycButton.onclick =
+      () =>
+        showPage(
+          'admin-kyc',
+          'admin'
+        );
+
+    nav.appendChild(
+      kycButton
+    );
+  }
 
   /*
    * ========================================================
@@ -13238,6 +13270,655 @@ function buildNav(role) {
  let currentRole=localStorage.getItem('austa-account-role-v39')||'customer';
  function showRole(role){currentRole=role;localStorage.setItem('austa-account-role-v39',role);buildNav(role);showPage('home',role)}
  window.AUSTA_V39_SHOW_ROLE=showRole;
+  /*
+ * ============================================================
+ * ADMIN KYC PANEL
+ * ============================================================
+ */
+
+function escapeAdminKycHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function adminKycPage() {
+  return `
+    <section
+      id="austa-admin-kyc"
+      class="austa-page"
+    >
+
+      <div class="austa-page-head">
+        <div>
+          <h2>Admin KYC Paneli</h2>
+          <p>
+            Usta müraciətlərini avtomatik yoxlama nəticələri
+            və sənədlərlə birlikdə idarə edin.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          id="austa-admin-kyc-refresh"
+        >
+          ↻ Yenilə
+        </button>
+      </div>
+
+      <div
+        id="austa-admin-kyc-status"
+        style="margin:12px 0;"
+      >
+        KYC müraciətləri yüklənir...
+      </div>
+
+      <div
+        id="austa-admin-kyc-list"
+      ></div>
+
+    </section>
+  `;
+}
+
+async function loadAdminKyc() {
+  const statusEl =
+    document.getElementById(
+      'austa-admin-kyc-status'
+    );
+
+  const listEl =
+    document.getElementById(
+      'austa-admin-kyc-list'
+    );
+
+  const refreshButton =
+    document.getElementById(
+      'austa-admin-kyc-refresh'
+    );
+
+  if (
+    !statusEl ||
+    !listEl
+  ) {
+    return;
+  }
+
+  if (refreshButton) {
+    refreshButton.disabled = true;
+  }
+
+  statusEl.textContent =
+    'KYC müraciətləri yüklənir...';
+
+  listEl.innerHTML = '';
+
+  try {
+    const sessionResult =
+      await supabaseClient.auth.getSession();
+
+    const session =
+      sessionResult.data?.session;
+
+    if (!session) {
+      throw new Error(
+        'Admin paneli üçün əvvəlcə hesaba daxil olun.'
+      );
+    }
+
+    const profileResult =
+      await supabaseClient
+        .from('profiles')
+        .select(
+          'id, role, is_active'
+        )
+        .eq(
+          'id',
+          session.user.id
+        )
+        .single();
+
+    if (
+      profileResult.error
+    ) {
+      throw new Error(
+        profileResult.error.message
+      );
+    }
+
+    if (
+      profileResult.data?.role !==
+        'admin' ||
+      profileResult.data?.is_active !==
+        true
+    ) {
+      throw new Error(
+        'Bu bölməyə yalnız aktiv admin daxil ola bilər.'
+      );
+    }
+
+    const kycResult =
+      await supabaseClient
+        .from('provider_profiles')
+        .select(`
+          user_id,
+          requested_role,
+          fin_code,
+          id_document_path,
+          kyc_status,
+          auto_check_status,
+          auto_check_reason,
+          auto_checked_at,
+          updated_at,
+          reviewed_by,
+          reviewed_at,
+          rejection_reason,
+          experience,
+          sector,
+          region,
+          address
+        `)
+        .eq(
+          'kyc_status',
+          'pending'
+        )
+        .order(
+          'updated_at',
+          {
+            ascending: false
+          }
+        );
+
+    if (
+      kycResult.error
+    ) {
+      throw new Error(
+        kycResult.error.message
+      );
+    }
+
+    const rows =
+      kycResult.data || [];
+
+    if (!rows.length) {
+      statusEl.textContent =
+        'Hazırda gözləyən KYC müraciəti yoxdur.';
+
+      listEl.innerHTML = `
+        <div
+          style="
+            padding:24px;
+            border:1px solid rgba(255,255,255,.08);
+            border-radius:16px;
+          "
+        >
+          ✓ Bütün KYC müraciətləri işlənib.
+        </div>
+      `;
+
+      return;
+    }
+
+    const userIds =
+      rows.map(
+        row => row.user_id
+      );
+
+    const profilesResult =
+      await supabaseClient
+        .from('profiles')
+        .select(`
+          id,
+          full_name,
+          phone,
+          role,
+          is_active
+        `)
+        .in(
+          'id',
+          userIds
+        );
+
+    if (
+      profilesResult.error
+    ) {
+      throw new Error(
+        profilesResult.error.message
+      );
+    }
+
+    const profileMap =
+      new Map(
+        (profilesResult.data || [])
+          .map(
+            profile => [
+              profile.id,
+              profile
+            ]
+          )
+      );
+
+    const cards =
+      await Promise.all(
+        rows.map(
+          async row => {
+            const profile =
+              profileMap.get(
+                row.user_id
+              ) || {};
+
+            let signedUrl =
+              '';
+
+            if (
+              row.id_document_path
+            ) {
+              const signedResult =
+                await supabaseClient
+                  .storage
+                  .from(
+                    'austa-kyc'
+                  )
+                  .createSignedUrl(
+                    row.id_document_path,
+                    300
+                  );
+
+              if (
+                !signedResult.error
+              ) {
+                signedUrl =
+                  signedResult
+                    .data
+                    ?.signedUrl ||
+                  '';
+              }
+            }
+
+            const autoStatus =
+              row.auto_check_status ||
+              'pending';
+
+            const autoReason =
+              row.auto_check_reason ||
+              'Yoxlama məlumatı yoxdur.';
+
+            const canReview =
+              row.kyc_status ===
+                'pending';
+
+            return `
+              <article
+                class="austa-admin-kyc-card"
+                style="
+                  border:1px solid rgba(255,255,255,.10);
+                  border-radius:18px;
+                  padding:18px;
+                  margin-bottom:16px;
+                "
+              >
+
+                <div
+                  style="
+                    display:flex;
+                    justify-content:space-between;
+                    gap:12px;
+                    flex-wrap:wrap;
+                  "
+                >
+
+                  <div>
+                    <h3>
+                      ${escapeAdminKycHtml(
+                        profile.full_name ||
+                        'Adsız usta'
+                      )}
+                    </h3>
+
+                    <div>
+                      Telefon:
+                      ${escapeAdminKycHtml(
+                        profile.phone ||
+                        '—'
+                      )}
+                    </div>
+
+                    <div>
+                      User ID:
+                      ${escapeAdminKycHtml(
+                        row.user_id
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <strong>
+                      KYC: ${escapeAdminKycHtml(
+                        row.kyc_status
+                      )}
+                    </strong>
+
+                    <div>
+                      Auto:
+                      ${escapeAdminKycHtml(
+                        autoStatus
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+
+                <hr style="opacity:.12;">
+
+                <div>
+                  <strong>Rol:</strong>
+                  ${escapeAdminKycHtml(
+                    row.requested_role
+                  )}
+                </div>
+
+                <div>
+                  <strong>FIN:</strong>
+                  ${escapeAdminKycHtml(
+                    row.fin_code
+                  )}
+                </div>
+
+                <div>
+                  <strong>Təcrübə:</strong>
+                  ${escapeAdminKycHtml(
+                    row.experience ||
+                    '—'
+                  )}
+                </div>
+
+                <div>
+                  <strong>Sektor:</strong>
+                  ${escapeAdminKycHtml(
+                    row.sector ||
+                    '—'
+                  )}
+                </div>
+
+                <div>
+                  <strong>Region:</strong>
+                  ${escapeAdminKycHtml(
+                    row.region ||
+                    '—'
+                  )}
+                </div>
+
+                <div>
+                  <strong>Ünvan:</strong>
+                  ${escapeAdminKycHtml(
+                    row.address ||
+                    '—'
+                  )}
+                </div>
+
+                <div
+                  style="
+                    margin-top:10px;
+                    padding:10px;
+                    border-radius:10px;
+                  "
+                >
+                  <strong>
+                    Avtomatik yoxlama:
+                  </strong>
+
+                  ${escapeAdminKycHtml(
+                    autoReason
+                  )}
+                </div>
+
+                <div
+                  style="
+                    display:flex;
+                    gap:10px;
+                    flex-wrap:wrap;
+                    margin-top:16px;
+                  "
+                >
+
+                  ${
+                    signedUrl
+                      ? `
+                        <a
+                          href="${escapeAdminKycHtml(
+                            signedUrl
+                          )}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          📄 Sənədə bax
+                        </a>
+                      `
+                      : `
+                        <span>
+                          ⚠ Sənəd üçün signed URL yaradıla bilmədi.
+                        </span>
+                      `
+                  }
+
+                  ${
+                    canReview
+                      ? `
+                        <button
+                          type="button"
+                          data-admin-kyc-approve="${escapeAdminKycHtml(
+                            row.user_id
+                          )}"
+                        >
+                          ✅ Təsdiq et
+                        </button>
+
+                        <button
+                          type="button"
+                          data-admin-kyc-reject="${escapeAdminKycHtml(
+                            row.user_id
+                          )}"
+                        >
+                          ❌ Rədd et
+                        </button>
+                      `
+                      : ''
+                  }
+
+                </div>
+
+              </article>
+            `;
+          }
+        )
+      );
+
+    listEl.innerHTML =
+      cards.join('');
+
+    statusEl.textContent =
+      `${rows.length} gözləyən KYC müraciəti tapıldı.`;
+
+    listEl
+      .querySelectorAll(
+        '[data-admin-kyc-approve]'
+      )
+      .forEach(
+        button => {
+          button.onclick =
+            async () => {
+              const userId =
+                button.dataset
+                  .adminKycApprove;
+
+              if (!userId) {
+                return;
+              }
+
+              const confirmed =
+                confirm(
+                  'Bu KYC müraciətini təsdiqləmək istəyirsiniz?'
+                );
+
+              if (!confirmed) {
+                return;
+              }
+
+              button.disabled =
+                true;
+
+              try {
+                const result =
+                  await supabaseClient
+                    .rpc(
+                      'admin_review_provider_kyc',
+                      {
+                        p_user_id:
+                          userId,
+                        p_decision:
+                          'approve',
+                        p_rejection_reason:
+                          null
+                      }
+                    );
+
+                if (
+                  result.error
+                ) {
+                  throw result.error;
+                }
+
+                alert(
+                  '✓ KYC təsdiqləndi və usta aktivləşdirildi.'
+                );
+
+                await loadAdminKyc();
+
+              } catch (error) {
+                console.error(
+                  'A-USTA ADMIN KYC APPROVE ERROR:',
+                  error
+                );
+
+                alert(
+                  'KYC təsdiqlənmədi.\n\n' +
+                  (
+                    error?.message ||
+                    'Naməlum xəta'
+                  )
+                );
+
+                button.disabled =
+                  false;
+              }
+            };
+        }
+      );
+
+    listEl
+      .querySelectorAll(
+        '[data-admin-kyc-reject]'
+      )
+      .forEach(
+        button => {
+          button.onclick =
+            async () => {
+              const userId =
+                button.dataset
+                  .adminKycReject;
+
+              if (!userId) {
+                return;
+              }
+
+              const reason =
+                prompt(
+                  'Rədd səbəbini daxil edin:'
+                );
+
+              if (
+                reason === null
+              ) {
+                return;
+              }
+
+              button.disabled =
+                true;
+
+              try {
+                const result =
+                  await supabaseClient
+                    .rpc(
+                      'admin_review_provider_kyc',
+                      {
+                        p_user_id:
+                          userId,
+                        p_decision:
+                          'reject',
+                        p_rejection_reason:
+                          reason
+                      }
+                    );
+
+                if (
+                  result.error
+                ) {
+                  throw result.error;
+                }
+
+                alert(
+                  '✓ KYC müraciəti rədd edildi.'
+                );
+
+                await loadAdminKyc();
+
+              } catch (error) {
+                console.error(
+                  'A-USTA ADMIN KYC REJECT ERROR:',
+                  error
+                );
+
+                alert(
+                  'KYC rədd edilmədi.\n\n' +
+                  (
+                    error?.message ||
+                    'Naməlum xəta'
+                  )
+                );
+
+                button.disabled =
+                  false;
+              }
+            };
+        }
+      );
+
+  } catch (error) {
+    console.error(
+      'A-USTA ADMIN KYC LOAD ERROR:',
+      error
+    );
+
+    statusEl.textContent =
+      '⚠ ' +
+      (
+        error?.message ||
+        'KYC müraciətləri yüklənmədi.'
+      );
+
+  } finally {
+    if (refreshButton) {
+      refreshButton.disabled =
+        false;
+
+      refreshButton.onclick =
+        () => loadAdminKyc();
+    }
+  }
+}
  function showPage(page,role=currentRole){
    currentRole=role; $$('.austa-v39-nav button').forEach(b=>b.classList.toggle('active',b.dataset.role===role&&b.dataset.page==null));
    const base=rolePages[role];
@@ -13246,6 +13927,20 @@ function buildNav(role) {
    else if(page==='orders') main.innerHTML=ordersPage(role);
    else if(page==='ratings') main.innerHTML=ratingsPage(role);
    else if(page==='videos') main.innerHTML=videosPage();
+   else if(page==='admin-kyc'){
+    if(role!=='admin'){
+      main.innerHTML=`
+        <section class="austa-page">
+          <div style="padding:24px;">
+            ⚠ Bu bölməyə yalnız admin daxil ola bilər.
+          </div>
+        </section>
+      `;
+    } else {
+      main.innerHTML=adminKycPage();
+      loadAdminKyc();
+    }
+  }
    bindPage(page,role);
  }
  function homePage(role,base){
