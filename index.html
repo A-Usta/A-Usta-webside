@@ -206,8 +206,24 @@
 <button class="austa-function-btn" data-top-flow="parts" data-top-title="Xaricdən avtomobil">Xaricdən avtomobil</button><button class="austa-function-btn" data-top-flow="legal" data-top-title="Notariat">Notariat</button><button class="austa-function-btn" data-top-flow="legal" data-top-title="Müqavilə">Müqavilə</button><button class="austa-function-btn" data-top-flow="legal" data-top-title="Zəmanət">Zəmanət</button>
 </div></div>
 </div>
-</section><section class="section austa-secondary-anchor" id="services"><div class="section-heading"><div><h2>🛠 Əsas xidmətlər</h2><p>Avtomobilinizin bütün ehtiyacları burada</p></div><a class="section-link" href="#all-services">Bütün xidmətlərə bax →</a></div><div class="service-grid" id="serviceGrid"></div></section><section class="section austa-secondary-anchor" id="all-services"><div class="section-heading"><div><h2>⚡ Xidmət istiqamətləri</h2><p>Mexaniki, elektron, kuzov, təkər və gündəlik xidmətlər</p></div></div><div class="feature-grid"><article class="feature-card"><h3>🔧 Texniki xidmət</h3><p>Mühərrik, karopka, əyləc, radiator, asqı, kondisioner və yağ dəyişimi.</p><a class="btn" href="#austaAllFunctions">Xidmət seç →</a></article><article class="feature-card"><h3>🎨 Kuzov və görünüş</h3><p>Malyar, dəmirçi, polirovka, detailing, PPF, wrap və faraların bərpası.</p><a class="btn" href="#austaAllFunctions">Usta tap →</a></article><article class="feature-card"><h3>💻 Elektronika</h3><p>Diaqnostika, ECU, proqramlaşdırma, Stage 1/2/3, çip tuning və elektrik.</p><a class="btn" href="#austaAllFunctions">Diaqnostika →</a></article><article class="feature-card red"><h3>🚨 Yol yardımı</h3><p>24/7 mobil usta, akkumulyator, təkər, yanacaq və açar.</p><a class="btn btn-primary" href="#austaAllFunctions">Təcili çağır →</a></article></div></section><section class="section" id="mechanic"><div class="section-heading"><div><h2>🔧 Usta çağır</h2><p>Problemi bildir → yaxın usta → GPS → qiymət → təsdiq → xidmət</p></div></div><div class="tracking"><div class="request-panel"><div class="request-form"><textarea class="full" id="requestProblem" placeholder="Avtomobilinizdə nə problem var? Məsələn: maşın işə düşmür..."></textarea><select id="requestCategory"><option value="automotive_service">Avtomobil xidməti</option><option value="roadside">Yol yardımı</option><option value="diagnostics">Diaqnostika</option><option value="towing">Evakuator</option><option value="cargo_transport">Yük daşıma</option><option value="vehicle_transport">Avtomobil daşınması</option></select><div class="payment-choice"><label for="requestPayment">Ödəniş üsulu</label><select id="requestPayment"><option value="cash">💵 Nağd</option><option value="card">💳 Bank kartı</option></select></div><select id="requestLevel"><option value="standard">Standart</option><option value="priority">Prioritet</option><option value="premium">Premium</option></select><input id="requestBrand" placeholder="Marka"/><input id="requestModel" placeholder="Model"/><input id="requestYear" placeholder="İl"/><input id="requestPlate" placeholder="Dövlət nömrəsi"/><input id="requestPhone" placeholder="Telefon"/><div id="cargoFields" style="display:none;grid-column:1/-1;border:1px solid #174c6e;border-radius:10px;padding:12px;background:#061a29"><strong>📦 Yük məlumatları</strong><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px"><input id="requestCargoWeight" min="0" placeholder="Çəki (kq)" step="1" type="number"/><input id="requestCargoLength" min="0" placeholder="Uzunluq (m)" step="0.01" type="number"/><input id="requestCargoWidth" min="0" placeholder="En (m)" step="0.01" type="number"/><input id="requestCargoHeight" min="0" placeholder="Hündürlük (m)" step="0.01" type="number"/></div><div style="margin-top:8px;color:#8fa5ba;font-size:11px">Çəki və ölçülər uyğun yük nəqliyyatının seçilməsi üçün istifadə olunur.</div></div><input id="requestPickupAddress" placeholder="📍 Götürüləcək ünvan" style="display:none"/><input id="requestDestinationAddress" placeholder="🏁 Çatdırılacaq ünvan" style="display:none"/><button class="btn" id="requestGps">📍 GPS götür</button><button class="btn btn-primary" id="requestSubmit">Usta çağır →</button></div><div class="request-result" id="requestResult"></div><div class="request-control-panel" id="requestControlPanel"><h3>⚙️ Sifariş idarəetməsi</h3><input id="requestProviderId" placeholder="Usta ID"/><input id="requestProviderName" placeholder="Usta adı"/><input id="requestProviderPhone" placeholder="Usta telefonu"/><input id="requestProviderVehicleId" placeholder="Usta nəqliyyat ID"/><input id="requestPrice" placeholder="Yekun qiymət (AZN)" step="0.01" type="number"/><button class="btn" id="requestApprovePrice" type="button">💰 Qiyməti təsdiqlə</button><button class="btn btn-primary" id="requestAssignProvider" type="button">👨‍🔧 Usta təyin et</button><div class="request-lifecycle" id="requestLifecycle"><strong>🔄 Sifariş mərhələləri</strong><div class="lifecycle-buttons"><button class="btn" id="requestProviderAccept" type="button">✓ Usta qəbul etdi</button><button class="btn" id="requestProviderEnRoute" type="button">🚗 Yola çıxdı</button><button class="btn" id="requestProviderArrived" type="button">📍 Çatdı</button><button class="btn" id="requestStartDiagnosis" type="button">🔎 Diaqnostika</button><button class="btn" id="requestRecalculatePrice" type="button">🧮 Yeni qiymət</button><button class="btn" id="requestStartService" type="button">🔧 Xidməti başlat</button><button class="btn" id="requestCreatePayment" type="button">💳 Ödəniş yarat</button><button class="btn" id="requestPaymentPaid" type="button">✅ Ödəniş alındı</button><button class="btn" id="requestCompleteService" type="button">🏁 Xidməti tamamla</button><button class="btn" id="requestCancel" type="button">✕ Sifarişi ləğv et</button></div><div class="request-evidence"><label>📸 Problem/xidmət foto və video</label><input accept="image/*,video/*" id="requestEvidence" multiple="" type="file"/><label class="austa-check"><input id="requestContract" type="checkbox"/> 📄 Rəsmi xidmət müqaviləsi tələb olunur</label><div class="austa-result" id="requestEvidenceResult"></div></div></div></div></div><div class="austa-tool-panel" id="austaServiceQuestions" style="margin-top:10px"><h3>🎯 Seçilmiş xidmət üçün düzgün suallar</h3><div class="austa-mini-note" id="austaServiceQuestionText">Xidmət seçin. A-USTA müştəri və usta üçün yalnız həmin xidmətə uyğun məlumatları göstərir.</div></div>
+</section><section class="section austa-secondary-anchor" id="services"><div class="section-heading"><div><h2>🛠 Əsas xidmətlər</h2><p>Avtomobilinizin bütün ehtiyacları burada</p></div><a class="section-link" href="#all-services">Bütün xidmətlərə bax →</a></div><div class="service-grid" id="serviceGrid"></div></section><section class="section austa-secondary-anchor" id="all-services"><div class="section-heading"><div><h2>⚡ Xidmət istiqamətləri</h2><p>Mexaniki, elektron, kuzov, təkər və gündəlik xidmətlər</p></div></div><div class="feature-grid"><article class="feature-card"><h3>🔧 Texniki xidmət</h3><p>Mühərrik, karopka, əyləc, radiator, asqı, kondisioner və yağ dəyişimi.</p><a class="btn" href="#austaAllFunctions">Xidmət seç →</a></article><article class="feature-card"><h3>🎨 Kuzov və görünüş</h3><p>Malyar, dəmirçi, polirovka, detailing, PPF, wrap və faraların bərpası.</p><a class="btn" href="#austaAllFunctions">Usta tap →</a></article><article class="feature-card"><h3>💻 Elektronika</h3><p>Diaqnostika, ECU, proqramlaşdırma, Stage 1/2/3, çip tuning və elektrik.</p><a class="btn" href="#austaAllFunctions">Diaqnostika →</a></article><article class="feature-card red"><h3>🚨 Yol yardımı</h3><p>24/7 mobil usta, akkumulyator, təkər, yanacaq və açar.</p><a class="btn btn-primary" href="#austaAllFunctions">Təcili çağır →</a></article></div></section><section class="section" id="mechanic"><div class="section-heading"><div><h2>🔧 Usta çağır</h2><p>Problemi bildir → yaxın usta → GPS → qiymət → təsdiq → xidmət</p></div></div><div class="tracking"><div class="request-panel"><div class="request-form"><textarea class="full" id="requestProblem" placeholder="Avtomobilinizdə nə problem var? Məsələn: maşın işə düşmür..."></textarea><select id="requestCategory"><option value="automotive_service">Avtomobil xidməti</option><option value="roadside">Yol yardımı</option><option value="diagnostics">Diaqnostika</option><option value="towing">Evakuator</option><option value="cargo_transport">Yük daşıma</option><option value="vehicle_transport">Avtomobil daşınması</option></select><div class="payment-choice"><label for="requestPayment">Ödəniş üsulu</label><select id="requestPayment"><option value="cash">💵 Nağd</option><option value="card">💳 Bank kartı</option></select></div><select id="requestLevel"><option value="standard">Standart</option><option value="priority">Prioritet</option><option value="premium">Premium</option></select><input id="requestBrand" placeholder="Marka"/><input id="requestModel" placeholder="Model"/><input id="requestYear" placeholder="İl"/><input id="requestPlate" placeholder="Dövlət nömrəsi"/><input id="requestPhone" placeholder="Telefon"/><div id="cargoFields" style="display:none;grid-column:1/-1;border:1px solid #174c6e;border-radius:10px;padding:12px;background:#061a29"><strong>📦 Yük məlumatları</strong><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px"><input id="requestCargoWeight" min="0" placeholder="Çəki (kq)" step="1" type="number"/><input id="requestCargoLength" min="0" placeholder="Uzunluq (m)" step="0.01" type="number"/><input id="requestCargoWidth" min="0" placeholder="En (m)" step="0.01" type="number"/><input id="requestCargoHeight" min="0" placeholder="Hündürlük (m)" step="0.01" type="number"/></div><div style="margin-top:8px;color:#8fa5ba;font-size:11px">Çəki və ölçülər uyğun yük nəqliyyatının seçilməsi üçün istifadə olunur.</div></div><input id="requestPickupAddress" placeholder="📍 Götürüləcək ünvan" style="display:none"/><input id="requestDestinationAddress" placeholder="🏁 Çatdırılacaq ünvan" style="display:none"/><button class="btn" id="requestGps">📍 GPS götür</button><button class="btn btn-primary" id="requestSubmit">Usta çağır →</button></div><div class="request-result" id="requestResult"></div><div class="request-control-panel" id="requestControlPanel"><h3>⚙️ Sifariş idarəetməsi</h3><input id="requestProviderId" placeholder="Usta ID"/><input id="requestProviderName" placeholder="Usta adı"/><input id="requestProviderPhone" placeholder="Usta telefonu"/><input id="requestProviderVehicleId" placeholder="Usta nəqliyyat ID"/><input id="requestPrice" placeholder="Yekun qiymət (AZN)" step="0.01" type="number"/><button class="btn" id="requestApprovePrice" type="button">💰 Qiyməti təsdiqlə</button><button class="btn btn-primary" id="requestAssignProvider" type="button">👨‍🔧 Usta təyin et</button><div class="request-lifecycle" id="requestLifecycle"><strong>🔄 Sifariş mərhələləri</strong><div class="lifecycle-buttons"><button class="btn" id="requestProviderAccept" type="button">✓ Usta qəbul etdi</button><button class="btn" id="requestProviderEnRoute" type="button">🚗 Yola çıxdı</button><button class="btn" id="requestProviderArrived" type="button">📍 Çatdı</button><button class="btn" id="requestStartDiagnosis" type="button">🔎 Diaqnostika</button><button class="btn" id="requestRecalculatePrice" type="button">🧮 Yeni qiymət</button><button class="btn" id="requestStartService" type="button">🔧 Xidməti başlat</button><button class="btn" id="requestCreatePayment" type="button">💳 Ödəniş yarat</button><button class="btn" id="requestPaymentPaid" type="button">✅ Ödəniş alındı</button><button class="btn" id="requestCompleteService" type="button">🏁 Xidməti tamamla</button><button class="btn" id="requestCancel" type="button">✕ Sifarişi ləğv et</button></div><div class="request-evidence"><label>📸 Problem/xidmət foto və video</label><input accept="image/*,video/*" id="requestEvidence" multiple="" type="file"/><label>📷 İşdən əvvəlki vəziyyət — BEFORE</label><input accept="image/*" id="requestBeforePhotos" multiple="" type="file"/><label>📷 İşdən sonrakı vəziyyət — AFTER</label><input accept="image/*" id="requestAfterPhotos" multiple="" type="file"/><label class="austa-check"><input id="requestContract" type="checkbox"/> 📄 Rəsmi xidmət müqaviləsi tələb olunur</label><div class="austa-result" id="requestEvidenceResult"></div></div></div></div></div><div class="austa-tool-panel" id="austaServiceQuestions" style="margin-top:10px"><h3>🎯 Seçilmiş xidmət üçün düzgün suallar</h3><div class="austa-mini-note" id="austaServiceQuestionText">Xidmət seçin. A-USTA müştəri və usta üçün yalnız həmin xidmətə uyğun məlumatları göstərir.</div></div>
 <details class="austa-service-chooser" id="austaServiceChooser"><summary>🧰 Usta çağır daxilində bütün xidmətlər</summary><div class="inner" id="austaServiceChooserInner"></div></details>
+<div class="provider-panel"><h3>🔴 Sifariş axını</h3><p style="color:#9db1c4;font-size:12px">A-USTA sifariş statusunu mərhələli izləyir və usta hərəkəti GPS ilə sistemə ötürülə bilər.</p><div class="progress"><span class="step active"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span></div><div class="trust-grid"><div class="trust-item"><div class="trust-icon">📍</div><span>GPS və məkan</span></div><div class="trust-item"><div class="trust-icon">💰</div><span>Qiymət təsdiqi</span></div><div class="trust-item"><div class="trust-icon">📸</div><span>Foto / video sübut</span></div><div class="trust-item"><div class="trust-icon">📄</div><span>Müqavilə / zəmanət</span></div></div></div></div></section><section class="section" id="parts"><div class="section-heading"><div><h2>⚙ Ehtiyat hissələri marketplace</h2><p>Hissəni tap → uyğunluğu yoxla → satıcı seç → sifariş et → çatdırılmanı izlə</p></div><a class="section-link" href="#austaAllFunctions">Xaricdən sifariş →</a></div><div class="austa-parts-gallery" id="austaPartsGallery">
+<article class="austa-part-visual" data-module-open="parts"><img alt="Mühərrik hissələri" loading="lazy" src="https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🔧 Mühərrik hissələri</b><span>Motor • filtr • kəmər • şam</span></div></article>
+<article class="austa-part-visual" data-module-open="parts"><img alt="Əyləc məhsulları" loading="lazy" src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🛞 Əyləc və təkər</b><span>Disk • kolodka • təkər məhsulları</span></div></article>
+<article class="austa-part-visual" data-module-open="parts"><img alt="Avtomobil ehtiyat hissələri" loading="lazy" src="https://images.unsplash.com/photo-1493238792000-8113da705763?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>⚙ Karopka hissələri</b><span>Karopka • mufta • transmissiya</span></div></article>
+<article class="austa-part-visual" data-module-open="parts"><img alt="Avtomobil elektrik hissələri" loading="lazy" src="https://images.unsplash.com/photo-1551830820-330a71b99659?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>💡 Elektrik və sensor</b><span>ECU • sensor • kamera • işıq</span></div></article>
+<article class="austa-part-visual" data-module-open="parts"><img alt="Avtomobil aksesuarları" loading="lazy" src="https://images.unsplash.com/photo-1600706432502-77a0e2e327d4?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>✨ Aksesuarlar</b><span>Salon • LED • spoyler • təhlükəsizlik</span></div></article>
+<article class="austa-part-visual" data-module-open="parts"><img alt="Yağ və filtrlər" loading="lazy" src="https://images.unsplash.com/photo-1632823469850-1f6f6a1f8b7c?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🛢 Yağ və filtrlər</b><span>Yağ • hava • salon • yanacaq filtri</span></div></article>
+</div>
+<div class="market-grid"><article class="market-card"><h3>🧰 Hissə axtarışı</h3><p>Marka, model, il, mühərrik və OEM kodu ilə hissə axtar.</p><button class="btn btn-primary" data-module-open="parts">Hissə axtar →</button></article><article class="market-card"><h3>🇩🇪 Almaniya</h3><p>Original və universal hissə üçün xarici təchizatçı kanalı.</p><button class="btn" data-country="Almaniya" data-module-open="parts">Sifariş et →</button></article><article class="market-card"><h3>🇨🇳 Çin</h3><p>Aksesuar, alternativ və universal hissələr.</p><button class="btn" data-country="Çin" data-module-open="parts">Kataloq →</button></article><article class="market-card"><h3>🇰🇷 Koreya</h3><p>Koreya avtomobilləri üçün hissə axtarışı və sifariş.</p><button class="btn" data-country="Koreya" data-module-open="parts">Axtar →</button></article></div><div class="austa-module" id="partsModule"><h3>🧰 Ehtiyat hissəsi sifarişi</h3><div class="austa-form-grid"><input id="partsBrand" placeholder="Avtomobil markası"/><input id="partsModel" placeholder="Model"/><input id="partsYear" placeholder="İl"/><input id="partsOem" placeholder="OEM / hissə kodu"/><input id="partsName" placeholder="Hissənin adı"/><select id="partsType"><option value="original">Original</option><option value="universal">Universal</option><option value="used">İşlənmiş</option></select><select id="partsCountry"><option>Azərbaycan</option><option>Almaniya</option><option>Çin</option><option>Koreya</option></select><input id="partsQty" min="1" placeholder="Say" type="number" value="1"/><input id="partsPhone" placeholder="Telefon"/><textarea class="full" id="partsNote" placeholder="Əlavə məlumat / foto və uyğunluq qeydi"></textarea></div><button class="btn btn-primary" id="partsOrderBtn">⚙ Hissə sifarişi yarat</button><div class="austa-result" id="partsResult"></div></div></section><section class="section" id="cars"><div class="section-heading"><div><h2>🚗 Avtomobil bazarı</h2><p>Elan yarat → alıcı tap → yoxlama → sənədləşmə → satış</p></div><a class="section-link" href="#austaMarketFeed">Video elanlara bax →</a></div>
+<div class="austa-market-search" id="austaCarSearch">
+<div class="austa-market-search-head"><strong>🔎 Avtomobil axtarışı</strong><span>Marka, model, vəziyyət, şəhər, qiymət və kuzova görə süzgəc</span></div>
+<div class="austa-market-filter-grid">
+<label><small>Marka</small><select id="carFilterBrand"><option value="">Hamısı</option><option>BMW</option><option>Mercedes-Benz</option><option>Toyota</option><option>Hyundai</option><option>Kia</option><option>Audi</option><option>Range Rover</option><option>Volkswagen</option><option>Digər</option></select></label>
+<label><small>Model</small><input id="carFilterModel" list="austaSearchModelOptions" placeholder="Model yazın"/><datalist id="austaSearchModelOptions"></datalist>
+<label><small>Vəziyyət</small><select id="carFilterCondition"><option value="">Hamısı</option><option value="Yeni">Yeni</option><option value="Sürülmüş">Sürülmüş</option></select></label>
+<label><small>Şəhər / rayon</small><input id="carFilterCity" placeholder="Bakı, Gəncə..."/></label>
 <div class="provider-panel"><h3>🔴 Sifariş axını</h3><p style="color:#9db1c4;font-size:12px">A-USTA sifariş statusunu mərhələli izləyir və usta hərəkəti GPS ilə sistemə ötürülə bilər.</p><div class="progress"><span class="step active"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span></div><div class="trust-grid"><div class="trust-item"><div class="trust-icon">📍</div><span>GPS və məkan</span></div><div class="trust-item"><div class="trust-icon">💰</div><span>Qiymət təsdiqi</span></div><div class="trust-item"><div class="trust-icon">📸</div><span>Foto / video sübut</span></div><div class="trust-item"><div class="trust-icon">📄</div><span>Müqavilə / zəmanət</span></div></div></div></div></section><section class="section" id="parts"><div class="section-heading"><div><h2>⚙ Ehtiyat hissələri marketplace</h2><p>Hissəni tap → uyğunluğu yoxla → satıcı seç → sifariş et → çatdırılmanı izlə</p></div><a class="section-link" href="#austaAllFunctions">Xaricdən sifariş →</a></div><div class="austa-parts-gallery" id="austaPartsGallery">
 <article class="austa-part-visual" data-module-open="parts"><img alt="Mühərrik hissələri" loading="lazy" src="https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🔧 Mühərrik hissələri</b><span>Motor • filtr • kəmər • şam</span></div></article>
 <article class="austa-part-visual" data-module-open="parts"><img alt="Əyləc məhsulları" loading="lazy" src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🛞 Əyləc və təkər</b><span>Disk • kolodka • təkər məhsulları</span></div></article>
@@ -8834,13 +8850,124 @@ el("requestCancel")?.addEventListener("click",()=>{
 el("requestEvidence")?.addEventListener("change",()=>{
   const files=[...el("requestEvidence").files];
   const id=activeId();
+
   if(!id||!files.length)return;
+
   const key="austa-request-evidence-v1";
-  const data=JSON.parse(localStorage.getItem(key)||"{}");
-  data[id]={files:files.map(f=>({name:f.name,type:f.type,size:f.size})),contract:!!el("requestContract")?.checked,updatedAt:new Date().toISOString()};
-  localStorage.setItem(key,JSON.stringify(data));
+  const data=JSON.parse(
+    localStorage.getItem(key)||"{}"
+  );
+
+  data[id]=data[id]||{
+    files:[],
+    beforePhotos:[],
+    afterPhotos:[]
+  };
+
+  data[id].files=
+    files.map(f=>({
+      name:f.name,
+      type:f.type,
+      size:f.size
+    }));
+
+  data[id].updatedAt=
+    new Date().toISOString();
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(data)
+  );
+
   el("requestEvidenceResult").classList.add("show");
-  el("requestEvidenceResult").innerHTML=`📸 ${files.length} fayl sifarişə bağlandı. <br>📄 Müqavilə: <strong>${el("requestContract")?.checked?"Tələb olunur":"Tələb olunmur"}</strong>`;
+
+  el("requestEvidenceResult").innerHTML=
+    `📸 ${files.length} fayl sifarişə bağlandı.<br>`+
+    `📄 Müqavilə: <strong>`+
+    (
+      el("requestContract")?.checked
+        ? "Tələb olunur"
+        : "Tələb olunmur"
+    )+
+    `</strong>`;
+});
+
+
+el("requestBeforePhotos")?.addEventListener("change",()=>{
+  const files=[...el("requestBeforePhotos").files];
+  const id=activeId();
+
+  if(!id||!files.length)return;
+
+  const key="austa-request-evidence-v1";
+  const data=JSON.parse(
+    localStorage.getItem(key)||"{}"
+  );
+
+  data[id]=data[id]||{
+    files:[],
+    beforePhotos:[],
+    afterPhotos:[]
+  };
+
+  data[id].beforePhotos=
+    files.map(f=>({
+      name:f.name,
+      type:f.type,
+      size:f.size
+    }));
+
+  data[id].updatedAt=
+    new Date().toISOString();
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(data)
+  );
+
+  el("requestEvidenceResult").classList.add("show");
+
+  el("requestEvidenceResult").innerHTML=
+    `📷 Əvvəl fotosu: <strong>${files.length}</strong> fayl sifarişə bağlandı.`;
+});
+
+
+el("requestAfterPhotos")?.addEventListener("change",()=>{
+  const files=[...el("requestAfterPhotos").files];
+  const id=activeId();
+
+  if(!id||!files.length)return;
+
+  const key="austa-request-evidence-v1";
+  const data=JSON.parse(
+    localStorage.getItem(key)||"{}"
+  );
+
+  data[id]=data[id]||{
+    files:[],
+    beforePhotos:[],
+    afterPhotos:[]
+  };
+
+  data[id].afterPhotos=
+    files.map(f=>({
+      name:f.name,
+      type:f.type,
+      size:f.size
+    }));
+
+  data[id].updatedAt=
+    new Date().toISOString();
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(data)
+  );
+
+  el("requestEvidenceResult").classList.add("show");
+
+  el("requestEvidenceResult").innerHTML=
+    `📷 Sonra fotosu: <strong>${files.length}</strong> fayl sifarişə bağlandı.`;
 });
 el("requestContract")?.addEventListener("change",()=>{
   const id=activeId(); if(!id)return;
