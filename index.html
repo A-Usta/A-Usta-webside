@@ -206,8 +206,24 @@
 <button class="austa-function-btn" data-top-flow="parts" data-top-title="Xaricdən avtomobil">Xaricdən avtomobil</button><button class="austa-function-btn" data-top-flow="legal" data-top-title="Notariat">Notariat</button><button class="austa-function-btn" data-top-flow="legal" data-top-title="Müqavilə">Müqavilə</button><button class="austa-function-btn" data-top-flow="legal" data-top-title="Zəmanət">Zəmanət</button>
 </div></div>
 </div>
-</section><section class="section austa-secondary-anchor" id="services"><div class="section-heading"><div><h2>🛠 Əsas xidmətlər</h2><p>Avtomobilinizin bütün ehtiyacları burada</p></div><a class="section-link" href="#all-services">Bütün xidmətlərə bax →</a></div><div class="service-grid" id="serviceGrid"></div></section><section class="section austa-secondary-anchor" id="all-services"><div class="section-heading"><div><h2>⚡ Xidmət istiqamətləri</h2><p>Mexaniki, elektron, kuzov, təkər və gündəlik xidmətlər</p></div></div><div class="feature-grid"><article class="feature-card"><h3>🔧 Texniki xidmət</h3><p>Mühərrik, karopka, əyləc, radiator, asqı, kondisioner və yağ dəyişimi.</p><a class="btn" href="#austaAllFunctions">Xidmət seç →</a></article><article class="feature-card"><h3>🎨 Kuzov və görünüş</h3><p>Malyar, dəmirçi, polirovka, detailing, PPF, wrap və faraların bərpası.</p><a class="btn" href="#austaAllFunctions">Usta tap →</a></article><article class="feature-card"><h3>💻 Elektronika</h3><p>Diaqnostika, ECU, proqramlaşdırma, Stage 1/2/3, çip tuning və elektrik.</p><a class="btn" href="#austaAllFunctions">Diaqnostika →</a></article><article class="feature-card red"><h3>🚨 Yol yardımı</h3><p>24/7 mobil usta, akkumulyator, təkər, yanacaq və açar.</p><a class="btn btn-primary" href="#austaAllFunctions">Təcili çağır →</a></article></div></section><section class="section" id="mechanic"><div class="section-heading"><div><h2>🔧 Usta çağır</h2><p>Problemi bildir → yaxın usta → GPS → qiymət → təsdiq → xidmət</p></div></div><div class="tracking"><div class="request-panel"><div class="request-form"><textarea class="full" id="requestProblem" placeholder="Avtomobilinizdə nə problem var? Məsələn: maşın işə düşmür..."></textarea><select id="requestCategory"><option value="automotive_service">Avtomobil xidməti</option><option value="roadside">Yol yardımı</option><option value="diagnostics">Diaqnostika</option><option value="towing">Evakuator</option><option value="cargo_transport">Yük daşıma</option><option value="vehicle_transport">Avtomobil daşınması</option></select><div class="payment-choice"><label for="requestPayment">Ödəniş üsulu</label><select id="requestPayment"><option value="cash">💵 Nağd</option><option value="card">💳 Bank kartı</option></select></div><select id="requestLevel"><option value="standard">Standart</option><option value="priority">Prioritet</option><option value="premium">Premium</option></select><input id="requestBrand" placeholder="Marka"/><input id="requestModel" placeholder="Model"/><input id="requestYear" placeholder="İl"/><input id="requestPlate" placeholder="Dövlət nömrəsi"/><input id="requestPhone" placeholder="Telefon"/><div id="cargoFields" style="display:none;grid-column:1/-1;border:1px solid #174c6e;border-radius:10px;padding:12px;background:#061a29"><strong>📦 Yük məlumatları</strong><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px"><input id="requestCargoWeight" min="0" placeholder="Çəki (kq)" step="1" type="number"/><input id="requestCargoLength" min="0" placeholder="Uzunluq (m)" step="0.01" type="number"/><input id="requestCargoWidth" min="0" placeholder="En (m)" step="0.01" type="number"/><input id="requestCargoHeight" min="0" placeholder="Hündürlük (m)" step="0.01" type="number"/></div><div style="margin-top:8px;color:#8fa5ba;font-size:11px">Çəki və ölçülər uyğun yük nəqliyyatının seçilməsi üçün istifadə olunur.</div></div><input id="requestPickupAddress" placeholder="📍 Götürüləcək ünvan" style="display:none"/><input id="requestDestinationAddress" placeholder="🏁 Çatdırılacaq ünvan" style="display:none"/><button class="btn" id="requestGps">📍 GPS götür</button><button class="btn btn-primary" id="requestSubmit">Usta çağır →</button></div><div class="request-result" id="requestResult"></div><div class="request-control-panel" id="requestControlPanel"><h3>⚙️ Sifariş idarəetməsi</h3><input id="requestProviderId" placeholder="Usta ID"/><input id="requestProviderName" placeholder="Usta adı"/><input id="requestProviderPhone" placeholder="Usta telefonu"/><input id="requestProviderVehicleId" placeholder="Usta nəqliyyat ID"/><input id="requestPrice" placeholder="Yekun qiymət (AZN)" step="0.01" type="number"/><button class="btn" id="requestApprovePrice" type="button">💰 Qiyməti təsdiqlə</button><button class="btn btn-primary" id="requestAssignProvider" type="button">👨‍🔧 Usta təyin et</button><div class="request-lifecycle" id="requestLifecycle"><strong>🔄 Sifariş mərhələləri</strong><div class="lifecycle-buttons"><button class="btn" id="requestProviderAccept" type="button">✓ Usta qəbul etdi</button><button class="btn" id="requestProviderEnRoute" type="button">🚗 Yola çıxdı</button><button class="btn" id="requestProviderArrived" type="button">📍 Çatdı</button><button class="btn" id="requestStartDiagnosis" type="button">🔎 Diaqnostika</button><button class="btn" id="requestRecalculatePrice" type="button">🧮 Yeni qiymət</button><button class="btn" id="requestStartService" type="button">🔧 Xidməti başlat</button><button class="btn" id="requestCreatePayment" type="button">💳 Ödəniş yarat</button><button class="btn" id="requestPaymentPaid" type="button">✅ Ödəniş alındı</button><button class="btn" id="requestCompleteService" type="button">🏁 Xidməti tamamla</button><button class="btn" id="requestCancel" type="button">✕ Sifarişi ləğv et</button></div><div class="request-evidence"><label>📸 Problem/xidmət foto və video</label><input accept="image/*,video/*" id="requestEvidence" multiple="" type="file"/><label class="austa-check"><input id="requestContract" type="checkbox"/> 📄 Rəsmi xidmət müqaviləsi tələb olunur</label><div class="austa-result" id="requestEvidenceResult"></div></div></div></div></div><div class="austa-tool-panel" id="austaServiceQuestions" style="margin-top:10px"><h3>🎯 Seçilmiş xidmət üçün düzgün suallar</h3><div class="austa-mini-note" id="austaServiceQuestionText">Xidmət seçin. A-USTA müştəri və usta üçün yalnız həmin xidmətə uyğun məlumatları göstərir.</div></div>
+</section><section class="section austa-secondary-anchor" id="services"><div class="section-heading"><div><h2>🛠 Əsas xidmətlər</h2><p>Avtomobilinizin bütün ehtiyacları burada</p></div><a class="section-link" href="#all-services">Bütün xidmətlərə bax →</a></div><div class="service-grid" id="serviceGrid"></div></section><section class="section austa-secondary-anchor" id="all-services"><div class="section-heading"><div><h2>⚡ Xidmət istiqamətləri</h2><p>Mexaniki, elektron, kuzov, təkər və gündəlik xidmətlər</p></div></div><div class="feature-grid"><article class="feature-card"><h3>🔧 Texniki xidmət</h3><p>Mühərrik, karopka, əyləc, radiator, asqı, kondisioner və yağ dəyişimi.</p><a class="btn" href="#austaAllFunctions">Xidmət seç →</a></article><article class="feature-card"><h3>🎨 Kuzov və görünüş</h3><p>Malyar, dəmirçi, polirovka, detailing, PPF, wrap və faraların bərpası.</p><a class="btn" href="#austaAllFunctions">Usta tap →</a></article><article class="feature-card"><h3>💻 Elektronika</h3><p>Diaqnostika, ECU, proqramlaşdırma, Stage 1/2/3, çip tuning və elektrik.</p><a class="btn" href="#austaAllFunctions">Diaqnostika →</a></article><article class="feature-card red"><h3>🚨 Yol yardımı</h3><p>24/7 mobil usta, akkumulyator, təkər, yanacaq və açar.</p><a class="btn btn-primary" href="#austaAllFunctions">Təcili çağır →</a></article></div></section><section class="section" id="mechanic"><div class="section-heading"><div><h2>🔧 Usta çağır</h2><p>Problemi bildir → yaxın usta → GPS → qiymət → təsdiq → xidmət</p></div></div><div class="tracking"><div class="request-panel"><div class="request-form"><textarea class="full" id="requestProblem" placeholder="Avtomobilinizdə nə problem var? Məsələn: maşın işə düşmür..."></textarea><select id="requestCategory"><option value="automotive_service">Avtomobil xidməti</option><option value="roadside">Yol yardımı</option><option value="diagnostics">Diaqnostika</option><option value="towing">Evakuator</option><option value="cargo_transport">Yük daşıma</option><option value="vehicle_transport">Avtomobil daşınması</option></select><div class="payment-choice"><label for="requestPayment">Ödəniş üsulu</label><select id="requestPayment"><option value="cash">💵 Nağd</option><option value="card">💳 Bank kartı</option></select></div><select id="requestLevel"><option value="standard">Standart</option><option value="priority">Prioritet</option><option value="premium">Premium</option></select><input id="requestBrand" placeholder="Marka"/><input id="requestModel" placeholder="Model"/><input id="requestYear" placeholder="İl"/><input id="requestPlate" placeholder="Dövlət nömrəsi"/><input id="requestPhone" placeholder="Telefon"/><div id="cargoFields" style="display:none;grid-column:1/-1;border:1px solid #174c6e;border-radius:10px;padding:12px;background:#061a29"><strong>📦 Yük məlumatları</strong><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px"><input id="requestCargoWeight" min="0" placeholder="Çəki (kq)" step="1" type="number"/><input id="requestCargoLength" min="0" placeholder="Uzunluq (m)" step="0.01" type="number"/><input id="requestCargoWidth" min="0" placeholder="En (m)" step="0.01" type="number"/><input id="requestCargoHeight" min="0" placeholder="Hündürlük (m)" step="0.01" type="number"/></div><div style="margin-top:8px;color:#8fa5ba;font-size:11px">Çəki və ölçülər uyğun yük nəqliyyatının seçilməsi üçün istifadə olunur.</div></div><input id="requestPickupAddress" placeholder="📍 Götürüləcək ünvan" style="display:none"/><input id="requestDestinationAddress" placeholder="🏁 Çatdırılacaq ünvan" style="display:none"/><button class="btn" id="requestGps">📍 GPS götür</button><button class="btn btn-primary" id="requestSubmit">Usta çağır →</button></div><div class="request-result" id="requestResult"></div><div class="request-control-panel" id="requestControlPanel"><h3>⚙️ Sifariş idarəetməsi</h3><input id="requestProviderId" placeholder="Usta ID"/><input id="requestProviderName" placeholder="Usta adı"/><input id="requestProviderPhone" placeholder="Usta telefonu"/><input id="requestProviderVehicleId" placeholder="Usta nəqliyyat ID"/><input id="requestPrice" placeholder="Yekun qiymət (AZN)" step="0.01" type="number"/><button class="btn" id="requestApprovePrice" type="button">💰 Qiyməti təsdiqlə</button><button class="btn btn-primary" id="requestAssignProvider" type="button">👨‍🔧 Usta təyin et</button><div class="request-lifecycle" id="requestLifecycle"><strong>🔄 Sifariş mərhələləri</strong><div class="lifecycle-buttons"><button class="btn" id="requestProviderAccept" type="button">✓ Usta qəbul etdi</button><button class="btn" id="requestProviderEnRoute" type="button">🚗 Yola çıxdı</button><button class="btn" id="requestProviderArrived" type="button">📍 Çatdı</button><button class="btn" id="requestStartDiagnosis" type="button">🔎 Diaqnostika</button><button class="btn" id="requestRecalculatePrice" type="button">🧮 Yeni qiymət</button><button class="btn" id="requestStartService" type="button">🔧 Xidməti başlat</button><button class="btn" id="requestCreatePayment" type="button">💳 Ödəniş yarat</button><button class="btn" id="requestPaymentPaid" type="button">✅ Ödəniş alındı</button><button class="btn" id="requestCompleteService" type="button">🏁 Xidməti tamamla</button><button class="btn" id="requestCancel" type="button">✕ Sifarişi ləğv et</button></div><div class="request-evidence"><label>📸 Problem/xidmət foto və video</label><input accept="image/*,video/*" id="requestEvidence" multiple="" type="file"/><label>📷 İşdən əvvəlki vəziyyət — BEFORE</label><input accept="image/*" id="requestBeforePhotos" multiple="" type="file"/><label>📷 İşdən sonrakı vəziyyət — AFTER</label><input accept="image/*" id="requestAfterPhotos" multiple="" type="file"/><label class="austa-check"><input id="requestContract" type="checkbox"/> 📄 Rəsmi xidmət müqaviləsi tələb olunur</label><div class="austa-result" id="requestEvidenceResult"></div></div></div></div></div><div class="austa-tool-panel" id="austaServiceQuestions" style="margin-top:10px"><h3>🎯 Seçilmiş xidmət üçün düzgün suallar</h3><div class="austa-mini-note" id="austaServiceQuestionText">Xidmət seçin. A-USTA müştəri və usta üçün yalnız həmin xidmətə uyğun məlumatları göstərir.</div></div>
 <details class="austa-service-chooser" id="austaServiceChooser"><summary>🧰 Usta çağır daxilində bütün xidmətlər</summary><div class="inner" id="austaServiceChooserInner"></div></details>
+<div class="provider-panel"><h3>🔴 Sifariş axını</h3><p style="color:#9db1c4;font-size:12px">A-USTA sifariş statusunu mərhələli izləyir və usta hərəkəti GPS ilə sistemə ötürülə bilər.</p><div class="progress"><span class="step active"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span></div><div class="trust-grid"><div class="trust-item"><div class="trust-icon">📍</div><span>GPS və məkan</span></div><div class="trust-item"><div class="trust-icon">💰</div><span>Qiymət təsdiqi</span></div><div class="trust-item"><div class="trust-icon">📸</div><span>Foto / video sübut</span></div><div class="trust-item"><div class="trust-icon">📄</div><span>Müqavilə / zəmanət</span></div></div></div></div></section><section class="section" id="parts"><div class="section-heading"><div><h2>⚙ Ehtiyat hissələri marketplace</h2><p>Hissəni tap → uyğunluğu yoxla → satıcı seç → sifariş et → çatdırılmanı izlə</p></div><a class="section-link" href="#austaAllFunctions">Xaricdən sifariş →</a></div><div class="austa-parts-gallery" id="austaPartsGallery">
+<article class="austa-part-visual" data-module-open="parts"><img alt="Mühərrik hissələri" loading="lazy" src="https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🔧 Mühərrik hissələri</b><span>Motor • filtr • kəmər • şam</span></div></article>
+<article class="austa-part-visual" data-module-open="parts"><img alt="Əyləc məhsulları" loading="lazy" src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🛞 Əyləc və təkər</b><span>Disk • kolodka • təkər məhsulları</span></div></article>
+<article class="austa-part-visual" data-module-open="parts"><img alt="Avtomobil ehtiyat hissələri" loading="lazy" src="https://images.unsplash.com/photo-1493238792000-8113da705763?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>⚙ Karopka hissələri</b><span>Karopka • mufta • transmissiya</span></div></article>
+<article class="austa-part-visual" data-module-open="parts"><img alt="Avtomobil elektrik hissələri" loading="lazy" src="https://images.unsplash.com/photo-1551830820-330a71b99659?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>💡 Elektrik və sensor</b><span>ECU • sensor • kamera • işıq</span></div></article>
+<article class="austa-part-visual" data-module-open="parts"><img alt="Avtomobil aksesuarları" loading="lazy" src="https://images.unsplash.com/photo-1600706432502-77a0e2e327d4?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>✨ Aksesuarlar</b><span>Salon • LED • spoyler • təhlükəsizlik</span></div></article>
+<article class="austa-part-visual" data-module-open="parts"><img alt="Yağ və filtrlər" loading="lazy" src="https://images.unsplash.com/photo-1632823469850-1f6f6a1f8b7c?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🛢 Yağ və filtrlər</b><span>Yağ • hava • salon • yanacaq filtri</span></div></article>
+</div>
+<div class="market-grid"><article class="market-card"><h3>🧰 Hissə axtarışı</h3><p>Marka, model, il, mühərrik və OEM kodu ilə hissə axtar.</p><button class="btn btn-primary" data-module-open="parts">Hissə axtar →</button></article><article class="market-card"><h3>🇩🇪 Almaniya</h3><p>Original və universal hissə üçün xarici təchizatçı kanalı.</p><button class="btn" data-country="Almaniya" data-module-open="parts">Sifariş et →</button></article><article class="market-card"><h3>🇨🇳 Çin</h3><p>Aksesuar, alternativ və universal hissələr.</p><button class="btn" data-country="Çin" data-module-open="parts">Kataloq →</button></article><article class="market-card"><h3>🇰🇷 Koreya</h3><p>Koreya avtomobilləri üçün hissə axtarışı və sifariş.</p><button class="btn" data-country="Koreya" data-module-open="parts">Axtar →</button></article></div><div class="austa-module" id="partsModule"><h3>🧰 Ehtiyat hissəsi sifarişi</h3><div class="austa-form-grid"><input id="partsBrand" placeholder="Avtomobil markası"/><input id="partsModel" placeholder="Model"/><input id="partsYear" placeholder="İl"/><input id="partsOem" placeholder="OEM / hissə kodu"/><input id="partsName" placeholder="Hissənin adı"/><select id="partsType"><option value="original">Original</option><option value="universal">Universal</option><option value="used">İşlənmiş</option></select><select id="partsCountry"><option>Azərbaycan</option><option>Almaniya</option><option>Çin</option><option>Koreya</option></select><input id="partsQty" min="1" placeholder="Say" type="number" value="1"/><input id="partsPhone" placeholder="Telefon"/><textarea class="full" id="partsNote" placeholder="Əlavə məlumat / foto və uyğunluq qeydi"></textarea></div><button class="btn btn-primary" id="partsOrderBtn">⚙ Hissə sifarişi yarat</button><div class="austa-result" id="partsResult"></div></div></section><section class="section" id="cars"><div class="section-heading"><div><h2>🚗 Avtomobil bazarı</h2><p>Elan yarat → alıcı tap → yoxlama → sənədləşmə → satış</p></div><a class="section-link" href="#austaMarketFeed">Video elanlara bax →</a></div>
+<div class="austa-market-search" id="austaCarSearch">
+<div class="austa-market-search-head"><strong>🔎 Avtomobil axtarışı</strong><span>Marka, model, vəziyyət, şəhər, qiymət və kuzova görə süzgəc</span></div>
+<div class="austa-market-filter-grid">
+<label><small>Marka</small><select id="carFilterBrand"><option value="">Hamısı</option><option>BMW</option><option>Mercedes-Benz</option><option>Toyota</option><option>Hyundai</option><option>Kia</option><option>Audi</option><option>Range Rover</option><option>Volkswagen</option><option>Digər</option></select></label>
+<label><small>Model</small><input id="carFilterModel" list="austaSearchModelOptions" placeholder="Model yazın"/><datalist id="austaSearchModelOptions"></datalist>
+<label><small>Vəziyyət</small><select id="carFilterCondition"><option value="">Hamısı</option><option value="Yeni">Yeni</option><option value="Sürülmüş">Sürülmüş</option></select></label>
+<label><small>Şəhər / rayon</small><input id="carFilterCity" placeholder="Bakı, Gəncə..."/></label>
 <div class="provider-panel"><h3>🔴 Sifariş axını</h3><p style="color:#9db1c4;font-size:12px">A-USTA sifariş statusunu mərhələli izləyir və usta hərəkəti GPS ilə sistemə ötürülə bilər.</p><div class="progress"><span class="step active"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span></div><div class="trust-grid"><div class="trust-item"><div class="trust-icon">📍</div><span>GPS və məkan</span></div><div class="trust-item"><div class="trust-icon">💰</div><span>Qiymət təsdiqi</span></div><div class="trust-item"><div class="trust-icon">📸</div><span>Foto / video sübut</span></div><div class="trust-item"><div class="trust-icon">📄</div><span>Müqavilə / zəmanət</span></div></div></div></div></section><section class="section" id="parts"><div class="section-heading"><div><h2>⚙ Ehtiyat hissələri marketplace</h2><p>Hissəni tap → uyğunluğu yoxla → satıcı seç → sifariş et → çatdırılmanı izlə</p></div><a class="section-link" href="#austaAllFunctions">Xaricdən sifariş →</a></div><div class="austa-parts-gallery" id="austaPartsGallery">
 <article class="austa-part-visual" data-module-open="parts"><img alt="Mühərrik hissələri" loading="lazy" src="https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🔧 Mühərrik hissələri</b><span>Motor • filtr • kəmər • şam</span></div></article>
 <article class="austa-part-visual" data-module-open="parts"><img alt="Əyləc məhsulları" loading="lazy" src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🛞 Əyləc və təkər</b><span>Disk • kolodka • təkər məhsulları</span></div></article>
@@ -8834,13 +8850,124 @@ el("requestCancel")?.addEventListener("click",()=>{
 el("requestEvidence")?.addEventListener("change",()=>{
   const files=[...el("requestEvidence").files];
   const id=activeId();
+
   if(!id||!files.length)return;
+
   const key="austa-request-evidence-v1";
-  const data=JSON.parse(localStorage.getItem(key)||"{}");
-  data[id]={files:files.map(f=>({name:f.name,type:f.type,size:f.size})),contract:!!el("requestContract")?.checked,updatedAt:new Date().toISOString()};
-  localStorage.setItem(key,JSON.stringify(data));
+  const data=JSON.parse(
+    localStorage.getItem(key)||"{}"
+  );
+
+  data[id]=data[id]||{
+    files:[],
+    beforePhotos:[],
+    afterPhotos:[]
+  };
+
+  data[id].files=
+    files.map(f=>({
+      name:f.name,
+      type:f.type,
+      size:f.size
+    }));
+
+  data[id].updatedAt=
+    new Date().toISOString();
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(data)
+  );
+
   el("requestEvidenceResult").classList.add("show");
-  el("requestEvidenceResult").innerHTML=`📸 ${files.length} fayl sifarişə bağlandı. <br>📄 Müqavilə: <strong>${el("requestContract")?.checked?"Tələb olunur":"Tələb olunmur"}</strong>`;
+
+  el("requestEvidenceResult").innerHTML=
+    `📸 ${files.length} fayl sifarişə bağlandı.<br>`+
+    `📄 Müqavilə: <strong>`+
+    (
+      el("requestContract")?.checked
+        ? "Tələb olunur"
+        : "Tələb olunmur"
+    )+
+    `</strong>`;
+});
+
+
+el("requestBeforePhotos")?.addEventListener("change",()=>{
+  const files=[...el("requestBeforePhotos").files];
+  const id=activeId();
+
+  if(!id||!files.length)return;
+
+  const key="austa-request-evidence-v1";
+  const data=JSON.parse(
+    localStorage.getItem(key)||"{}"
+  );
+
+  data[id]=data[id]||{
+    files:[],
+    beforePhotos:[],
+    afterPhotos:[]
+  };
+
+  data[id].beforePhotos=
+    files.map(f=>({
+      name:f.name,
+      type:f.type,
+      size:f.size
+    }));
+
+  data[id].updatedAt=
+    new Date().toISOString();
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(data)
+  );
+
+  el("requestEvidenceResult").classList.add("show");
+
+  el("requestEvidenceResult").innerHTML=
+    `📷 Əvvəl fotosu: <strong>${files.length}</strong> fayl sifarişə bağlandı.`;
+});
+
+
+el("requestAfterPhotos")?.addEventListener("change",()=>{
+  const files=[...el("requestAfterPhotos").files];
+  const id=activeId();
+
+  if(!id||!files.length)return;
+
+  const key="austa-request-evidence-v1";
+  const data=JSON.parse(
+    localStorage.getItem(key)||"{}"
+  );
+
+  data[id]=data[id]||{
+    files:[],
+    beforePhotos:[],
+    afterPhotos:[]
+  };
+
+  data[id].afterPhotos=
+    files.map(f=>({
+      name:f.name,
+      type:f.type,
+      size:f.size
+    }));
+
+  data[id].updatedAt=
+    new Date().toISOString();
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(data)
+  );
+
+  el("requestEvidenceResult").classList.add("show");
+
+  el("requestEvidenceResult").innerHTML=
+    `📷 Sonra fotosu: <strong>${files.length}</strong> fayl sifarişə bağlandı.`;
 });
 el("requestContract")?.addEventListener("change",()=>{
   const id=activeId(); if(!id)return;
@@ -13077,8 +13204,39 @@ function init(){
  shell.innerHTML=`<div class="austa-v39-head"><div><h2>👤 A-USTA Hesabım</h2><p>Müştəri • Usta • Mağaza • Tərəfdaş — hər rol öz qeydiyyat və idarəetmə səhifəsi ilə</p></div><button class="austa-v39-close" type="button" aria-label="Bağla">×</button></div>
  <div class="austa-v39-body"><nav class="austa-v39-nav" id="austaV39Nav"></nav><main class="austa-v39-main" id="austaV39Main"></main></div>`;
  const nav=$('#austaV39Nav'), main=$('#austaV39Main');
- const roles=[['customer','👤','Müştəri'],['provider','🛠','Usta'],['store','🏪','Mağaza'],['partner','🤝','Tərəfdaş']];
- const rolePages={customer:{title:'Müştəri hesabı',desc:'Gmail və ya telefonla giriş. FIN/ID tələb edilmir.'},provider:{title:'Usta qeydiyyatı və paneli',desc:'Usta kimi xidmət göstərmək üçün profil, KYC, xidmət sahəsi və iş məkanı qeydiyyatı.'},store:{title:'Mağaza qeydiyyatı və paneli',desc:'Ehtiyat hissələri və aksesuar mağazası üçün ayrıca mağaza profili.'},partner:{title:'Tərəfdaş qeydiyyatı və paneli',desc:'Tərəfdaş şirkət və xidmət təminatçıları üçün ayrıca iş profili.'}};
+const roles=[
+  ['customer','👤','Müştəri'],
+  ['provider','🛠','Usta'],
+  ['mechanic','🔧','Mexanik'],
+  ['store','🏪','Mağaza'],
+  ['partner','🤝','Tərəfdaş']
+];
+const rolePages={
+  customer:{
+    title:'Müştəri hesabı',
+    desc:'Gmail və ya telefonla giriş. FIN/ID tələb edilmir.'
+  },
+
+  provider:{
+    title:'Usta qeydiyyatı və paneli',
+    desc:'Usta kimi xidmət göstərmək üçün profil, KYC, xidmət sahəsi və iş məkanı qeydiyyatı.'
+  },
+
+  mechanic:{
+    title:'Mexanik / Usta hesabı',
+    desc:'Mexanik xidmətləri, sifarişlər və usta fəaliyyəti üçün hesab paneli.'
+  },
+
+  store:{
+    title:'Mağaza qeydiyyatı və paneli',
+    desc:'Ehtiyat hissələri və aksesuar mağazası üçün ayrıca mağaza profili.'
+  },
+
+  partner:{
+    title:'Tərəfdaş qeydiyyatı və paneli',
+    desc:'Tərəfdaş şirkət və xidmət təminatçıları üçün ayrıca iş profili.'
+  }
+};
 function buildNav(role) {
   nav.innerHTML = '';
 
@@ -15973,8 +16131,21 @@ const Q={
  parts:['Ad / soyad','Telefon','Avtomobil marka / modeli','Hissənin adı','OEM / kod','Yeni / işlənmiş','Uyğunluq','Şəkil / video','Çatdırılma ünvanı','Əlavə məlumat'],
  sifaris:['Ad / soyad','Telefon','Xidmət / məhsul','Avtomobil marka / modeli','Problem / tələb','Tarix','Saat','Ünvan','GPS / xəritə ünvanı','Əlavə məlumat'],
  huquq:['Ad / soyad','Telefon','Sorğunun növü','Avtomobil / sənəd məlumatı','Məsələnin izahı','Sənəd / foto','Təcili olub?','Əlaqə üçün uyğun vaxt'],
- usta:['Ad / soyad','Telefon','Avtomobil marka / modeli','Problemi seçin','Problemin təsviri','Tarix','Saat','Ünvan','GPS / xəritə ünvanı','Usta gəlsin / servisə gedim','Foto / video']
-};
+usta:[
+  'Ad / soyad',
+  'Telefon',
+  'Avtomobil marka / modeli',
+  'Problemi seçin',
+  'Problemin təsviri',
+  'Tarix',
+  'Saat',
+  'Ünvan',
+  'GPS / xəritə ünvanı',
+  'Usta gəlsin / servisə gedim',
+  '📸 Problem / xidmət foto və video',
+  '📷 İşdən əvvəl foto — BEFORE',
+  '📷 İşdən sonra foto — AFTER'
+]
 const opts={
  'Yuma xidməti':['Stasionar avtoyuma','Mobil avtoyuma — usta ünvana gəlir'],'Paket':['Standart','Premium','Dərin təmizləmə','Salon + kuzov','Ustanın təklifi'],
  'Yeni / işlənmiş':['Yeni','İşlənmiş','Fərqi yoxdur'],'Uyğunluq':['Marka/modelə görə','OEM koduna görə','Usta yoxlasın'],
@@ -15984,7 +16155,19 @@ const opts={
 };
 function norm(s){return String(s||'').toLocaleLowerCase('az-AZ').replace(/[ə]/g,'e').replace(/[ı]/g,'i').replace(/[ö]/g,'o').replace(/[ü]/g,'u').replace(/[ş]/g,'s').replace(/[ç]/g,'c').replace(/[ğ]/g,'g').replace(/\s+/g,' ').trim()}
 function kind(raw){const x=norm(raw);if(/avtoyuma|yuma/.test(x))return'avtoyuma';if(/hisse|ehtiyat hisse/.test(x))return'parts';if(/huquq|huquqi|sened|notariat/.test(x))return'huquq';if(/usta cagir/.test(x))return'usta';if(/sifaris/.test(x))return'sifaris';return null}
-function open(kindName,title){const qs=Q[kindName];if(!qs)return;document.querySelectorAll('.austa-v47-overlay').forEach(x=>x.remove());const o=document.createElement('div');o.className='austa-v47-overlay';const c=document.createElement('div');c.className='austa-v47-card';c.innerHTML='<h2>'+title+'</h2><div class="austa-v47-grid"></div><div class="austa-v47-actions"><button class="austa-v47-send">Sifarişi göndər</button><button class="austa-v47-close">Bağla</button></div><div data-r style="margin-top:12px"></div>';o.appendChild(c);const f=c.querySelector('.austa-v47-grid');qs.forEach((q,i)=>{const l=document.createElement('label');l.textContent=q;let e;if(opts[q]){e=document.createElement('select');e.innerHTML='<option value="">Seçin</option>'+opts[q].map(v=>'<option>'+v+'</option>').join('')}else if(/foto|video|şəkil|sənəd/.test(norm(q))){e=document.createElement('input');e.type='file'}else if(/izahı|təsviri|məlumat|qeyd/.test(norm(q))){e=document.createElement('textarea')}else{e=document.createElement('input');e.type=/telefon/.test(norm(q))?'tel':/tarix/.test(norm(q))?'date':/saat|vaxt/.test(norm(q))?'time':'text'}e.dataset.i=i;l.appendChild(e);if(e.tagName==='TEXTAREA'||e.type==='file')l.classList.add('full');f.appendChild(l)});document.body.appendChild(o);const close=()=>o.remove();c.querySelector('.austa-v47-close').onclick=close;o.onclick=e=>{if(e.target===o)close()};c.querySelector('.austa-v47-send').onclick=()=>{const es=[...f.querySelectorAll('[data-i]')];const bad=es.some(e=>e.type!=='file'&&!String(e.value||'').trim());const r=c.querySelector('[data-r]');if(bad){r.innerHTML='<span style="color:#ff6878">⚠ Bütün sualları cavablandırın.</span>';return}const id='AU-V47-'+Date.now();const item={id,type:kindName,title,createdAt:new Date().toISOString(),answers:es.map((e,i)=>({question:qs[i],value:e.type==='file'?(e.files[0]?.name||''):e.value}))};let a=[];try{a=JSON.parse(localStorage.getItem('austa-v47-orders')||'[]')}catch(_){}a.unshift(item);localStorage.setItem('austa-v47-orders',JSON.stringify(a));r.innerHTML='<span style="color:#72e6a3">✓ Sifariş yaradıldı — '+id+'</span>'};}
+function open(kindName,title){const qs=Q[kindName];if(!qs)return;document.querySelectorAll('.austa-v47-overlay').forEach(x=>x.remove());const o=document.createElement('div');o.className='austa-v47-overlay';const c=document.createElement('div');c.className='austa-v47-card';c.innerHTML='<h2>'+title+'</h2><div class="austa-v47-grid"></div><div class="austa-v47-actions"><button class="austa-v47-send">Sifarişi göndər</button><button class="austa-v47-close">Bağla</button></div><div data-r style="margin-top:12px"></div>';o.appendChild(c);const f=c.querySelector('.austa-v47-grid');qs.forEach((q,i)=>{const l=document.createElement('label');l.textContent=q;let e;if(opts[q]){e=document.createElement('select');e.innerHTML='<option value="">Seçin</option>'+opts[q].map(v=>'<option>'+v+'</option>').join('')}else if(/foto|video|şəkil|sənəd/.test(norm(q))){
+  e=document.createElement('input');
+  e.type='file';
+
+  if(
+    /before|after|əvvəl|sonra/.test(
+      norm(q)
+    )
+  ){
+    e.multiple=true;
+    e.accept='image/*';
+  }
+}else if(/izahı|təsviri|məlumat|qeyd/.test(norm(q))){e=document.createElement('textarea')}else{e=document.createElement('input');e.type=/telefon/.test(norm(q))?'tel':/tarix/.test(norm(q))?'date':/saat|vaxt/.test(norm(q))?'time':'text'}e.dataset.i=i;l.appendChild(e);if(e.tagName==='TEXTAREA'||e.type==='file')l.classList.add('full');f.appendChild(l)});document.body.appendChild(o);const close=()=>o.remove();c.querySelector('.austa-v47-close').onclick=close;o.onclick=e=>{if(e.target===o)close()};c.querySelector('.austa-v47-send').onclick=()=>{const es=[...f.querySelectorAll('[data-i]')];const bad=es.some(e=>e.type!=='file'&&!String(e.value||'').trim());const r=c.querySelector('[data-r]');if(bad){r.innerHTML='<span style="color:#ff6878">⚠ Bütün sualları cavablandırın.</span>';return}const id='AU-V47-'+Date.now();const item={id,type:kindName,title,createdAt:new Date().toISOString(),answers:es.map((e,i)=>({question:qs[i],value:e.type==='file'?(e.files[0]?.name||''):e.value}))};let a=[];try{a=JSON.parse(localStorage.getItem('austa-v47-orders')||'[]')}catch(_){}a.unshift(item);localStorage.setItem('austa-v47-orders',JSON.stringify(a));r.innerHTML='<span style="color:#72e6a3">✓ Sifariş yaradıldı — '+id+'</span>'};}
 function capture(e){const b=e.target.closest?.('.austa-function-btn,.premium-chip,.austa-v36-service-btn,.austa-v36-service,.service-card,[data-service],[data-top-service],#parts .a46-guide-btn,#legal .a46-guide-btn,#mechanic .a46-guide-btn');if(!b)return;const raw=(b.dataset?.topService||b.dataset?.service||b.innerText||b.textContent||'').trim();let k=kind(raw);if(b.matches('#parts .a46-guide-btn'))k='parts';if(b.matches('#legal .a46-guide-btn'))k='huquq';if(b.matches('#mechanic .a46-guide-btn'))k='usta';if(!k)return;e.preventDefault();e.stopImmediatePropagation();open(k,k==='avtoyuma'?'🧼 Avtoyuma sifarişi':k==='parts'?'🔧 Ehtiyat hissəsi sifarişi':k==='huquq'?'⚖ Hüquqi sorğu':k==='usta'?'🛠 Usta çağır':'📦 Sifariş')}
 window.addEventListener('click',capture,true);
 window.AUSTA_V47_OPEN=open;
@@ -16983,6 +17166,30 @@ window.AUSTA_V54={openService,addCategoryImages};
 const N=s=>String(s||'').toLocaleLowerCase('az-AZ').replace(/[əıöüşçğ]/g,c=>({ə:'e',ı:'i',ö:'o',ü:'u',ş:'s',ç:'c',ğ:'g'}[c])).replace(/[–—]/g,'-').replace(/\s+/g,' ').trim();
 const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const FORMS={
+  'Usta çağır':[
+  ['Ad / soyad','text'],
+  ['Telefon','tel'],
+  ['Avtomobil marka / modeli','text'],
+  ['Problemi seçin','select',[
+    'Problemi bilirəm',
+    'Problemi bilmirəm',
+    'Avtomobil işə düşmür',
+    'Təcili yolüstü yardım'
+  ]],
+  ['Problemin təsviri','textarea'],
+  ['Tarix','date'],
+  ['Saat','time'],
+  ['Ünvan','text'],
+  ['GPS / xəritə ünvanı','text'],
+  ['Usta gəlsin / servisə gedim','select',[
+    'Usta ünvana gəlsin',
+    'Servisə gedəcəyəm',
+    'Usta müəyyən etsin'
+  ]],
+  ['📸 Problem / xidmət foto və video','file'],
+  ['📷 İşdən əvvəl foto — BEFORE','file'],
+  ['📷 İşdən sonra foto — AFTER','file']
+ ],
  'Turbo təmiri':[
   ['Avtomobil marka / modeli','text'],['Turbo problemi / əsas əlamət','select',['Güc itkisi','Tüstü','Fit / uğultu səsi','Yağ sızması','Turbo gec qoşulur','Check Engine','Digər']],['Problem nə vaxt başlayıb?','text'],['Turbo təzyiqi / diaqnostika nəticəsi','textarea'],['Təxmini yürüş (km)','number'],['Şəkil / video','file']
  ],
@@ -17002,9 +17209,298 @@ const FORMS={
   ['Ad / soyad','text'],['Telefon','tel'],['Elan / avtomobil ID','text'],['Avtomobil marka / modeli / ili','text'],['VIN / WIN','text'],['Yürüş (km)','number'],['Satıcının ünvanı','text'],['Yoxlama paketi','select',['Standart yoxlama','Geniş yoxlama','Ekspert yoxlama']],['Xüsusi yoxlanılacaq hissələr','textarea'],['Test sürüşü istəyirsiniz?','select',['Bəli','Xeyr']],['Şəkil / video','file']
  ]
 };
-function route(raw){const x=N(raw);if(/turbo/.test(x))return'Turbo təmiri';if(/forsunka/.test(x))return'Forsunkaların yuyulması';if(/^temir$|\btemir\b|te'mir/.test(x))return'Təmir';if(/muqavile/.test(x))return'Müqavilə sorğusu';if(/zemanet/.test(x))return'Zəmanət sorğusu';if(/alisdan evvel yoxlama|alisdan evvel|yoxlama/.test(x))return'Alışdan əvvəl yoxlama';return null}
+function route(raw){
+  const x=N(raw);
+
+  if(/usta cagir/.test(x))
+    return 'Usta çağır';
+
+  if(/turbo/.test(x))
+    return 'Turbo təmiri';
+
+  if(/forsunka/.test(x))
+    return 'Forsunkaların yuyulması';
+
+  if(/^temir$|\btemir\b|te'mir/.test(x))
+    return 'Təmir';
+
+  if(/muqavile/.test(x))
+    return 'Müqavilə sorğusu';
+
+  if(/zemanet/.test(x))
+    return 'Zəmanət sorğusu';
+
+  if(
+    /alisdan evvel yoxlama|alisdan evvel|yoxlama/.test(x)
+  )
+    return 'Alışdan əvvəl yoxlama';
+
+  return null;
+}
+  function route(raw){
+  const x=N(raw);
+
+  if(/usta cagir/.test(x))
+    return 'Usta çağır';
+
+  if(/turbo/.test(x))
+    return 'Turbo təmiri';
+
+  if(/forsunka/.test(x))
+    return 'Forsunkaların yuyulması';
+
+  if(/^temir$|\btemir\b|te'mir/.test(x))
+    return 'Təmir';
+
+  if(/muqavile/.test(x))
+    return 'Müqavilə sorğusu';
+
+  if(/zemanet/.test(x))
+    return 'Zəmanət sorğusu';
+
+  if(
+    /alisdan evvel yoxlama|alisdan evvel|yoxlama/.test(x)
+  )
+    return 'Alışdan əvvəl yoxlama';
+
+  return null;
+}
 function closeAll(){document.querySelectorAll('.austa-v55-overlay,.austa-v54-service-overlay,.austa-v45-master-overlay,.austa-v51-overlay,.austa-v50-overlay,.austa-v49-overlay,.austa-v48-overlay,.austa-v44-overlay,.austa-v43-service-overlay,#austaV22Overlay').forEach(x=>x.remove())}
-function openProtected(name){const qs=FORMS[name];if(!qs)return;closeAll();const o=document.createElement('div');o.className='austa-v55-overlay';o.innerHTML='<div class="austa-v55-box"><button type="button" data-x style="float:right;background:#ff2448;color:#fff;border:0;border-radius:8px;width:34px;height:34px;font-size:20px;cursor:pointer">×</button><small style="color:#ff536c;font-weight:900">A-USTA QORUNAN YENİ TƏRKİBLİ FORM</small><h2>🛠 '+E(name)+'</h2><p style="color:#9db2c4;font-size:12px">Bu bölmə yalnız yeni tərkibli sual forması ilə işləyir. Köhnə forma açılmasına icazə verilmir.</p><form><div class="austa-v55-grid"></div><div class="austa-v55-actions"><button class="austa-v55-btn" type="submit">✓ Cavabları təsdiqlə və sifarişi yarat</button><button class="austa-v55-btn secondary" type="button" data-close>Bağla</button></div><div data-r style="margin-top:10px"></div></form></div>';document.body.appendChild(o);const g=o.querySelector('.austa-v55-grid');qs.forEach((q,i)=>{const l=document.createElement('label');l.className='austa-v55-field'+(q[1]==='textarea'||q[1]==='file'?' full':'');l.textContent=q[0];let e;if(q[1]==='select'){e=document.createElement('select');e.innerHTML='<option value="">Seçin</option>'+q[2].map(v=>'<option>'+E(v)+'</option>').join('')}else if(q[1]==='textarea'){e=document.createElement('textarea')}else{e=document.createElement('input');e.type=q[1]}e.name='q'+i;l.appendChild(e);g.appendChild(l)});const close=()=>o.remove();o.querySelector('[data-x]').onclick=close;o.querySelector('[data-close]').onclick=close;o.querySelector('form').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);for(let i=0;i<qs.length;i++){const q=qs[i],v=fd.get('q'+i);if(q[1]!=='file'&&!String(v||'').trim()){o.querySelector('[data-r]').innerHTML='<b style="color:#ff6878">⚠ Bütün sualları cavablandırın.</b>';return}}const answers=qs.map((q,i)=>({question:q[0],value:q[1]==='file'?(fd.get('q'+i)?.name||''):String(fd.get('q'+i)||'')}));const order={id:'AU-V55-'+Date.now(),service:name,answers,createdAt:new Date().toISOString(),status:'Yeni sifariş',formVersion:'V55-PROTECTED'};let a=[];try{a=JSON.parse(localStorage.getItem('austa-protected-service-orders')||'[]')}catch(_){}a.unshift(order);localStorage.setItem('austa-protected-service-orders',JSON.stringify(a.slice(0,500)));o.querySelector('[data-r]').innerHTML='<b style="color:#72e6a3">✓ Yeni tərkibli forma ilə qeyd edildi — '+E(order.id)+'</b>'}}
+function openProtected(name){const qs=FORMS[name];if(!qs)return;closeAll();const o=document.createElement('div');o.className='austa-v55-overlay';o.innerHTML='<div class="austa-v55-box"><button type="button" data-x style="float:right;background:#ff2448;color:#fff;border:0;border-radius:8px;width:34px;height:34px;font-size:20px;cursor:pointer">×</button><small style="color:#ff536c;font-weight:900">A-USTA QORUNAN YENİ TƏRKİBLİ FORM</small><h2>🛠 '+E(name)+'</h2><p style="color:#9db2c4;font-size:12px">Bu bölmə yalnız yeni tərkibli sual forması ilə işləyir. Köhnə forma açılmasına icazə verilmir.</p><form><div class="austa-v55-grid"></div><div class="austa-v55-actions"><button class="austa-v55-btn" type="submit">✓ Cavabları təsdiqlə və sifarişi yarat</button><button class="austa-v55-btn secondary" type="button" data-close>Bağla</button></div><div data-r style="margin-top:10px"></div></form></div>';document.body.appendChild(o);const g=o.querySelector('.austa-v55-grid');qs.forEach((q,i)=>{const l=document.createElement('label');l.className='austa-v55-field'+(q[1]==='textarea'||q[1]==='file'?' full':'');l.textContent=q[0];let e;if(q[1]==='select'){e=document.createElement('select');e.innerHTML='<option value="">Seçin</option>'+q[2].map(v=>'<option>'+E(v)+'</option>').join('')}else if(q[1]==='textarea'){e=document.createElement('textarea')}else{
+  e=document.createElement('input');
+  e.type=q[1];
+
+  if(q[1]==='file'){
+    const labelNorm=N(q[0]);
+
+    if(
+      /before|after|evvel|sonra/.test(
+        labelNorm
+      )
+    ){
+      e.multiple=true;
+      e.accept='image/*';
+    }else{
+      e.accept='image/*,video/*';
+    }
+  }
+}e.name='q'+i;l.appendChild(e);g.appendChild(l)});const close=()=>o.remove();o.querySelector('[data-x]').onclick=close;o.querySelector('[data-close]').onclick=close;o.querySelector('form').onsubmit=async e=>{
+  e.preventDefault();
+
+  const resultBox=o.querySelector('[data-r]');
+
+  try{
+    resultBox.innerHTML=
+      '<span style="color:#9db2c4">⏳ Sifariş və foto faylları hazırlanır...</span>';
+
+    const fd=new FormData(e.target);
+
+    for(let i=0;i<qs.length;i++){
+      const q=qs[i];
+      const v=fd.get('q'+i);
+
+      if(
+        q[1]!=='file' &&
+        !String(v||'').trim()
+      ){
+        resultBox.innerHTML=
+          '<b style="color:#ff6878">⚠ Bütün sualları cavablandırın.</b>';
+        return;
+      }
+    }
+
+    const userResult=
+      await window.AUSTA_SUPABASE.auth.getUser();
+
+    if(userResult.error){
+      throw userResult.error;
+    }
+
+    const user=userResult.data?.user;
+
+    if(!user){
+      throw new Error(
+        'Aktiv A-USTA istifadəçi sessiyası tapılmadı.'
+      );
+    }
+
+    const orderId=
+      'AU-V55-'+Date.now();
+
+    const uploadedFiles=[];
+    const answers=[];
+
+    for(let i=0;i<qs.length;i++){
+
+      const q=qs[i];
+
+      const field=
+        e.target.querySelector(
+          '[name="q'+i+'"]'
+        );
+
+      if(q[1]==='file'){
+
+        const files=
+          field?.files
+            ? [...field.files]
+            : [];
+
+        const uploaded=[];
+
+        const labelNorm=N(q[0]);
+
+        let category='attachments';
+
+        if(
+          /before|evvel/.test(labelNorm)
+        ){
+          category='before';
+        }
+
+        if(
+          /after|sonra/.test(labelNorm)
+        ){
+          category='after';
+        }
+
+        if(
+          /problem.*xidmet|problem.*xidmət/.test(
+            labelNorm
+          )
+        ){
+          category='problem';
+        }
+
+        for(const file of files){
+
+          const safeName=
+            file.name.replace(
+              /[^a-zA-Z0-9._-]/g,
+              '_'
+            );
+
+          const path=
+            user.id+
+            '/' +
+            orderId+
+            '/' +
+            category+
+            '/' +
+            Date.now()+
+            '-' +
+            crypto.randomUUID()+
+            '-' +
+            safeName;
+
+          const uploadResult=
+            await window.AUSTA_SUPABASE
+              .storage
+              .from('service-evidence')
+              .upload(
+                path,
+                file,
+                {
+                  cacheControl:'3600',
+                  upsert:false,
+                  contentType:
+                    file.type ||
+                    undefined
+                }
+              );
+
+          if(uploadResult.error){
+            throw new Error(
+              'Fayl yüklənmədi: '+
+              uploadResult.error.message
+            );
+          }
+
+          const item={
+            bucket:'service-evidence',
+            path,
+            category,
+            name:file.name,
+            type:file.type,
+            size:file.size
+          };
+
+          uploadedFiles.push(item);
+          uploaded.push(item);
+        }
+
+        answers.push({
+          question:q[0],
+          value:uploaded
+        });
+
+      }else{
+
+        answers.push({
+          question:q[0],
+          value:String(
+            fd.get('q'+i)||''
+          )
+        });
+      }
+    }
+
+    const order={
+      id:orderId,
+      service:name,
+      userId:user.id,
+      answers,
+      evidenceFiles:uploadedFiles,
+      createdAt:new Date().toISOString(),
+      status:'Yeni sifariş',
+      formVersion:'V55-PROTECTED'
+    };
+
+    let a=[];
+
+    try{
+      a=JSON.parse(
+        localStorage.getItem(
+          'austa-protected-service-orders'
+        )||'[]'
+      );
+    }catch(_){}
+
+    a.unshift(order);
+
+    localStorage.setItem(
+      'austa-protected-service-orders',
+      JSON.stringify(
+        a.slice(0,500)
+      )
+    );
+
+    resultBox.innerHTML=
+      '<b style="color:#72e6a3">'+
+      '✓ Sifariş yaradıldı və foto faylları Storage-a yükləndi — '+
+      E(order.id)+
+      '</b>';
+
+  }catch(error){
+
+    console.error(
+      'A-USTA V55 STORAGE UPLOAD ERROR:',
+      error
+    );
+
+    resultBox.innerHTML=
+      '<b style="color:#ff6878">'+
+      '⚠ Sifariş/foto yüklənmədi: '+
+      E(
+        error?.message||
+        'Naməlum xəta'
+      )+
+      '</b>';
+  }
+};
+                             
+}
+ 
 function lockOldUstaUI(){
  document.querySelectorAll('#austaV22Panel-usta .austa-v52-usta-actions,#austaV22Panel-usta #austaV52AddUsta,#austaV22Panel-usta button[id*="AddUsta"],#austaV22Panel-usta .austa-v51-btn').forEach(x=>x.remove());
  const panel=document.getElementById('austaV22Panel-usta');if(panel){const createWords=['usta profili elani','usta profili elanı','usta profili'];panel.querySelectorAll('button,a').forEach(x=>{if(createWords.some(w=>N(x.textContent).includes(N(w))))x.remove()});}
