@@ -13204,8 +13204,39 @@ function init(){
  shell.innerHTML=`<div class="austa-v39-head"><div><h2>👤 A-USTA Hesabım</h2><p>Müştəri • Usta • Mağaza • Tərəfdaş — hər rol öz qeydiyyat və idarəetmə səhifəsi ilə</p></div><button class="austa-v39-close" type="button" aria-label="Bağla">×</button></div>
  <div class="austa-v39-body"><nav class="austa-v39-nav" id="austaV39Nav"></nav><main class="austa-v39-main" id="austaV39Main"></main></div>`;
  const nav=$('#austaV39Nav'), main=$('#austaV39Main');
- const roles=[['customer','👤','Müştəri'],['provider','🛠','Usta'],['store','🏪','Mağaza'],['partner','🤝','Tərəfdaş']];
- const rolePages={customer:{title:'Müştəri hesabı',desc:'Gmail və ya telefonla giriş. FIN/ID tələb edilmir.'},provider:{title:'Usta qeydiyyatı və paneli',desc:'Usta kimi xidmət göstərmək üçün profil, KYC, xidmət sahəsi və iş məkanı qeydiyyatı.'},store:{title:'Mağaza qeydiyyatı və paneli',desc:'Ehtiyat hissələri və aksesuar mağazası üçün ayrıca mağaza profili.'},partner:{title:'Tərəfdaş qeydiyyatı və paneli',desc:'Tərəfdaş şirkət və xidmət təminatçıları üçün ayrıca iş profili.'}};
+const roles=[
+  ['customer','👤','Müştəri'],
+  ['provider','🛠','Usta'],
+  ['mechanic','🔧','Mexanik'],
+  ['store','🏪','Mağaza'],
+  ['partner','🤝','Tərəfdaş']
+];
+const rolePages={
+  customer:{
+    title:'Müştəri hesabı',
+    desc:'Gmail və ya telefonla giriş. FIN/ID tələb edilmir.'
+  },
+
+  provider:{
+    title:'Usta qeydiyyatı və paneli',
+    desc:'Usta kimi xidmət göstərmək üçün profil, KYC, xidmət sahəsi və iş məkanı qeydiyyatı.'
+  },
+
+  mechanic:{
+    title:'Mexanik / Usta hesabı',
+    desc:'Mexanik xidmətləri, sifarişlər və usta fəaliyyəti üçün hesab paneli.'
+  },
+
+  store:{
+    title:'Mağaza qeydiyyatı və paneli',
+    desc:'Ehtiyat hissələri və aksesuar mağazası üçün ayrıca mağaza profili.'
+  },
+
+  partner:{
+    title:'Tərəfdaş qeydiyyatı və paneli',
+    desc:'Tərəfdaş şirkət və xidmət təminatçıları üçün ayrıca iş profili.'
+  }
+};
 function buildNav(role) {
   nav.innerHTML = '';
 
