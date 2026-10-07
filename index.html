@@ -16100,8 +16100,21 @@ const Q={
  parts:['Ad / soyad','Telefon','Avtomobil marka / modeli','Hissənin adı','OEM / kod','Yeni / işlənmiş','Uyğunluq','Şəkil / video','Çatdırılma ünvanı','Əlavə məlumat'],
  sifaris:['Ad / soyad','Telefon','Xidmət / məhsul','Avtomobil marka / modeli','Problem / tələb','Tarix','Saat','Ünvan','GPS / xəritə ünvanı','Əlavə məlumat'],
  huquq:['Ad / soyad','Telefon','Sorğunun növü','Avtomobil / sənəd məlumatı','Məsələnin izahı','Sənəd / foto','Təcili olub?','Əlaqə üçün uyğun vaxt'],
- usta:['Ad / soyad','Telefon','Avtomobil marka / modeli','Problemi seçin','Problemin təsviri','Tarix','Saat','Ünvan','GPS / xəritə ünvanı','Usta gəlsin / servisə gedim','Foto / video']
-};
+usta:[
+  'Ad / soyad',
+  'Telefon',
+  'Avtomobil marka / modeli',
+  'Problemi seçin',
+  'Problemin təsviri',
+  'Tarix',
+  'Saat',
+  'Ünvan',
+  'GPS / xəritə ünvanı',
+  'Usta gəlsin / servisə gedim',
+  '📸 Problem / xidmət foto və video',
+  '📷 İşdən əvvəl foto — BEFORE',
+  '📷 İşdən sonra foto — AFTER'
+]
 const opts={
  'Yuma xidməti':['Stasionar avtoyuma','Mobil avtoyuma — usta ünvana gəlir'],'Paket':['Standart','Premium','Dərin təmizləmə','Salon + kuzov','Ustanın təklifi'],
  'Yeni / işlənmiş':['Yeni','İşlənmiş','Fərqi yoxdur'],'Uyğunluq':['Marka/modelə görə','OEM koduna görə','Usta yoxlasın'],
@@ -16111,7 +16124,19 @@ const opts={
 };
 function norm(s){return String(s||'').toLocaleLowerCase('az-AZ').replace(/[ə]/g,'e').replace(/[ı]/g,'i').replace(/[ö]/g,'o').replace(/[ü]/g,'u').replace(/[ş]/g,'s').replace(/[ç]/g,'c').replace(/[ğ]/g,'g').replace(/\s+/g,' ').trim()}
 function kind(raw){const x=norm(raw);if(/avtoyuma|yuma/.test(x))return'avtoyuma';if(/hisse|ehtiyat hisse/.test(x))return'parts';if(/huquq|huquqi|sened|notariat/.test(x))return'huquq';if(/usta cagir/.test(x))return'usta';if(/sifaris/.test(x))return'sifaris';return null}
-function open(kindName,title){const qs=Q[kindName];if(!qs)return;document.querySelectorAll('.austa-v47-overlay').forEach(x=>x.remove());const o=document.createElement('div');o.className='austa-v47-overlay';const c=document.createElement('div');c.className='austa-v47-card';c.innerHTML='<h2>'+title+'</h2><div class="austa-v47-grid"></div><div class="austa-v47-actions"><button class="austa-v47-send">Sifarişi göndər</button><button class="austa-v47-close">Bağla</button></div><div data-r style="margin-top:12px"></div>';o.appendChild(c);const f=c.querySelector('.austa-v47-grid');qs.forEach((q,i)=>{const l=document.createElement('label');l.textContent=q;let e;if(opts[q]){e=document.createElement('select');e.innerHTML='<option value="">Seçin</option>'+opts[q].map(v=>'<option>'+v+'</option>').join('')}else if(/foto|video|şəkil|sənəd/.test(norm(q))){e=document.createElement('input');e.type='file'}else if(/izahı|təsviri|məlumat|qeyd/.test(norm(q))){e=document.createElement('textarea')}else{e=document.createElement('input');e.type=/telefon/.test(norm(q))?'tel':/tarix/.test(norm(q))?'date':/saat|vaxt/.test(norm(q))?'time':'text'}e.dataset.i=i;l.appendChild(e);if(e.tagName==='TEXTAREA'||e.type==='file')l.classList.add('full');f.appendChild(l)});document.body.appendChild(o);const close=()=>o.remove();c.querySelector('.austa-v47-close').onclick=close;o.onclick=e=>{if(e.target===o)close()};c.querySelector('.austa-v47-send').onclick=()=>{const es=[...f.querySelectorAll('[data-i]')];const bad=es.some(e=>e.type!=='file'&&!String(e.value||'').trim());const r=c.querySelector('[data-r]');if(bad){r.innerHTML='<span style="color:#ff6878">⚠ Bütün sualları cavablandırın.</span>';return}const id='AU-V47-'+Date.now();const item={id,type:kindName,title,createdAt:new Date().toISOString(),answers:es.map((e,i)=>({question:qs[i],value:e.type==='file'?(e.files[0]?.name||''):e.value}))};let a=[];try{a=JSON.parse(localStorage.getItem('austa-v47-orders')||'[]')}catch(_){}a.unshift(item);localStorage.setItem('austa-v47-orders',JSON.stringify(a));r.innerHTML='<span style="color:#72e6a3">✓ Sifariş yaradıldı — '+id+'</span>'};}
+function open(kindName,title){const qs=Q[kindName];if(!qs)return;document.querySelectorAll('.austa-v47-overlay').forEach(x=>x.remove());const o=document.createElement('div');o.className='austa-v47-overlay';const c=document.createElement('div');c.className='austa-v47-card';c.innerHTML='<h2>'+title+'</h2><div class="austa-v47-grid"></div><div class="austa-v47-actions"><button class="austa-v47-send">Sifarişi göndər</button><button class="austa-v47-close">Bağla</button></div><div data-r style="margin-top:12px"></div>';o.appendChild(c);const f=c.querySelector('.austa-v47-grid');qs.forEach((q,i)=>{const l=document.createElement('label');l.textContent=q;let e;if(opts[q]){e=document.createElement('select');e.innerHTML='<option value="">Seçin</option>'+opts[q].map(v=>'<option>'+v+'</option>').join('')}else if(/foto|video|şəkil|sənəd/.test(norm(q))){
+  e=document.createElement('input');
+  e.type='file';
+
+  if(
+    /before|after|əvvəl|sonra/.test(
+      norm(q)
+    )
+  ){
+    e.multiple=true;
+    e.accept='image/*';
+  }
+}else if(/izahı|təsviri|məlumat|qeyd/.test(norm(q))){e=document.createElement('textarea')}else{e=document.createElement('input');e.type=/telefon/.test(norm(q))?'tel':/tarix/.test(norm(q))?'date':/saat|vaxt/.test(norm(q))?'time':'text'}e.dataset.i=i;l.appendChild(e);if(e.tagName==='TEXTAREA'||e.type==='file')l.classList.add('full');f.appendChild(l)});document.body.appendChild(o);const close=()=>o.remove();c.querySelector('.austa-v47-close').onclick=close;o.onclick=e=>{if(e.target===o)close()};c.querySelector('.austa-v47-send').onclick=()=>{const es=[...f.querySelectorAll('[data-i]')];const bad=es.some(e=>e.type!=='file'&&!String(e.value||'').trim());const r=c.querySelector('[data-r]');if(bad){r.innerHTML='<span style="color:#ff6878">⚠ Bütün sualları cavablandırın.</span>';return}const id='AU-V47-'+Date.now();const item={id,type:kindName,title,createdAt:new Date().toISOString(),answers:es.map((e,i)=>({question:qs[i],value:e.type==='file'?(e.files[0]?.name||''):e.value}))};let a=[];try{a=JSON.parse(localStorage.getItem('austa-v47-orders')||'[]')}catch(_){}a.unshift(item);localStorage.setItem('austa-v47-orders',JSON.stringify(a));r.innerHTML='<span style="color:#72e6a3">✓ Sifariş yaradıldı — '+id+'</span>'};}
 function capture(e){const b=e.target.closest?.('.austa-function-btn,.premium-chip,.austa-v36-service-btn,.austa-v36-service,.service-card,[data-service],[data-top-service],#parts .a46-guide-btn,#legal .a46-guide-btn,#mechanic .a46-guide-btn');if(!b)return;const raw=(b.dataset?.topService||b.dataset?.service||b.innerText||b.textContent||'').trim();let k=kind(raw);if(b.matches('#parts .a46-guide-btn'))k='parts';if(b.matches('#legal .a46-guide-btn'))k='huquq';if(b.matches('#mechanic .a46-guide-btn'))k='usta';if(!k)return;e.preventDefault();e.stopImmediatePropagation();open(k,k==='avtoyuma'?'🧼 Avtoyuma sifarişi':k==='parts'?'🔧 Ehtiyat hissəsi sifarişi':k==='huquq'?'⚖ Hüquqi sorğu':k==='usta'?'🛠 Usta çağır':'📦 Sifariş')}
 window.addEventListener('click',capture,true);
 window.AUSTA_V47_OPEN=open;
