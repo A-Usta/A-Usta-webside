@@ -17284,38 +17284,221 @@ function openProtected(name){const qs=FORMS[name];if(!qs)return;closeAll();const
       e.accept='image/*,video/*';
     }
   }
-}e.name='q'+i;l.appendChild(e);g.appendChild(l)});const close=()=>o.remove();o.querySelector('[data-x]').onclick=close;o.querySelector('[data-close]').onclick=close;o.querySelector('form').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);for(let i=0;i<qs.length;i++){const q=qs[i],v=fd.get('q'+i);if(q[1]!=='file'&&!String(v||'').trim()){o.querySelector('[data-r]').innerHTML='<b style="color:#ff6878">⚠ Bütün sualları cavablandırın.</b>';return}}const answers=qs.map((q,i)=>{
+}e.name='q'+i;l.appendChild(e);g.appendChild(l)});const close=()=>o.remove();o.querySelector('[data-x]').onclick=close;o.querySelector('[data-close]').onclick=close;o.querySelector('form').onsubmit=async e=>{
+  e.preventDefault();
 
-  const field=
-    e.target.querySelector(
-      '[name="q'+i+'"]'
+  const resultBox=o.querySelector('[data-r]');
+
+  try{
+    resultBox.innerHTML=
+      '<span style="color:#9db2c4">⏳ Sifariş və foto faylları hazırlanır...</span>';
+
+    const fd=new FormData(e.target);
+
+    for(let i=0;i<qs.length;i++){
+      const q=qs[i];
+      const v=fd.get('q'+i);
+
+      if(
+        q[1]!=='file' &&
+        !String(v||'').trim()
+      ){
+        resultBox.innerHTML=
+          '<b style="color:#ff6878">⚠ Bütün sualları cavablandırın.</b>';
+        return;
+      }
+    }
+
+    const userResult=
+      await window.AUSTA_SUPABASE.auth.getUser();
+
+    if(userResult.error){
+      throw userResult.error;
+    }
+
+    const user=userResult.data?.user;
+
+    if(!user){
+      throw new Error(
+        'Aktiv A-USTA istifadəçi sessiyası tapılmadı.'
+      );
+    }
+
+    const orderId=
+      'AU-V55-'+Date.now();
+
+    const uploadedFiles=[];
+    const answers=[];
+
+    for(let i=0;i<qs.length;i++){
+
+      const q=qs[i];
+
+      const field=
+        e.target.querySelector(
+          '[name="q'+i+'"]'
+        );
+
+      if(q[1]==='file'){
+
+        const files=
+          field?.files
+            ? [...field.files]
+            : [];
+
+        const uploaded=[];
+
+        const labelNorm=N(q[0]);
+
+        let category='attachments';
+
+        if(
+          /before|evvel/.test(labelNorm)
+        ){
+          category='before';
+        }
+
+        if(
+          /after|sonra/.test(labelNorm)
+        ){
+          category='after';
+        }
+
+        if(
+          /problem.*xidmet|problem.*xidmət/.test(
+            labelNorm
+          )
+        ){
+          category='problem';
+        }
+
+        for(const file of files){
+
+          const safeName=
+            file.name.replace(
+              /[^a-zA-Z0-9._-]/g,
+              '_'
+            );
+
+          const path=
+            user.id+
+            '/' +
+            orderId+
+            '/' +
+            category+
+            '/' +
+            Date.now()+
+            '-' +
+            crypto.randomUUID()+
+            '-' +
+            safeName;
+
+          const uploadResult=
+            await window.AUSTA_SUPABASE
+              .storage
+              .from('service-evidence')
+              .upload(
+                path,
+                file,
+                {
+                  cacheControl:'3600',
+                  upsert:false,
+                  contentType:
+                    file.type ||
+                    undefined
+                }
+              );
+
+          if(uploadResult.error){
+            throw new Error(
+              'Fayl yüklənmədi: '+
+              uploadResult.error.message
+            );
+          }
+
+          const item={
+            bucket:'service-evidence',
+            path,
+            category,
+            name:file.name,
+            type:file.type,
+            size:file.size
+          };
+
+          uploadedFiles.push(item);
+          uploaded.push(item);
+        }
+
+        answers.push({
+          question:q[0],
+          value:uploaded
+        });
+
+      }else{
+
+        answers.push({
+          question:q[0],
+          value:String(
+            fd.get('q'+i)||''
+          )
+        });
+      }
+    }
+
+    const order={
+      id:orderId,
+      service:name,
+      userId:user.id,
+      answers,
+      evidenceFiles:uploadedFiles,
+      createdAt:new Date().toISOString(),
+      status:'Yeni sifariş',
+      formVersion:'V55-PROTECTED'
+    };
+
+    let a=[];
+
+    try{
+      a=JSON.parse(
+        localStorage.getItem(
+          'austa-protected-service-orders'
+        )||'[]'
+      );
+    }catch(_){}
+
+    a.unshift(order);
+
+    localStorage.setItem(
+      'austa-protected-service-orders',
+      JSON.stringify(
+        a.slice(0,500)
+      )
     );
 
-  if(q[1]==='file'){
+    resultBox.innerHTML=
+      '<b style="color:#72e6a3">'+
+      '✓ Sifariş yaradıldı və foto faylları Storage-a yükləndi — '+
+      E(order.id)+
+      '</b>';
 
-    const files=
-      field?.files
-        ? [...field.files]
-        : [];
+  }catch(error){
 
-    return {
-      question:q[0],
-      value:files.map(
-        file=>({
-          name:file.name,
-          type:file.type,
-          size:file.size
-        })
-      )
-    };
+    console.error(
+      'A-USTA V55 STORAGE UPLOAD ERROR:',
+      error
+    );
+
+    resultBox.innerHTML=
+      '<b style="color:#ff6878">'+
+      '⚠ Sifariş/foto yüklənmədi: '+
+      E(
+        error?.message||
+        'Naməlum xəta'
+      )+
+      '</b>';
   }
-
-  return {
-    question:q[0],
-    value:String(
-      fd.get('q'+i)||''
-    )
-  };
+};
+ 
 });const order={id:'AU-V55-'+Date.now(),service:name,answers,createdAt:new Date().toISOString(),status:'Yeni sifariş',formVersion:'V55-PROTECTED'};let a=[];try{a=JSON.parse(localStorage.getItem('austa-protected-service-orders')||'[]')}catch(_){}a.unshift(order);localStorage.setItem('austa-protected-service-orders',JSON.stringify(a.slice(0,500)));o.querySelector('[data-r]').innerHTML='<b style="color:#72e6a3">✓ Yeni tərkibli forma ilə qeyd edildi — '+E(order.id)+'</b>'}}
 function lockOldUstaUI(){
  document.querySelectorAll('#austaV22Panel-usta .austa-v52-usta-actions,#austaV22Panel-usta #austaV52AddUsta,#austaV22Panel-usta button[id*="AddUsta"],#austaV22Panel-usta .austa-v51-btn').forEach(x=>x.remove());
