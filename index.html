@@ -17499,7 +17499,6 @@ function openProtected(name){const qs=FORMS[name];if(!qs)return;closeAll();const
   }
 };
  
-});const order={id:'AU-V55-'+Date.now(),service:name,answers,createdAt:new Date().toISOString(),status:'Yeni sifariş',formVersion:'V55-PROTECTED'};let a=[];try{a=JSON.parse(localStorage.getItem('austa-protected-service-orders')||'[]')}catch(_){}a.unshift(order);localStorage.setItem('austa-protected-service-orders',JSON.stringify(a.slice(0,500)));o.querySelector('[data-r]').innerHTML='<b style="color:#72e6a3">✓ Yeni tərkibli forma ilə qeyd edildi — '+E(order.id)+'</b>'}}
 function lockOldUstaUI(){
  document.querySelectorAll('#austaV22Panel-usta .austa-v52-usta-actions,#austaV22Panel-usta #austaV52AddUsta,#austaV22Panel-usta button[id*="AddUsta"],#austaV22Panel-usta .austa-v51-btn').forEach(x=>x.remove());
  const panel=document.getElementById('austaV22Panel-usta');if(panel){const createWords=['usta profili elani','usta profili elanı','usta profili'];panel.querySelectorAll('button,a').forEach(x=>{if(createWords.some(w=>N(x.textContent).includes(N(w))))x.remove()});}
