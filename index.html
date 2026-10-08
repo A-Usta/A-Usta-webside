@@ -17266,6 +17266,63 @@ function route(raw){
   return null;
 }
 function closeAll(){document.querySelectorAll('.austa-v55-overlay,.austa-v54-service-overlay,.austa-v45-master-overlay,.austa-v51-overlay,.austa-v50-overlay,.austa-v49-overlay,.austa-v48-overlay,.austa-v44-overlay,.austa-v43-service-overlay,#austaV22Overlay').forEach(x=>x.remove())}
+const AUSTA_API_BASE =
+  'https://a-usta-webside.onrender.com';
+
+async function createBackendServiceOrder(
+  payload
+) {
+  const authResult =
+    await window.AUSTA_SUPABASE.auth.getSession();
+
+  if (authResult.error) {
+    throw authResult.error;
+  }
+
+  const session =
+    authResult.data?.session;
+
+  if (!session) {
+    throw new Error(
+      'Backend sifarişi üçün aktiv A-USTA session tapılmadı.'
+    );
+  }
+
+  const response =
+    await fetch(
+      `${AUSTA_API_BASE}/service-orders`,
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type':
+            'application/json',
+
+          Authorization:
+            `Bearer ${session.access_token}`,
+        },
+
+        body:
+          JSON.stringify(payload),
+      }
+    );
+
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch (_) {}
+
+  if (!response.ok) {
+    throw new Error(
+      data?.message ||
+      data?.error ||
+      `Backend HTTP ${response.status}`
+    );
+  }
+
+  return data;
+}  
 function openProtected(name){const qs=FORMS[name];if(!qs)return;closeAll();const o=document.createElement('div');o.className='austa-v55-overlay';o.innerHTML='<div class="austa-v55-box"><button type="button" data-x style="float:right;background:#ff2448;color:#fff;border:0;border-radius:8px;width:34px;height:34px;font-size:20px;cursor:pointer">×</button><small style="color:#ff536c;font-weight:900">A-USTA QORUNAN YENİ TƏRKİBLİ FORM</small><h2>🛠 '+E(name)+'</h2><p style="color:#9db2c4;font-size:12px">Bu bölmə yalnız yeni tərkibli sual forması ilə işləyir. Köhnə forma açılmasına icazə verilmir.</p><form><div class="austa-v55-grid"></div><div class="austa-v55-actions"><button class="austa-v55-btn" type="submit">✓ Cavabları təsdiqlə və sifarişi yarat</button><button class="austa-v55-btn secondary" type="button" data-close>Bağla</button></div><div data-r style="margin-top:10px"></div></form></div>';document.body.appendChild(o);const g=o.querySelector('.austa-v55-grid');qs.forEach((q,i)=>{const l=document.createElement('label');l.className='austa-v55-field'+(q[1]==='textarea'||q[1]==='file'?' full':'');l.textContent=q[0];let e;if(q[1]==='select'){e=document.createElement('select');e.innerHTML='<option value="">Seçin</option>'+q[2].map(v=>'<option>'+E(v)+'</option>').join('')}else if(q[1]==='textarea'){e=document.createElement('textarea')}else{
   e=document.createElement('input');
   e.type=q[1];
@@ -17456,30 +17513,44 @@ function openProtected(name){const qs=FORMS[name];if(!qs)return;closeAll();const
       formVersion:'V55-PROTECTED'
     };
 
-    let a=[];
+  const backendResult =
+  await createBackendServiceOrder({
+    client_order_id:
+      order.id,
 
-    try{
-      a=JSON.parse(
-        localStorage.getItem(
-          'austa-protected-service-orders'
-        )||'[]'
-      );
-    }catch(_){}
+    form_version:
+      order.formVersion,
 
-    a.unshift(order);
+    service_category:
+      'mechanic_service',
 
-    localStorage.setItem(
-      'austa-protected-service-orders',
-      JSON.stringify(
-        a.slice(0,500)
-      )
-    );
+    service_description:
+      order.service,
 
-    resultBox.innerHTML=
-      '<b style="color:#72e6a3">'+
-      '✓ Sifariş yaradıldı və foto faylları Storage-a yükləndi — '+
-      E(order.id)+
-      '</b>';
+    urgency:
+      'normal',
+
+    service_mode:
+      'mobile',
+
+    price_status:
+      'unknown',
+
+    answers:
+      order.answers,
+
+    evidence_files:
+      order.evidenceFiles,
+  });
+
+resultBox.innerHTML=
+  '<b style="color:#72e6a3">'+
+  '✓ Sifariş backend və Storage-a yadda saxlanıldı — '+
+  E(
+    backendResult?.order?.id ||
+    order.id
+  )+
+  '</b>';
 
   }catch(error){
 
