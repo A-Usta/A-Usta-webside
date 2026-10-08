@@ -5,19 +5,40 @@ const PRIVATE_BUCKETS = [
   "kyc-documents",
 ] as const;
 
-export async function ensureBackendV1Buckets() {
+export async function ensureBackendV1Buckets(): Promise<void> {
   for (const name of PRIVATE_BUCKETS) {
-    const { data } = await supabase.storage.getBucket(name);
+    const { data, error: getError } =
+      await supabase.storage.getBucket(name);
 
-    if (data) continue;
+    if (getError) {
+      throw new Error(
+        `Storage bucket ${name} could not be checked: ${getError.message}`,
+      );
+    }
 
-    const { error } = await supabase.storage.createBucket(name, {
-      public: false,
-      fileSizeLimit: 25 * 1024 * 1024,
-    });
+    if (data) {
+      continue;
+    }
 
-    if (error && !/already exists/i.test(error.message)) {
-      throw new Error(`Storage bucket ${name} could not be created: ${error.message}`);
+    const { error: createError } =
+      await supabase.storage.createBucket(
+        name,
+        {
+          public: false,
+          fileSizeLimit:
+            25 * 1024 * 1024,
+        },
+      );
+
+    if (
+      createError &&
+      !/already exists/i.test(
+        createError.message,
+      )
+    ) {
+      throw new Error(
+        `Storage bucket ${name} could not be created: ${createError.message}`,
+      );
     }
   }
 }
