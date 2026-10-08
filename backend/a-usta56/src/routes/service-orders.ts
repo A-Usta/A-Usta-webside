@@ -99,6 +99,11 @@ type CreateServiceOrderBody = {
   estimated_price_max?: unknown;
   price_status?: unknown;
   customer_note?: unknown;
+
+  client_order_id?: unknown;
+  form_version?: unknown;
+  answers?: unknown;
+  evidence_files?: unknown;
 };
 
 type AssignmentBody = {
@@ -152,6 +157,83 @@ function optionalNumber(
   }
 
   return numberValue;
+}
+
+function optionalJsonArray(
+  value: unknown,
+): unknown[] | null {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  return value;
+}
+
+function validateEvidenceFiles(
+  value: unknown,
+  customerId: string,
+): unknown[] | null {
+  const files =
+    optionalJsonArray(value);
+
+  if (files === null) {
+    return null;
+  }
+
+  const requiredPrefix =
+    `${customerId}/`;
+
+  for (const item of files) {
+    if (
+      typeof item !== "object" ||
+      item === null
+    ) {
+      return null;
+    }
+
+    const record =
+      item as Record<string, unknown>;
+
+    if (
+      record.bucket !==
+      "service-evidence"
+    ) {
+      return null;
+    }
+
+    if (
+      typeof record.path !==
+      "string"
+    ) {
+      return null;
+    }
+
+    if (
+      !record.path.startsWith(
+        requiredPrefix,
+      )
+    ) {
+      return null;
+    }
+
+    if (
+      record.path
+        .split("/")
+        .includes("..")
+    ) {
+      return null;
+    }
+  }
+
+  return files;
 }
 
 function isAllowed<T extends readonly string[]>(
@@ -371,6 +453,51 @@ export async function serviceOrderRoutes(
         );
       }
 
+      const clientOrderId =
+  optionalString(
+    body.client_order_id,
+  );
+
+const formVersion =
+  optionalString(
+    body.form_version,
+  );
+
+if (
+  clientOrderId !== null &&
+  clientOrderId.length > 120
+) {
+  return sendBadRequest(
+    reply,
+    "client_order_id is too long",
+  );
+}
+
+const answers =
+  optionalJsonArray(
+    body.answers,
+  );
+
+if (answers === null) {
+  return sendBadRequest(
+    reply,
+    "answers must be an array",
+  );
+}
+
+const evidenceFiles =
+  validateEvidenceFiles(
+    body.evidence_files,
+    customerId,
+  );
+
+if (evidenceFiles === null) {
+  return sendBadRequest(
+    reply,
+    "evidence_files contains an invalid service-evidence path",
+  );
+}
+
       const latitude =
         optionalNumber(body.latitude);
 
@@ -492,12 +619,25 @@ export async function serviceOrderRoutes(
       const { data, error } =
         await supabase
           .from("service_orders")
-          .insert({
-            customer_id: customerId,
-            vehicle_id:
-              optionalString(
-                body.vehicle_id,
-              ),
+         .insert({
+  customer_id: customerId,
+
+  client_order_id:
+    clientOrderId,
+
+  form_version:
+    formVersion,
+
+  answers:
+    answers ?? [],
+
+  evidence_files:
+    evidenceFiles ?? [],
+
+  vehicle_id:
+    optionalString(
+      body.vehicle_id,
+    ),
             service_category:
               serviceCategory,
             service_description:
@@ -535,14 +675,24 @@ export async function serviceOrderRoutes(
           .select("*")
           .single();
 
-      if (error) {
-        app.log.error(error);
+   if (error) {
+  app.log.error(error);
 
-        return sendServerError(
-          reply,
-          "Service order could not be created",
-        );
-      }
+  if (
+    error.code === "23505" &&
+    clientOrderId
+  ) {
+    return sendConflict(
+      reply,
+      "This client_order_id already exists",
+    );
+  }
+
+  return sendServerError(
+    reply,
+    "Service order could not be created",
+  );
+}
 
       return reply.code(201).send({
         message:
