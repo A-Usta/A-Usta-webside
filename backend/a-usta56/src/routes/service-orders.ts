@@ -20,6 +20,7 @@ import {
  * POST /service-orders/:orderId/assignments
  *
  * Provider:
+ * GET /service-order-assignments
  * PATCH /service-order-assignments/:assignmentId/accept
  * PATCH /service-order-assignments/:assignmentId/reject
  * PATCH /service-order-assignments/:assignmentId/start
@@ -1635,6 +1636,104 @@ if (evidenceFiles === null) {
           "Service order assignment rejected successfully",
         assignment:
           rejectedAssignment,
+      });
+    },
+  );
+
+  /*
+   * ==========================================================
+   * GET /service-order-assignments
+   * Provider özünə təklif / təyin edilmiş sifarişləri görür.
+   * Offered assignment-lər də qaytarılır ki, provider onları
+   * qəbul və ya rədd edə bilsin.
+   * ==========================================================
+   */
+
+  app.get(
+    "/service-order-assignments",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const providerUserId =
+        getAuthenticatedUserId(request);
+
+      const {
+        data: assignments,
+        error: assignmentsError,
+      } = await supabase
+        .from("service_order_assignments")
+        .select(
+          "id, order_id, provider_id, provider_type, status, distance_km, offered_at, accepted_at, rejected_at, completed_at, created_at, updated_at",
+        )
+        .eq("provider_id", providerUserId)
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (assignmentsError) {
+        app.log.error(assignmentsError);
+
+        return sendServerError(
+          reply,
+          "Provider assignments could not be loaded",
+        );
+      }
+
+      const providerAssignments =
+        assignments ?? [];
+
+      if (providerAssignments.length === 0) {
+        return reply.send({
+          assignments: [],
+        });
+      }
+
+      const orderIds = [
+        ...new Set(
+          providerAssignments.map(
+            (assignment) => assignment.order_id,
+          ),
+        ),
+      ];
+
+      const {
+        data: orders,
+        error: ordersError,
+      } = await supabase
+        .from("service_orders")
+        .select("*")
+        .in("id", orderIds);
+
+      if (ordersError) {
+        app.log.error(ordersError);
+
+        return sendServerError(
+          reply,
+          "Assigned service orders could not be loaded",
+        );
+      }
+
+      const orderById = new Map(
+        (orders ?? []).map((order) => [
+          order.id,
+          order,
+        ]),
+      );
+
+      const enrichedAssignments =
+        providerAssignments.map(
+          (assignment) => ({
+            ...assignment,
+            order:
+              orderById.get(
+                assignment.order_id,
+              ) ?? null,
+          }),
+        );
+
+      return reply.send({
+        assignments: enrichedAssignments,
       });
     },
   );
