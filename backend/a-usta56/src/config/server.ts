@@ -5,6 +5,8 @@ import sensible from "@fastify/sensible";
 
 import { serviceOrderRoutes } from "../routes/service-orders.js";
 import { authRoutes } from "../routes/auth.js";
+import { backendV1Routes } from "../routes/backend-v1.js";
+import { ensureBackendV1Buckets } from "./backend-v1-storage.js";
 
 const app = Fastify({
   logger: true,
@@ -33,7 +35,13 @@ await app.register(serviceOrderRoutes);
 
 await app.register(authRoutes);
 
-const port = Number(process.env.PORT || 3000);
+await app.register(backendV1Routes);
+
+await ensureBackendV1Buckets();
+
+const port = Number(
+  process.env.PORT || 3000,
+);
 
 await app.listen({
   port,
