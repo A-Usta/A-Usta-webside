@@ -71,7 +71,12 @@ create table if not exists public.provider_availability (
   start_time time,
   end_time time,
   is_closed boolean not null default false,
-  unique(provider_id, weekday)
+ unique(
+  provider_id,
+  weekday,
+  start_time,
+  end_time
+)
 );
 
 -- =========================
@@ -591,3 +596,31 @@ as $$
   where nearby.distance_km <= p_radius_km
   order by nearby.distance_km asc;
 $$;
+
+-- Restrict nearby-provider lookup to the backend service role.
+REVOKE ALL ON FUNCTION
+  public.austa_find_nearby_providers(
+    double precision,
+    double precision,
+    double precision,
+    text
+  )
+FROM PUBLIC;
+
+REVOKE ALL ON FUNCTION
+  public.austa_find_nearby_providers(
+    double precision,
+    double precision,
+    double precision,
+    text
+  )
+FROM anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION
+  public.austa_find_nearby_providers(
+    double precision,
+    double precision,
+    double precision,
+    text
+  )
+TO service_role;
