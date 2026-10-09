@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import sensible from "@fastify/sensible";
+import multipart from "@fastify/multipart";
 
 import { serviceOrderRoutes } from "../routes/service-orders.js";
 import { authRoutes } from "../routes/auth.js";
@@ -21,6 +22,13 @@ await app.register(cors, {
 await app.register(helmet);
 
 await app.register(sensible);
+
+await app.register(multipart, {
+  limits: {
+    files: 1,
+    fileSize: 10 * 1024 * 1024,
+  },
+});
 
 app.get("/health", async () => {
   return {
