@@ -71,7 +71,7 @@ create table if not exists public.provider_availability (
   start_time time,
   end_time time,
   is_closed boolean not null default false,
- unique(
+unique nulls not distinct (
   provider_id,
   weekday,
   start_time,
