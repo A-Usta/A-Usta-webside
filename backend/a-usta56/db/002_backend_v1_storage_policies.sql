@@ -3,20 +3,6 @@
 
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage'
-      AND tablename = 'objects'
-      AND policyname = 'austa_rental_evidence_insert_own'
-  ) THEN
-    CREATE POLICY austa_rental_evidence_insert_own
-    ON storage.objects
-    FOR INSERT TO authenticated
-    WITH CHECK (
-      bucket_id = 'rental-evidence'
-      AND (storage.foldername(name))[1] = auth.uid()::text
-    );
-  END IF;
 
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
