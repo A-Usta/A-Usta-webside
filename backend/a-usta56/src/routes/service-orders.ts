@@ -1824,15 +1824,27 @@ if (evidenceFiles === null) {
         );
       }
 
-      if (
-        assignment.status !==
-        "accepted"
-      ) {
-        return sendConflict(
-          reply,
-          "Evidence can only be uploaded for an accepted assignment",
-        );
-      }
+    if (
+  stage === "before" &&
+  assignment.status !==
+    "accepted"
+) {
+  return sendConflict(
+    reply,
+    "BEFORE photo can only be uploaded for an accepted assignment",
+  );
+}
+
+if (
+  stage === "after" &&
+  assignment.status !==
+    "in_progress"
+) {
+  return sendConflict(
+    reply,
+    "AFTER photo can only be uploaded for an in-progress assignment",
+  );
+}
 
       const {
         data: order,
