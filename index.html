@@ -206,7 +206,7 @@
 <button class="austa-function-btn" data-top-flow="parts" data-top-title="Xaricdən avtomobil">Xaricdən avtomobil</button><button class="austa-function-btn" data-top-flow="legal" data-top-title="Notariat">Notariat</button><button class="austa-function-btn" data-top-flow="legal" data-top-title="Müqavilə">Müqavilə</button><button class="austa-function-btn" data-top-flow="legal" data-top-title="Zəmanət">Zəmanət</button>
 </div></div>
 </div>
-</section><section class="section austa-secondary-anchor" id="services"><div class="section-heading"><div><h2>🛠 Əsas xidmətlər</h2><p>Avtomobilinizin bütün ehtiyacları burada</p></div><a class="section-link" href="#all-services">Bütün xidmətlərə bax →</a></div><div class="service-grid" id="serviceGrid"></div></section><section class="section austa-secondary-anchor" id="all-services"><div class="section-heading"><div><h2>⚡ Xidmət istiqamətləri</h2><p>Mexaniki, elektron, kuzov, təkər və gündəlik xidmətlər</p></div></div><div class="feature-grid"><article class="feature-card"><h3>🔧 Texniki xidmət</h3><p>Mühərrik, karopka, əyləc, radiator, asqı, kondisioner və yağ dəyişimi.</p><a class="btn" href="#austaAllFunctions">Xidmət seç →</a></article><article class="feature-card"><h3>🎨 Kuzov və görünüş</h3><p>Malyar, dəmirçi, polirovka, detailing, PPF, wrap və faraların bərpası.</p><a class="btn" href="#austaAllFunctions">Usta tap →</a></article><article class="feature-card"><h3>💻 Elektronika</h3><p>Diaqnostika, ECU, proqramlaşdırma, Stage 1/2/3, çip tuning və elektrik.</p><a class="btn" href="#austaAllFunctions">Diaqnostika →</a></article><article class="feature-card red"><h3>🚨 Yol yardımı</h3><p>24/7 mobil usta, akkumulyator, təkər, yanacaq və açar.</p><a class="btn btn-primary" href="#austaAllFunctions">Təcili çağır →</a></article></div></section><section class="section" id="mechanic"><div class="section-heading"><div><h2>🔧 Usta çağır</h2><p>Problemi bildir → yaxın usta → GPS → qiymət → təsdiq → xidmət</p></div></div><div class="tracking"><div class="request-panel"><div class="request-form"><textarea class="full" id="requestProblem" placeholder="Avtomobilinizdə nə problem var? Məsələn: maşın işə düşmür..."></textarea><select id="requestCategory"><option value="automotive_service">Avtomobil xidməti</option><option value="roadside">Yol yardımı</option><option value="diagnostics">Diaqnostika</option><option value="towing">Evakuator</option><option value="cargo_transport">Yük daşıma</option><option value="vehicle_transport">Avtomobil daşınması</option></select><div class="payment-choice"><label for="requestPayment">Ödəniş üsulu</label><select id="requestPayment"><option value="cash">💵 Nağd</option><option value="card">💳 Bank kartı</option></select></div><select id="requestLevel"><option value="standard">Standart</option><option value="priority">Prioritet</option><option value="premium">Premium</option></select><input id="requestBrand" placeholder="Marka"/><input id="requestModel" placeholder="Model"/><input id="requestYear" placeholder="İl"/><input id="requestPlate" placeholder="Dövlət nömrəsi"/><input id="requestPhone" placeholder="Telefon"/><div id="cargoFields" style="display:none;grid-column:1/-1;border:1px solid #174c6e;border-radius:10px;padding:12px;background:#061a29"><strong>📦 Yük məlumatları</strong><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px"><input id="requestCargoWeight" min="0" placeholder="Çəki (kq)" step="1" type="number"/><input id="requestCargoLength" min="0" placeholder="Uzunluq (m)" step="0.01" type="number"/><input id="requestCargoWidth" min="0" placeholder="En (m)" step="0.01" type="number"/><input id="requestCargoHeight" min="0" placeholder="Hündürlük (m)" step="0.01" type="number"/></div><div style="margin-top:8px;color:#8fa5ba;font-size:11px">Çəki və ölçülər uyğun yük nəqliyyatının seçilməsi üçün istifadə olunur.</div></div><input id="requestPickupAddress" placeholder="📍 Götürüləcək ünvan" style="display:none"/><input id="requestDestinationAddress" placeholder="🏁 Çatdırılacaq ünvan" style="display:none"/><button class="btn" id="requestGps">📍 GPS götür</button><button class="btn btn-primary" id="requestSubmit">Usta çağır →</button></div><div class="request-result" id="requestResult"></div><div class="request-control-panel" id="requestControlPanel"><h3>⚙️ Sifariş idarəetməsi</h3><input id="requestProviderId" placeholder="Usta ID"/><input id="requestProviderName" placeholder="Usta adı"/><input id="requestProviderPhone" placeholder="Usta telefonu"/><input id="requestProviderVehicleId" placeholder="Usta nəqliyyat ID"/><input id="requestPrice" placeholder="Yekun qiymət (AZN)" step="0.01" type="number"/><button class="btn" id="requestApprovePrice" type="button">💰 Qiyməti təsdiqlə</button><button class="btn btn-primary" id="requestAssignProvider" type="button">👨‍🔧 Usta təyin et</button><div class="request-lifecycle" id="requestLifecycle"><strong>🔄 Sifariş mərhələləri</strong><div class="lifecycle-buttons"><button class="btn" id="requestProviderAccept" type="button">✓ Usta qəbul etdi</button><button class="btn" id="requestProviderEnRoute" type="button">🚗 Yola çıxdı</button><button class="btn" id="requestProviderArrived" type="button">📍 Çatdı</button><button class="btn" id="requestStartDiagnosis" type="button">🔎 Diaqnostika</button><button class="btn" id="requestRecalculatePrice" type="button">🧮 Yeni qiymət</button><button class="btn" id="requestStartService" type="button">🔧 Xidməti başlat</button><button class="btn" id="requestCreatePayment" type="button">💳 Ödəniş yarat</button><button class="btn" id="requestPaymentPaid" type="button">✅ Ödəniş alındı</button><button class="btn" id="requestCompleteService" type="button">🏁 Xidməti tamamla</button><button class="btn" id="requestCancel" type="button">✕ Sifarişi ləğv et</button></div><div class="request-evidence"><label>📸 Problem/xidmət foto və video</label><input accept="image/*,video/*" id="requestEvidence" multiple="" type="file"/><label>📷 İşdən əvvəlki vəziyyət — BEFORE</label><input accept="image/*" id="requestBeforePhotos" multiple="" type="file"/><label>📷 İşdən sonrakı vəziyyət — AFTER</label><input accept="image/*" id="requestAfterPhotos" multiple="" type="file"/><label class="austa-check"><input id="requestContract" type="checkbox"/> 📄 Rəsmi xidmət müqaviləsi tələb olunur</label><div class="austa-result" id="requestEvidenceResult"></div></div></div></div></div><div class="austa-tool-panel" id="austaServiceQuestions" style="margin-top:10px"><h3>🎯 Seçilmiş xidmət üçün düzgün suallar</h3><div class="austa-mini-note" id="austaServiceQuestionText">Xidmət seçin. A-USTA müştəri və usta üçün yalnız həmin xidmətə uyğun məlumatları göstərir.</div></div>
+</section><section class="section austa-secondary-anchor" id="services"><div class="section-heading"><div><h2>🛠 Əsas xidmətlər</h2><p>Avtomobilinizin bütün ehtiyacları burada</p></div><a class="section-link" href="#all-services">Bütün xidmətlərə bax →</a></div><div class="service-grid" id="serviceGrid"></div></section><section class="section austa-secondary-anchor" id="all-services"><div class="section-heading"><div><h2>⚡ Xidmət istiqamətləri</h2><p>Mexaniki, elektron, kuzov, təkər və gündəlik xidmətlər</p></div></div><div class="feature-grid"><article class="feature-card"><h3>🔧 Texniki xidmət</h3><p>Mühərrik, karopka, əyləc, radiator, asqı, kondisioner və yağ dəyişimi.</p><a class="btn" href="#austaAllFunctions">Xidmət seç →</a></article><article class="feature-card"><h3>🎨 Kuzov və görünüş</h3><p>Malyar, dəmirçi, polirovka, detailing, PPF, wrap və faraların bərpası.</p><a class="btn" href="#austaAllFunctions">Usta tap →</a></article><article class="feature-card"><h3>💻 Elektronika</h3><p>Diaqnostika, ECU, proqramlaşdırma, Stage 1/2/3, çip tuning və elektrik.</p><a class="btn" href="#austaAllFunctions">Diaqnostika →</a></article><article class="feature-card red"><h3>🚨 Yol yardımı</h3><p>24/7 mobil usta, akkumulyator, təkər, yanacaq və açar.</p><a class="btn btn-primary" href="#austaAllFunctions">Təcili çağır →</a></article></div></section><section class="section" id="mechanic"><div class="section-heading"><div><h2>🔧 Usta çağır</h2><p>Problemi bildir → yaxın usta → GPS → qiymət → təsdiq → xidmət</p></div></div><div class="tracking"><div class="request-panel"><div class="request-form"><textarea class="full" id="requestProblem" placeholder="Avtomobilinizdə nə problem var? Məsələn: maşın işə düşmür..."></textarea><select id="requestCategory"><option value="automotive_service">Avtomobil xidməti</option><option value="roadside">Yol yardımı</option><option value="diagnostics">Diaqnostika</option><option value="towing">Evakuator</option><option value="cargo_transport">Yük daşıma</option><option value="vehicle_transport">Avtomobil daşınması</option></select><div class="payment-choice"><label for="requestPayment">Ödəniş üsulu</label><select id="requestPayment"><option value="cash">💵 Nağd</option><option value="card">💳 Bank kartı</option></select></div><select id="requestLevel"><option value="standard">Standart</option><option value="priority">Prioritet</option><option value="premium">Premium</option></select><input id="requestBrand" placeholder="Marka"/><input id="requestModel" placeholder="Model"/><input id="requestYear" placeholder="İl"/><input id="requestPlate" placeholder="Dövlət nömrəsi"/><input id="requestPhone" placeholder="Telefon"/><div id="cargoFields" style="display:none;grid-column:1/-1;border:1px solid #174c6e;border-radius:10px;padding:12px;background:#061a29"><strong>📦 Yük məlumatları</strong><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px"><input id="requestCargoWeight" min="0" placeholder="Çəki (kq)" step="1" type="number"/><input id="requestCargoLength" min="0" placeholder="Uzunluq (m)" step="0.01" type="number"/><input id="requestCargoWidth" min="0" placeholder="En (m)" step="0.01" type="number"/><input id="requestCargoHeight" min="0" placeholder="Hündürlük (m)" step="0.01" type="number"/></div><div style="margin-top:8px;color:#8fa5ba;font-size:11px">Çəki və ölçülər uyğun yük nəqliyyatının seçilməsi üçün istifadə olunur.</div></div><input id="requestPickupAddress" placeholder="📍 Götürüləcək ünvan" style="display:none"/><input id="requestDestinationAddress" placeholder="🏁 Çatdırılacaq ünvan" style="display:none"/><button class="btn" id="requestGps">📍 GPS götür</button><button class="btn btn-primary" id="requestSubmit">Usta çağır →</button></div><div class="request-result" id="requestResult"></div><div class="request-control-panel" id="requestControlPanel"><h3>⚙️ Sifariş idarəetməsi</h3><input id="requestProviderId" placeholder="Usta ID"/><input id="requestProviderName" placeholder="Usta adı"/><input id="requestProviderPhone" placeholder="Usta telefonu"/><input id="requestProviderVehicleId" placeholder="Usta nəqliyyat ID"/><input id="requestPrice" placeholder="Yekun qiymət (AZN)" step="0.01" type="number"/><button class="btn" id="requestApprovePrice" type="button">💰 Qiyməti təsdiqlə</button><button class="btn btn-primary" id="requestAssignProvider" type="button">👨‍🔧 Usta təyin et</button><div class="request-lifecycle" id="requestLifecycle"><strong>🔄 Sifariş mərhələləri</strong><div class="lifecycle-buttons"><button class="btn" id="requestProviderAccept" type="button">✓ Usta qəbul etdi</button><button class="btn" id="requestProviderEnRoute" type="button">🚗 Yola çıxdı</button><button class="btn" id="requestProviderArrived" type="button">📍 Çatdı</button><button class="btn" id="requestStartDiagnosis" type="button">🔎 Diaqnostika</button><button class="btn" id="requestRecalculatePrice" type="button">🧮 Yeni qiymət</button><button class="btn" id="requestStartService" type="button">🔧 Xidməti başlat</button><button class="btn" id="requestCreatePayment" type="button">💳 Ödəniş yarat</button><button class="btn" id="requestPaymentPaid" type="button">✅ Ödəniş alındı</button><button class="btn" id="requestCompleteService" type="button">🏁 Xidməti tamamla</button><button class="btn" id="requestCancel" type="button">✕ Sifarişi ləğv et</button></div><div class="request-evidence"><label>📸 Problem/xidmət foto və video</label><input accept="image/*,video/*" id="requestEvidence" multiple="" type="file"/><label class="austa-check"><input id="requestContract" type="checkbox"/> 📄 Rəsmi xidmət müqaviləsi tələb olunur</label><div class="austa-result" id="requestEvidenceResult"></div></div></div></div></div><div class="austa-tool-panel" id="austaServiceQuestions" style="margin-top:10px"><h3>🎯 Seçilmiş xidmət üçün düzgün suallar</h3><div class="austa-mini-note" id="austaServiceQuestionText">Xidmət seçin. A-USTA müştəri və usta üçün yalnız həmin xidmətə uyğun məlumatları göstərir.</div></div>
 <details class="austa-service-chooser" id="austaServiceChooser"><summary>🧰 Usta çağır daxilində bütün xidmətlər</summary><div class="inner" id="austaServiceChooserInner"></div></details>
 <div class="provider-panel"><h3>🔴 Sifariş axını</h3><p style="color:#9db1c4;font-size:12px">A-USTA sifariş statusunu mərhələli izləyir və usta hərəkəti GPS ilə sistemə ötürülə bilər.</p><div class="progress"><span class="step active"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span></div><div class="trust-grid"><div class="trust-item"><div class="trust-icon">📍</div><span>GPS və məkan</span></div><div class="trust-item"><div class="trust-icon">💰</div><span>Qiymət təsdiqi</span></div><div class="trust-item"><div class="trust-icon">📸</div><span>Foto / video sübut</span></div><div class="trust-item"><div class="trust-icon">📄</div><span>Müqavilə / zəmanət</span></div></div></div></div></section><section class="section" id="parts"><div class="section-heading"><div><h2>⚙ Ehtiyat hissələri marketplace</h2><p>Hissəni tap → uyğunluğu yoxla → satıcı seç → sifariş et → çatdırılmanı izlə</p></div><a class="section-link" href="#austaAllFunctions">Xaricdən sifariş →</a></div><div class="austa-parts-gallery" id="austaPartsGallery">
 <article class="austa-part-visual" data-module-open="parts"><img alt="Mühərrik hissələri" loading="lazy" src="https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&amp;fit=crop&amp;w=900&amp;q=82"/><div class="austa-part-visual-body"><b>🔧 Mühərrik hissələri</b><span>Motor • filtr • kəmər • şam</span></div></article>
@@ -17186,9 +17186,7 @@ const FORMS={
     'Servisə gedəcəyəm',
     'Usta müəyyən etsin'
   ]],
-  ['📸 Problem / xidmət foto və video','file'],
-  ['📷 İşdən əvvəl foto — BEFORE','file'],
-  ['📷 İşdən sonra foto — AFTER','file']
+['📸 Problem fotosu (istəyə bağlı)','file']
  ],
  'Turbo təmiri':[
   ['Avtomobil marka / modeli','text'],['Turbo problemi / əsas əlamət','select',['Güc itkisi','Tüstü','Fit / uğultu səsi','Yağ sızması','Turbo gec qoşulur','Check Engine','Digər']],['Problem nə vaxt başlayıb?','text'],['Turbo təzyiqi / diaqnostika nəticəsi','textarea'],['Təxmini yürüş (km)','number'],['Şəkil / video','file']
@@ -17407,8 +17405,7 @@ function openProtected(name){const qs=FORMS[name];if(!qs)return;closeAll();const
 
         const labelNorm=N(q[0]);
 
-        let category='attachments';
-
+      let category='problem';
         if(
           /before|evvel/.test(labelNorm)
         ){
@@ -17597,3 +17594,1933 @@ const supabaseClient = window.supabase.createClient(
 
 window.AUSTA_SUPABASE = supabaseClient;
 </script>
+<!-- =========================================================
+     A-USTA REAL PROVIDER SERVICE ORDER FLOW
+     Backend:
+     GET   /service-order-assignments
+     PATCH /service-order-assignments/:id/accept
+     PATCH /service-order-assignments/:id/reject
+     POST  /service-order-assignments/:id/evidence/before
+     PATCH /service-order-assignments/:id/start
+     POST  /service-order-assignments/:id/evidence/after
+     PATCH /service-order-assignments/:id/complete
+     ========================================================= -->
+
+<style id="austa-real-provider-service-style">
+
+  #austaRealProviderOrders {
+    margin: 18px 0;
+    padding: 16px;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    background: #090909;
+    color: #ffffff;
+  }
+
+  #austaRealProviderOrders * {
+    box-sizing: border-box;
+  }
+
+  .austa-provider-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .austa-provider-head h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #ffffff;
+  }
+
+  .austa-provider-head p {
+    width: 100%;
+    margin: 0;
+    color: #9ca3af;
+    font-size: 12px;
+  }
+
+  .austa-provider-refresh {
+    border: 1px solid #3a3a3a;
+    background: #151515;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 9px 12px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .austa-provider-refresh:hover {
+    border-color: #e11d2e;
+  }
+
+  #austaProviderOrderStatus {
+    display: none;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #141414;
+    border: 1px solid #303030;
+    font-size: 12px;
+  }
+
+  #austaProviderOrderStatus.show {
+    display: block;
+  }
+
+  #austaProviderOrderStatus.success {
+    border-color: #166534;
+  }
+
+  #austaProviderOrderStatus.error {
+    border-color: #991b1b;
+  }
+
+  .austa-provider-orders-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .austa-provider-empty {
+    padding: 18px;
+    border: 1px dashed #333333;
+    border-radius: 12px;
+    text-align: center;
+    color: #9ca3af;
+  }
+
+  .austa-provider-order-card {
+    border: 1px solid #292929;
+    border-radius: 14px;
+    padding: 14px;
+    background: #101010;
+  }
+
+  .austa-provider-order-card[data-status="offered"] {
+    border-color: #7f1d1d;
+  }
+
+  .austa-provider-order-card[data-status="accepted"] {
+    border-color: #991b1b;
+  }
+
+  .austa-provider-order-card[data-order-status="in_progress"] {
+    border-color: #b91c1c;
+  }
+
+  .austa-provider-order-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .austa-provider-order-title {
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .austa-provider-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #231113;
+    border: 1px solid #7f1d1d;
+    color: #fca5a5;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .austa-provider-order-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px 12px;
+    margin: 10px 0;
+    font-size: 12px;
+  }
+
+  .austa-provider-order-info div {
+    min-width: 0;
+    color: #b8b8b8;
+    word-break: break-word;
+  }
+
+  .austa-provider-order-info strong {
+    color: #ffffff;
+  }
+
+  .austa-provider-description {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 10px;
+    background: #080808;
+    border: 1px solid #222222;
+    color: #d1d5db;
+    font-size: 12px;
+    white-space: pre-wrap;
+  }
+
+  .austa-provider-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .austa-provider-action {
+    border: 1px solid #383838;
+    background: #181818;
+    color: #ffffff;
+    padding: 9px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 12px;
+  }
+
+  .austa-provider-action.primary {
+    background: #c51627;
+    border-color: #e11d2e;
+  }
+
+  .austa-provider-action.danger {
+    border-color: #7f1d1d;
+    color: #fca5a5;
+  }
+
+  .austa-provider-action:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .austa-provider-stage {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #080808;
+    border: 1px solid #252525;
+  }
+
+  .austa-provider-stage-title {
+    margin-bottom: 8px;
+    font-weight: 800;
+    font-size: 13px;
+  }
+
+  .austa-provider-stage-note {
+    margin: 5px 0 10px;
+    color: #9ca3af;
+    font-size: 11px;
+  }
+
+  .austa-provider-file {
+    display: block;
+    width: 100%;
+    margin-bottom: 9px;
+    padding: 9px;
+    border: 1px solid #333333;
+    border-radius: 9px;
+    background: #111111;
+    color: #ffffff;
+  }
+
+  .austa-evidence-ok {
+    color: #86efac;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  @media (max-width: 700px) {
+    .austa-provider-order-info {
+      grid-template-columns: 1fr;
+    }
+
+    .austa-provider-action {
+      width: 100%;
+    }
+  }
+
+</style>
+
+<section id="austaRealProviderOrders">
+
+  <div class="austa-provider-head">
+
+    <h3>
+      👨‍🔧 Usta sifarişləri
+    </h3>
+
+    <button
+      class="austa-provider-refresh"
+      id="austaProviderRefresh"
+      type="button"
+    >
+      ↻ Yenilə
+    </button>
+
+    <p>
+      Sizə təklif və ya təyin edilmiş real xidmət sifarişləri.
+    </p>
+
+  </div>
+
+  <div id="austaProviderOrderStatus"></div>
+
+  <div
+    class="austa-provider-orders-list"
+    id="austaProviderOrdersList"
+  >
+    <div class="austa-provider-empty">
+      Sifarişlər yüklənir...
+    </div>
+  </div>
+
+</section>
+
+<script id="austa-real-provider-service-flow">
+(() => {
+
+  const API_BASE =
+    "https://a-usta-webside.onrender.com";
+
+  const list =
+    document.getElementById(
+      "austaProviderOrdersList"
+    );
+
+  const statusBox =
+    document.getElementById(
+      "austaProviderOrderStatus"
+    );
+
+  const refreshButton =
+    document.getElementById(
+      "austaProviderRefresh"
+    );
+
+  if (
+    !list ||
+    !statusBox ||
+    !refreshButton
+  ) {
+    return;
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function showStatus(
+    message,
+    type = ""
+  ) {
+
+    statusBox.textContent =
+      message;
+
+    statusBox.className =
+      "show" +
+      (
+        type
+          ? " " + type
+          : ""
+      );
+
+  }
+
+
+  function clearStatus() {
+
+    statusBox.textContent =
+      "";
+
+    statusBox.className =
+      "";
+
+  }
+
+
+  async function getSession() {
+
+    if (
+      !window.AUSTA_SUPABASE
+    ) {
+      throw new Error(
+        "Supabase bağlantısı tapılmadı."
+      );
+    }
+
+    const {
+      data,
+      error
+    } =
+      await window.AUSTA_SUPABASE
+        .auth
+        .getSession();
+
+    if (error) {
+      throw error;
+    }
+
+    const session =
+      data?.session;
+
+    if (
+      !session?.access_token
+    ) {
+      throw new Error(
+        "Aktiv giriş yoxdur. Usta hesabına daxil olun."
+      );
+    }
+
+    return session;
+
+  }
+
+
+  async function apiRequest(
+    path,
+    options = {}
+  ) {
+
+    const session =
+      await getSession();
+
+    const headers =
+      new Headers(
+        options.headers || {}
+      );
+
+    headers.set(
+      "Authorization",
+      `Bearer ${session.access_token}`
+    );
+
+    if (
+      options.body &&
+      !(
+        options.body
+        instanceof FormData
+      )
+    ) {
+      headers.set(
+        "Content-Type",
+        "application/json"
+      );
+    }
+
+    const response =
+      await fetch(
+        API_BASE + path,
+        {
+          ...options,
+          headers
+        }
+      );
+
+    let result = null;
+
+    try {
+
+      result =
+        await response.json();
+
+    } catch {
+
+      result = null;
+
+    }
+
+    if (
+      !response.ok
+    ) {
+
+      throw new Error(
+        result?.message ||
+        result?.error ||
+        `Server xətası (${response.status})`
+      );
+
+    }
+
+    return result;
+
+  }
+
+
+  function getEvidence(
+    order
+  ) {
+
+    return Array.isArray(
+      order?.evidence_files
+    )
+      ? order.evidence_files
+      : [];
+
+  }
+
+
+  function hasStageEvidence(
+    assignment,
+    stage
+  ) {
+
+    return getEvidence(
+      assignment?.order
+    ).some(
+      item =>
+        item &&
+        item.category === stage &&
+        item.assignment_id ===
+          assignment.id
+    );
+
+  }
+
+
+  function statusText(
+    assignment
+  ) {
+
+    const orderStatus =
+      assignment?.order?.status;
+
+    if (
+      orderStatus ===
+      "completed"
+    ) {
+      return "Tamamlanıb";
+    }
+
+    if (
+      orderStatus ===
+      "in_progress"
+    ) {
+      return "İş gedir";
+    }
+
+    if (
+      assignment?.status ===
+      "accepted"
+    ) {
+      return "Qəbul edilib";
+    }
+
+    if (
+      assignment?.status ===
+      "rejected"
+    ) {
+      return "Rədd edilib";
+    }
+
+    if (
+      assignment?.status ===
+      "offered"
+    ) {
+      return "Yeni təklif";
+    }
+
+    return (
+      assignment?.status ||
+      orderStatus ||
+      "Naməlum"
+    );
+
+  }
+
+
+  function renderAssignment(
+    assignment
+  ) {
+
+    const order =
+      assignment.order || {};
+
+    const assignmentStatus =
+      assignment.status || "";
+
+    const orderStatus =
+      order.status || "";
+
+    const beforeUploaded =
+      hasStageEvidence(
+        assignment,
+        "before"
+      );
+
+    const afterUploaded =
+      hasStageEvidence(
+        assignment,
+        "after"
+      );
+
+    const title =
+      order.service_description ||
+      order.service_category ||
+      "Xidmət sifarişi";
+
+    const clientOrderId =
+      order.client_order_id ||
+      order.id ||
+      "—";
+
+    const serviceMode =
+      order.service_mode ||
+      "—";
+
+    const urgency =
+      order.urgency ||
+      "—";
+
+    const createdAt =
+      order.created_at
+        ? new Date(
+            order.created_at
+          ).toLocaleString(
+            "az-AZ"
+          )
+        : "—";
+
+
+    let actionHtml = "";
+
+
+    if (
+      assignmentStatus ===
+      "offered"
+    ) {
+
+      actionHtml = `
+        <div class="austa-provider-actions">
+
+          <button
+            class="austa-provider-action primary"
+            type="button"
+            data-austa-provider-action="accept"
+            data-assignment-id="${escapeHtml(
+              assignment.id
+            )}"
+          >
+            ✓ Sifarişi qəbul et
+          </button>
+
+          <button
+            class="austa-provider-action danger"
+            type="button"
+            data-austa-provider-action="reject"
+            data-assignment-id="${escapeHtml(
+              assignment.id
+            )}"
+          >
+            ✕ Rədd et
+          </button>
+
+        </div>
+      `;
+
+    }
+
+
+    if (
+      assignmentStatus ===
+        "accepted" &&
+      orderStatus ===
+        "accepted"
+    ) {
+
+      actionHtml = `
+        <div class="austa-provider-stage">
+
+          <div class="austa-provider-stage-title">
+            📷 İşdən əvvəl — BEFORE
+          </div>
+
+          ${
+            beforeUploaded
+              ? `
+                <div class="austa-evidence-ok">
+                  ✓ BEFORE foto yüklənib
+                </div>
+              `
+              : `
+                <div class="austa-provider-stage-note">
+                  Xidmətə başlamazdan əvvəl
+                  avtomobilin mövcud vəziyyətinin
+                  fotosunu yükləyin.
+                </div>
+
+                <input
+                  class="austa-provider-file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  data-before-file="${escapeHtml(
+                    assignment.id
+                  )}"
+                />
+
+                <button
+                  class="austa-provider-action"
+                  type="button"
+                  data-austa-provider-action="before"
+                  data-assignment-id="${escapeHtml(
+                    assignment.id
+                  )}"
+                >
+                  📤 BEFORE foto yüklə
+                </button>
+              `
+          }
+
+          <div class="austa-provider-actions">
+
+            <button
+              class="austa-provider-action primary"
+              type="button"
+              data-austa-provider-action="start"
+              data-assignment-id="${escapeHtml(
+                assignment.id
+              )}"
+              ${
+                beforeUploaded
+                  ? ""
+                  : "disabled"
+              }
+            >
+              🔧 Xidməti başlat
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+    }
+
+
+    if (
+      assignmentStatus ===
+        "accepted" &&
+      orderStatus ===
+        "in_progress"
+    ) {
+
+      actionHtml = `
+        <div class="austa-provider-stage">
+
+          <div class="austa-provider-stage-title">
+            📷 İşdən sonra — AFTER
+          </div>
+
+          ${
+            afterUploaded
+              ? `
+                <div class="austa-evidence-ok">
+                  ✓ AFTER foto yüklənib
+                </div>
+              `
+              : `
+                <div class="austa-provider-stage-note">
+                  İş tamamlandıqdan sonra
+                  nəticənin fotosunu yükləyin.
+                </div>
+
+                <input
+                  class="austa-provider-file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  data-after-file="${escapeHtml(
+                    assignment.id
+                  )}"
+                />
+
+                <button
+                  class="austa-provider-action"
+                  type="button"
+                  data-austa-provider-action="after"
+                  data-assignment-id="${escapeHtml(
+                    assignment.id
+                  )}"
+                >
+                  📤 AFTER foto yüklə
+                </button>
+              `
+          }
+
+          <div class="austa-provider-actions">
+
+            <button
+              class="austa-provider-action primary"
+              type="button"
+              data-austa-provider-action="complete"
+              data-assignment-id="${escapeHtml(
+                assignment.id
+              )}"
+              ${
+                afterUploaded
+                  ? ""
+                  : "disabled"
+              }
+            >
+              🏁 Xidməti tamamla
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+    }
+
+
+    return `
+      <article
+        class="austa-provider-order-card"
+        data-status="${escapeHtml(
+          assignmentStatus
+        )}"
+        data-order-status="${escapeHtml(
+          orderStatus
+        )}"
+      >
+
+        <div class="austa-provider-order-top">
+
+          <div class="austa-provider-order-title">
+            ${escapeHtml(
+              title
+            )}
+          </div>
+
+          <span class="austa-provider-badge">
+            ${escapeHtml(
+              statusText(
+                assignment
+              )
+            )}
+          </span>
+
+        </div>
+
+        <div class="austa-provider-order-info">
+
+          <div>
+            <strong>Sifariş:</strong>
+            ${escapeHtml(
+              clientOrderId
+            )}
+          </div>
+
+          <div>
+            <strong>Rejim:</strong>
+            ${escapeHtml(
+              serviceMode
+            )}
+          </div>
+
+          <div>
+            <strong>Təcili:</strong>
+            ${escapeHtml(
+              urgency
+            )}
+          </div>
+
+          <div>
+            <strong>Tarix:</strong>
+            ${escapeHtml(
+              createdAt
+            )}
+          </div>
+
+        </div>
+
+        ${
+          order.service_description
+            ? `
+              <div class="austa-provider-description">
+                ${escapeHtml(
+                  order.service_description
+                )}
+              </div>
+            `
+            : ""
+        }
+
+        ${actionHtml}
+
+      </article>
+    `;
+
+  }
+
+
+  async function loadAssignments() {
+
+    clearStatus();
+
+    list.innerHTML = `
+      <div class="austa-provider-empty">
+        Sifarişlər yüklənir...
+      </div>
+    `;
+
+    try {
+
+      const result =
+        await apiRequest(
+          "/service-order-assignments",
+          {
+            method: "GET"
+          }
+        );
+
+      const assignments =
+        Array.isArray(
+          result?.assignments
+        )
+          ? result.assignments
+          : [];
+
+      if (
+        assignments.length === 0
+      ) {
+
+        list.innerHTML = `
+          <div class="austa-provider-empty">
+            Hazırda sizə təklif və ya
+            təyin edilmiş sifariş yoxdur.
+          </div>
+        `;
+
+        return;
+
+      }
+
+      list.innerHTML =
+        assignments
+          .map(
+            renderAssignment
+          )
+          .join("");
+
+    } catch (error) {
+
+      list.innerHTML = `
+        <div class="austa-provider-empty">
+          Sifarişlər göstərilə bilmədi.
+        </div>
+      `;
+
+      showStatus(
+        error?.message ||
+        "Sifarişlər yüklənmədi.",
+        "error"
+      );
+
+    }
+
+  }
+
+
+  async function acceptAssignment(
+    assignmentId
+  ) {
+
+    await apiRequest(
+      `/service-order-assignments/${encodeURIComponent(
+        assignmentId
+      )}/accept`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({})
+      }
+    );
+
+    showStatus(
+      "✓ Sifariş qəbul edildi. İndi BEFORE foto yükləyin.",
+      "success"
+    );
+
+  }
+
+
+  async function rejectAssignment(
+    assignmentId
+  ) {
+
+    await apiRequest(
+      `/service-order-assignments/${encodeURIComponent(
+        assignmentId
+      )}/reject`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({})
+      }
+    );
+
+    showStatus(
+      "Sifariş rədd edildi.",
+      "success"
+    );
+
+  }
+
+
+  async function uploadEvidence(
+    assignmentId,
+    stage
+  ) {
+
+    const selector =
+      stage === "before"
+        ? `[data-before-file="${CSS.escape(
+            assignmentId
+          )}"]`
+        : `[data-after-file="${CSS.escape(
+            assignmentId
+          )}"]`;
+
+    const input =
+      document.querySelector(
+        selector
+      );
+
+    const file =
+      input?.files?.[0];
+
+    if (!file) {
+
+      throw new Error(
+        stage === "before"
+          ? "BEFORE foto seçin."
+          : "AFTER foto seçin."
+      );
+
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (
+      !allowedTypes.includes(
+        file.type
+      )
+    ) {
+
+      throw new Error(
+        "Yalnız JPEG, PNG və ya WEBP foto qəbul olunur."
+      );
+
+    }
+
+    if (
+      file.size >
+      10 * 1024 * 1024
+    ) {
+
+      throw new Error(
+        "Foto 10 MB-dan böyük ola bilməz."
+      );
+
+    }
+
+    const formData =
+      new FormData();
+
+    formData.append(
+      "file",
+      file
+    );
+
+    await apiRequest(
+      `/service-order-assignments/${encodeURIComponent(
+        assignmentId
+      )}/evidence/${stage}`,
+      {
+        method: "POST",
+        body: formData
+      }
+    );
+
+    showStatus(
+      stage === "before"
+        ? "✓ BEFORE foto backend və Storage-a yükləndi."
+        : "✓ AFTER foto backend və Storage-a yükləndi.",
+      "success"
+    );
+
+  }
+
+
+  async function startService(
+    assignmentId
+  ) {
+
+    await apiRequest(
+      `/service-order-assignments/${encodeURIComponent(
+        assignmentId
+      )}/start`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({})
+      }
+    );
+
+    showStatus(
+      "🔧 Xidmət başladıldı.",
+      "success"
+    );
+
+  }
+
+
+  async function completeService(
+    assignmentId
+  ) {
+
+    await apiRequest(
+      `/service-order-assignments/${encodeURIComponent(
+        assignmentId
+      )}/complete`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({})
+      }
+    );
+
+    showStatus(
+      "🏁 Xidmət uğurla tamamlandı.",
+      "success"
+    );
+
+  }
+
+
+  list.addEventListener(
+    "click",
+    async event => {
+
+      const button =
+        event.target.closest(
+          "[data-austa-provider-action]"
+        );
+
+      if (
+        !button ||
+        button.disabled
+      ) {
+        return;
+      }
+
+      const action =
+        button.dataset
+          .austaProviderAction;
+
+      const assignmentId =
+        button.dataset
+          .assignmentId;
+
+      if (
+        !action ||
+        !assignmentId
+      ) {
+        return;
+      }
+
+      button.disabled =
+        true;
+
+      const originalText =
+        button.textContent;
+
+      button.textContent =
+        "Gözləyin...";
+
+      try {
+
+        if (
+          action === "accept"
+        ) {
+
+          await acceptAssignment(
+            assignmentId
+          );
+
+        } else if (
+          action === "reject"
+        ) {
+
+          await rejectAssignment(
+            assignmentId
+          );
+
+        } else if (
+          action === "before"
+        ) {
+
+          await uploadEvidence(
+            assignmentId,
+            "before"
+          );
+
+        } else if (
+          action === "start"
+        ) {
+
+          await startService(
+            assignmentId
+          );
+
+        } else if (
+          action === "after"
+        ) {
+
+          await uploadEvidence(
+            assignmentId,
+            "after"
+          );
+
+        } else if (
+          action === "complete"
+        ) {
+
+          await completeService(
+            assignmentId
+          );
+
+        }
+
+        await loadAssignments();
+
+      } catch (error) {
+
+        showStatus(
+          error?.message ||
+          "Əməliyyat baş tutmadı.",
+          "error"
+        );
+
+      } finally {
+
+        if (
+          document.body.contains(
+            button
+          )
+        ) {
+
+          button.disabled =
+            false;
+
+          button.textContent =
+            originalText;
+
+        }
+
+      }
+
+    }
+  );
+
+
+  refreshButton.addEventListener(
+    "click",
+    loadAssignments
+  );
+
+
+  window.AUSTA_PROVIDER_SERVICE =
+    {
+      refresh:
+        loadAssignments
+    };
+
+
+  loadAssignments();
+
+})();
+</script>
+<!-- =========================================================
+     A-USTA REAL CUSTOMER SERVICE ORDERS
+     GET /service-orders
+     ========================================================= -->
+
+<style id="austa-real-customer-orders-style">
+
+  #austaRealCustomerOrders {
+    margin: 18px 0;
+    padding: 16px;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    background: #090909;
+    color: #ffffff;
+  }
+
+  #austaRealCustomerOrders * {
+    box-sizing: border-box;
+  }
+
+  .austa-customer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .austa-customer-head h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 18px;
+  }
+
+  .austa-customer-head p {
+    width: 100%;
+    margin: 0;
+    color: #9ca3af;
+    font-size: 12px;
+  }
+
+  .austa-customer-refresh {
+    border: 1px solid #3a3a3a;
+    background: #151515;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 9px 12px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .austa-customer-refresh:hover {
+    border-color: #e11d2e;
+  }
+
+  #austaCustomerOrderStatus {
+    display: none;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #141414;
+    border: 1px solid #303030;
+    font-size: 12px;
+  }
+
+  #austaCustomerOrderStatus.show {
+    display: block;
+  }
+
+  #austaCustomerOrderStatus.error {
+    border-color: #991b1b;
+  }
+
+  .austa-customer-orders-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .austa-customer-empty {
+    padding: 18px;
+    border: 1px dashed #333333;
+    border-radius: 12px;
+    color: #9ca3af;
+    text-align: center;
+  }
+
+  .austa-customer-order-card {
+    padding: 14px;
+    border: 1px solid #292929;
+    border-radius: 14px;
+    background: #101010;
+  }
+
+  .austa-customer-order-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .austa-customer-order-title {
+    color: #ffffff;
+    font-weight: 800;
+  }
+
+  .austa-customer-order-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border: 1px solid #7f1d1d;
+    border-radius: 999px;
+    background: #231113;
+    color: #fca5a5;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .austa-customer-order-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px 12px;
+    margin-top: 12px;
+    font-size: 12px;
+  }
+
+  .austa-customer-order-info div {
+    color: #b8b8b8;
+    word-break: break-word;
+  }
+
+  .austa-customer-order-info strong {
+    color: #ffffff;
+  }
+
+  .austa-customer-provider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid #3a2023;
+    border-radius: 12px;
+    background: #130b0c;
+  }
+
+  .austa-customer-provider-avatar {
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #5a252b;
+    border-radius: 50%;
+    background: #202020;
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .austa-customer-provider-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .austa-customer-provider-data {
+    min-width: 0;
+  }
+
+  .austa-customer-provider-data strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #ffffff;
+  }
+
+  .austa-customer-provider-data div {
+    color: #c9c9c9;
+    font-size: 12px;
+    word-break: break-word;
+  }
+
+  .austa-customer-waiting {
+    margin-top: 12px;
+    padding: 10px;
+    border: 1px dashed #333333;
+    border-radius: 10px;
+    color: #9ca3af;
+    font-size: 12px;
+  }
+
+  @media (max-width: 700px) {
+    .austa-customer-order-info {
+      grid-template-columns: 1fr;
+    }
+  }
+
+</style>
+
+<section id="austaRealCustomerOrders">
+
+  <div class="austa-customer-head">
+
+    <h3>
+      🚘 Sifarişlərim
+    </h3>
+
+    <button
+      class="austa-customer-refresh"
+      id="austaCustomerRefresh"
+      type="button"
+    >
+      ↻ Yenilə
+    </button>
+
+    <p>
+      Real xidmət sifarişləriniz və sifarişi qəbul edən usta.
+    </p>
+
+  </div>
+
+  <div id="austaCustomerOrderStatus"></div>
+
+  <div
+    class="austa-customer-orders-list"
+    id="austaCustomerOrdersList"
+  >
+    <div class="austa-customer-empty">
+      Sifarişlər yüklənir...
+    </div>
+  </div>
+
+</section>
+
+<script id="austa-real-customer-service-orders">
+(() => {
+
+  const API_BASE =
+    "https://a-usta-webside.onrender.com";
+
+  const list =
+    document.getElementById(
+      "austaCustomerOrdersList"
+    );
+
+  const statusBox =
+    document.getElementById(
+      "austaCustomerOrderStatus"
+    );
+
+  const refreshButton =
+    document.getElementById(
+      "austaCustomerRefresh"
+    );
+
+  if (
+    !list ||
+    !statusBox ||
+    !refreshButton
+  ) {
+    return;
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+
+  function showStatus(message) {
+
+    statusBox.textContent =
+      message;
+
+    statusBox.className =
+      "show error";
+
+  }
+
+
+  function clearStatus() {
+
+    statusBox.textContent =
+      "";
+
+    statusBox.className =
+      "";
+
+  }
+
+
+  async function getSession() {
+
+    if (
+      !window.AUSTA_SUPABASE
+    ) {
+      throw new Error(
+        "Supabase bağlantısı tapılmadı."
+      );
+    }
+
+    const {
+      data,
+      error
+    } =
+      await window.AUSTA_SUPABASE
+        .auth
+        .getSession();
+
+    if (error) {
+      throw error;
+    }
+
+    if (
+      !data?.session?.access_token
+    ) {
+      throw new Error(
+        "Aktiv giriş yoxdur. Sifarişləri görmək üçün hesabınıza daxil olun."
+      );
+    }
+
+    return data.session;
+
+  }
+
+
+  async function loadOrders() {
+
+    clearStatus();
+
+    list.innerHTML = `
+      <div class="austa-customer-empty">
+        Sifarişlər yüklənir...
+      </div>
+    `;
+
+    try {
+
+      const session =
+        await getSession();
+
+      const response =
+        await fetch(
+          API_BASE +
+          "/service-orders",
+          {
+            method: "GET",
+
+            headers: {
+              Authorization:
+                `Bearer ${session.access_token}`
+            }
+          }
+        );
+
+      let result = null;
+
+      try {
+
+        result =
+          await response.json();
+
+      } catch {
+
+        result = null;
+
+      }
+
+      if (!response.ok) {
+
+        throw new Error(
+          result?.message ||
+          result?.error ||
+          `Server xətası (${response.status})`
+        );
+
+      }
+
+
+      const orders =
+        Array.isArray(result?.orders)
+          ? result.orders
+          : Array.isArray(result)
+            ? result
+            : [];
+
+
+      if (
+        orders.length === 0
+      ) {
+
+        list.innerHTML = `
+          <div class="austa-customer-empty">
+            Hələ real xidmət sifarişiniz yoxdur.
+          </div>
+        `;
+
+        return;
+
+      }
+
+
+      list.innerHTML =
+        orders
+          .map(renderOrder)
+          .join("");
+
+
+    } catch (error) {
+
+      list.innerHTML = `
+        <div class="austa-customer-empty">
+          Sifarişlər göstərilə bilmədi.
+        </div>
+      `;
+
+      showStatus(
+        error?.message ||
+        "Sifarişlər yüklənmədi."
+      );
+
+    }
+
+  }
+
+
+  function getStatusText(status) {
+
+    const statuses = {
+
+      pending:
+        "Usta gözlənilir",
+
+      accepted:
+        "Usta qəbul edib",
+
+      in_progress:
+        "Xidmət davam edir",
+
+      completed:
+        "Tamamlanıb",
+
+      cancelled:
+        "Ləğv edilib"
+
+    };
+
+    return (
+      statuses[status] ||
+      status ||
+      "Naməlum"
+    );
+
+  }
+
+
+  function renderProvider(provider) {
+
+    if (!provider) {
+
+      return `
+        <div class="austa-customer-waiting">
+          👨‍🔧 Hələ usta təyin edilməyib.
+          Sifariş uyğun ustalara göndərilir.
+        </div>
+      `;
+
+    }
+
+
+    const name =
+      provider.full_name ||
+      "A-USTA ustası";
+
+    const phone =
+      provider.phone || "";
+
+    const avatar =
+      provider.avatar_url || "";
+
+    const firstLetter =
+      String(name)
+        .trim()
+        .charAt(0)
+        .toUpperCase() ||
+      "U";
+
+
+    const avatarHtml =
+      avatar
+        ? `
+          <img
+            src="${escapeHtml(avatar)}"
+            alt="${escapeHtml(name)}"
+            loading="lazy"
+          />
+        `
+        : escapeHtml(firstLetter);
+
+
+    return `
+      <div class="austa-customer-provider">
+
+        <div class="austa-customer-provider-avatar">
+          ${avatarHtml}
+        </div>
+
+        <div class="austa-customer-provider-data">
+
+          <strong>
+            👨‍🔧 ${escapeHtml(name)}
+          </strong>
+
+          ${
+            phone
+              ? `
+                <div>
+                  📞 ${escapeHtml(phone)}
+                </div>
+              `
+              : `
+                <div>
+                  Telefon məlumatı göstərilməyib.
+                </div>
+              `
+          }
+
+        </div>
+
+      </div>
+    `;
+
+  }
+
+
+  function renderOrder(order) {
+
+    const title =
+      order.service_description ||
+      order.service_category ||
+      "Xidmət sifarişi";
+
+    const orderNumber =
+      order.client_order_id ||
+      order.id ||
+      "—";
+
+    const status =
+      order.status ||
+      "pending";
+
+    const serviceMode =
+      order.service_mode ||
+      "—";
+
+    const urgency =
+      order.urgency ||
+      "—";
+
+    const createdAt =
+      order.created_at
+        ? new Date(
+            order.created_at
+          ).toLocaleString(
+            "az-AZ"
+          )
+        : "—";
+
+
+    return `
+      <article class="austa-customer-order-card">
+
+        <div class="austa-customer-order-top">
+
+          <div class="austa-customer-order-title">
+            ${escapeHtml(title)}
+          </div>
+
+          <span class="austa-customer-order-badge">
+            ${escapeHtml(
+              getStatusText(status)
+            )}
+          </span>
+
+        </div>
+
+        <div class="austa-customer-order-info">
+
+          <div>
+            <strong>Sifariş:</strong>
+            ${escapeHtml(orderNumber)}
+          </div>
+
+          <div>
+            <strong>Rejim:</strong>
+            ${escapeHtml(serviceMode)}
+          </div>
+
+          <div>
+            <strong>Təcili:</strong>
+            ${escapeHtml(urgency)}
+          </div>
+
+          <div>
+            <strong>Tarix:</strong>
+            ${escapeHtml(createdAt)}
+          </div>
+
+        </div>
+
+        ${renderProvider(
+          order.provider
+        )}
+
+      </article>
+    `;
+
+  }
+
+
+  refreshButton.addEventListener(
+    "click",
+    loadOrders
+  );
+
+
+  window.AUSTA_CUSTOMER_SERVICE =
+    {
+      refresh:
+        loadOrders
+    };
+
+
+  loadOrders();
+
+})();
+</script>
+
