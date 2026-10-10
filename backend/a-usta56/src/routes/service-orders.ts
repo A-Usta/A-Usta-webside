@@ -2081,141 +2081,224 @@ if (evidenceFiles === null) {
     },
   );
 
-  /*
-   * ==========================================================
-   * PATCH /service-order-assignments/:assignmentId/start
-   * Provider qəbul etdiyi sifarişə başlayır.
-   * ==========================================================
-   */
+/*
+ * ==========================================================
+ * PATCH /service-order-assignments/:assignmentId/start
+ * Provider qəbul etdiyi sifarişə başlayır.
+ * Order və assignment birlikdə in_progress olur.
+ * ==========================================================
+ */
 
-  app.patch(
-    "/service-order-assignments/:assignmentId/start",
-    {
-      preHandler: requireAuth,
-    },
-    async (request, reply) => {
-      const providerUserId =
-        getAuthenticatedUserId(
-          request,
-        );
+app.patch(
+  "/service-order-assignments/:assignmentId/start",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
+    const providerUserId =
+      getAuthenticatedUserId(
+        request,
+      );
 
-      const params =
-        request.params as {
-          assignmentId?: string;
-        };
+    const params =
+      request.params as {
+        assignmentId?: string;
+      };
 
-      if (
-        !isNonEmptyString(
-          params.assignmentId,
-        )
-      ) {
-        return sendBadRequest(
-          reply,
-          "assignmentId is required",
-        );
-      }
+    if (
+      !isNonEmptyString(
+        params.assignmentId,
+      )
+    ) {
+      return sendBadRequest(
+        reply,
+        "assignmentId is required",
+      );
+    }
 
+    const {
+      data: assignment,
+      error: assignmentError,
+    } = await supabase
+      .from(
+        "service_order_assignments",
+      )
+      .select("*")
+      .eq(
+        "id",
+        params.assignmentId,
+      )
+      .single();
+
+    if (
+      assignmentError ||
+      !assignment
+    ) {
+      return sendNotFound(
+        reply,
+        "Service order assignment not found",
+      );
+    }
+
+    if (
+      assignment.provider_id !==
+      providerUserId
+    ) {
+      return sendForbidden(
+        reply,
+        "You are not allowed to start this assignment",
+      );
+    }
+
+    if (
+      assignment.status !==
+      "accepted"
+    ) {
+      return sendConflict(
+        reply,
+        "Only accepted assignments can be started",
+      );
+    }
+
+    const {
+      data: order,
+      error: orderError,
+    } = await supabase
+      .from("service_orders")
+      .select("*")
+      .eq(
+        "id",
+        assignment.order_id,
+      )
+      .single();
+
+    if (
+      orderError ||
+      !order
+    ) {
+      return sendNotFound(
+        reply,
+        "Service order not found",
+      );
+    }
+
+    if (
+      order.status !==
+      "accepted"
+    ) {
+      return sendConflict(
+        reply,
+        "Only accepted service orders can be started",
+      );
+    }
+
+    if (
+      !hasAssignmentEvidence(
+        order.evidence_files,
+        "before",
+        assignment.id,
+      )
+    ) {
+      return sendConflict(
+        reply,
+        "BEFORE photo is required before starting the service",
+      );
+    }
+
+    const startedAt =
+      new Date().toISOString();
+
+    /*
+     * Əvvəl order statusunu
+     * in_progress edirik.
+     */
+    const {
+      data: startedOrder,
+      error: startOrderError,
+    } = await supabase
+      .from("service_orders")
+      .update({
+        status: "in_progress",
+        started_at:
+          startedAt,
+      })
+      .eq(
+        "id",
+        assignment.order_id,
+      )
+      .eq(
+        "status",
+        "accepted",
+      )
+      .select("*")
+      .single();
+
+    if (
+      startOrderError ||
+      !startedOrder
+    ) {
+      app.log.error(
+        startOrderError,
+      );
+
+      return sendConflict(
+        reply,
+        "Service order could not be started",
+      );
+    }
+
+    /*
+     * Sonra assignment statusunu da
+     * in_progress edirik.
+     */
+    const {
+      data: startedAssignment,
+      error: startAssignmentError,
+    } = await supabase
+      .from(
+        "service_order_assignments",
+      )
+      .update({
+        status: "in_progress",
+        updated_at:
+          startedAt,
+      })
+      .eq(
+        "id",
+        assignment.id,
+      )
+      .eq(
+        "provider_id",
+        providerUserId,
+      )
+      .eq(
+        "status",
+        "accepted",
+      )
+      .select("*")
+      .single();
+
+    if (
+      startAssignmentError ||
+      !startedAssignment
+    ) {
+      app.log.error(
+        startAssignmentError,
+      );
+
+      /*
+       * Assignment yenilənməzsə,
+       * order-i accepted vəziyyətinə
+       * geri qaytarırıq ki statuslar
+       * bir-birindən ayrılmasın.
+       */
       const {
-        data: assignment,
-        error: assignmentError,
-      } = await supabase
-        .from(
-          "service_order_assignments",
-        )
-        .select("*")
-        .eq(
-          "id",
-          params.assignmentId,
-        )
-        .single();
-
-      if (
-        assignmentError ||
-        !assignment
-      ) {
-        return sendNotFound(
-          reply,
-          "Service order assignment not found",
-        );
-      }
-
-      if (
-        assignment.provider_id !==
-        providerUserId
-      ) {
-        return sendForbidden(
-          reply,
-          "You are not allowed to start this assignment",
-        );
-      }
-
-      if (
-        assignment.status !==
-        "accepted"
-      ) {
-        return sendConflict(
-          reply,
-          "Only accepted assignments can be started",
-        );
-      }
-
-      const {
-        data: order,
-        error: orderError,
-      } = await supabase
-        .from("service_orders")
-        .select("*")
-        .eq(
-          "id",
-          assignment.order_id,
-        )
-        .single();
-
-      if (
-        orderError ||
-        !order
-      ) {
-        return sendNotFound(
-          reply,
-          "Service order not found",
-        );
-      }
-
-      if (
-        order.status !==
-        "accepted"
-      ) {
-        return sendConflict(
-          reply,
-          "Only accepted service orders can be started",
-        );
-      }
-
-      if (
-        !hasAssignmentEvidence(
-          order.evidence_files,
-          "before",
-          assignment.id,
-        )
-      ) {
-        return sendConflict(
-          reply,
-          "BEFORE photo is required before starting the service",
-        );
-      }
-
-      const startedAt =
-        new Date().toISOString();
-
-      const {
-        data: startedOrder,
-        error: startError,
+        error: rollbackError,
       } = await supabase
         .from("service_orders")
         .update({
-          status: "in_progress",
-          started_at:
-            startedAt,
+          status: "accepted",
+          started_at: null,
         })
         .eq(
           "id",
@@ -2223,34 +2306,35 @@ if (evidenceFiles === null) {
         )
         .eq(
           "status",
-          "accepted",
-        )
-        .select("*")
-        .single();
-
-      if (
-        startError ||
-        !startedOrder
-      ) {
-        app.log.error(
-          startError,
+          "in_progress",
         );
 
-        return sendConflict(
-          reply,
-          "Service order could not be started",
+      if (rollbackError) {
+        app.log.error(
+          rollbackError,
         );
       }
 
-      return reply.send({
-        message:
-          "Service order started successfully",
-        order: startedOrder,
-        assignment,
-      });
-    },
-  );
+      return reply
+        .code(500)
+        .send({
+          error:
+            "Internal Server Error",
+          message:
+            "Assignment could not be started",
+        });
+    }
 
+    return reply.send({
+      message:
+        "Service order started successfully",
+      order:
+        startedOrder,
+      assignment:
+        startedAssignment,
+    });
+  },
+);
   /*
    * ==========================================================
    * PATCH /service-order-assignments/:assignmentId/complete
