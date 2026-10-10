@@ -2418,15 +2418,15 @@ app.patch(
         );
       }
 
-      if (
-        assignment.status !==
-        "accepted"
-      ) {
-        return sendConflict(
-          reply,
-          "Only accepted assignments can be completed",
-        );
-      }
+     if (
+  assignment.status !==
+  "in_progress"
+) {
+  return sendConflict(
+    reply,
+    "Only in-progress assignments can be completed",
+  );
+}
 
       const {
         data: order,
@@ -2560,9 +2560,9 @@ app.patch(
           "provider_id",
           providerUserId,
         )
-        .eq(
-          "status",
-          "accepted",
+         .eq(
+            "status",
+           "in_progress"
         )
         .select("*")
         .single();
@@ -2625,10 +2625,10 @@ app.patch(
           .from(
             "service_order_assignments",
           )
-          .update({
-            status: "accepted",
-            completed_at: null,
-          })
+        .update({
+           status: "in_progress",
+           completed_at: null,
+         })
           .eq(
             "id",
             params.assignmentId,
