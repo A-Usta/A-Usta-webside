@@ -1513,6 +1513,228 @@ if (evidenceFiles === null) {
   );
 
   /*
+ * ==========================================================
+ * PATCH /service-order-assignments/:assignmentId/price-offer
+ * Provider qəbul etdiyi sifariş üçün qiymət təklif edir.
+ *
+ * A-USTA hesablayıcısının qiymət aralığı:
+ * estimated_price_min → estimated_price_max
+ *
+ * Provider öz qiymətini:
+ * proposed_price
+ *
+ * kimi təqdim edir.
+ * ==========================================================
+ */
+
+app.patch(
+  "/service-order-assignments/:assignmentId/price-offer",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
+    const providerUserId =
+      getAuthenticatedUserId(
+        request,
+      );
+
+    const params =
+      request.params as {
+        assignmentId?: string;
+      };
+
+    const body =
+      request.body as {
+        proposed_price?: unknown;
+      };
+
+    if (
+      !isNonEmptyString(
+        params.assignmentId,
+      )
+    ) {
+      return sendBadRequest(
+        reply,
+        "assignmentId is required",
+      );
+    }
+
+    const proposedPrice =
+      Number(
+        body?.proposed_price,
+      );
+
+    if (
+      !Number.isFinite(
+        proposedPrice,
+      ) ||
+      proposedPrice < 0
+    ) {
+      return sendBadRequest(
+        reply,
+        "proposed_price must be a non-negative number",
+      );
+    }
+
+    const {
+      data: assignment,
+      error: assignmentError,
+    } = await supabase
+      .from(
+        "service_order_assignments",
+      )
+      .select("*")
+      .eq(
+        "id",
+        params.assignmentId,
+      )
+      .single();
+
+    if (
+      assignmentError ||
+      !assignment
+    ) {
+      return sendNotFound(
+        reply,
+        "Service order assignment not found",
+      );
+    }
+
+    if (
+      assignment.provider_id !==
+      providerUserId
+    ) {
+      return sendForbidden(
+        reply,
+        "You are not allowed to offer a price for this assignment",
+      );
+    }
+
+    if (
+      assignment.status !==
+      "accepted"
+    ) {
+      return sendConflict(
+        reply,
+        "Price can only be offered for an accepted assignment",
+      );
+    }
+
+    const {
+      data: order,
+      error: orderError,
+    } = await supabase
+      .from("service_orders")
+      .select("*")
+      .eq(
+        "id",
+        assignment.order_id,
+      )
+      .single();
+
+    if (
+      orderError ||
+      !order
+    ) {
+      return sendNotFound(
+        reply,
+        "Service order not found",
+      );
+    }
+
+    if (
+      order.status !==
+      "accepted"
+    ) {
+      return sendConflict(
+        reply,
+        "Price can only be offered for an accepted service order",
+      );
+    }
+
+    if (
+      order.price_status ===
+      "confirmed" ||
+      order.price_status ===
+      "final"
+    ) {
+      return sendConflict(
+        reply,
+        "The service price has already been confirmed",
+      );
+    }
+
+    const offeredAt =
+      new Date().toISOString();
+
+    const {
+      data: updatedOrder,
+      error: updateError,
+    } = await supabase
+      .from("service_orders")
+      .update({
+        proposed_price:
+          proposedPrice,
+        price_status:
+          "offered",
+        price_offered_at:
+          offeredAt,
+        price_responded_at:
+          null,
+      })
+      .eq(
+        "id",
+        assignment.order_id,
+      )
+      .eq(
+        "status",
+        "accepted",
+      )
+      .select("*")
+      .single();
+
+    if (
+      updateError ||
+      !updatedOrder
+    ) {
+      app.log.error(
+        updateError,
+      );
+
+      return sendConflict(
+        reply,
+        "Provider price offer could not be saved",
+      );
+    }
+
+    return reply.send({
+      message:
+        "Price offered successfully",
+
+      price: {
+        estimated_price_min:
+          updatedOrder.estimated_price_min,
+
+        estimated_price_max:
+          updatedOrder.estimated_price_max,
+
+        proposed_price:
+          updatedOrder.proposed_price,
+
+        price_status:
+          updatedOrder.price_status,
+
+        price_offered_at:
+          updatedOrder.price_offered_at,
+      },
+
+      order:
+        updatedOrder,
+    });
+  },
+);
+
+  /*
    * ==========================================================
    * PATCH /service-order-assignments/:assignmentId/reject
    * Provider sifarişi rədd edir.
@@ -2204,6 +2426,51 @@ app.patch(
       );
     }
 
+      /*
+     * ==========================================================
+     * PRICE APPROVAL CHECK
+     * ==========================================================
+     *
+     * Provider işi yalnız müştəri qiyməti
+     * təsdiqlədikdən sonra başlada bilər.
+     *
+     * Qiymət axını:
+     *
+     * estimated
+     *    ↓
+     * offered
+     *    ↓
+     * confirmed
+     *    ↓
+     * START
+     *
+     * rejected / offered / estimated / unknown
+     * vəziyyətlərində START bloklanır.
+     * ==========================================================
+     */
+
+    if (
+      order.price_status !==
+      "confirmed"
+    ) {
+      return sendConflict(
+        reply,
+        "Customer must approve the provider price before the service can start",
+      );
+    }
+
+    if (
+      order.final_price ===
+        null ||
+      order.final_price ===
+        undefined
+    ) {
+      return sendConflict(
+        reply,
+        "Approved final price is required before starting the service",
+      );
+    }
+
     if (
       !hasAssignmentEvidence(
         order.evidence_files,
@@ -2824,4 +3091,358 @@ app.patch(
       });
     },
   );
+
+  /*
+ * ==========================================================
+ * PATCH /service-orders/:orderId/price/approve
+ * Customer provider tərəfindən təklif edilən qiyməti
+ * təsdiqləyir.
+ *
+ * proposed_price → final_price
+ * price_status   → confirmed
+ * ==========================================================
+ */
+
+app.patch(
+  "/service-orders/:orderId/price/approve",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
+    const customerId =
+      getAuthenticatedUserId(
+        request,
+      );
+
+    const params =
+      request.params as {
+        orderId?: string;
+      };
+
+    if (
+      !isNonEmptyString(
+        params.orderId,
+      )
+    ) {
+      return sendBadRequest(
+        reply,
+        "orderId is required",
+      );
+    }
+
+    const {
+      data: order,
+      error: orderError,
+    } = await supabase
+      .from("service_orders")
+      .select("*")
+      .eq(
+        "id",
+        params.orderId,
+      )
+      .single();
+
+    if (
+      orderError ||
+      !order
+    ) {
+      return sendNotFound(
+        reply,
+        "Service order not found",
+      );
+    }
+
+    if (
+      order.customer_id !==
+      customerId
+    ) {
+      return sendForbidden(
+        reply,
+        "You are not allowed to approve the price for this service order",
+      );
+    }
+
+    if (
+      order.status !==
+      "accepted"
+    ) {
+      return sendConflict(
+        reply,
+        "Price can only be approved for an accepted service order",
+      );
+    }
+
+    if (
+      order.price_status !==
+      "offered"
+    ) {
+      return sendConflict(
+        reply,
+        "There is no pending provider price offer to approve",
+      );
+    }
+
+    if (
+      order.proposed_price ===
+        null ||
+      order.proposed_price ===
+        undefined
+    ) {
+      return sendConflict(
+        reply,
+        "Provider price offer is missing",
+      );
+    }
+
+    const respondedAt =
+      new Date().toISOString();
+
+    const {
+      data: updatedOrder,
+      error: updateError,
+    } = await supabase
+      .from("service_orders")
+      .update({
+        final_price:
+          order.proposed_price,
+
+        price_status:
+          "confirmed",
+
+        price_responded_at:
+          respondedAt,
+      })
+      .eq(
+        "id",
+        params.orderId,
+      )
+      .eq(
+        "customer_id",
+        customerId,
+      )
+      .eq(
+        "status",
+        "accepted",
+      )
+      .eq(
+        "price_status",
+        "offered",
+      )
+      .select("*")
+      .single();
+
+    if (
+      updateError ||
+      !updatedOrder
+    ) {
+      app.log.error(
+        updateError,
+      );
+
+      return sendConflict(
+        reply,
+        "Price offer could not be approved",
+      );
+    }
+
+    return reply.send({
+      message:
+        "Price offer approved successfully",
+
+      price: {
+        estimated_price_min:
+          updatedOrder.estimated_price_min,
+
+        estimated_price_max:
+          updatedOrder.estimated_price_max,
+
+        proposed_price:
+          updatedOrder.proposed_price,
+
+        final_price:
+          updatedOrder.final_price,
+
+        price_status:
+          updatedOrder.price_status,
+
+        price_responded_at:
+          updatedOrder.price_responded_at,
+      },
+
+      order:
+        updatedOrder,
+    });
+  },
+);
+
+
+/*
+ * ==========================================================
+ * PATCH /service-orders/:orderId/price/reject
+ * Customer provider tərəfindən təklif edilən qiyməti
+ * rədd edir.
+ *
+ * Provider bundan sonra yeni qiymət təklif edə bilər.
+ * ==========================================================
+ */
+
+app.patch(
+  "/service-orders/:orderId/price/reject",
+  {
+    preHandler: requireAuth,
+  },
+  async (request, reply) => {
+    const customerId =
+      getAuthenticatedUserId(
+        request,
+      );
+
+    const params =
+      request.params as {
+        orderId?: string;
+      };
+
+    if (
+      !isNonEmptyString(
+        params.orderId,
+      )
+    ) {
+      return sendBadRequest(
+        reply,
+        "orderId is required",
+      );
+    }
+
+    const {
+      data: order,
+      error: orderError,
+    } = await supabase
+      .from("service_orders")
+      .select("*")
+      .eq(
+        "id",
+        params.orderId,
+      )
+      .single();
+
+    if (
+      orderError ||
+      !order
+    ) {
+      return sendNotFound(
+        reply,
+        "Service order not found",
+      );
+    }
+
+    if (
+      order.customer_id !==
+      customerId
+    ) {
+      return sendForbidden(
+        reply,
+        "You are not allowed to reject the price for this service order",
+      );
+    }
+
+    if (
+      order.status !==
+      "accepted"
+    ) {
+      return sendConflict(
+        reply,
+        "Price can only be rejected for an accepted service order",
+      );
+    }
+
+    if (
+      order.price_status !==
+      "offered"
+    ) {
+      return sendConflict(
+        reply,
+        "There is no pending provider price offer to reject",
+      );
+    }
+
+    const respondedAt =
+      new Date().toISOString();
+
+    const {
+      data: updatedOrder,
+      error: updateError,
+    } = await supabase
+      .from("service_orders")
+      .update({
+        price_status:
+          "rejected",
+
+        final_price:
+          null,
+
+        price_responded_at:
+          respondedAt,
+      })
+      .eq(
+        "id",
+        params.orderId,
+      )
+      .eq(
+        "customer_id",
+        customerId,
+      )
+      .eq(
+        "status",
+        "accepted",
+      )
+      .eq(
+        "price_status",
+        "offered",
+      )
+      .select("*")
+      .single();
+
+    if (
+      updateError ||
+      !updatedOrder
+    ) {
+      app.log.error(
+        updateError,
+      );
+
+      return sendConflict(
+        reply,
+        "Price offer could not be rejected",
+      );
+    }
+
+    return reply.send({
+      message:
+        "Price offer rejected successfully",
+
+      price: {
+        estimated_price_min:
+          updatedOrder.estimated_price_min,
+
+        estimated_price_max:
+          updatedOrder.estimated_price_max,
+
+        proposed_price:
+          updatedOrder.proposed_price,
+
+        final_price:
+          updatedOrder.final_price,
+
+        price_status:
+          updatedOrder.price_status,
+
+        price_responded_at:
+          updatedOrder.price_responded_at,
+      },
+
+      order:
+        updatedOrder,
+    });
+  },
+ );
 }
