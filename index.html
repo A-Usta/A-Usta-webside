@@ -18213,6 +18213,32 @@ window.AUSTA_SUPABASE = supabaseClient;
             "az-AZ"
           )
         : "—";
+    const estimatedMin =
+  order.estimated_price_min;
+
+const estimatedMax =
+  order.estimated_price_max;
+
+const proposedPrice =
+  order.proposed_price;
+
+const finalPrice =
+  order.final_price;
+
+const priceStatus =
+  order.price_status ||
+  "unknown";
+
+const hasEstimate =
+  estimatedMin !== null &&
+  estimatedMin !== undefined &&
+  estimatedMax !== null &&
+  estimatedMax !== undefined;
+
+const estimateText =
+  hasEstimate
+    ? `${estimatedMin}–${estimatedMax} AZN`
+    : "Hesablanmayıb";
 
 
     let actionHtml = "";
@@ -18223,33 +18249,181 @@ window.AUSTA_SUPABASE = supabaseClient;
       "offered"
     ) {
 
-      actionHtml = `
-        <div class="austa-provider-actions">
+    actionHtml = `
+  <div class="austa-provider-stage">
 
-          <button
-            class="austa-provider-action primary"
-            type="button"
-            data-austa-provider-action="accept"
-            data-assignment-id="${escapeHtml(
-              assignment.id
-            )}"
-          >
-            ✓ Sifarişi qəbul et
-          </button>
+    <div class="austa-provider-stage-title">
+      💰 Xidmət qiyməti
+    </div>
 
-          <button
-            class="austa-provider-action danger"
-            type="button"
-            data-austa-provider-action="reject"
-            data-assignment-id="${escapeHtml(
-              assignment.id
-            )}"
-          >
-            ✕ Rədd et
-          </button>
+    <div class="austa-provider-stage-note">
+      <strong>A-USTA qiymət aralığı:</strong>
+      ${escapeHtml(
+        estimateText
+      )}
+    </div>
 
-        </div>
-      `;
+    ${
+      priceStatus === "offered"
+        ? `
+            <div class="austa-provider-stage-note">
+              <strong>Sizin təklifiniz:</strong>
+              ${escapeHtml(
+                proposedPrice
+              )} AZN
+            </div>
+
+            <div class="austa-provider-stage-note">
+              ⏳ Müştərinin qiymət qərarı gözlənilir.
+            </div>
+          `
+        : ""
+    }
+
+    ${
+      priceStatus === "rejected"
+        ? `
+            <div class="austa-provider-stage-note">
+              <strong>Rədd edilən təklif:</strong>
+              ${escapeHtml(
+                proposedPrice
+              )} AZN
+            </div>
+
+            <div class="austa-provider-stage-note">
+              Müştəri qiyməti rədd edib.
+              Yeni qiymət təklif edə bilərsiniz.
+            </div>
+          `
+        : ""
+    }
+
+    ${
+      priceStatus === "confirmed"
+        ? `
+            <div class="austa-evidence-ok">
+              ✓ Müştəri qiyməti təsdiqlədi:
+              ${escapeHtml(
+                finalPrice
+              )} AZN
+            </div>
+          `
+        : ""
+    }
+
+    ${
+      priceStatus !== "offered" &&
+      priceStatus !== "confirmed"
+        ? `
+            <div class="austa-provider-stage-note">
+              Baxışdan sonra yekun xidmət
+              qiymətinizi daxil edin.
+            </div>
+
+            <input
+              class="austa-provider-file"
+              type="number"
+              min="0"
+              step="0.01"
+              inputmode="decimal"
+              placeholder="Məsələn: 140"
+              data-price-input="${escapeHtml(
+                assignment.id
+              )}"
+            />
+
+            <div
+              data-price-warning="${escapeHtml(
+                assignment.id
+              )}"
+              class="austa-provider-stage-note"
+            ></div>
+
+            <button
+              class="austa-provider-action"
+              type="button"
+              data-austa-provider-action="price-offer"
+              data-assignment-id="${escapeHtml(
+                assignment.id
+              )}"
+              data-estimated-max="${escapeHtml(
+                estimatedMax ?? ""
+              )}"
+            >
+              💰 Qiymət təklif et
+            </button>
+          `
+        : ""
+    }
+
+    ${
+      priceStatus === "confirmed"
+        ? `
+            <div class="austa-provider-stage-title">
+              📷 İşdən əvvəl — BEFORE
+            </div>
+
+            ${
+              beforeUploaded
+                ? `
+                    <div class="austa-evidence-ok">
+                      ✓ BEFORE foto yüklənib
+                    </div>
+                  `
+                : `
+                    <div class="austa-provider-stage-note">
+                      Xidmətə başlamazdan əvvəl
+                      avtomobilin mövcud vəziyyətinin
+                      fotosunu yükləyin.
+                    </div>
+
+                    <input
+                      class="austa-provider-file"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      data-before-file="${escapeHtml(
+                        assignment.id
+                      )}"
+                    />
+
+                    <button
+                      class="austa-provider-action"
+                      type="button"
+                      data-austa-provider-action="before"
+                      data-assignment-id="${escapeHtml(
+                        assignment.id
+                      )}"
+                    >
+                      📤 BEFORE foto yüklə
+                    </button>
+                  `
+            }
+
+            <div class="austa-provider-actions">
+
+              <button
+                class="austa-provider-action primary"
+                type="button"
+                data-austa-provider-action="start"
+                data-assignment-id="${escapeHtml(
+                  assignment.id
+                )}"
+                ${
+                  beforeUploaded
+                    ? ""
+                    : "disabled"
+                }
+              >
+                🔧 Xidməti başlat
+              </button>
+
+            </div>
+          `
+        : ""
+    }
+
+  </div>
+`; 
 
     }
 
@@ -18686,7 +18860,85 @@ window.AUSTA_SUPABASE = supabaseClient;
 
   }
 
+  async function offerPrice(
+  assignmentId
+) {
 
+  const input =
+    document.querySelector(
+      `[data-price-input="${CSS.escape(
+        assignmentId
+      )}"]`
+    );
+
+  const proposedPrice =
+    Number(
+      input?.value
+    );
+
+  if (
+    !Number.isFinite(
+      proposedPrice
+    ) ||
+    proposedPrice < 0
+  ) {
+    throw new Error(
+      "Düzgün xidmət qiyməti daxil edin."
+    );
+  }
+
+  const estimatedMax =
+    Number(
+      document.querySelector(
+        `[data-austa-provider-action="price-offer"][data-assignment-id="${CSS.escape(
+          assignmentId
+        )}"]`
+      )?.dataset
+        ?.estimatedMax
+    );
+
+  if (
+    Number.isFinite(
+      estimatedMax
+    ) &&
+    estimatedMax > 0 &&
+    proposedPrice >
+      estimatedMax
+  ) {
+
+    const warning =
+      document.querySelector(
+        `[data-price-warning="${CSS.escape(
+          assignmentId
+        )}"]`
+      );
+
+    if (warning) {
+      warning.textContent =
+        "⚠ Təklif A-USTA qiymət aralığından yüksəkdir. Real baxış nəticəsinə görə bu qiyməti yenə də göndərə bilərsiniz.";
+    }
+
+  }
+
+  await apiRequest(
+    `/service-order-assignments/${encodeURIComponent(
+      assignmentId
+    )}/price-offer`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        proposed_price:
+          proposedPrice
+      })
+    }
+  );
+
+  showStatus(
+    `✓ ${proposedPrice} AZN qiymət təklifi müştəriyə göndərildi.`,
+    "success"
+  );
+
+}
   async function startService(
     assignmentId
   ) {
@@ -18789,6 +19041,14 @@ window.AUSTA_SUPABASE = supabaseClient;
             assignmentId
           );
 
+        } else if (
+  action === "price-offer"
+) {
+
+  await offerPrice(
+    assignmentId
+  );
+          
         } else if (
           action === "before"
         ) {
