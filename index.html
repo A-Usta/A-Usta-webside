@@ -19393,13 +19393,16 @@ const estimateText =
   }
 
 
-  function showStatus(message) {
+  function showStatus(
+    message,
+    type = "error"
+  ) {
 
     statusBox.textContent =
       message;
 
     statusBox.className =
-      "show error";
+      "show " + type;
 
   }
 
@@ -19450,6 +19453,76 @@ const estimateText =
   }
 
 
+  async function apiRequest(
+    path,
+    options = {}
+  ) {
+
+    const session =
+      await getSession();
+
+    const headers =
+      new Headers(
+        options.headers || {}
+      );
+
+    headers.set(
+      "Authorization",
+      `Bearer ${session.access_token}`
+    );
+
+    if (
+      options.body &&
+      !(
+        options.body
+        instanceof FormData
+      )
+    ) {
+      headers.set(
+        "Content-Type",
+        "application/json"
+      );
+    }
+
+    const response =
+      await fetch(
+        API_BASE + path,
+        {
+          ...options,
+          headers
+        }
+      );
+
+    let result = null;
+
+    try {
+
+      result =
+        await response.json();
+
+    } catch {
+
+      result = null;
+
+    }
+
+    if (
+      !response.ok
+    ) {
+
+      throw new Error(
+        result?.message ||
+        result?.error ||
+        `Server xətası (${response.status})`
+      );
+
+    }
+
+    return result;
+
+  }
+
+
   async function loadOrders() {
 
     clearStatus();
@@ -19462,46 +19535,13 @@ const estimateText =
 
     try {
 
-      const session =
-        await getSession();
-
-      const response =
-        await fetch(
-          API_BASE +
+      const result =
+        await apiRequest(
           "/service-orders",
           {
-            method: "GET",
-
-            headers: {
-              Authorization:
-                `Bearer ${session.access_token}`
-            }
+            method: "GET"
           }
         );
-
-      let result = null;
-
-      try {
-
-        result =
-          await response.json();
-
-      } catch {
-
-        result = null;
-
-      }
-
-      if (!response.ok) {
-
-        throw new Error(
-          result?.message ||
-          result?.error ||
-          `Server xətası (${response.status})`
-        );
-
-      }
-
 
       const orders =
         Array.isArray(result?.orders)
@@ -19659,6 +19699,237 @@ const estimateText =
   }
 
 
+  function renderPrice(
+    order
+  ) {
+
+    const estimatedMin =
+      order.estimated_price_min;
+
+    const estimatedMax =
+      order.estimated_price_max;
+
+    const proposedPrice =
+      order.proposed_price;
+
+    const finalPrice =
+      order.final_price;
+
+    const priceStatus =
+      order.price_status ||
+      "unknown";
+
+    const hasEstimate =
+      estimatedMin !== null &&
+      estimatedMin !== undefined &&
+      estimatedMax !== null &&
+      estimatedMax !== undefined;
+
+    const estimateText =
+      hasEstimate
+        ? `${estimatedMin}–${estimatedMax} AZN`
+        : "Hesablanmayıb";
+
+
+    if (
+      priceStatus === "offered"
+    ) {
+
+      return `
+        <div class="austa-provider-stage">
+
+          <div class="austa-provider-stage-title">
+            💰 Qiymət təklifi
+          </div>
+
+          <div class="austa-provider-stage-note">
+            <strong>A-USTA qiymət aralığı:</strong>
+            ${escapeHtml(
+              estimateText
+            )}
+          </div>
+
+          <div class="austa-provider-stage-note">
+            <strong>Ustanın təklifi:</strong>
+            ${escapeHtml(
+              proposedPrice
+            )} AZN
+          </div>
+
+          <div class="austa-provider-stage-note">
+            Qiyməti təsdiqlədikdən sonra
+            usta xidmətə başlaya biləcək.
+          </div>
+
+          <div class="austa-provider-actions">
+
+            <button
+              class="austa-provider-action primary"
+              type="button"
+              data-austa-customer-price-action="approve"
+              data-order-id="${escapeHtml(
+                order.id
+              )}"
+            >
+              ✓ Qiyməti qəbul et
+            </button>
+
+            <button
+              class="austa-provider-action"
+              type="button"
+              data-austa-customer-price-action="reject"
+              data-order-id="${escapeHtml(
+                order.id
+              )}"
+            >
+              ✕ Qiyməti rədd et
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+    }
+
+
+    if (
+      priceStatus === "rejected"
+    ) {
+
+      return `
+        <div class="austa-provider-stage">
+
+          <div class="austa-provider-stage-title">
+            💰 Qiymət təklifi
+          </div>
+
+          <div class="austa-provider-stage-note">
+            <strong>A-USTA qiymət aralığı:</strong>
+            ${escapeHtml(
+              estimateText
+            )}
+          </div>
+
+          <div class="austa-provider-stage-note">
+            <strong>Rədd etdiyiniz qiymət:</strong>
+            ${escapeHtml(
+              proposedPrice
+            )} AZN
+          </div>
+
+          <div class="austa-customer-waiting">
+            ⏳ Ustanın yeni qiymət təklifi gözlənilir.
+          </div>
+
+        </div>
+      `;
+
+    }
+
+
+    if (
+      priceStatus === "confirmed"
+    ) {
+
+      return `
+        <div class="austa-provider-stage">
+
+          <div class="austa-provider-stage-title">
+            💰 Xidmət qiyməti
+          </div>
+
+          <div class="austa-provider-stage-note">
+            <strong>A-USTA qiymət aralığı:</strong>
+            ${escapeHtml(
+              estimateText
+            )}
+          </div>
+
+          <div class="austa-evidence-ok">
+            ✓ Təsdiqlənmiş qiymət:
+            ${escapeHtml(
+              finalPrice
+            )} AZN
+          </div>
+
+        </div>
+      `;
+
+    }
+
+
+    if (
+      priceStatus === "final"
+    ) {
+
+      return `
+        <div class="austa-provider-stage">
+
+          <div class="austa-provider-stage-title">
+            💰 Yekun xidmət qiyməti
+          </div>
+
+          <div class="austa-provider-stage-note">
+            <strong>A-USTA qiymət aralığı:</strong>
+            ${escapeHtml(
+              estimateText
+            )}
+          </div>
+
+          <div class="austa-evidence-ok">
+            ✓ Yekun qiymət:
+            ${escapeHtml(
+              finalPrice
+            )} AZN
+          </div>
+
+        </div>
+      `;
+
+    }
+
+
+    if (
+      priceStatus === "estimated"
+    ) {
+
+      return `
+        <div class="austa-provider-stage">
+
+          <div class="austa-provider-stage-title">
+            💰 A-USTA qiymət hesablaması
+          </div>
+
+          <div class="austa-provider-stage-note">
+            <strong>Təxmini qiymət aralığı:</strong>
+            ${escapeHtml(
+              estimateText
+            )}
+          </div>
+
+          ${
+            order.status ===
+              "accepted"
+              ? `
+                  <div class="austa-customer-waiting">
+                    ⏳ Ustanın yekun qiymət təklifi gözlənilir.
+                  </div>
+                `
+              : ""
+          }
+
+        </div>
+      `;
+
+    }
+
+
+    return "";
+
+  }
+
+
   function renderOrder(order) {
 
     const title =
@@ -19738,10 +20009,130 @@ const estimateText =
           order.provider
         )}
 
+        ${renderPrice(
+          order
+        )}
+
       </article>
     `;
 
   }
+
+
+  async function approvePrice(
+    orderId
+  ) {
+
+    await apiRequest(
+      `/service-orders/${encodeURIComponent(
+        orderId
+      )}/price/approve`,
+      {
+        method: "PATCH"
+      }
+    );
+
+    showStatus(
+      "✓ Ustanın qiymət təklifi qəbul edildi.",
+      "success"
+    );
+
+  }
+
+
+  async function rejectPrice(
+    orderId
+  ) {
+
+    await apiRequest(
+      `/service-orders/${encodeURIComponent(
+        orderId
+      )}/price/reject`,
+      {
+        method: "PATCH"
+      }
+    );
+
+    showStatus(
+      "✓ Qiymət təklifi rədd edildi. Ustanın yeni təklifi gözlənilir.",
+      "success"
+    );
+
+  }
+
+
+  list.addEventListener(
+    "click",
+    async event => {
+
+      const button =
+        event.target.closest(
+          "[data-austa-customer-price-action]"
+        );
+
+      if (!button) {
+        return;
+      }
+
+      const action =
+        button.dataset
+          .austaCustomerPriceAction;
+
+      const orderId =
+        button.dataset.orderId;
+
+      if (
+        !action ||
+        !orderId
+      ) {
+        return;
+      }
+
+
+      button.disabled =
+        true;
+
+      clearStatus();
+
+
+      try {
+
+        if (
+          action === "approve"
+        ) {
+
+          await approvePrice(
+            orderId
+          );
+
+        } else if (
+          action === "reject"
+        ) {
+
+          await rejectPrice(
+            orderId
+          );
+
+        }
+
+
+        await loadOrders();
+
+
+      } catch (error) {
+
+        showStatus(
+          error?.message ||
+          "Qiymət əməliyyatı tamamlanmadı."
+        );
+
+        button.disabled =
+          false;
+
+      }
+
+    }
+  );
 
 
   refreshButton.addEventListener(
@@ -19761,4 +20152,3 @@ const estimateText =
 
 })();
 </script>
-
