@@ -2767,16 +2767,19 @@ app.patch(
         }
       }
 
-      const priceStatus: PriceStatus =
-        body.price_status ===
-          undefined ||
-        body.price_status === null ||
-        body.price_status === ""
-          ? finalPrice !== null
-            ? "final"
-            : ((order.price_status ??
-                "unknown") as PriceStatus)
-          : (body.price_status as PriceStatus);
+     const priceStatus: PriceStatus =
+  order.price_status ===
+    "confirmed"
+    ? "final"
+    : body.price_status ===
+        undefined ||
+      body.price_status === null ||
+      body.price_status === ""
+      ? finalPrice !== null
+        ? "final"
+        : ((order.price_status ??
+            "unknown") as PriceStatus)
+      : (body.price_status as PriceStatus);
 
       if (
         !isAllowed(
