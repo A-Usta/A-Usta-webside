@@ -355,6 +355,39 @@ function expectedProviderType(
   }
 }
 
+type ProviderServiceType =
+  | "mechanic_mobile"
+  | "mechanic_shop"
+  | "tow"
+  | "cargo";
+
+type MatchingProvider = {
+  provider_id: string;
+  provider_type: ProviderType;
+  service_type: ProviderServiceType;
+  distance_km: number;
+  service_radius_km: number;
+  location_updated_at: string | null;
+};
+
+function expectedProviderServiceType(
+  category: ServiceCategory,
+  serviceMode: ServiceMode,
+): ProviderServiceType {
+  switch (category) {
+    case "mechanic_service":
+      return serviceMode === "shop"
+        ? "mechanic_shop"
+        : "mechanic_mobile";
+
+    case "tow_service":
+      return "tow";
+
+    case "cargo_service":
+      return "cargo";
+  }
+}
+
 function sendBadRequest(
   reply: import("fastify").FastifyReply,
   message: string,
@@ -963,6 +996,304 @@ if (evidenceFiles === null) {
       });
     },
   );
+
+    /*
+   * ==========================================================
+   * POST /service-orders/:orderId/discover-providers
+   *
+   * Customer öz pending sifarişi üçün uyğun providerləri tapır.
+   * Məsafə browser-dən qəbul edilmir.
+   * Distance + radius + location freshness DB tərəfində hesablanır.
+   * ==========================================================
+   */
+
+  app.post(
+    "/service-orders/:orderId/discover-providers",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const customerId =
+        getAuthenticatedUserId(request);
+
+      const params =
+        request.params as {
+          orderId?: string;
+        };
+
+      if (
+        !isNonEmptyString(
+          params.orderId,
+        )
+      ) {
+        return sendBadRequest(
+          reply,
+          "orderId is required",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Sifarişi yalnız onun sahibi discovery edə bilər.
+       * --------------------------------------------------------
+       */
+
+      const {
+        data: order,
+        error: orderError,
+      } = await supabase
+        .from("service_orders")
+       .select(
+  "id, customer_id, status, service_category, service_mode, latitude, longitude",
+)
+        .eq(
+          "id",
+          params.orderId,
+        )
+        .single();
+
+      if (
+        orderError ||
+        !order
+      ) {
+        return sendNotFound(
+          reply,
+          "Service order not found",
+        );
+      }
+
+      if (
+        order.customer_id !==
+        customerId
+      ) {
+        return sendForbidden(
+          reply,
+          "You are not allowed to discover providers for this service order",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Discovery yalnız pending sifariş üçündür.
+       * --------------------------------------------------------
+       */
+
+      if (
+        order.status !==
+        "pending"
+      ) {
+        return sendConflict(
+          reply,
+          "Providers can only be discovered for pending service orders",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Mövcud service_category və service_mode yoxlanılır.
+       * --------------------------------------------------------
+       */
+
+      if (
+        !isAllowed(
+          order.service_category,
+          allowedCategories,
+        )
+      ) {
+        return sendConflict(
+          reply,
+          "Service category is not supported for provider discovery",
+        );
+      }
+
+      if (
+        !isAllowed(
+          order.service_mode,
+          allowedServiceModes,
+        )
+      ) {
+        return sendConflict(
+          reply,
+          "Service mode is not supported for provider discovery",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Order koordinatları mütləq olmalıdır.
+       * Browser discovery zamanı yeni koordinat göndərmir.
+       * Sifarişdə əvvəlcədən saxlanmış koordinatlar istifadə olunur.
+       * --------------------------------------------------------
+       */
+
+      const latitude =
+        optionalNumber(
+          order.latitude,
+        );
+
+      const longitude =
+        optionalNumber(
+          order.longitude,
+        );
+
+      if (
+        latitude === null ||
+        longitude === null
+      ) {
+        return sendConflict(
+          reply,
+          "Service order location is required for provider discovery",
+        );
+      }
+
+      if (
+        latitude < -90 ||
+        latitude > 90
+      ) {
+        return sendConflict(
+          reply,
+          "Service order latitude is invalid",
+        );
+      }
+
+      if (
+        longitude < -180 ||
+        longitude > 180
+      ) {
+        return sendConflict(
+          reply,
+          "Service order longitude is invalid",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * A-USTA service mapping.
+       *
+       * mechanic_service + mobile -> mechanic_mobile
+       * mechanic_service + shop   -> mechanic_shop
+       * tow_service               -> tow
+       * cargo_service             -> cargo
+       * --------------------------------------------------------
+       */
+
+      const serviceCategory =
+        order.service_category as ServiceCategory;
+
+      const serviceMode =
+        order.service_mode as ServiceMode;
+
+      const requiredServiceType =
+        expectedProviderServiceType(
+          serviceCategory,
+          serviceMode,
+        );
+
+      const providerType =
+        expectedProviderType(
+          serviceCategory,
+          serviceMode,
+        );
+
+      /*
+       * --------------------------------------------------------
+       * Təhlükəsiz DB discovery.
+       *
+       * RPC özü:
+       * - active provider
+       * - active service
+       * - service_type
+       * - GPS freshness
+       * - radius
+       * - server-side distance
+       * yoxlamalarını edir.
+       * --------------------------------------------------------
+       */
+
+      const {
+        data: providers,
+        error: discoveryError,
+      } = await supabase.rpc(
+        "find_matching_providers",
+        {
+          p_service_type:
+            requiredServiceType,
+
+          p_order_latitude:
+            latitude,
+
+          p_order_longitude:
+            longitude,
+
+          p_limit: 10,
+        },
+      );
+
+      if (discoveryError) {
+        app.log.error(
+          discoveryError,
+        );
+
+        return sendServerError(
+          reply,
+          "Matching providers could not be discovered",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * RPC minimal məlumat qaytarır.
+       * Hələ assignment yaradılmır.
+       * --------------------------------------------------------
+       */
+
+     const matches =
+  (
+    (providers ?? []) as MatchingProvider[]
+  ).map(
+    (provider) => ({
+            provider_id:
+              provider.provider_id,
+
+            provider_type:
+              provider.provider_type,
+
+            service_type:
+              provider.service_type,
+
+            distance_km:
+              provider.distance_km,
+
+            service_radius_km:
+              provider.service_radius_km,
+          }),
+        );
+
+      return reply.send({
+        order_id:
+          order.id,
+
+        service_category:
+          serviceCategory,
+
+        service_mode:
+          serviceMode,
+
+        required_service_type:
+          requiredServiceType,
+
+        provider_type:
+          providerType,
+
+        match_count:
+          matches.length,
+
+        providers:
+          matches,
+      });
+    },
+  );
+  
 
   /*
    * ==========================================================
