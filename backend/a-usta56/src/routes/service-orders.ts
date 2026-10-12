@@ -1293,6 +1293,399 @@ if (evidenceFiles === null) {
       });
     },
   );
+
+
+   /*
+   * ==========================================================
+   * POST /service-orders/:orderId/dispatch
+   *
+   * Customer-in pending sifarişi üçün uyğun providerləri tapır
+   * və onlara avtomatik "offered" assignment yaradır.
+   *
+   * Təhlükəsizlik:
+   * - yalnız sifariş sahibi dispatch edə bilər
+   * - yalnız pending sifariş dispatch edilə bilər
+   * - order koordinatları serverdə saxlanmış məlumatdan götürülür
+   * - provider məsafəsi DB tərəfindən hesablanır
+   * - client provider_id və distance_km göndərmir
+   * - UNIQUE(order_id, provider_id) duplicate offer-i qoruyur
+   * ==========================================================
+   */
+
+  app.post(
+    "/service-orders/:orderId/dispatch",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const customerId =
+        getAuthenticatedUserId(request);
+
+      const params =
+        request.params as {
+          orderId?: string;
+        };
+
+      if (
+        !isNonEmptyString(
+          params.orderId,
+        )
+      ) {
+        return sendBadRequest(
+          reply,
+          "orderId is required",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Sifarişi yüklə.
+       * --------------------------------------------------------
+       */
+
+      const {
+        data: order,
+        error: orderError,
+      } = await supabase
+        .from("service_orders")
+        .select(
+          "id, customer_id, status, service_category, service_mode, latitude, longitude",
+        )
+        .eq(
+          "id",
+          params.orderId,
+        )
+        .single();
+
+      if (
+        orderError ||
+        !order
+      ) {
+        return sendNotFound(
+          reply,
+          "Service order not found",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Customer ownership.
+       * --------------------------------------------------------
+       */
+
+      if (
+        order.customer_id !==
+        customerId
+      ) {
+        return sendForbidden(
+          reply,
+          "You are not allowed to dispatch this service order",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Yalnız pending sifariş.
+       * --------------------------------------------------------
+       */
+
+      if (
+        order.status !==
+        "pending"
+      ) {
+        return sendConflict(
+          reply,
+          "Only pending service orders can be dispatched",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Service category / mode yoxlaması.
+       * --------------------------------------------------------
+       */
+
+      if (
+        !isAllowed(
+          order.service_category,
+          allowedCategories,
+        )
+      ) {
+        return sendConflict(
+          reply,
+          "Service category is not supported for provider dispatch",
+        );
+      }
+
+      if (
+        !isAllowed(
+          order.service_mode,
+          allowedServiceModes,
+        )
+      ) {
+        return sendConflict(
+          reply,
+          "Service mode is not supported for provider dispatch",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Sifariş koordinatları.
+       * --------------------------------------------------------
+       */
+
+      const latitude =
+        optionalNumber(
+          order.latitude,
+        );
+
+      const longitude =
+        optionalNumber(
+          order.longitude,
+        );
+
+      if (
+        latitude === null ||
+        longitude === null
+      ) {
+        return sendConflict(
+          reply,
+          "Service order location is required for provider dispatch",
+        );
+      }
+
+      if (
+        latitude < -90 ||
+        latitude > 90
+      ) {
+        return sendConflict(
+          reply,
+          "Service order latitude is invalid",
+        );
+      }
+
+      if (
+        longitude < -180 ||
+        longitude > 180
+      ) {
+        return sendConflict(
+          reply,
+          "Service order longitude is invalid",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * A-USTA service mapping.
+       * --------------------------------------------------------
+       */
+
+      const serviceCategory =
+        order.service_category as ServiceCategory;
+
+      const serviceMode =
+        order.service_mode as ServiceMode;
+
+      const requiredServiceType =
+        expectedProviderServiceType(
+          serviceCategory,
+          serviceMode,
+        );
+
+      /*
+       * --------------------------------------------------------
+       * Provider discovery.
+       *
+       * RPC server-side olaraq:
+       * - provider active
+       * - service active
+       * - role/service uyğunluğu
+       * - GPS freshness
+       * - service radius
+       * - real distance
+       * yoxlayır.
+       * --------------------------------------------------------
+       */
+
+      const {
+        data: discoveredProviders,
+        error: discoveryError,
+      } = await supabase.rpc(
+        "find_matching_providers",
+        {
+          p_service_type:
+            requiredServiceType,
+
+          p_order_latitude:
+            latitude,
+
+          p_order_longitude:
+            longitude,
+
+          p_limit: 10,
+        },
+      );
+
+      if (discoveryError) {
+        app.log.error(
+          discoveryError,
+        );
+
+        return sendServerError(
+          reply,
+          "Matching providers could not be discovered for dispatch",
+        );
+      }
+
+      const providers =
+        (
+          discoveredProviders ??
+          []
+        ) as MatchingProvider[];
+
+      /*
+       * --------------------------------------------------------
+       * Heç bir uyğun provider yoxdur.
+       *
+       * Bu server xətası deyil.
+       * --------------------------------------------------------
+       */
+
+      if (
+        providers.length === 0
+      ) {
+        return reply.send({
+          message:
+            "No matching providers are currently available",
+
+          order_id:
+            order.id,
+
+          required_service_type:
+            requiredServiceType,
+
+          discovered_count: 0,
+
+          offered_count: 0,
+
+          skipped_count: 0,
+
+          assignments: [],
+        });
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Hər provider üçün offered assignment yarat.
+       *
+       * distance_km DB discovery nəticəsindən gəlir.
+       * Client bu dəyəri idarə etmir.
+       *
+       * UNIQUE(order_id, provider_id) DB constraint-i
+       * duplicate offer-ləri bloklayır.
+       * --------------------------------------------------------
+       */
+
+      const createdAssignments = [];
+
+      let skippedCount = 0;
+
+      for (
+        const provider of providers
+      ) {
+        const {
+          data: assignment,
+          error: assignmentError,
+        } = await supabase
+          .from(
+            "service_order_assignments",
+          )
+          .insert({
+            order_id:
+              order.id,
+
+            provider_id:
+              provider.provider_id,
+
+            provider_type:
+              provider.provider_type,
+
+            status:
+              "offered",
+
+            distance_km:
+              provider.distance_km,
+          })
+          .select("*")
+          .single();
+
+        /*
+         * ------------------------------------------------------
+         * 23505 = duplicate key.
+         *
+         * Eyni order/provider artıq mövcuddursa bütün dispatch
+         * dayandırılmır. Provider skip edilir.
+         * ------------------------------------------------------
+         */
+
+        if (assignmentError) {
+          if (
+            assignmentError.code ===
+            "23505"
+          ) {
+            skippedCount += 1;
+
+            continue;
+          }
+
+          app.log.error(
+            assignmentError,
+          );
+
+          return sendServerError(
+            reply,
+            "Provider assignment could not be created during dispatch",
+          );
+        }
+
+        if (assignment) {
+          createdAssignments.push(
+            assignment,
+          );
+        }
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Dispatch nəticəsi.
+       * --------------------------------------------------------
+       */
+
+      return reply.send({
+        message:
+          "Service order dispatched successfully",
+
+        order_id:
+          order.id,
+
+        required_service_type:
+          requiredServiceType,
+
+        discovered_count:
+          providers.length,
+
+        offered_count:
+          createdAssignments.length,
+
+        skipped_count:
+          skippedCount,
+
+        assignments:
+          createdAssignments,
+      });
+    },
+  );
   
 
   /*
