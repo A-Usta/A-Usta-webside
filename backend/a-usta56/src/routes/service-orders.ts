@@ -1994,10 +1994,16 @@ if (evidenceFiles === null) {
     },
   );
 
-  /*
+ 
+
+    /*
    * ==========================================================
    * PATCH /service-order-assignments/:assignmentId/accept
-   * Provider sifarişi qəbul edir.
+   *
+   * Provider offered assignment-i atomik şəkildə qəbul edir.
+   *
+   * Order + winning assignment + losing offers
+   * PostgreSQL daxilində eyni transaction ilə dəyişdirilir.
    * ==========================================================
    */
 
@@ -2028,214 +2034,181 @@ if (evidenceFiles === null) {
         );
       }
 
-      const {
-        data: assignment,
-        error: assignmentError,
-      } = await supabase
-        .from(
-          "service_order_assignments",
-        )
-        .select("*")
-        .eq(
-          "id",
-          params.assignmentId,
-        )
-        .single();
-
-      if (
-        assignmentError ||
-        !assignment
-      ) {
-        return sendNotFound(
-          reply,
-          "Service order assignment not found",
-        );
-      }
-
-      if (
-        assignment.provider_id !==
-        providerUserId
-      ) {
-        return sendForbidden(
-          reply,
-          "You are not allowed to accept this assignment",
-        );
-      }
-
-      if (
-        assignment.status !==
-        "offered"
-      ) {
-        return sendConflict(
-          reply,
-          "Only offered assignments can be accepted",
-        );
-      }
+      /*
+       * --------------------------------------------------------
+       * Atomik DB əməliyyatı.
+       *
+       * provider_id request body-dən götürülmür.
+       * Authenticated JWT-dən alınır.
+       * --------------------------------------------------------
+       */
 
       const {
-        data: order,
-        error: orderError,
-      } = await supabase
-        .from("service_orders")
-        .select("id, status")
-        .eq(
-          "id",
-          assignment.order_id,
-        )
-        .single();
-
-      if (
-        orderError ||
-        !order
-      ) {
-        return sendNotFound(
-          reply,
-          "Service order not found",
-        );
-      }
-
-      if (
-        order.status !==
-        "pending"
-      ) {
-        return sendConflict(
-          reply,
-          "This service order is no longer available for acceptance",
-        );
-      }
-
-      const acceptedAt =
-        new Date().toISOString();
-
-      const {
-        data: updatedOrder,
-        error: updateOrderError,
-      } = await supabase
-        .from("service_orders")
-        .update({
-          status: "accepted",
-          accepted_at:
-            acceptedAt,
-        })
-        .eq(
-          "id",
-          assignment.order_id,
-        )
-        .eq(
-          "status",
-          "pending",
-        )
-        .select("*")
-        .single();
-
-      if (
-        updateOrderError ||
-        !updatedOrder
-      ) {
-        app.log.error(
-          updateOrderError,
-        );
-
-        return sendConflict(
-          reply,
-          "Service order could not be accepted because it is no longer pending",
-        );
-      }
-
-      const {
-        data: acceptedAssignment,
+        data: acceptResults,
         error: acceptError,
-      } = await supabase
-        .from(
-          "service_order_assignments",
-        )
-        .update({
-          status: "accepted",
-          accepted_at:
-            acceptedAt,
-        })
-        .eq(
-          "id",
-          params.assignmentId,
-        )
-        .eq(
-          "provider_id",
-          providerUserId,
-        )
-        .eq(
-          "status",
-          "offered",
-        )
-        .select("*")
-        .single();
+      } = await supabase.rpc(
+        "accept_service_order_assignment_atomic",
+        {
+          p_assignment_id:
+            params.assignmentId,
 
-      if (
-        acceptError ||
-        !acceptedAssignment
-      ) {
+          p_provider_id:
+            providerUserId,
+        },
+      );
+
+      if (acceptError) {
         app.log.error(
           acceptError,
         );
 
-        await supabase
-          .from("service_orders")
-          .update({
-            status: "pending",
-            accepted_at: null,
-          })
-          .eq(
-            "id",
-            assignment.order_id,
-          )
-          .eq(
-            "status",
-            "accepted",
-          );
-
-        return sendConflict(
+        return sendServerError(
           reply,
           "Service order assignment could not be accepted",
         );
       }
 
-      const {
-        error: cancelOtherError,
-      } = await supabase
-        .from(
-          "service_order_assignments",
-        )
-        .update({
-          status: "cancelled",
-        })
-        .eq(
-          "order_id",
-          assignment.order_id,
-        )
-        .eq(
-          "status",
-          "offered",
-        )
-        .neq(
-          "id",
-          params.assignmentId,
+      const acceptResult =
+        acceptResults?.[0];
+
+      if (!acceptResult) {
+        return sendServerError(
+          reply,
+          "Atomic accept returned no result",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * RPC nəticələrini HTTP cavablarına çevir.
+       * --------------------------------------------------------
+       */
+
+      switch (
+        acceptResult.result
+      ) {
+        case "assignment_not_found":
+          return sendNotFound(
+            reply,
+            "Service order assignment not found",
+          );
+
+        case "forbidden":
+          return sendForbidden(
+            reply,
+            "You are not allowed to accept this assignment",
+          );
+
+        case "assignment_not_offered":
+          return sendConflict(
+            reply,
+            "Only offered assignments can be accepted",
+          );
+
+        case "order_not_found":
+          return sendNotFound(
+            reply,
+            "Service order not found",
+          );
+
+        case "order_not_pending":
+          return sendConflict(
+            reply,
+            "This service order is no longer available for acceptance",
+          );
+
+        case "accepted":
+          break;
+
+        default:
+          app.log.error(
+            {
+              acceptResult,
+            },
+            "Unexpected atomic accept result",
+          );
+
+          return sendServerError(
+            reply,
+            "Unexpected service order acceptance result",
+          );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Transaction uğurla bitdikdən sonra aktual order və
+       * winning assignment məlumatını qaytar.
+       * --------------------------------------------------------
+       */
+
+      const [
+        orderResult,
+        assignmentResult,
+      ] = await Promise.all([
+        supabase
+          .from(
+            "service_orders",
+          )
+          .select("*")
+          .eq(
+            "id",
+            acceptResult.order_id,
+          )
+          .single(),
+
+        supabase
+          .from(
+            "service_order_assignments",
+          )
+          .select("*")
+          .eq(
+            "id",
+            acceptResult.assignment_id,
+          )
+          .single(),
+      ]);
+
+      if (
+        orderResult.error ||
+        !orderResult.data
+      ) {
+        app.log.error(
+          orderResult.error,
         );
 
-      if (cancelOtherError) {
+        return sendServerError(
+          reply,
+          "Accepted service order could not be loaded",
+        );
+      }
+
+      if (
+        assignmentResult.error ||
+        !assignmentResult.data
+      ) {
         app.log.error(
-          cancelOtherError,
+          assignmentResult.error,
+        );
+
+        return sendServerError(
+          reply,
+          "Accepted assignment could not be loaded",
         );
       }
 
       return reply.send({
         message:
           "Service order accepted successfully",
-        order: updatedOrder,
+
+        order:
+          orderResult.data,
+
         assignment:
-          acceptedAssignment,
+          assignmentResult.data,
       });
     },
   );
-
+  
   /*
  * ==========================================================
  * PATCH /service-order-assignments/:assignmentId/price-offer
