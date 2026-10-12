@@ -361,6 +361,15 @@ type ProviderServiceType =
   | "tow"
   | "cargo";
 
+type MatchingProvider = {
+  provider_id: string;
+  provider_type: ProviderType;
+  service_type: ProviderServiceType;
+  distance_km: number;
+  service_radius_km: number;
+  location_updated_at: string | null;
+};
+
 function expectedProviderServiceType(
   category: ServiceCategory,
   serviceMode: ServiceMode,
@@ -1034,17 +1043,9 @@ if (evidenceFiles === null) {
         error: orderError,
       } = await supabase
         .from("service_orders")
-        .select(
-          [
-            "id",
-            "customer_id",
-            "status",
-            "service_category",
-            "service_mode",
-            "latitude",
-            "longitude",
-          ].join(", "),
-        )
+       .select(
+  "id, customer_id, status, service_category, service_mode, latitude, longitude",
+)
         .eq(
           "id",
           params.orderId,
@@ -1246,9 +1247,11 @@ if (evidenceFiles === null) {
        * --------------------------------------------------------
        */
 
-      const matches =
-        (providers ?? []).map(
-          (provider) => ({
+     const matches =
+  (
+    (providers ?? []) as MatchingProvider[]
+  ).map(
+    (provider) => ({
             provider_id:
               provider.provider_id,
 
