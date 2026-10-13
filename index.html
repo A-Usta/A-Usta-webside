@@ -18079,6 +18079,239 @@ window.AUSTA_SUPABASE = supabaseClient;
 
   }
 
+   /* =====================================================
+     PROVIDER LIVE LOCATION SYNC
+     ===================================================== */
+
+  let providerLocationSyncTimer =
+    null;
+
+  let lastProviderLocationSync = {
+    latitude: null,
+    longitude: null,
+    timestamp: 0
+  };
+
+
+  function calculateProviderMoveDistance(
+    latitude,
+    longitude
+  ) {
+
+    if (
+      lastProviderLocationSync.latitude === null ||
+      lastProviderLocationSync.longitude === null
+    ) {
+      return Infinity;
+    }
+
+
+    if (
+      window.AUSTA_LOCATION_CORE
+        ?.calculateDistance
+    ) {
+
+      return window.AUSTA_LOCATION_CORE
+        .calculateDistance(
+          lastProviderLocationSync.latitude,
+          lastProviderLocationSync.longitude,
+          latitude,
+          longitude
+        );
+    }
+
+
+    return Infinity;
+
+  }
+
+
+  async function syncProviderLocation(
+    latitude,
+    longitude,
+    accuracy = null
+  ) {
+
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
+      return false;
+    }
+
+
+    const now =
+      Date.now();
+
+    const elapsed =
+      now -
+      lastProviderLocationSync.timestamp;
+
+    const movedMeters =
+      calculateProviderMoveDistance(
+        latitude,
+        longitude
+      );
+
+
+    /*
+     * Backend-i lazımsız sorğularla yükləmirik.
+     *
+     * Yeniləmə edilir əgər:
+     * - ilk GPS məlumatıdır;
+     * - provider ən az 25 metr hərəkət edib;
+     * - və ya son sync-dən 60 saniyə keçib.
+     */
+
+    if (
+      lastProviderLocationSync.timestamp !== 0 &&
+      movedMeters < 25 &&
+      elapsed < 60000
+    ) {
+      return false;
+    }
+
+
+    await apiRequest(
+      "/provider/location",
+      {
+        method: "PATCH",
+
+        body: JSON.stringify({
+          latitude,
+          longitude
+        })
+      }
+    );
+
+
+    lastProviderLocationSync = {
+      latitude,
+      longitude,
+      timestamp: now
+    };
+
+
+    if (
+      window.AUSTA_LOCATION_CORE
+        ?.setProviderLocation
+    ) {
+
+      window.AUSTA_LOCATION_CORE
+        .setProviderLocation({
+          latitude,
+          longitude,
+          accuracy,
+          availability: "online",
+          tracking: true
+        });
+    }
+
+
+    console.log(
+      "A-USTA provider location synced:",
+      {
+        latitude,
+        longitude,
+        accuracy
+      }
+    );
+
+
+    return true;
+
+  }
+
+
+  async function syncCurrentProviderLocation() {
+
+    if (
+      !window.AUSTA_LOCATION_CORE
+        ?.getCurrentPosition
+    ) {
+      throw new Error(
+        "A-USTA Location Core tapılmadı."
+      );
+    }
+
+
+    const position =
+      await window.AUSTA_LOCATION_CORE
+        .getCurrentPosition();
+
+
+    return syncProviderLocation(
+      position.coords.latitude,
+      position.coords.longitude,
+      position.coords.accuracy
+    );
+
+  }
+
+
+  function startProviderLocationSync() {
+
+    if (
+      providerLocationSyncTimer !== null
+    ) {
+      return;
+    }
+
+
+    syncCurrentProviderLocation()
+      .catch(
+        error => {
+
+          console.warn(
+            "A-USTA provider GPS initial sync:",
+            error
+          );
+
+        }
+      );
+
+
+    providerLocationSyncTimer =
+      window.setInterval(
+        () => {
+
+          syncCurrentProviderLocation()
+            .catch(
+              error => {
+
+                console.warn(
+                  "A-USTA provider GPS sync:",
+                  error
+                );
+
+              }
+            );
+
+        },
+        60000
+      );
+
+  }
+
+
+  function stopProviderLocationSync() {
+
+    if (
+      providerLocationSyncTimer === null
+    ) {
+      return;
+    }
+
+
+    window.clearInterval(
+      providerLocationSyncTimer
+    );
+
+    providerLocationSyncTimer =
+      null;
+
+  }
+
 
   function getEvidence(
     order
@@ -19101,11 +19334,21 @@ const estimateText =
   );
 
 
-  window.AUSTA_PROVIDER_SERVICE =
-    {
-      refresh:
-        loadAssignments
-    };
+ window.AUSTA_PROVIDER_SERVICE = {
+
+    refresh:
+      loadAssignments,
+
+    syncLocation:
+      syncCurrentProviderLocation,
+
+    startLocationSync:
+      startProviderLocationSync,
+
+    stopLocationSync:
+      stopProviderLocationSync
+
+  };
 
 
   loadAssignments();
