@@ -17145,6 +17145,65 @@ if (
         );
       }
 
+      /*
+ * ========================================================
+ * AUTO DISPATCH SERVICE ORDER
+ * ========================================================
+ */
+
+let dispatchData =
+  null;
+
+try {
+
+  const dispatchResponse =
+    await fetch(
+      `https://a-usta-webside.onrender.com/service-orders/${backendOrder.id}/dispatch`,
+      {
+        method: 'POST',
+
+        headers: {
+          'Authorization':
+            `Bearer ${session.access_token}`
+        }
+      }
+    );
+
+  const dispatchText =
+    await dispatchResponse.text();
+
+  try {
+    dispatchData =
+      JSON.parse(
+        dispatchText
+      );
+  } catch (_) {
+    dispatchData =
+      null;
+  }
+
+  if (!dispatchResponse.ok) {
+    console.warn(
+      'A-USTA AUTO DISPATCH FAILED:',
+      dispatchResponse.status,
+      dispatchData ||
+      dispatchText
+    );
+  } else {
+    console.log(
+      'A-USTA AUTO DISPATCH SUCCESS:',
+      dispatchData
+    );
+  }
+
+} catch (dispatchError) {
+
+  console.warn(
+    'A-USTA AUTO DISPATCH ERROR:',
+    dispatchError
+  );
+}
+
       const localOrder = {
         id:
           backendOrder.id,
