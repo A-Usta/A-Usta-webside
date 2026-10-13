@@ -1994,7 +1994,277 @@ if (evidenceFiles === null) {
     },
   );
 
- 
+
+     /*
+   * ==========================================================
+   * PATCH /provider/location
+   *
+   * Aktiv provider öz cari GPS mövqeyini yeniləyir.
+   *
+   * Təhlükəsizlik:
+   * - requireAuth tələb olunur
+   * - provider_id request body-dən qəbul edilmir
+   * - provider ID authenticated JWT session-dan götürülür
+   * - yalnız aktiv provider rolları GPS yeniləyə bilər
+   * ==========================================================
+   */
+
+  app.patch(
+    "/provider/location",
+    {
+      preHandler: requireAuth,
+    },
+    async (request, reply) => {
+      const providerUserId =
+        getAuthenticatedUserId(
+          request,
+        );
+
+      const body =
+        (request.body ?? {}) as {
+          latitude?: unknown;
+          longitude?: unknown;
+        };
+
+      /*
+       * --------------------------------------------------------
+       * Latitude tələb olunur.
+       * --------------------------------------------------------
+       */
+
+      if (
+        body.latitude === undefined ||
+        body.latitude === null ||
+        body.latitude === ""
+      ) {
+        return sendBadRequest(
+          reply,
+          "latitude is required",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Longitude tələb olunur.
+       * --------------------------------------------------------
+       */
+
+      if (
+        body.longitude === undefined ||
+        body.longitude === null ||
+        body.longitude === ""
+      ) {
+        return sendBadRequest(
+          reply,
+          "longitude is required",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * GPS dəyərlərini number-a çevir.
+       * --------------------------------------------------------
+       */
+
+      const latitude =
+        optionalNumber(
+          body.latitude,
+        );
+
+      const longitude =
+        optionalNumber(
+          body.longitude,
+        );
+
+      if (
+        latitude === null
+      ) {
+        return sendBadRequest(
+          reply,
+          "latitude must be a valid number",
+        );
+      }
+
+      if (
+        longitude === null
+      ) {
+        return sendBadRequest(
+          reply,
+          "longitude must be a valid number",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Latitude diapazonu.
+       * --------------------------------------------------------
+       */
+
+      if (
+        latitude < -90 ||
+        latitude > 90
+      ) {
+        return sendBadRequest(
+          reply,
+          "latitude must be between -90 and 90",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Longitude diapazonu.
+       * --------------------------------------------------------
+       */
+
+      if (
+        longitude < -180 ||
+        longitude > 180
+      ) {
+        return sendBadRequest(
+          reply,
+          "longitude must be between -180 and 180",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Authenticated istifadəçinin profilini yoxla.
+       * --------------------------------------------------------
+       */
+
+      const {
+        data: provider,
+        error: providerError,
+      } = await supabase
+        .from(
+          "profiles",
+        )
+        .select(
+          "id, role, is_active",
+        )
+        .eq(
+          "id",
+          providerUserId,
+        )
+        .single();
+
+      if (
+        providerError ||
+        !provider
+      ) {
+        return sendNotFound(
+          reply,
+          "Provider profile not found",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Provider aktiv olmalıdır.
+       * --------------------------------------------------------
+       */
+
+      if (
+        !provider.is_active
+      ) {
+        return sendConflict(
+          reply,
+          "Provider is not active",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Yalnız provider rolları GPS yeniləyə bilər.
+       *
+       * mechanic
+       * shop
+       * tow
+       * cargo
+       * --------------------------------------------------------
+       */
+
+      if (
+        !isAllowed(
+          provider.role,
+          allowedProviderTypes,
+        )
+      ) {
+        return sendForbidden(
+          reply,
+          "Only providers can update provider location",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * GPS freshness vaxtı server tərəfindən yaradılır.
+       *
+       * Client location_updated_at göndərə bilmir.
+       * --------------------------------------------------------
+       */
+
+      const locationUpdatedAt =
+        new Date().toISOString();
+
+      /*
+       * --------------------------------------------------------
+       * Provider-in öz profilində GPS məlumatını yenilə.
+       * --------------------------------------------------------
+       */
+
+      const {
+        data: updatedProvider,
+        error: updateError,
+      } = await supabase
+        .from(
+          "profiles",
+        )
+        .update({
+          latitude,
+          longitude,
+          location_updated_at:
+            locationUpdatedAt,
+        })
+        .eq(
+          "id",
+          providerUserId,
+        )
+        .select(
+          "id, role, is_active, latitude, longitude, location_updated_at, service_radius_km",
+        )
+        .single();
+
+      if (
+        updateError ||
+        !updatedProvider
+      ) {
+        app.log.error(
+          updateError,
+        );
+
+        return sendServerError(
+          reply,
+          "Provider location could not be updated",
+        );
+      }
+
+      /*
+       * --------------------------------------------------------
+       * Uğurlu cavab.
+       * --------------------------------------------------------
+       */
+
+      return reply.send({
+        message:
+          "Provider location updated successfully",
+
+        provider:
+          updatedProvider,
+      });
+    },
+  );
+  
 
     /*
    * ==========================================================
