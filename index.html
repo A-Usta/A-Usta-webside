@@ -17554,6 +17554,52 @@ function openProtected(name){const qs=FORMS[name];if(!qs)return;closeAll();const
       formVersion:'V55-PROTECTED'
     };
 
+    /*
+ * ========================================================
+ * CUSTOMER ORDER LOCATION
+ * ========================================================
+ */
+
+if (
+  !window.AUSTA_LOCATION_CORE ||
+  typeof window.AUSTA_LOCATION_CORE.getCurrentPosition !==
+    'function'
+) {
+  throw new Error(
+    'A-USTA məkan sistemi hazır deyil.'
+  );
+}
+
+resultBox.innerHTML=
+  '<span style="color:#9db2c4">'+
+  '📍 Sifariş məkanı müəyyən edilir...'+
+  '</span>';
+
+const customerPosition =
+  await window.AUSTA_LOCATION_CORE
+    .getCurrentPosition();
+
+const customerLatitude =
+  Number(
+    customerPosition?.latitude ??
+    customerPosition?.coords?.latitude
+  );
+
+const customerLongitude =
+  Number(
+    customerPosition?.longitude ??
+    customerPosition?.coords?.longitude
+  );
+
+if (
+  !Number.isFinite(customerLatitude) ||
+  !Number.isFinite(customerLongitude)
+) {
+  throw new Error(
+    'Sifariş üçün GPS koordinatları alınmadı.'
+  );
+}
+
   const backendResult =
   await createBackendServiceOrder({
     client_order_id:
@@ -17573,6 +17619,12 @@ function openProtected(name){const qs=FORMS[name];if(!qs)return;closeAll();const
 
     service_mode:
       'mobile',
+
+    latitude:
+  customerLatitude,
+
+longitude:
+  customerLongitude,
 
     price_status:
       'unknown',
