@@ -2240,13 +2240,41 @@ if (evidenceFiles === null) {
         !updatedProvider
       ) {
         app.log.error(
-          updateError,
+          {
+            updateError,
+            providerUserId,
+          },
+          "Provider location update failed",
         );
 
-        return sendServerError(
-          reply,
-          "Provider location could not be updated",
-        );
+        return reply
+          .code(500)
+          .send({
+            error:
+              "Internal Server Error",
+
+            message:
+              "Provider location could not be updated",
+
+            debug: updateError
+              ? {
+                  code:
+                    updateError.code,
+
+                  message:
+                    updateError.message,
+
+                  details:
+                    updateError.details,
+
+                  hint:
+                    updateError.hint,
+                }
+              : {
+                  message:
+                    "Update returned no provider",
+                },
+          });
       }
 
       /*
