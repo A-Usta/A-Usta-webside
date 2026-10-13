@@ -17581,12 +17581,14 @@ const customerPosition =
 
 const customerLatitude =
   Number(
+    customerPosition?.coordinates?.latitude ??
     customerPosition?.latitude ??
     customerPosition?.coords?.latitude
   );
 
 const customerLongitude =
   Number(
+    customerPosition?.coordinates?.longitude ??
     customerPosition?.longitude ??
     customerPosition?.coords?.longitude
   );
