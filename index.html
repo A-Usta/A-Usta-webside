@@ -17016,6 +17016,49 @@ function openService(raw) {
           answers
         });
 
+      /*
+ * ========================================================
+ * CUSTOMER SERVICE ORDER LOCATION
+ * ========================================================
+ */
+
+if (
+  !window.AUSTA_LOCATION_CORE ||
+  typeof window.AUSTA_LOCATION_CORE.getCurrentPosition !==
+    'function'
+) {
+  throw new Error(
+    'A-USTA məkan sistemi hazır deyil.'
+  );
+}
+
+const customerPosition =
+  await window.AUSTA_LOCATION_CORE
+    .getCurrentPosition();
+
+const customerLatitude =
+  Number(
+    customerPosition?.coordinates?.latitude ??
+    customerPosition?.latitude ??
+    customerPosition?.coords?.latitude
+  );
+
+const customerLongitude =
+  Number(
+    customerPosition?.coordinates?.longitude ??
+    customerPosition?.longitude ??
+    customerPosition?.coords?.longitude
+  );
+
+if (
+  !Number.isFinite(customerLatitude) ||
+  !Number.isFinite(customerLongitude)
+) {
+  throw new Error(
+    'Sifariş üçün GPS koordinatları alınmadı.'
+  );
+}
+
       const response =
         await fetch(
           'https://a-usta-webside.onrender.com/service-orders',
@@ -17052,11 +17095,11 @@ function openService(raw) {
               district:
                 '',
 
-              latitude:
-                null,
+             latitude:
+              customerLatitude,
 
-              longitude:
-                null,
+             longitude:
+               customerLongitude,
 
               price_status:
                 'unknown',
