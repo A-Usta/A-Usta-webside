@@ -13374,13 +13374,31 @@ function buildNav(role) {
             .auth
             .signOut();
 
-        if (result.error) {
-          throw result.error;
-        }
+      if (result.error) {
+  throw result.error;
+}
 
-        localStorage.removeItem(
-          'austa-account-role-v39'
-        );
+/*
+ * ========================================================
+ * STOP PROVIDER LIVE LOCATION ON LOGOUT
+ * ========================================================
+ */
+
+if (
+  window.AUSTA_PROVIDER_SERVICE
+    ?.stopLocationSync
+) {
+  window.AUSTA_PROVIDER_SERVICE
+    .stopLocationSync();
+
+  console.log(
+    'A-USTA provider live location stopped.'
+  );
+}
+
+localStorage.removeItem(
+  'austa-account-role-v39'
+);
 
         localStorage.removeItem(
           'austa-auth-user-id'
@@ -14891,6 +14909,32 @@ localStorage.setItem(
   'austa-auth-user-id',
   user.id
 );
+   /*
+ * ========================================================
+ * AUTO START PROVIDER LIVE LOCATION
+ * ========================================================
+ */
+
+const providerRoles = [
+  'mechanic',
+  'shop',
+  'tow',
+  'cargo'
+];
+
+if (
+  providerRoles.includes(savedRole) &&
+  window.AUSTA_PROVIDER_SERVICE
+    ?.startLocationSync
+) {
+  window.AUSTA_PROVIDER_SERVICE
+    .startLocationSync();
+
+  console.log(
+    'A-USTA provider live location started:',
+    savedRole
+  );
+}
             showMessage(
               '✓ Uğurla daxil oldunuz. A-USTA session aktivdir.',
               'success'
