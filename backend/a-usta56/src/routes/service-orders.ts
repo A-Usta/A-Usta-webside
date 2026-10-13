@@ -2235,7 +2235,7 @@ if (evidenceFiles === null) {
         )
         .single();
 
-       if (
+      if (
         updateError ||
         !updatedProvider
       ) {
@@ -2247,34 +2247,10 @@ if (evidenceFiles === null) {
           "Provider location update failed",
         );
 
-        return reply
-          .code(500)
-          .send({
-            error:
-              "Internal Server Error",
-
-            message:
-              "Provider location could not be updated",
-
-            debug: updateError
-              ? {
-                  code:
-                    updateError.code,
-
-                  message:
-                    updateError.message,
-
-                  details:
-                    updateError.details,
-
-                  hint:
-                    updateError.hint,
-                }
-              : {
-                  message:
-                    "Update returned no provider",
-                },
-          });
+        return sendServerError(
+          reply,
+          "Provider location could not be updated",
+        );
       }
 
       /*
