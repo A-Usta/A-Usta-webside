@@ -20594,47 +20594,14 @@ const estimateText =
   loadOrders();
 
 })();
-</script>
-<style id="austa-usta-cagir-dropdown-fix">
-/* Usta çağır klikindən sonra açılan xidmət siyahısı */
-#austaUstaCagirDropdown {
-  display: none;
-  margin-top: 10px;
-  padding: 10px;
-  border: 1px solid #263b49;
-  border-radius: 12px;
-  background: #08151f;
-}
-
-#austaUstaCagirDropdown.austa-open {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 7px;
-}
-
-#austaUstaCagirDropdown .austa-function-btn {
-  width: 100%;
-}
-
-@media (max-width: 800px) {
-  #austaUstaCagirDropdown.austa-open {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 480px) {
-  #austaUstaCagirDropdown.austa-open {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
-
 <script id="austa-usta-cagir-dropdown-image-only">
 (function () {
   'use strict';
 
   /* =====================================================
-     1. USTA ÇAĞIR -> XİDMƏTLƏR AŞAĞI AÇILSIN
+     A-USTA
+     1. USTA ÇAĞIR -> MÖVCUD XİDMƏTLƏRİ AÇ / BAĞLA
+     2. İLKİN XİDMƏT FORMASI -> YALNIZ ŞƏKİL
      ===================================================== */
 
   function norm(value) {
@@ -20651,12 +20618,18 @@ const estimateText =
       .trim();
   }
 
+
+  /* =====================================================
+     1. USTA ÇAĞIR
+     ===================================================== */
+
   function findUstaButton() {
     return [...document.querySelectorAll('[data-top-service]')]
       .find(function (button) {
         return norm(button.dataset.topService) === 'usta cagir';
       });
   }
+
 
   function prepareDropdown() {
     const ustaButton = findUstaButton();
@@ -20675,49 +20648,56 @@ const estimateText =
       return;
     }
 
-    const serviceButtons = [...list.querySelectorAll('[data-top-service]')]
-      .filter(function (button) {
-        return button !== ustaButton;
-      });
+    /*
+      Yalnız Usta çağır ilə EYNİ siyahıda olan
+      mövcud xidmət düymələrini götürürük.
+
+      Düymələri başqa yerə daşımırıq.
+    */
+    const serviceButtons = [
+      ...list.querySelectorAll(':scope > [data-top-service]')
+    ].filter(function (button) {
+      return button !== ustaButton;
+    });
 
     if (!serviceButtons.length) {
       return;
     }
 
-    const dropdown = document.createElement('div');
-    dropdown.id = 'austaUstaCagirDropdown';
-
+    /*
+      Səhifə açılanda:
+      Usta çağır görünür,
+      onun xidmətləri bağlı olur.
+    */
     serviceButtons.forEach(function (button) {
-      dropdown.appendChild(button);
+      button.hidden = true;
     });
 
-    list.appendChild(dropdown);
-
     ustaButton.dataset.austaDropdownReady = '1';
+    ustaButton.setAttribute('aria-expanded', 'false');
+
 
     /*
-      Capture mərhələsində Usta çağırın köhnə generic
-      form açmasını dayandırırıq.
-
-      Digər xidmət düymələrinə toxunmuruq.
+      Usta çağır klik:
+      mövcud xidmətləri aç / bağla.
     */
-    window.addEventListener(
+    ustaButton.addEventListener(
       'click',
       function (event) {
-        const button = event.target.closest?.('[data-top-service="Usta çağır"]');
-
-        if (!button) {
-          return;
-        }
-
         event.preventDefault();
+        event.stopPropagation();
         event.stopImmediatePropagation();
 
-        dropdown.classList.toggle('austa-open');
+        const isOpen =
+          ustaButton.getAttribute('aria-expanded') === 'true';
+
+        serviceButtons.forEach(function (serviceButton) {
+          serviceButton.hidden = isOpen;
+        });
 
         ustaButton.setAttribute(
           'aria-expanded',
-          dropdown.classList.contains('austa-open') ? 'true' : 'false'
+          isOpen ? 'false' : 'true'
         );
       },
       true
@@ -20733,11 +20713,44 @@ const estimateText =
   function makeInitialServiceImageOnly(root) {
     const scope = root || document;
 
-    scope.querySelectorAll(
-      '.austa-v45-master-overlay input[type="file"],' +
-      '.austa-v54-service-overlay input[type="file"],' +
-      '.austa-v55-overlay input[type="file"]'
-    ).forEach(function (input) {
+    const inputs = [];
+
+    /*
+      Əgər root özü file input-dursa onu da götür.
+    */
+    if (
+      scope instanceof Element &&
+      scope.matches('input[type="file"]')
+    ) {
+      inputs.push(scope);
+    }
+
+    /*
+      Yalnız ilkin xidmət formalarının file inputları.
+    */
+    if (scope.querySelectorAll) {
+      inputs.push(
+        ...scope.querySelectorAll(
+          '.austa-v45-master-overlay input[type="file"],' +
+          '.austa-v54-service-overlay input[type="file"],' +
+          '.austa-v55-overlay input[type="file"]'
+        )
+      );
+    }
+
+    inputs.forEach(function (input) {
+      const overlay = input.closest(
+        '.austa-v45-master-overlay,' +
+        '.austa-v54-service-overlay,' +
+        '.austa-v55-overlay'
+      );
+
+      /*
+        İlkin xidmət overlay-i deyilsə toxunma.
+      */
+      if (!overlay) {
+        return;
+      }
 
       const label = input.closest('label');
 
@@ -20750,7 +20763,8 @@ const estimateText =
       );
 
       /*
-        BEFORE / AFTER sübutlarına toxunmuruq.
+        BEFORE / AFTER / evidence hissələrinə
+        heç bir dəyişiklik etmirik.
       */
       if (
         /before|after|evvel|sonra|evidence/.test(text)
@@ -20758,20 +20772,28 @@ const estimateText =
         return;
       }
 
+      /*
+        Video çıxır.
+        Yalnız şəkil seçilə bilər.
+      */
       input.accept = 'image/*';
-      input.multiple = true;
 
+
+      /*
+        "Şəkil / video" yazısını
+        "📷 Şəkil" edirik.
+      */
       if (label) {
-        const textNodes = [...label.childNodes]
-          .filter(function (node) {
-            return node.nodeType === Node.TEXT_NODE;
-          });
+        [...label.childNodes].forEach(function (node) {
+          if (node.nodeType !== Node.TEXT_NODE) {
+            return;
+          }
 
-        textNodes.forEach(function (node) {
+          const labelText = norm(node.textContent);
+
           if (
-            /sekil\s*\/\s*video|foto\s*\/\s*video/i.test(
-              norm(node.textContent)
-            )
+            /sekil\s*\/\s*video/.test(labelText) ||
+            /foto\s*\/\s*video/.test(labelText)
           ) {
             node.textContent = '📷 Şəkil';
           }
@@ -20781,7 +20803,10 @@ const estimateText =
   }
 
 
-  /* Yeni forma açılan kimi yoxla */
+  /* =====================================================
+     YENİ XİDMƏT FORMASI AÇILANDA IMAGE-ONLY TƏTBİQ ET
+     ===================================================== */
+
   const observer = new MutationObserver(function (mutations) {
     mutations.forEach(function (mutation) {
       mutation.addedNodes.forEach(function (node) {
@@ -20794,6 +20819,10 @@ const estimateText =
     });
   });
 
+
+  /* =====================================================
+     START
+     ===================================================== */
 
   function start() {
     prepareDropdown();
@@ -20808,7 +20837,11 @@ const estimateText =
 
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start);
+    document.addEventListener(
+      'DOMContentLoaded',
+      start,
+      { once: true }
+    );
   } else {
     start();
   }
