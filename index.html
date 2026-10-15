@@ -20452,15 +20452,45 @@ const estimateText =
           order.provider
         )}
 
-        ${renderPrice(
+       ${renderPrice(
           order
         )}
+
+        ${
+          ["pending", "accepted"].includes(status)
+            ? `
+              <div class="austa-provider-actions">
+                <button
+                  type="button"
+                  class="austa-provider-action"
+                  data-austa-customer-cancel
+                  data-order-id="${escapeHtml(order.id)}"
+                >
+                  ✕ Sifarişi ləğv et
+                </button>
+              </div>
+            `
+            : ""
+        }
 
       </article>
     `;
 
   }
 
+    async function cancelOrder(orderId) {
+    await apiRequest(
+      `/service-orders/${encodeURIComponent(orderId)}/cancel`,
+      {
+        method: "PATCH"
+      }
+    );
+
+    showStatus(
+      "✓ Sifariş ləğv edildi.",
+      "success"
+    );
+  }
 
   async function approvePrice(
     orderId
@@ -20510,7 +20540,7 @@ const estimateText =
 
       const button =
         event.target.closest(
-          "[data-austa-customer-price-action]"
+          "[data-austa-customer-price-action], [data-austa-customer-cancel]"
         );
 
       if (!button) {
@@ -20524,13 +20554,17 @@ const estimateText =
       const orderId =
         button.dataset.orderId;
 
+    const isCancel =
+        button.hasAttribute(
+          "data-austa-customer-cancel"
+        );
+
       if (
-        !action ||
+        (!action && !isCancel) ||
         !orderId
       ) {
         return;
       }
-
 
       button.disabled =
         true;
@@ -20548,15 +20582,15 @@ const estimateText =
             orderId
           );
 
-        } else if (
-          action === "reject"
+      } else if (
+          button.hasAttribute("data-austa-customer-cancel")
         ) {
 
-          await rejectPrice(
+          await cancelOrder(
             orderId
           );
 
-        }
+        } 
 
 
         await loadOrders();
