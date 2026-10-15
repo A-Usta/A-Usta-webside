@@ -20595,3 +20595,223 @@ const estimateText =
 
 })();
 </script>
+<style id="austa-usta-cagir-dropdown-fix">
+/* Usta çağır klikindən sonra açılan xidmət siyahısı */
+#austaUstaCagirDropdown {
+  display: none;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #263b49;
+  border-radius: 12px;
+  background: #08151f;
+}
+
+#austaUstaCagirDropdown.austa-open {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+#austaUstaCagirDropdown .austa-function-btn {
+  width: 100%;
+}
+
+@media (max-width: 800px) {
+  #austaUstaCagirDropdown.austa-open {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  #austaUstaCagirDropdown.austa-open {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script id="austa-usta-cagir-dropdown-image-only">
+(function () {
+  'use strict';
+
+  /* =====================================================
+     1. USTA ÇAĞIR -> XİDMƏTLƏR AŞAĞI AÇILSIN
+     ===================================================== */
+
+  function norm(value) {
+    return String(value || '')
+      .toLocaleLowerCase('az-AZ')
+      .replace(/ə/g, 'e')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ç/g, 'c')
+      .replace(/ğ/g, 'g')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function findUstaButton() {
+    return [...document.querySelectorAll('[data-top-service]')]
+      .find(function (button) {
+        return norm(button.dataset.topService) === 'usta cagir';
+      });
+  }
+
+  function prepareDropdown() {
+    const ustaButton = findUstaButton();
+
+    if (!ustaButton) {
+      return;
+    }
+
+    if (ustaButton.dataset.austaDropdownReady === '1') {
+      return;
+    }
+
+    const list = ustaButton.closest('.austa-function-list');
+
+    if (!list) {
+      return;
+    }
+
+    const serviceButtons = [...list.querySelectorAll('[data-top-service]')]
+      .filter(function (button) {
+        return button !== ustaButton;
+      });
+
+    if (!serviceButtons.length) {
+      return;
+    }
+
+    const dropdown = document.createElement('div');
+    dropdown.id = 'austaUstaCagirDropdown';
+
+    serviceButtons.forEach(function (button) {
+      dropdown.appendChild(button);
+    });
+
+    list.appendChild(dropdown);
+
+    ustaButton.dataset.austaDropdownReady = '1';
+
+    /*
+      Capture mərhələsində Usta çağırın köhnə generic
+      form açmasını dayandırırıq.
+
+      Digər xidmət düymələrinə toxunmuruq.
+    */
+    window.addEventListener(
+      'click',
+      function (event) {
+        const button = event.target.closest?.('[data-top-service="Usta çağır"]');
+
+        if (!button) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        dropdown.classList.toggle('austa-open');
+
+        ustaButton.setAttribute(
+          'aria-expanded',
+          dropdown.classList.contains('austa-open') ? 'true' : 'false'
+        );
+      },
+      true
+    );
+  }
+
+
+  /* =====================================================
+     2. İLKİN XİDMƏT FORMASINDA YALNIZ ŞƏKİL
+     BEFORE / AFTER DƏYİŞMİR
+     ===================================================== */
+
+  function makeInitialServiceImageOnly(root) {
+    const scope = root || document;
+
+    scope.querySelectorAll(
+      '.austa-v45-master-overlay input[type="file"],' +
+      '.austa-v54-service-overlay input[type="file"],' +
+      '.austa-v55-overlay input[type="file"]'
+    ).forEach(function (input) {
+
+      const label = input.closest('label');
+
+      const text = norm(
+        (label?.textContent || '') +
+        ' ' +
+        (input.name || '') +
+        ' ' +
+        (input.id || '')
+      );
+
+      /*
+        BEFORE / AFTER sübutlarına toxunmuruq.
+      */
+      if (
+        /before|after|evvel|sonra|evidence/.test(text)
+      ) {
+        return;
+      }
+
+      input.accept = 'image/*';
+      input.multiple = true;
+
+      if (label) {
+        const textNodes = [...label.childNodes]
+          .filter(function (node) {
+            return node.nodeType === Node.TEXT_NODE;
+          });
+
+        textNodes.forEach(function (node) {
+          if (
+            /sekil\s*\/\s*video|foto\s*\/\s*video/i.test(
+              norm(node.textContent)
+            )
+          ) {
+            node.textContent = '📷 Şəkil';
+          }
+        });
+      }
+    });
+  }
+
+
+  /* Yeni forma açılan kimi yoxla */
+  const observer = new MutationObserver(function (mutations) {
+    mutations.forEach(function (mutation) {
+      mutation.addedNodes.forEach(function (node) {
+        if (!(node instanceof Element)) {
+          return;
+        }
+
+        makeInitialServiceImageOnly(node);
+      });
+    });
+  });
+
+
+  function start() {
+    prepareDropdown();
+
+    makeInitialServiceImageOnly(document);
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+
+})();
+</script>
