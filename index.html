@@ -14096,6 +14096,28 @@ async function loadAdminKyc() {
   }
 }
  function showPage(page,role=currentRole){
+    [
+    'austaRealCustomerOrders',
+    'austaRealProviderOrders'
+  ].forEach((panelId) => {
+    const panel =
+      document.getElementById(panelId);
+
+    const marker =
+      panel?.__austaHomeMarker;
+
+    if (
+      panel &&
+      marker &&
+      marker.parentNode
+    ) {
+      marker.parentNode.insertBefore(
+        panel,
+        marker.nextSibling
+      );
+    }
+  });
+   
    currentRole=role; $$('.austa-v39-nav button').forEach(b=>b.classList.toggle('active',b.dataset.role===role&&b.dataset.page==null));
    const base=rolePages[role];
    if(page==='home') main.innerHTML=homePage(role,base);
@@ -14175,50 +14197,66 @@ function ordersPage(role) {
    const o=document.createElement('div');o.className='austa-account-overlay';o.style.cssText='position:fixed;inset:0;z-index:2100000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px';o.innerHTML=`<div style="width:min(650px,96vw);max-height:92vh;overflow:auto;background:#071725;border:1px solid #1b628e;border-radius:16px;padding:18px;color:#fff"><h3>＋ Yeni elan yerləşdir</h3><div class="austa-v39-form"><label>Elan növü<select id="v39lt">${types.map(x=>'<option>'+esc(x)+'</option>').join('')}</select></label><label>Elanın adı<input id="v39ln" placeholder="Məsələn: BMW X5 2022"></label><label>Şəhər / rayon<input id="v39ll" placeholder="Bakı"></label><label>Telefon<input id="v39lp" placeholder="Telefon"></label><label class="full">Təsvir<textarea id="v39ld" placeholder="Əsas məlumatlar"></textarea></label></div><div class="austa-v39-note"><span class="austa-v39-free">1 ay ödənişsiz elan.</span> Elan aktivləşdiyi andan 1 ay ərzində yerləşdirmə haqqı tutulmur. Sonrakı ödəniş qaydaları ayrıca göstərilməlidir.</div><div class="austa-v39-actions"><button class="austa-v39-btn primary" id="v39ls">Elanı yerləşdir</button><button class="austa-v39-btn" id="v39lc">Bağla</button></div><div id="v39lr" class="austa-v39-note" hidden></div></div>`;document.body.appendChild(o);$('#v39lc',o).onclick=()=>o.remove();$('#v39ls',o).onclick=()=>{const x={id:'AU-LIST-'+Date.now(),type:$('#v39lt',o).value,title:$('#v39ln',o).value.trim(),location:$('#v39ll',o).value.trim(),phone:$('#v39lp',o).value.trim(),description:$('#v39ld',o).value.trim(),createdAt:new Date().toISOString(),freeUntil:monthFree(),rating:0,reviewCount:0};if(!x.title||!x.location||!x.phone){$('#v39lr',o).hidden=false;$('#v39lr',o).textContent='⚠ Elan adı, şəhər/rayon və telefon doldurulmalıdır.';return}const arr=read('austa-user-listings',[]);arr.unshift(x);save('austa-user-listings',arr);o.remove();showPage('listings',currentRole)};
  }
 function bindPage(page, role) {
-    if (page === 'orders') {
-    setTimeout(() => {
-      const host =
-        document.getElementById('austaV39RealOrdersHost');
+ if (page === 'orders') {
+  setTimeout(() => {
+    const host =
+      document.getElementById('austaV39RealOrdersHost');
 
-      if (!host) return;
+    if (!host) return;
 
-      const isProvider =
-        role === 'provider' ||
-        role === 'mechanic';
+    const isProvider =
+      role === 'provider' ||
+      role === 'mechanic';
 
-      const realPanel =
-        document.getElementById(
-          isProvider
-            ? 'austaRealProviderOrders'
-            : 'austaRealCustomerOrders'
+    const panelId =
+      isProvider
+        ? 'austaRealProviderOrders'
+        : 'austaRealCustomerOrders';
+
+    const realPanel =
+      document.getElementById(panelId);
+
+    if (!realPanel) {
+      host.innerHTML = `
+        <div class="austa-v39-empty">
+          Sifariş məlumatları tapılmadı.
+        </div>
+      `;
+      return;
+    }
+
+    // Panelin orijinal yerini ilk dəfə yadda saxla
+    if (!realPanel.__austaHomeMarker) {
+      const marker =
+        document.createComment(
+          'AUSTA_REAL_ORDERS_HOME_' + panelId
         );
 
-      if (!realPanel) {
-        host.innerHTML = `
-          <div class="austa-v39-empty">
-            Sifariş məlumatları tapılmadı.
-          </div>
-        `;
-        return;
-      }
+      realPanel.parentNode.insertBefore(
+        marker,
+        realPanel
+      );
 
-      host.innerHTML = '';
+      realPanel.__austaHomeMarker = marker;
+    }
 
-      host.appendChild(realPanel);
+    host.innerHTML = '';
+    host.appendChild(realPanel);
 
-      realPanel.style.display = 'block';
-      realPanel.style.margin = '0';
+    realPanel.style.display = 'block';
+    realPanel.style.margin = '0';
 
-      if (isProvider) {
-        window.AUSTA_PROVIDER_SERVICE
-          ?.refresh?.();
-      } else {
-        window.AUSTA_CUSTOMER_SERVICE
-          ?.refresh?.();
-      }
-    }, 0);
-  }
-  $$('[data-role-switch]').forEach((b) => {
+    if (isProvider) {
+      window.AUSTA_PROVIDER_SERVICE
+        ?.refresh?.();
+    } else {
+      window.AUSTA_CUSTOMER_SERVICE
+        ?.refresh?.();
+    }
+  }, 0);
+}
+
+    $$('[data-role-switch]').forEach((b) => {
     b.onclick = () => {
       showRole(b.dataset.role);
     };
