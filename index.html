@@ -20574,7 +20574,7 @@ const estimateText =
 
       try {
 
-        if (
+       if (
           action === "approve"
         ) {
 
@@ -20582,15 +20582,25 @@ const estimateText =
             orderId
           );
 
-      } else if (
-          button.hasAttribute("data-austa-customer-cancel")
+        } else if (
+          action === "reject"
+        ) {
+
+          await rejectPrice(
+            orderId
+          );
+
+        } else if (
+          button.hasAttribute(
+            "data-austa-customer-cancel"
+          )
         ) {
 
           await cancelOrder(
             orderId
           );
 
-        } 
+        }
 
 
         await loadOrders();
