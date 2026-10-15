@@ -20595,39 +20595,7 @@ const estimateText =
 
 })();
 </script>
-<style id="austa-usta-cagir-dropdown-fix">
-/* Usta çağır klikindən sonra açılan xidmət siyahısı */
-#austaUstaCagirDropdown {
-  display: none;
-  margin-top: 10px;
-  padding: 10px;
-  border: 1px solid #263b49;
-  border-radius: 12px;
-  background: #08151f;
-}
 
-#austaUstaCagirDropdown.austa-open {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 7px;
-}
-
-#austaUstaCagirDropdown .austa-function-btn {
-  width: 100%;
-}
-
-@media (max-width: 800px) {
-  #austaUstaCagirDropdown.austa-open {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 480px) {
-  #austaUstaCagirDropdown.austa-open {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
 
 <script id="austa-usta-cagir-dropdown-image-only">
 (function () {
@@ -20684,16 +20652,80 @@ const estimateText =
       return;
     }
 
-    const dropdown = document.createElement('div');
-    dropdown.id = 'austaUstaCagirDropdown';
+  function prepareDropdown() {
+  const ustaButton = findUstaButton();
 
-    serviceButtons.forEach(function (button) {
-      dropdown.appendChild(button);
+  if (!ustaButton) {
+    return;
+  }
+
+  if (ustaButton.dataset.austaDropdownReady === '1') {
+    return;
+  }
+
+  const list = ustaButton.closest('.austa-function-list');
+
+  if (!list) {
+    return;
+  }
+
+  /*
+    Mövcud xidmətləri YERİNDƏ SAXLAYIRIQ.
+    Heç bir button başqa div-ə daşınmır.
+  */
+  const serviceButtons = [...list.querySelectorAll(':scope > [data-top-service]')]
+    .filter(function (button) {
+      return button !== ustaButton;
     });
 
-    list.appendChild(dropdown);
+  if (!serviceButtons.length) {
+    return;
+  }
 
-    ustaButton.dataset.austaDropdownReady = '1';
+  /*
+    İlk açılışda xidmətlər bağlıdır.
+    Usta çağır özü həmişə görünür.
+  */
+  serviceButtons.forEach(function (button) {
+    button.style.display = 'none';
+  });
+
+  ustaButton.dataset.austaDropdownReady = '1';
+  ustaButton.setAttribute('aria-expanded', 'false');
+
+  /*
+    Usta çağır klik:
+    xidmətləri aşağı aç / bağla.
+  */
+  window.addEventListener(
+    'click',
+    function (event) {
+      const button = event.target.closest?.('[data-top-service="Usta çağır"]');
+
+      if (!button) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const isOpen =
+        ustaButton.getAttribute('aria-expanded') === 'true';
+
+      serviceButtons.forEach(function (serviceButton) {
+        serviceButton.style.display = isOpen ? 'none' : '';
+      });
+
+      ustaButton.setAttribute(
+        'aria-expanded',
+        isOpen ? 'false' : 'true'
+      );
+    },
+    true
+  );
+}
+
+ 
 
     /*
       Capture mərhələsində Usta çağırın köhnə generic
