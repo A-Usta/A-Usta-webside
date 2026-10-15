@@ -14256,7 +14256,48 @@ function bindPage(page, role) {
   }, 0);
 }
 
-  
+    $$('[data-role-switch]').forEach((b) => {
+    b.onclick = () => {
+      showRole(b.dataset.role);
+    };
+  });
+
+  $$('[data-page-open]').forEach((b) => {
+    b.onclick = () => {
+      showPage(
+        b.dataset.pageOpen,
+        role
+      );
+    };
+  });
+
+  $$('[data-action="new-listing"]').forEach((b) => {
+    b.onclick = newListing;
+  });
+
+  $$('[data-remove-listing]').forEach((b) => {
+    b.onclick = () => {
+      const arr = read(
+        'austa-user-listings',
+        []
+      );
+
+      arr.splice(
+        +b.dataset.removeListing,
+        1
+      );
+
+      save(
+        'austa-user-listings',
+        arr
+      );
+
+      showPage(
+        'listings',
+        role
+      );
+    };
+  });
 
   /*
    * ============================================================
