@@ -20595,257 +20595,47 @@ const estimateText =
 
 })();
 </script>
-<script id="austa-usta-cagir-dropdown-image-only">
+<script id="austa-image-only-fix">
 (function () {
   'use strict';
 
-  /* =====================================================
-     A-USTA
-     1. USTA ÇAĞIR -> MÖVCUD XİDMƏTLƏRİ AÇ / BAĞLA
-     2. İLKİN XİDMƏT FORMASI -> YALNIZ ŞƏKİL
-     ===================================================== */
-
-  function norm(value) {
-    return String(value || '')
-      .toLocaleLowerCase('az-AZ')
-      .replace(/ə/g, 'e')
-      .replace(/ı/g, 'i')
-      .replace(/ö/g, 'o')
-      .replace(/ü/g, 'u')
-      .replace(/ş/g, 's')
-      .replace(/ç/g, 'c')
-      .replace(/ğ/g, 'g')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-
-  /* =====================================================
-     1. USTA ÇAĞIR
-     ===================================================== */
-
-  function findUstaButton() {
-    return [...document.querySelectorAll('[data-top-service]')]
-      .find(function (button) {
-        return norm(button.dataset.topService) === 'usta cagir';
-      });
-  }
-
-
-  function prepareDropdown() {
-    const ustaButton = findUstaButton();
-
-    if (!ustaButton) {
-      return;
-    }
-
-    if (ustaButton.dataset.austaDropdownReady === '1') {
-      return;
-    }
-
-    const list = ustaButton.closest('.austa-function-list');
-
-    if (!list) {
-      return;
-    }
-
-    /*
-      Yalnız Usta çağır ilə EYNİ siyahıda olan
-      mövcud xidmət düymələrini götürürük.
-
-      Düymələri başqa yerə daşımırıq.
-    */
-    const serviceButtons = [
-      ...list.querySelectorAll(':scope > [data-top-service]')
-    ].filter(function (button) {
-      return button !== ustaButton;
-    });
-
-    if (!serviceButtons.length) {
-      return;
-    }
-
-    /*
-      Səhifə açılanda:
-      Usta çağır görünür,
-      onun xidmətləri bağlı olur.
-    */
-    serviceButtons.forEach(function (button) {
-      button.hidden = true;
-    });
-
-    ustaButton.dataset.austaDropdownReady = '1';
-    ustaButton.setAttribute('aria-expanded', 'false');
-
-
-    /*
-      Usta çağır klik:
-      mövcud xidmətləri aç / bağla.
-    */
-    ustaButton.addEventListener(
-      'click',
-      function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-
-        const isOpen =
-          ustaButton.getAttribute('aria-expanded') === 'true';
-
-        serviceButtons.forEach(function (serviceButton) {
-          serviceButton.hidden = isOpen;
-        });
-
-        ustaButton.setAttribute(
-          'aria-expanded',
-          isOpen ? 'false' : 'true'
-        );
-      },
-      true
-    );
-  }
-
-
-  /* =====================================================
-     2. İLKİN XİDMƏT FORMASINDA YALNIZ ŞƏKİL
-     BEFORE / AFTER DƏYİŞMİR
-     ===================================================== */
-
-  function makeInitialServiceImageOnly(root) {
-    const scope = root || document;
-
-    const inputs = [];
-
-    /*
-      Əgər root özü file input-dursa onu da götür.
-    */
-    if (
-      scope instanceof Element &&
-      scope.matches('input[type="file"]')
-    ) {
-      inputs.push(scope);
-    }
-
-    /*
-      Yalnız ilkin xidmət formalarının file inputları.
-    */
-    if (scope.querySelectorAll) {
-      inputs.push(
-        ...scope.querySelectorAll(
-          '.austa-v45-master-overlay input[type="file"],' +
-          '.austa-v54-service-overlay input[type="file"],' +
-          '.austa-v55-overlay input[type="file"]'
-        )
-      );
-    }
-
-    inputs.forEach(function (input) {
-      const overlay = input.closest(
-        '.austa-v45-master-overlay,' +
-        '.austa-v54-service-overlay,' +
-        '.austa-v55-overlay'
-      );
-
-      /*
-        İlkin xidmət overlay-i deyilsə toxunma.
-      */
-      if (!overlay) {
-        return;
-      }
-
+  function imageOnly(root = document) {
+    root.querySelectorAll?.(
+      '.austa-v45-master-overlay input[type="file"],' +
+      '.austa-v54-service-overlay input[type="file"],' +
+      '.austa-v55-overlay input[type="file"]'
+    ).forEach(input => {
       const label = input.closest('label');
-
-      const text = norm(
-        (label?.textContent || '') +
-        ' ' +
-        (input.name || '') +
-        ' ' +
+      const text = (
+        (label?.textContent || '') + ' ' +
+        (input.name || '') + ' ' +
         (input.id || '')
-      );
+      ).toLowerCase();
 
-      /*
-        BEFORE / AFTER / evidence hissələrinə
-        heç bir dəyişiklik etmirik.
-      */
-      if (
-        /before|after|evvel|sonra|evidence/.test(text)
-      ) {
-        return;
-      }
+      // Before / After olduğu kimi qalır
+      if (/before|after|evvel|əvvəl|sonra|evidence/.test(text)) return;
 
-      /*
-        Video çıxır.
-        Yalnız şəkil seçilə bilər.
-      */
+      // İlkin sifarişdə yalnız şəkil
       input.accept = 'image/*';
 
-
-      /*
-        "Şəkil / video" yazısını
-        "📷 Şəkil" edirik.
-      */
       if (label) {
-        [...label.childNodes].forEach(function (node) {
-          if (node.nodeType !== Node.TEXT_NODE) {
-            return;
-          }
-
-          const labelText = norm(node.textContent);
-
-          if (
-            /sekil\s*\/\s*video/.test(labelText) ||
-            /foto\s*\/\s*video/.test(labelText)
-          ) {
-            node.textContent = '📷 Şəkil';
+        label.childNodes.forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            node.textContent = node.textContent
+              .replace(/şəkil\s*\/\s*video/gi, '📷 Şəkil')
+              .replace(/foto\s*\/\s*video/gi, '📷 Şəkil');
           }
         });
       }
     });
   }
 
+  imageOnly();
 
-  /* =====================================================
-     YENİ XİDMƏT FORMASI AÇILANDA IMAGE-ONLY TƏTBİQ ET
-     ===================================================== */
-
-  const observer = new MutationObserver(function (mutations) {
-    mutations.forEach(function (mutation) {
-      mutation.addedNodes.forEach(function (node) {
-        if (!(node instanceof Element)) {
-          return;
-        }
-
-        makeInitialServiceImageOnly(node);
-      });
-    });
-  });
-
-
-  /* =====================================================
-     START
-     ===================================================== */
-
-  function start() {
-    prepareDropdown();
-
-    makeInitialServiceImageOnly(document);
-
-    observer.observe(document.body, {
+  new MutationObserver(() => imageOnly())
+    .observe(document.body, {
       childList: true,
       subtree: true
     });
-  }
-
-
-  if (document.readyState === 'loading') {
-    document.addEventListener(
-      'DOMContentLoaded',
-      start,
-      { once: true }
-    );
-  } else {
-    start();
-  }
-
 })();
 </script>
