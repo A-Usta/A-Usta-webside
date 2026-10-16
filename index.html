@@ -16775,11 +16775,47 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const norm=s=>String(s||'').toLocaleLowerCase('az-AZ').replace(/[ə]/g,'e').replace(/[ı]/g,'i').replace(/[ö]/g,'o').replace(/[ü]/g,'u').replace(/[ş]/g,'s').replace(/[ç]/g,'c').replace(/[ğ]/g,'g');
 const CATS=[
- ['cars','🚗 Avtomobil','Avtomobil elanı'],['rent','🔑 Rent a Car','Avtomobil icarəsi elanı'],['parts','⚙ Ehtiyat hissələri','Ehtiyat hissəsi elanı'],['accessories','🧰 Aksesuarlar','Aksesuar elanı'],['special','🏗️ Xüsusi texnika','Xüsusi texnika elanı'],['moto','🏍️ Moto / Moped / Skuter','Moto / Moped / Skuter elanı'],['plate','🔢 Qeydiyyat nömrələri','Qeydiyyat nömrəsi elanı'],['bus','🚌 Avtobus','Avtobus elanı'],['trailer','🚛 Qoşqu / Treyler','Qoşqu / Treyler elanı'],['water','🛥 Su nəqliyyatı','Su nəqliyyatı elanı'],['service','🛠 Avtoservislər','Avtoservis / Servis mərkəzi elanı'],['usta','🧑‍🔧 Usta profilləri','Usta profili elanı']
+ ['cars','🚗 Avtomobil','Avtomobil elanı'],
+ ['rent','🔑 Rent a Car','Avtomobil icarəsi elanı'],
+ ['caravan','🚐 Karavan','Karavan elanı'],
+ ['parts','⚙ Ehtiyat hissələri','Ehtiyat hissəsi elanı'],
+ ['accessories','🧰 Aksesuarlar','Aksesuar elanı'],
+ ['special','🏗️ Xüsusi texnika','Xüsusi texnika elanı'],
+ ['moto','🏍️ Moto / Moped / Skuter','Moto / Moped / Skuter elanı'],
+ ['plate','🔢 Qeydiyyat nömrələri','Qeydiyyat nömrəsi elanı'],
+ ['bus','🚌 Avtobus','Avtobus elanı'],
+ ['trailer','🚛 Qoşqu / Treyler','Qoşqu / Treyler elanı'],
+ ['water','🛥 Su nəqliyyatı','Su nəqliyyatı elanı'],
+ ['service','🛠 Avtoservislər','Avtoservis / Servis mərkəzi elanı'],
+ ['usta','🧑‍🔧 Usta profilləri','Usta profili elanı']
 ];
 const QUESTIONS={
  cars:[['Ad / soyad','text'],['Telefon','tel'],['Marka / model','text'],['İl','number'],['Yürüş (km)','number'],['Yanacaq','select',['Benzin','Dizel','Hibrid','Elektrik','Qaz','Digər']],['Sürətlər qutusu','select',['Avtomat','Mexaniki','Robot','CVT','Digər']],['Ban tipi','select',['Sedan','SUV','Hetçbek','Universal','Kupe','Kabriolet','Miniven','Pikap','Digər']],['Qiymət (AZN)','number'],['Region / ünvan','text'],['Əlavə məlumat','textarea'],['Şəkil / video','file']],
- rent:[['Ad / soyad','text'],['Telefon','tel'],['Avtomobil marka / model','text'],['İcarə növü','select',['Günlük','Həftəlik','Aylıq','Uzunmüddətli']],['Qiymət (AZN)','number'],['Depozit','number'],['Götürülmə yeri','text'],['Tarix','date'],['Saat','time'],['Təhvil qaydaları','textarea'],['Şəkil / video','file']],
+ rent:[
+  ['Ad / soyad','text'],
+  ['Telefon','tel'],
+  ['Avtomobil marka / model','text'],
+  ['İl','number'],
+  ['İcarə növü','select',['Günlük','Həftəlik','Aylıq','Uzunmüddətli']],
+  ['Qiymət (AZN)','number'],
+  ['Region / ünvan','text'],
+  ['Avtomobil haqqında məlumat','textarea'],
+  ['Şəkil / video','file']
+ ],
+   caravan:[
+  ['Ad / soyad','text'],
+  ['Telefon','tel'],
+  ['Karavan marka / model','text'],
+  ['İl','number'],
+  ['Karavan növü','select',['Motorlu karavan','Qoşqu karavan','Kampervan','Digər']],
+  ['Yataq sayı','number'],
+  ['Vəziyyət','select',['Yeni','İşlənmiş']],
+  ['Satış / icarə','select',['Satış','İcarə','Hər ikisi']],
+  ['Qiymət (AZN)','number'],
+  ['Region / ünvan','text'],
+  ['Karavan haqqında məlumat','textarea'],
+  ['Şəkil / video','file']
+ ],
  parts:[['Ad / soyad','text'],['Telefon','tel'],['Hissənin adı','text'],['OEM / kod','text'],['Marka / model','text'],['Vəziyyət','select',['Yeni','İşlənmiş','Original','Universal']],['Uyğunluq','textarea'],['Qiymət (AZN)','number'],['Stok sayı','number'],['Çatdırılma / ünvan','text'],['Əlavə məlumat','textarea'],['Şəkil / video','file']],
  accessories:[['Ad / soyad','text'],['Telefon','tel'],['Aksesuarın adı','text'],['Marka / model uyğunluğu','text'],['Vəziyyət','select',['Yeni','İşlənmiş']],['Qiymət (AZN)','number'],['Stok sayı','number'],['Çatdırılma / ünvan','text'],['Ətraflı məlumat','textarea'],['Şəkil / video','file']],
  special:[['Ad / soyad','text'],['Telefon','tel'],['Texnikanın növü','text'],['Marka / model','text'],['İl','number'],['İş saatı / yürüş','text'],['Vəziyyət','select',['Yeni','İşlənmiş']],['Satış / icarə','select',['Satış','İcarə','Hər ikisi']],['Qiymət (AZN)','number'],['Region / ünvan','text'],['Əlavə məlumat','textarea'],['Şəkil / video','file']],
