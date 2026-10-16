@@ -17059,7 +17059,635 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 window.AUSTA_V53={openListing,renderUsta,renderCategory};
 })();
 </script>
+<style id="austa-unified-home-listings-css">
+#austaUnifiedHomeListings{
+  margin:18px 0;
+}
 
+#austaUnifiedHomeListings .austa-home-listings-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+#austaUnifiedHomeListings .austa-home-listings-head h3{
+  margin:0;
+}
+
+#austaUnifiedHomeListings .austa-home-listings-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+
+#austaUnifiedHomeListings .austa-home-listing-card{
+  position:relative;
+  min-width:0;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  background:#071725;
+  color:#fff;
+  cursor:pointer;
+  overflow:hidden;
+}
+
+#austaUnifiedHomeListings .austa-home-listing-card:hover{
+  border-color:#ff2448;
+}
+
+#austaUnifiedHomeListings .austa-home-listing-category{
+  display:block;
+  margin-bottom:7px;
+  font-size:10px;
+  opacity:.70;
+}
+
+#austaUnifiedHomeListings .austa-home-listing-title{
+  display:block;
+  font-size:13px;
+  font-weight:900;
+  line-height:1.35;
+}
+
+#austaUnifiedHomeListings .austa-home-listing-info{
+  display:block;
+  margin-top:7px;
+  font-size:10px;
+  line-height:1.5;
+  opacity:.80;
+}
+
+#austaUnifiedHomeListings .austa-home-listing-badge{
+  position:absolute;
+  top:8px;
+  right:8px;
+  padding:4px 7px;
+  border-radius:999px;
+  background:#ff2448;
+  color:#fff;
+  font-size:8px;
+  font-weight:900;
+  z-index:2;
+}
+
+#austaUnifiedHomeListings .austa-home-empty{
+  grid-column:1/-1;
+  padding:18px;
+  text-align:center;
+  border:1px dashed rgba(255,255,255,.15);
+  border-radius:12px;
+  opacity:.65;
+}
+
+@media(max-width:1000px){
+  #austaUnifiedHomeListings .austa-home-listings-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+@media(max-width:700px){
+  #austaUnifiedHomeListings .austa-home-listings-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+</style>
+
+<script id="austa-unified-home-listings-js">
+(function(){
+  'use strict';
+
+  const CATEGORIES={
+    cars:'🚗 Avtomobil',
+    rent:'🔑 Rent a Car',
+    caravan:'🚐 Karavan',
+    parts:'⚙ Ehtiyat hissələri',
+    accessories:'🧰 Aksesuarlar',
+    special:'🏗️ Xüsusi texnika',
+    moto:'🏍️ Moto / Moped / Skuter',
+    plate:'🔢 Qeydiyyat nömrələri',
+    bus:'🚌 Avtobus',
+    trailer:'🚛 Qoşqu / Treyler',
+    water:'🛥 Su nəqliyyatı',
+    service:'🛠 Avtoservis',
+    usta:'🧑‍🔧 Usta profili'
+  };
+
+  function esc(value){
+    return String(value ?? '').replace(
+      /[&<>"']/g,
+      char => ({
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#39;'
+      })[char]
+    );
+  }
+
+  function norm(value){
+    return String(value || '')
+      .toLocaleLowerCase('az-AZ')
+      .replace(/[ə]/g,'e')
+      .replace(/[ı]/g,'i')
+      .replace(/[ö]/g,'o')
+      .replace(/[ü]/g,'u')
+      .replace(/[ş]/g,'s')
+      .replace(/[ç]/g,'c')
+      .replace(/[ğ]/g,'g');
+  }
+
+  function listingTime(item){
+    const values=[
+      item?.createdAt,
+      item?.created_at,
+      item?.timestamp,
+      item?.date,
+      item?.id
+    ];
+
+    for(const value of values){
+      if(!value) continue;
+
+      if(
+        typeof value === 'number' &&
+        Number.isFinite(value)
+      ){
+        return value;
+      }
+
+      const parsed=Date.parse(value);
+
+      if(Number.isFinite(parsed)){
+        return parsed;
+      }
+
+      const numeric=
+        String(value).match(/(\d{10,})/);
+
+      if(numeric){
+        const n=Number(numeric[1]);
+
+        if(Number.isFinite(n)){
+          return n;
+        }
+      }
+    }
+
+    return 0;
+  }
+
+  function promotionTime(item){
+    const values=[
+      item?.promotedAt,
+      item?.promoted_at,
+      item?.vipOrder,
+      item?.vipStart,
+      item?.premiumStart,
+      item?.boostedAt,
+      item?.boosted_at
+    ];
+
+    for(const value of values){
+      if(!value) continue;
+
+      if(
+        typeof value === 'number' &&
+        Number.isFinite(value)
+      ){
+        return value;
+      }
+
+      const parsed=Date.parse(value);
+
+      if(Number.isFinite(parsed)){
+        return parsed;
+      }
+    }
+
+    return 0;
+  }
+
+  function promotionActive(item){
+    const until=
+      item?.promotedUntil ||
+      item?.promoted_until ||
+      item?.vipUntil ||
+      item?.vip_until ||
+      item?.premiumUntil ||
+      item?.premium_until;
+
+    if(until){
+      const time=
+        typeof until === 'number'
+          ? until
+          : Date.parse(until);
+
+      if(Number.isFinite(time)){
+        return time > Date.now();
+      }
+    }
+
+    return Boolean(
+      item?.premium === true ||
+      item?.isPremium === true ||
+      item?.vip === true ||
+      item?.isVip === true ||
+      item?.promoted === true
+    );
+  }
+
+  function promotionLevel(item){
+    if(!promotionActive(item)){
+      return 0;
+    }
+
+    if(
+      item?.premium === true ||
+      item?.isPremium === true ||
+      norm(item?.package).includes('premium') ||
+      norm(item?.promotionType).includes('premium')
+    ){
+      return 2;
+    }
+
+    return 1;
+  }
+
+  function sortListings(items){
+    return [...items].sort((a,b)=>{
+      const levelDifference=
+        promotionLevel(b) -
+        promotionLevel(a);
+
+      if(levelDifference){
+        return levelDifference;
+      }
+
+      const aLevel=promotionLevel(a);
+      const bLevel=promotionLevel(b);
+
+      if(aLevel && bLevel){
+        const promotionDifference=
+          promotionTime(b) -
+          promotionTime(a);
+
+        if(promotionDifference){
+          return promotionDifference;
+        }
+      }
+
+      return listingTime(b) - listingTime(a);
+    });
+  }
+
+  function readListings(){
+    try{
+      const data=JSON.parse(
+        localStorage.getItem(
+          'austa-user-listings'
+        ) || '[]'
+      );
+
+      return Array.isArray(data)
+        ? data
+        : [];
+    }catch(error){
+      return [];
+    }
+  }
+
+  function categoryOf(item){
+    if(
+      item?.category &&
+      CATEGORIES[item.category]
+    ){
+      return item.category;
+    }
+
+    const type=norm(item?.type);
+
+    if(type.includes('rent') || type.includes('icare')){
+      return 'rent';
+    }
+
+    if(type.includes('karavan')){
+      return 'caravan';
+    }
+
+    if(type.includes('ehtiyat')){
+      return 'parts';
+    }
+
+    if(type.includes('aksesuar')){
+      return 'accessories';
+    }
+
+    if(type.includes('xususi texnika')){
+      return 'special';
+    }
+
+    if(
+      type.includes('moto') ||
+      type.includes('moped') ||
+      type.includes('skuter')
+    ){
+      return 'moto';
+    }
+
+    if(type.includes('qeydiyyat')){
+      return 'plate';
+    }
+
+    if(type.includes('avtobus')){
+      return 'bus';
+    }
+
+    if(
+      type.includes('qosqu') ||
+      type.includes('treyler')
+    ){
+      return 'trailer';
+    }
+
+    if(type.includes('su neqliyyati')){
+      return 'water';
+    }
+
+    if(
+      type.includes('avtoservis') ||
+      type.includes('servis merkezi')
+    ){
+      return 'service';
+    }
+
+    if(type.includes('usta')){
+      return 'usta';
+    }
+
+    if(
+      type.includes('avtomobil') &&
+      !type.includes('icare')
+    ){
+      return 'cars';
+    }
+
+    return item?.category || 'cars';
+  }
+
+  function titleOf(item){
+    return (
+      item?.['Marka / model'] ||
+      item?.['Avtomobil marka / model'] ||
+      item?.['Karavan marka / model'] ||
+      item?.['Hissənin adı'] ||
+      item?.['Aksesuarın adı'] ||
+      item?.['Texnikanın növü'] ||
+      item?.['Avtobus marka / model'] ||
+      item?.['Qoşqu / treyler növü'] ||
+      item?.['Su nəqliyyatı növü'] ||
+      item?.['Servis adı'] ||
+      item?.specialty ||
+      item?.title ||
+      item?.type ||
+      'A-USTA elanı'
+    );
+  }
+
+  function priceOf(item){
+    const price=
+      item?.['Qiymət (AZN)'] ||
+      item?.price ||
+      item?.amount;
+
+    return price
+      ? String(price) + ' AZN'
+      : '';
+  }
+
+  function ensureHost(){
+    let section=
+      document.getElementById(
+        'austaUnifiedHomeListings'
+      );
+
+    if(section){
+      return section;
+    }
+
+    section=document.createElement('section');
+    section.id='austaUnifiedHomeListings';
+
+    section.innerHTML=`
+      <div class="austa-home-listings-head">
+        <h3>🔥 Yeni və irəli çəkilmiş elanlar</h3>
+      </div>
+
+      <div
+        id="austaUnifiedHomeListingsGrid"
+        class="austa-home-listings-grid"
+      ></div>
+    `;
+
+    const oldFeed=
+      document.getElementById(
+        'austaV22VideoGrid'
+      );
+
+    const market=
+      document.getElementById(
+        'carsModule'
+      );
+
+    if(oldFeed?.parentNode){
+      oldFeed.parentNode.insertBefore(
+        section,
+        oldFeed
+      );
+    }else if(market?.parentNode){
+      market.parentNode.insertBefore(
+        section,
+        market
+      );
+    }else{
+      document.body.appendChild(section);
+    }
+
+    return section;
+  }
+
+  function openCategory(item){
+    const category=categoryOf(item);
+
+    const tab=document.querySelector(
+      '#austaV22Tabs ' +
+      '[data-v22-cat="' +
+      CSS.escape(category) +
+      '"]'
+    );
+
+    if(tab){
+      tab.click();
+
+      document.getElementById(
+        'carsModule'
+      )?.scrollIntoView({
+        behavior:'smooth',
+        block:'start'
+      });
+    }
+  }
+
+  function render(){
+    ensureHost();
+
+    const grid=
+      document.getElementById(
+        'austaUnifiedHomeListingsGrid'
+      );
+
+    if(!grid){
+      return;
+    }
+
+    const listings=
+      sortListings(readListings());
+
+    if(!listings.length){
+      grid.innerHTML=`
+        <div class="austa-home-empty">
+          Hələ elan yoxdur.
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML=listings.map(item=>{
+      const category=categoryOf(item);
+      const level=promotionLevel(item);
+
+      const badge=
+        level===2
+          ? '<span class="austa-home-listing-badge">PREMIUM</span>'
+          : level===1
+            ? '<span class="austa-home-listing-badge">VIP</span>'
+            : '';
+
+      const region=
+        item?.region ||
+        item?.address ||
+        item?.['Region / ünvan'] ||
+        item?.['Region / iş ünvanı'] ||
+        item?.['Yerləşmə / marina'] ||
+        '';
+
+      const price=priceOf(item);
+
+      return `
+        <article
+          class="austa-home-listing-card"
+          data-austa-home-listing="${esc(item?.id || '')}"
+          data-austa-home-category="${esc(category)}"
+          tabindex="0"
+          role="button"
+        >
+          ${badge}
+
+          <small class="austa-home-listing-category">
+            ${esc(
+              CATEGORIES[category] ||
+              item?.type ||
+              'Elan'
+            )}
+          </small>
+
+          <strong class="austa-home-listing-title">
+            ${esc(titleOf(item))}
+          </strong>
+
+          <small class="austa-home-listing-info">
+            ${region ? '📍 '+esc(region) : ''}
+            ${
+              region && price
+                ? '<br>'
+                : ''
+            }
+            ${price ? '💰 '+esc(price) : ''}
+          </small>
+        </article>
+      `;
+    }).join('');
+
+    grid
+      .querySelectorAll(
+        '[data-austa-home-listing]'
+      )
+      .forEach(card=>{
+        const item=listings.find(
+          x=>
+            String(x?.id || '') ===
+            card.dataset.austaHomeListing
+        );
+
+        if(!item){
+          return;
+        }
+
+        card.addEventListener(
+          'click',
+          ()=>openCategory(item)
+        );
+
+        card.addEventListener(
+          'keydown',
+          event=>{
+            if(
+              event.key === 'Enter' ||
+              event.key === ' '
+            ){
+              event.preventDefault();
+              openCategory(item);
+            }
+          }
+        );
+      });
+  }
+
+  function boot(){
+    render();
+
+    window.addEventListener(
+      'storage',
+      event=>{
+        if(
+          event.key ===
+          'austa-user-listings'
+        ){
+          render();
+        }
+      }
+    );
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      boot
+    );
+  }else{
+    boot();
+  }
+
+  window.AUSTA_UNIFIED_LISTINGS={
+    render,
+    sortListings,
+    readListings
+  };
+})();
+</script>
 
 <style id="austa-v54-final-fix-css">
 .austa-v54-service-overlay{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:15px}
