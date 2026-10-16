@@ -16836,7 +16836,212 @@ function addOrFixTab(){
  tabs.querySelectorAll('[data-v22-cat]').forEach(b=>{if(b.dataset.v53bound)return;b.dataset.v53bound='1';b.addEventListener('click',()=>{tabs.querySelectorAll('[data-v22-cat]').forEach(x=>x.classList.toggle('active',x===b));CATS.forEach(([id])=>{const p=$('#austaV22Panel-'+id);if(p)p.hidden=id!==b.dataset.v22Cat});if(b.dataset.v22Cat==='usta')renderUsta();else renderCategory(b.dataset.v22Cat)})});
  CATS.forEach(([id])=>{const p=$('#austaV22Panel-'+id);if(p&&!p.dataset.v53built){p.dataset.v53built='1';if(id==='usta')p.innerHTML='<div class="austa-v52-usta-listing-panel"><h3>🧑‍🔧 Usta profilləri — elanlar</h3><p class="austa-v53-listing-help">Yalnız Usta profili elanları görünür. + Elan yerləşdir düyməsi ilə ümumi elan formasından “Usta profili elanı” seçmək də mümkündür.</p><div id="austaV53UstaList" class="austa-v52-listings-grid"></div></div>';else p.innerHTML='<div class="austa-v53-category-panel"><h3>'+esc(CATS.find(c=>c[0]===id)[1])+' — elanlar</h3><p class="austa-v53-listing-help">Bu kateqoriyanın elanları və əlavə etmə sualları.</p><div id="austaV53List-'+id+'" class="austa-v52-listings-grid"></div></div>';}});
 }
-function renderCategory(id){const box=$('#austaV53List-'+id);if(!box)return;const arr=JSON.parse(localStorage.getItem('austa-user-listings')||'[]').filter(x=>norm(x.type).includes(norm(CATS.find(c=>c[0]===id)?.[2]||''))||norm(x.type).includes(norm(CATS.find(c=>c[0]===id)?.[1]||'')));box.innerHTML=arr.length?arr.map(x=>'<article class="austa-v52-listing-card"><b>'+esc(x.title||x.type)+'</b><small>'+esc(x.name||'')+' • '+esc(x.phone||'')+'</small><small>'+esc(x.region||x.address||'')+'</small><div class="austa-v52-listing-actions"><button type="button" data-v53-forward="'+esc(x.id||'')+'">↑ İrəli çək</button><button type="button" data-v53-edit="'+esc(x.id||'')+'">✎ Redaktə et</button></div></article>').join(''):'<small>Bu kateqoriyada hələ elan yoxdur.</small>';}
+function austaListingTime(x){
+  const values=[
+    x?.createdAt,
+    x?.created_at,
+    x?.timestamp,
+    x?.date,
+    x?.id
+  ];
+
+  for(const value of values){
+    if(!value) continue;
+
+    if(typeof value==='number' && Number.isFinite(value)){
+      return value;
+    }
+
+    const parsed=Date.parse(value);
+    if(Number.isFinite(parsed)){
+      return parsed;
+    }
+
+    const numeric=String(value).match(/(\d{10,})/);
+    if(numeric){
+      const n=Number(numeric[1]);
+      if(Number.isFinite(n)) return n;
+    }
+  }
+
+  return 0;
+}
+
+function austaPromotionTime(x){
+  const values=[
+    x?.promotedAt,
+    x?.promoted_at,
+    x?.vipOrder,
+    x?.vipStart,
+    x?.premiumStart,
+    x?.boostedAt,
+    x?.boosted_at
+  ];
+
+  for(const value of values){
+    if(!value) continue;
+
+    if(typeof value==='number' && Number.isFinite(value)){
+      return value;
+    }
+
+    const parsed=Date.parse(value);
+    if(Number.isFinite(parsed)){
+      return parsed;
+    }
+  }
+
+  return 0;
+}
+
+function austaPromotionActive(x){
+  const now=Date.now();
+
+  const until=
+    x?.promotedUntil ||
+    x?.promoted_until ||
+    x?.vipUntil ||
+    x?.vip_until ||
+    x?.premiumUntil ||
+    x?.premium_until;
+
+  if(until){
+    const t=
+      typeof until==='number'
+        ? until
+        : Date.parse(until);
+
+    if(Number.isFinite(t)){
+      return t > now;
+    }
+  }
+
+  return Boolean(
+    x?.premium === true ||
+    x?.isPremium === true ||
+    x?.vip === true ||
+    x?.isVip === true ||
+    x?.promoted === true
+  );
+}
+
+function austaPromotionLevel(x){
+  if(!austaPromotionActive(x)) return 0;
+
+  if(
+    x?.premium === true ||
+    x?.isPremium === true ||
+    norm(x?.package).includes('premium') ||
+    norm(x?.promotionType).includes('premium')
+  ){
+    return 2;
+  }
+
+  return 1;
+}
+
+function austaSortListings(arr){
+  return [...arr].sort((a,b)=>{
+    const levelDiff=
+      austaPromotionLevel(b) -
+      austaPromotionLevel(a);
+
+    if(levelDiff) return levelDiff;
+
+    const aLevel=austaPromotionLevel(a);
+    const bLevel=austaPromotionLevel(b);
+
+    if(aLevel && bLevel){
+      const promotionDiff=
+        austaPromotionTime(b) -
+        austaPromotionTime(a);
+
+      if(promotionDiff) return promotionDiff;
+    }
+
+    return (
+      austaListingTime(b) -
+      austaListingTime(a)
+    );
+  });
+}
+
+function renderCategory(id){
+  const box=$('#austaV53List-'+id);
+  if(!box) return;
+
+  const cat=CATS.find(c=>c[0]===id);
+  if(!cat) return;
+
+  let all=[];
+
+  try{
+    all=JSON.parse(
+      localStorage.getItem('austa-user-listings') || '[]'
+    );
+  }catch(e){
+    all=[];
+  }
+
+  const arr=austaSortListings(
+    all.filter(x=>
+      x.category===id ||
+      norm(x.type).includes(norm(cat[2])) ||
+      norm(x.type).includes(norm(cat[1]))
+    )
+  );
+
+  box.innerHTML=arr.length
+    ? arr.map(x=>{
+        const level=austaPromotionLevel(x);
+
+        const badge=
+          level===2
+            ? '<span style="display:inline-block;margin-left:6px;padding:3px 7px;border-radius:999px;background:#ff2448;color:#fff;font-size:9px;font-weight:900">PREMIUM</span>'
+            : level===1
+              ? '<span style="display:inline-block;margin-left:6px;padding:3px 7px;border-radius:999px;background:#ff2448;color:#fff;font-size:9px;font-weight:900">VIP</span>'
+              : '';
+
+        return `
+          <article
+            class="austa-v52-listing-card"
+            data-austa-listing-id="${esc(x.id||'')}"
+            data-austa-listing-category="${esc(id)}"
+          >
+            <b>
+              ${esc(x.title||x.type)}
+              ${badge}
+            </b>
+
+            <small>
+              ${esc(x.name||'')}
+              ${x.phone ? ' • '+esc(x.phone) : ''}
+            </small>
+
+            <small>
+              ${esc(x.region||x.address||'')}
+            </small>
+
+            <div class="austa-v52-listing-actions">
+              <button
+                type="button"
+                data-v53-forward="${esc(x.id||'')}"
+              >
+                ↑ İrəli çək
+              </button>
+
+              <button
+                type="button"
+                data-v53-edit="${esc(x.id||'')}"
+              >
+                ✎ Redaktə et
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('')
+    : '<small>Bu kateqoriyada hələ elan yoxdur.</small>';
+}
 function renderUsta(){const box=$('#austaV53UstaList');if(!box)return;const arr=JSON.parse(localStorage.getItem('austa-user-listings')||'[]').filter(x=>norm(x.type).includes('usta'));box.innerHTML=arr.length?arr.map(x=>'<article class="austa-v52-listing-card"><b>🧑‍🔧 '+esc(x.name||x.title||'Usta')+'</b><small>🔧 '+esc(x.specialty||x.ixTisas||'')+' • ⭐ '+esc(x.rating||'0')+' ('+esc(x.reviews||'0')+' rəy)</small><small>📍 '+esc(x.region||x.address||'')+' • ☎ '+esc(x.phone||'')+'</small><small>'+esc(x.services||x.about||'')+'</small><div class="austa-v52-listing-actions"><button type="button" data-v53-forward="'+esc(x.id||'')+'">↑ İrəli çək</button><button type="button" data-v53-edit="'+esc(x.id||'')+'">✎ Redaktə et</button></div></article>').join(''):'<small>Hələ Usta profili elanı yoxdur.</small>';}
 function openListing(){
  const old=$('#austaV53ListingOverlay');if(old)old.remove();
