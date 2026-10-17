@@ -18755,26 +18755,6 @@ function renderCategory(id){
       }).join('')
     : '<small>Bu kateqoriyada hələ elan yoxdur.</small>';
 
-  box.querySelectorAll('[data-austa-listing-id]').forEach(card=>{
-  const openExactListing=()=>{
-    const listingId=card.dataset.austaListingId;
-
-    if(!listingId) return;
-
-    if(typeof window.AUSTA_OPEN_LISTING==='function'){
-      window.AUSTA_OPEN_LISTING(listingId);
-    }
-  };
-
-  card.addEventListener('click',openExactListing);
-
-  card.addEventListener('keydown',e=>{
-    if(e.key==='Enter' || e.key===' '){
-      e.preventDefault();
-      openExactListing();
-    }
-  });
-});
 }
 function renderUsta(){const box=$('#austaV53UstaList');if(!box)return;const arr=JSON.parse(localStorage.getItem('austa-user-listings')||'[]').filter(x=>norm(x.type).includes('usta'));box.innerHTML=arr.length?arr.map(x=>'<article class="austa-v52-listing-card"><b>🧑‍🔧 '+esc(x.name||x.title||'Usta')+'</b><small>🔧 '+esc(x.specialty||x.ixTisas||'')+' • ⭐ '+esc(x.rating||'0')+' ('+esc(x.reviews||'0')+' rəy)</small><small>📍 '+esc(x.region||x.address||'')+' • ☎ '+esc(x.phone||'')+'</small><small>'+esc(x.services||x.about||'')+'</small><div class="austa-v52-listing-actions"><button type="button" data-v53-forward="'+esc(x.id||'')+'">↑ İrəli çək</button><button type="button" data-v53-edit="'+esc(x.id||'')+'">✎ Redaktə et</button></div></article>').join(''):'<small>Hələ Usta profili elanı yoxdur.</small>';}
 function openListing(){
