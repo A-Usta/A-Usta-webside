@@ -19152,6 +19152,272 @@ function renderCategory(id){
     : '<small>Bu kateqoriyada hələ elan yoxdur.</small>';
 
 }
+
+/* =========================================================
+   A-USTA — PRIVATE LISTING MEDIA → CATEGORY CARD
+   Backend signed URL
+   ========================================================= */
+
+const AUSTA_LISTING_MEDIA_API =
+  'https://a-usta-webside.onrender.com';
+
+const AUSTA_LISTING_MEDIA_URL_CACHE =
+  new Map();
+
+async function austaGetListingMediaUrl(path){
+
+  const cleanPath=String(path||'').trim();
+
+  if(!cleanPath){
+    return '';
+  }
+
+  if(
+    cleanPath.startsWith('http://') ||
+    cleanPath.startsWith('https://') ||
+    cleanPath.startsWith('blob:') ||
+    cleanPath.startsWith('data:')
+  ){
+    return cleanPath;
+  }
+
+  if(
+    AUSTA_LISTING_MEDIA_URL_CACHE.has(cleanPath)
+  ){
+    return AUSTA_LISTING_MEDIA_URL_CACHE.get(
+      cleanPath
+    );
+  }
+
+  try{
+
+    const response=await fetch(
+      AUSTA_LISTING_MEDIA_API+
+      '/listing-media/signed-url?path='+
+      encodeURIComponent(cleanPath)
+    );
+
+    if(!response.ok){
+
+      console.warn(
+        'A-USTA listing media URL failed:',
+        response.status,
+        cleanPath
+      );
+
+      return '';
+    }
+
+    const result=await response.json();
+
+    const url=String(
+      result?.url || ''
+    ).trim();
+
+    if(!url){
+      return '';
+    }
+
+    AUSTA_LISTING_MEDIA_URL_CACHE.set(
+      cleanPath,
+      url
+    );
+
+    return url;
+
+  }catch(error){
+
+    console.warn(
+      'A-USTA listing media request error:',
+      error
+    );
+
+    return '';
+  }
+}
+
+
+async function austaHydrateCategoryListingImages(){
+
+  let listings=[];
+
+  try{
+
+    listings=JSON.parse(
+      localStorage.getItem(
+        'austa-user-listings'
+      ) || '[]'
+    );
+
+  }catch(error){
+
+    listings=[];
+
+  }
+
+  const listingMap=new Map(
+    listings.map(item=>[
+      String(item?.id||''),
+      item
+    ])
+  );
+
+  const cards=[
+    ...document.querySelectorAll(
+      '.austa-v52-listing-card[data-austa-listing-id]'
+    )
+  ];
+
+  for(const card of cards){
+
+    const listingId=String(
+      card.dataset.austaListingId || ''
+    );
+
+    if(!listingId){
+      continue;
+    }
+
+    const item=listingMap.get(listingId);
+
+    if(!item){
+      continue;
+    }
+
+    const storagePath=String(
+      item.cover_image_path ||
+      item.image_paths?.[0] ||
+      ''
+    ).trim();
+
+    if(!storagePath){
+      continue;
+    }
+
+    /*
+     * Eyni karta şəkli ikinci dəfə əlavə etmə.
+     */
+    if(
+      card.querySelector(
+        '[data-austa-storage-cover]'
+      )
+    ){
+      continue;
+    }
+
+    const url=
+      await austaGetListingMediaUrl(
+        storagePath
+      );
+
+    if(!url){
+      continue;
+    }
+
+    /*
+     * Köhnə demo/image elementi varsa,
+     * Storage şəkli ilə əvəz et.
+     */
+    const oldImage=
+      card.querySelector('img');
+
+    if(oldImage){
+
+      oldImage.src=url;
+
+      oldImage.dataset.austaStorageCover='1';
+
+      oldImage.style.width='100%';
+      oldImage.style.height='190px';
+      oldImage.style.objectFit='cover';
+      oldImage.style.display='block';
+      oldImage.style.borderRadius='12px';
+      oldImage.style.marginBottom='9px';
+
+      continue;
+    }
+
+    /*
+     * Şəkil elementi yoxdursa yenisini yarat.
+     */
+    const image=
+      document.createElement('img');
+
+    image.src=url;
+
+    image.alt=
+      String(
+        item['Marka'] ||
+        item.title ||
+        'A-USTA elan şəkli'
+      );
+
+    image.loading='lazy';
+
+    image.dataset.austaStorageCover='1';
+
+    image.style.cssText=
+      'width:100%;'+
+      'height:190px;'+
+      'object-fit:cover;'+
+      'display:block;'+
+      'border-radius:12px;'+
+      'margin-bottom:9px;';
+
+    image.onerror=()=>{
+      image.remove();
+    };
+
+    card.prepend(image);
+  }
+}
+
+
+/* =========================================================
+   renderCategory-dən sonra Storage şəkillərini göstər
+   ========================================================= */
+
+const AUSTA_ORIGINAL_RENDER_CATEGORY =
+  renderCategory;
+
+renderCategory=function(id){
+
+  const result=
+    AUSTA_ORIGINAL_RENDER_CATEGORY(id);
+
+  setTimeout(()=>{
+    austaHydrateCategoryListingImages();
+  },0);
+
+  return result;
+};
+
+  if(window.AUSTA_V53){
+  window.AUSTA_V53.renderCategory=renderCategory;
+}
+
+/*
+ * Səhifə ilk dəfə açıldıqda artıq mövcud
+ * kartlar varsa onları da doldur.
+ */
+if(document.readyState==='loading'){
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    ()=>{
+      austaHydrateCategoryListingImages();
+    },
+    {
+      once:true
+    }
+  );
+
+}else{
+
+  austaHydrateCategoryListingImages();
+
+}
+  
 function renderUsta(){const box=$('#austaV53UstaList');if(!box)return;const arr=JSON.parse(localStorage.getItem('austa-user-listings')||'[]').filter(x=>norm(x.type).includes('usta'));box.innerHTML=arr.length?arr.map(x=>'<article class="austa-v52-listing-card"><b>🧑‍🔧 '+esc(x.name||x.title||'Usta')+'</b><small>🔧 '+esc(x.specialty||x.ixTisas||'')+' • ⭐ '+esc(x.rating||'0')+' ('+esc(x.reviews||'0')+' rəy)</small><small>📍 '+esc(x.region||x.address||'')+' • ☎ '+esc(x.phone||'')+'</small><small>'+esc(x.services||x.about||'')+'</small><div class="austa-v52-listing-actions"><button type="button" data-v53-forward="'+esc(x.id||'')+'">↑ İrəli çək</button><button type="button" data-v53-edit="'+esc(x.id||'')+'">✎ Redaktə et</button></div></article>').join(''):'<small>Hələ Usta profili elanı yoxdur.</small>';}
 function openListing(){
  const old=$('#austaV53ListingOverlay');if(old)old.remove();
