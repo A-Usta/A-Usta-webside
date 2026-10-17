@@ -6,6 +6,7 @@ import multipart from "@fastify/multipart";
 
 import { serviceOrderRoutes } from "../routes/service-orders.js";
 import { authRoutes } from "../routes/auth.js";
+import { listingMediaRoutes } from "../routes/listing-media.js";
 
 const app = Fastify({
   logger: true,
@@ -40,6 +41,8 @@ app.get("/health", async () => {
 await app.register(serviceOrderRoutes);
 
 await app.register(authRoutes);
+
+await app.register(listingMediaRoutes);
 
 const port = Number(process.env.PORT || 3000);
 
