@@ -20636,12 +20636,45 @@ function build(id){
             .join('')+
           '</select>';
 
-      }else if(q[1]==='file'){
+    }else if(q[1]==='file'){
 
-        el=
-          '<input '+
-          'id="'+n+'" '+
-          'type="file">';
+  const label=String(q[0]||'').toLowerCase();
+
+  const isImages=
+    label.includes('şəkillər') ||
+    label==='şəkil';
+
+  const isVideo=
+    label==='video';
+
+  if(isImages){
+
+    el=
+      '<input '+
+      'id="'+n+'" '+
+      'type="file" '+
+      'accept="image/*" '+
+      'multiple '+
+      'data-austa-media="images">';
+
+  }else if(isVideo){
+
+    el=
+      '<input '+
+      'id="'+n+'" '+
+      'type="file" '+
+      'accept="video/*" '+
+      'data-austa-media="video">';
+
+  }else{
+
+    el=
+      '<input '+
+      'id="'+n+'" '+
+      'type="file" '+
+      'accept="image/*,video/*" '+
+      'data-austa-media="mixed">';
+  }
 
       }else{
 
@@ -20710,25 +20743,239 @@ $('#austaV53Save').onclick=async()=>{
       return;
     }
 
-    const data={};
+   const data={};
 
-    (QUESTIONS[id]||[]).forEach((q,i)=>{
-      const el=$('#v53f'+i);
+/* =========================================================
+   A-USTA LISTING MEDIA
+   Çoxlu şəkil + ayrıca video → Supabase Storage
+   Bucket: listing-media
+   ========================================================= */
 
-      if(!el) return;
+const listingId='AUSTA-L-'+Date.now();
 
-      if(el.type==='file'){
-        data[q[0]]=el.files?.[0]?.name || '';
-      }else{
-        data[q[0]]=el.value || '';
+const imagePaths=[];
+let videoPath='';
+
+const safeFileName=(name)=>{
+  const parts=String(name||'file').split('.');
+  const ext=parts.length>1
+    ? parts.pop().toLowerCase().replace(/[^a-z0-9]/g,'')
+    : '';
+
+  const base=parts.join('.')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-zA-Z0-9_-]/g,'-')
+    .replace(/-+/g,'-')
+    .replace(/^-|-$/g,'')
+    .slice(0,60) || 'file';
+
+  return ext ? base+'.'+ext : base;
+};
+
+const uploadListingFile=async(file,kind,index)=>{
+
+  if(!file){
+    throw new Error('Yüklənəcək fayl tapılmadı.');
+  }
+
+  if(kind==='images' && !String(file.type||'').startsWith('image/')){
+    throw new Error('Şəkillər bölməsinə yalnız şəkil əlavə edin.');
+  }
+
+  if(kind==='video' && !String(file.type||'').startsWith('video/')){
+    throw new Error('Video bölməsinə yalnız video əlavə edin.');
+  }
+
+  const unique=
+    Date.now()+
+    '-'+
+    Math.random().toString(36).slice(2,10)+
+    '-'+
+    index;
+
+  const storagePath=
+    user.id+
+    '/'+
+    listingId+
+    '/'+
+    kind+
+    '/'+
+    unique+
+    '-'+
+    safeFileName(file.name);
+
+  const {
+    data:uploadData,
+    error:uploadError
+  }=await sb.storage
+    .from('listing-media')
+    .upload(
+      storagePath,
+      file,
+      {
+        cacheControl:'3600',
+        upsert:false,
+        contentType:file.type || undefined
       }
-    });
+    );
 
+  if(uploadError){
+    console.error(
+      'A-USTA listing media upload error:',
+      uploadError
+    );
+
+    throw new Error(
+      'Media yüklənmədi: '+
+      (uploadError.message||'Naməlum xəta')
+    );
+  }
+
+  return uploadData?.path || storagePath;
+};
+
+
+/* =========================================================
+   FORM CAVABLARI
+   ========================================================= */
+
+const questions=QUESTIONS[id]||[];
+
+for(let i=0;i<questions.length;i++){
+
+  const q=questions[i];
+  const el=$('#v53f'+i);
+
+  if(!el) continue;
+
+  if(el.type!=='file'){
+    data[q[0]]=el.value || '';
+    continue;
+  }
+
+  const files=Array.from(el.files||[]);
+  const mediaType=el.dataset.austaMedia || 'mixed';
+
+  /* -------------------------
+     ÇOXLU ŞƏKİLLƏR
+     ------------------------- */
+
+  if(mediaType==='images'){
+
+    if(files.length>20){
+      throw new Error(
+        'Bir elana maksimum 20 şəkil əlavə edə bilərsiniz.'
+      );
+    }
+
+    for(let f=0;f<files.length;f++){
+
+      const file=files[f];
+
+      if(!String(file.type||'').startsWith('image/')){
+        throw new Error(
+          'Şəkillər bölməsində şəkil olmayan fayl var.'
+        );
+      }
+
+      const path=await uploadListingFile(
+        file,
+        'images',
+        f
+      );
+
+      imagePaths.push(path);
+    }
+
+    data[q[0]]=[...imagePaths];
+    continue;
+  }
+
+
+  /* -------------------------
+     AYRICA VİDEO
+     ------------------------- */
+
+  if(mediaType==='video'){
+
+    if(files.length>1){
+      throw new Error(
+        'Bir elan üçün yalnız 1 video seçin.'
+      );
+    }
+
+    if(files[0]){
+
+      if(!String(files[0].type||'').startsWith('video/')){
+        throw new Error(
+          'Video bölməsinə yalnız video əlavə edin.'
+        );
+      }
+
+      videoPath=await uploadListingFile(
+        files[0],
+        'video',
+        0
+      );
+    }
+
+    data[q[0]]=videoPath;
+    continue;
+  }
+
+
+  /* -------------------------
+     KÖHNƏ ŞƏKİL / VİDEO
+     SAHƏLƏRİ
+     ------------------------- */
+
+  const mixedPaths=[];
+
+  const mixedVideoCount=files.filter(
+  file=>String(file.type||'').startsWith('video/')
+).length;
+
+if(mixedVideoCount>1){
+  throw new Error(
+    'Bir elan üçün yalnız 1 video əlavə edə bilərsiniz.'
+  );
+}
+
+  for(let f=0;f<files.length;f++){
+
+    const file=files[f];
+
+    const kind=
+      String(file.type||'').startsWith('video/')
+        ? 'video'
+        : 'images';
+
+    const path=await uploadListingFile(
+      file,
+      kind,
+      f
+    );
+
+    mixedPaths.push({
+      type:kind,
+      path:path
+    });
+  }
+
+  data[q[0]]=mixedPaths;
+}
     const item={
-      id:'AUSTA-L-'+Date.now(),
+      id:listingId,
 
       owner_id:user.id,
 
+      image_paths:[...imagePaths],
+
+video_path:videoPath,
+
+cover_image_path:imagePaths[0] || '',
+      
       type:cat[2],
       title:cat[1],
       category:id,
