@@ -11593,7 +11593,6 @@ function openListingDetail(id){
   overlay.addEventListener(
     "click",
     event=>{
-
       if(event.target===overlay){
         closeListingDetail();
       }
@@ -18665,45 +18664,97 @@ function renderCategory(id){
               ? '<span style="display:inline-block;margin-left:6px;padding:3px 7px;border-radius:999px;background:#ff2448;color:#fff;font-size:9px;font-weight:900">VIP</span>'
               : '';
 
-        return `
-          <article
-            class="austa-v52-listing-card"
-            data-austa-listing-id="${esc(x.id||'')}"
-            data-austa-listing-category="${esc(id)}"
+       return `
+  <article
+    class="austa-v52-listing-card"
+    data-austa-listing-id="${esc(x.id||'')}"
+    data-austa-listing-category="${esc(id)}"
+    role="button"
+    tabindex="0"
+    style="cursor:pointer"
+  >
+
+    ${
+      x.image || x.coverImage || x.thumbnail
+        ? `
+          <img
+            src="${esc(x.image || x.coverImage || x.thumbnail)}"
+            alt="${esc(x['Marka'] || x.title || cat[1])}"
+            style="
+              width:100%;
+              height:170px;
+              object-fit:cover;
+              border-radius:12px;
+              margin-bottom:9px;
+            "
           >
-            <b>
-              ${esc(x.title||x.type)}
-              ${badge}
-            </b>
+        `
+        : ''
+    }
 
-            <small>
-              ${esc(x.name||'')}
-              ${x.phone ? ' • '+esc(x.phone) : ''}
-            </small>
+    <b style="font-size:15px">
+      ${
+        id==='cars'
+          ? esc(
+              [x['Marka'],x['Model']]
+                .filter(Boolean)
+                .join(' ') ||
+              x.title ||
+              x.type
+            )
+          : esc(x.title||x.type)
+      }
+      ${badge}
+    </b>
 
-            <small>
-              ${esc(x.region||x.address||'')}
-            </small>
+    ${
+      id==='cars' && x['Qiymət (AZN)']
+        ? `
+          <strong style="
+            display:block;
+            margin-top:7px;
+            font-size:16px;
+          ">
+            ${esc(x['Qiymət (AZN)'])} AZN
+          </strong>
+        `
+        : ''
+    }
 
-            <div class="austa-v52-listing-actions">
-              <button
-                type="button"
-                data-v53-forward="${esc(x.id||'')}"
-              >
-                ↑ İrəli çək
-              </button>
+    ${
+      id==='cars'
+        ? `
+          <small style="display:block;margin-top:6px">
+            ${
+              x['Buraxılış ili']
+                ? '📅 '+esc(x['Buraxılış ili'])
+                : ''
+            }
 
-              <button
-                type="button"
-                data-v53-edit="${esc(x.id||'')}"
-              >
-                ✎ Redaktə et
-              </button>
-            </div>
-          </article>
-        `;
+            ${
+              x['Yürüş (km)']
+                ? ' • 🛣 '+esc(x['Yürüş (km)'])+' km'
+                : ''
+            }
+          </small>
+        `
+        : ''
+    }
+
+    <small style="display:block;margin-top:6px">
+      📍 ${esc(
+        x['Region / ünvan'] ||
+        x.region ||
+        x.address ||
+        ''
+      )}
+    </small>
+
+  </article>
+`;
       }).join('')
     : '<small>Bu kateqoriyada hələ elan yoxdur.</small>';
+
 }
 function renderUsta(){const box=$('#austaV53UstaList');if(!box)return;const arr=JSON.parse(localStorage.getItem('austa-user-listings')||'[]').filter(x=>norm(x.type).includes('usta'));box.innerHTML=arr.length?arr.map(x=>'<article class="austa-v52-listing-card"><b>🧑‍🔧 '+esc(x.name||x.title||'Usta')+'</b><small>🔧 '+esc(x.specialty||x.ixTisas||'')+' • ⭐ '+esc(x.rating||'0')+' ('+esc(x.reviews||'0')+' rəy)</small><small>📍 '+esc(x.region||x.address||'')+' • ☎ '+esc(x.phone||'')+'</small><small>'+esc(x.services||x.about||'')+'</small><div class="austa-v52-listing-actions"><button type="button" data-v53-forward="'+esc(x.id||'')+'">↑ İrəli çək</button><button type="button" data-v53-edit="'+esc(x.id||'')+'">✎ Redaktə et</button></div></article>').join(''):'<small>Hələ Usta profili elanı yoxdur.</small>';}
 function openListing(){
