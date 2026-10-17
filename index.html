@@ -18849,17 +18849,28 @@ cars:[
 
   ['Video','file']
 ],
- rent:[
+rent:[
   ['Ad / soyad','text'],
   ['Telefon','tel'],
   ['Avtomobil marka / model','text'],
   ['İl','number'],
-  ['İcarə növü','select',['Günlük','Həftəlik','Aylıq','Uzunmüddətli']],
+  ['Yürüş (km)','number'],
+  ['Yanacaq','select',[
+    'Benzin','Dizel','Hibrid','Plug-in Hibrid',
+    'Elektrik','Qaz','Digər'
+  ]],
+  ['Sürətlər qutusu','select',[
+    'Avtomat','Mexaniki','Robot','CVT','Digər'
+  ]],
+  ['İcarə növü','select',[
+    'Günlük','Həftəlik','Aylıq','Uzunmüddətli'
+  ]],
   ['Qiymət (AZN)','number'],
   ['Region / ünvan','text'],
   ['Avtomobil haqqında məlumat','textarea'],
-  ['Şəkil / video','file']
- ],
+  ['Şəkillər','file'],
+  ['Video','file']
+],
    caravan:[
   ['Ad / soyad','text'],
   ['Telefon','tel'],
@@ -18877,11 +18888,89 @@ cars:[
  parts:[['Ad / soyad','text'],['Telefon','tel'],['Hissənin adı','text'],['OEM / kod','text'],['Marka / model','text'],['Vəziyyət','select',['Yeni','İşlənmiş','Original','Universal']],['Uyğunluq','textarea'],['Qiymət (AZN)','number'],['Stok sayı','number'],['Çatdırılma / ünvan','text'],['Əlavə məlumat','textarea'],['Şəkil / video','file']],
  accessories:[['Ad / soyad','text'],['Telefon','tel'],['Aksesuarın adı','text'],['Marka / model uyğunluğu','text'],['Vəziyyət','select',['Yeni','İşlənmiş']],['Qiymət (AZN)','number'],['Stok sayı','number'],['Çatdırılma / ünvan','text'],['Ətraflı məlumat','textarea'],['Şəkil / video','file']],
  special:[['Ad / soyad','text'],['Telefon','tel'],['Texnikanın növü','text'],['Marka / model','text'],['İl','number'],['İş saatı / yürüş','text'],['Vəziyyət','select',['Yeni','İşlənmiş']],['Satış / icarə','select',['Satış','İcarə','Hər ikisi']],['Qiymət (AZN)','number'],['Region / ünvan','text'],['Əlavə məlumat','textarea'],['Şəkil / video','file']],
- moto:[['Ad / soyad','text'],['Telefon','tel'],['Növ','select',['Motosiklet','Moped','Skuter']],['Marka / model','text'],['İl','number'],['Yürüş (km)','number'],['Vəziyyət','select',['Yeni','İşlənmiş']],['Qiymət (AZN)','number'],['Region / ünvan','text'],['Əlavə məlumat','textarea'],['Şəkil / video','file']],
+moto:[
+  ['Ad / soyad','text'],
+  ['Telefon','tel'],
+  ['Növ','select',[
+    'Motosiklet',
+    'Moped',
+    'Skuter',
+    'Elektrik motosiklet',
+    'Elektrik skuter',
+    'ATV / Kvadratsikl',
+    'Digər'
+  ]],
+  ['Elan növü','select',[
+    'Satış','İcarə','Hər ikisi'
+  ]],
+  ['Marka / model','text'],
+  ['Buraxılış ili','number'],
+  ['Yürüş (km)','number'],
+  ['Mühərrik həcmi','text'],
+  ['Mühərrik gücü','text'],
+  ['Yanacaq','select',[
+    'Benzin','Elektrik','Hibrid','Digər'
+  ]],
+  ['Sürətlər qutusu','select',[
+    'Avtomat','Mexaniki','Variator / CVT','Digər'
+  ]],
+  ['Vəziyyət','select',[
+    'Yeni','İşlənmiş'
+  ]],
+  ['Rəng','text'],
+  ['Qiymət (AZN)','number'],
+  ['Region / ünvan','text'],
+  ['Moto / Moped / Skuter haqqında əlavə məlumat','textarea'],
+  ['Şəkillər','file'],
+  ['Video','file']
+],
  plate:[['Ad / soyad','text'],['Telefon','tel'],['Qeydiyyat nömrəsi','text'],['Seriya / region','text'],['Qiymət (AZN)','number'],['Sənəd vəziyyəti','select',['Tam sənədlidir','Yoxlanılmalıdır']],['Region / ünvan','text'],['Əlavə məlumat','textarea'],['Şəkil','file']],
- bus:[['Ad / soyad','text'],['Telefon','tel'],['Avtobus marka / model','text'],['İl','number'],['Tutum (nəfər)','number'],['Satış / icarə','select',['Satış','İcarə','Hər ikisi']],['Qiymət (AZN)','number'],['Region / ünvan','text'],['Əlavə məlumat','textarea'],['Şəkil / video','file']],
- trailer:[['Ad / soyad','text'],['Telefon','tel'],['Qoşqu / treyler növü','text'],['Marka / model','text'],['İl','number'],['Yük tutumu (kq)','number'],['Vəziyyət','select',['Yeni','İşlənmiş']],['Qiymət (AZN)','number'],['Region / ünvan','text'],['Əlavə məlumat','textarea'],['Şəkil / video','file']],
- water:[['Ad / soyad','text'],['Telefon','tel'],['Su nəqliyyatı növü','select',['Qayıq','Yaxta','Kater','Jet-ski','Digər']],['Marka / model','text'],['İl','number'],['Mühərrik','text'],['Vəziyyət','select',['Yeni','İşlənmiş']],['Qiymət (AZN)','number'],['Yerləşmə / marina','text'],['Əlavə məlumat','textarea'],['Şəkil / video','file']],
+bus:[
+  ['Ad / soyad','text'],
+  ['Telefon','tel'],
+  ['Elan növü','select',['Satış','İcarə','Hər ikisi']],
+  ['Avtobus marka / model','text'],
+  ['İl','number'],
+  ['Tutum (nəfər)','number'],
+  ['Vəziyyət','select',['Yeni','İşlənmiş']],
+  ['Qiymət (AZN)','number'],
+  ['Region / ünvan','text'],
+  ['Əlavə məlumat','textarea'],
+  ['Şəkillər','file'],
+  ['Video','file']
+],
+trailer:[
+  ['Ad / soyad','text'],
+  ['Telefon','tel'],
+  ['Elan növü','select',['Satış','İcarə','Hər ikisi']],
+  ['Qoşqu / treyler növü','text'],
+  ['Marka / model','text'],
+  ['İl','number'],
+  ['Yük tutumu (kq)','number'],
+  ['Vəziyyət','select',['Yeni','İşlənmiş']],
+  ['Qiymət (AZN)','number'],
+  ['Region / ünvan','text'],
+  ['Əlavə məlumat','textarea'],
+  ['Şəkillər','file'],
+  ['Video','file']
+],
+water:[
+  ['Ad / soyad','text'],
+  ['Telefon','tel'],
+  ['Elan növü','select',['Satış','İcarə','Hər ikisi']],
+  ['Su nəqliyyatı növü','select',[
+    'Qayıq','Yaxta','Kater','Jet-ski','Digər'
+  ]],
+  ['Marka / model','text'],
+  ['İl','number'],
+  ['Mühərrik','text'],
+  ['Vəziyyət','select',['Yeni','İşlənmiş']],
+  ['Qiymət (AZN)','number'],
+  ['Yerləşmə / marina','text'],
+  ['Əlavə məlumat','textarea'],
+  ['Şəkillər','file'],
+  ['Video','file']
+],
  service:[['Ad / soyad','text'],['Telefon','tel'],['Servis adı','text'],['İxtisas / xidmətlər','textarea'],['Markalar','text'],['Region / iş ünvanı','text'],['İş saatları','text'],['Qiymət siyasəti','textarea'],['Haqqımızda','textarea'],['Şəkil / video','file']],
  usta:[['Ad / soyad','text'],['Telefon','tel'],['İxtisas','text'],['Region / iş ünvanı','text'],['İş təcrübəsi','text'],['İş saatları','text'],['Xidmət sahələri','textarea'],['Özünüz haqqında','textarea'],['WhatsApp / mesaj əlaqəsi','text'],['Reytinq','number'],['Rəy sayı','number'],['Şəkil','file'],['Video','file']]
 };
@@ -27907,3 +27996,8 @@ setTimeout(
 
 })();
 </script>
+
+['Elan statusu','select',[
+  'Satışdadır',
+  'Sifarişlə'
+]],
