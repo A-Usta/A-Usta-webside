@@ -169,7 +169,42 @@
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+
+ <style id="austa-listing-owner-controls-css">
+.austa-listing-owner-actions{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin:16px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.10);
+}
+
+.austa-listing-owner-actions button{
+  min-height:42px;
+  border:1px solid #31566b;
+  border-radius:9px;
+  background:#0a2030;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.austa-listing-owner-actions button:hover{
+  border-color:#ff2448;
+}
+
+.austa-listing-owner-actions [data-austa-owner-premium]{
+  background:#ff2448;
+  border-color:#ff2448;
+}
+
+@media(max-width:650px){
+  .austa-listing-owner-actions{
+    grid-template-columns:1fr 1fr;
+  }
+}
+ </style> 
 </head>
 <body>
 <header class="site-header">
@@ -11581,6 +11616,163 @@ function openListingDetail(id){
 
   document.body.appendChild(overlay);
 
+   /* =========================================================
+     A-USTA — LISTING OWNER CONTROLS
+     ========================================================= */
+
+  (async()=>{
+
+    try{
+
+      const sb=window.AUSTA_SUPABASE;
+
+      if(!sb || !item.owner_id){
+        return;
+      }
+
+      const {
+        data:sessionData,
+        error:sessionError
+      }=await sb.auth.getSession();
+
+      if(sessionError){
+        console.error(
+          'A-USTA owner session error:',
+          sessionError
+        );
+        return;
+      }
+
+      const user=sessionData?.session?.user;
+
+      if(!user){
+        return;
+      }
+
+      if(user.id!==item.owner_id){
+        return;
+      }
+
+      const modal=
+        overlay.querySelector(
+          '.austa-listing-detail-modal'
+        );
+
+      if(!modal){
+        return;
+      }
+
+      const ownerActions=
+        document.createElement('div');
+
+      ownerActions.className=
+        'austa-listing-owner-actions';
+
+      ownerActions.innerHTML=`
+        <button
+          type="button"
+          data-austa-owner-edit
+        >
+          ✎ Elanı düzəlt
+        </button>
+
+        <button
+          type="button"
+          data-austa-owner-boost
+        >
+          ↑ İrəli çək
+        </button>
+
+        <button
+          type="button"
+          data-austa-owner-vip
+        >
+          VIP
+        </button>
+
+        <button
+          type="button"
+          data-austa-owner-premium
+        >
+          Premium
+        </button>
+      `;
+
+      modal.appendChild(ownerActions);
+
+      ownerActions
+        .querySelector('[data-austa-owner-edit]')
+        ?.addEventListener('click',()=>{
+
+          closeListingDetail();
+
+          if(
+            window.AUSTA_V53 &&
+            typeof window.AUSTA_V53.openListing==='function'
+          ){
+            window.AUSTA_V53.openListing();
+
+            setTimeout(()=>{
+
+              const typeSelect=
+                document.getElementById(
+                  'austaV53Type'
+                );
+
+              if(typeSelect && item.category){
+                typeSelect.value=item.category;
+                typeSelect.dispatchEvent(
+                  new Event('change')
+                );
+              }
+
+            },50);
+          }
+        });
+
+
+      ownerActions
+        .querySelector('[data-austa-owner-boost]')
+        ?.addEventListener('click',()=>{
+
+          window.AUSTA_OWNER_PROMOTION?.(
+            item.id,
+            'boost'
+          );
+        });
+
+
+      ownerActions
+        .querySelector('[data-austa-owner-vip]')
+        ?.addEventListener('click',()=>{
+
+          window.AUSTA_OWNER_PROMOTION?.(
+            item.id,
+            'vip'
+          );
+        });
+
+
+      ownerActions
+        .querySelector('[data-austa-owner-premium]')
+        ?.addEventListener('click',()=>{
+
+          window.AUSTA_OWNER_PROMOTION?.(
+            item.id,
+            'premium'
+          );
+        });
+
+    }catch(error){
+
+      console.error(
+        'A-USTA owner controls error:',
+        error
+      );
+    }
+
+  })();
+  
   document.body.style.overflow="hidden";
 
   overlay
@@ -11602,6 +11794,210 @@ function openListingDetail(id){
   return true;
 }
 
+ /* =========================================================
+   A-USTA — OWNER PROMOTION
+   ========================================================= */
+
+window.AUSTA_OWNER_PROMOTION=function(
+  listingId,
+  packageType
+){
+
+  const allowed=[
+    'boost',
+    'vip',
+    'premium'
+  ];
+
+  if(!allowed.includes(packageType)){
+    return;
+  }
+
+  document
+    .getElementById('austaOwnerPromotionOverlay')
+    ?.remove();
+
+  const names={
+    boost:'↑ İrəli çək',
+    vip:'VIP',
+    premium:'Premium'
+  };
+
+  const overlay=
+    document.createElement('div');
+
+  overlay.id='austaOwnerPromotionOverlay';
+
+  overlay.style.cssText=`
+    position:fixed;
+    inset:0;
+    z-index:2147483647;
+    background:rgba(0,0,0,.84);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+  `;
+
+  overlay.innerHTML=`
+    <div style="
+      width:min(520px,96vw);
+      background:#071725;
+      color:#fff;
+      border:1px solid #ff2448;
+      border-radius:16px;
+      padding:20px;
+      box-shadow:0 30px 90px #000;
+    ">
+
+      <button
+        type="button"
+        data-close-promotion
+        style="
+          float:right;
+          border:0;
+          border-radius:8px;
+          background:#ff2448;
+          color:#fff;
+          width:35px;
+          height:35px;
+          cursor:pointer;
+        "
+      >
+        ×
+      </button>
+
+      <h2 style="margin-top:0">
+        ${names[packageType]}
+      </h2>
+
+      <p style="
+        color:#9eb1c7;
+        font-size:12px;
+      ">
+        Elan: ${esc(listingId)}
+      </p>
+
+      <label style="
+        display:block;
+        margin-top:15px;
+      ">
+        Müddət
+
+        <select
+          data-promotion-duration
+          style="
+            display:block;
+            width:100%;
+            margin-top:6px;
+            padding:11px;
+            border-radius:9px;
+            border:1px solid #31566b;
+            background:#061522;
+            color:#fff;
+          "
+        >
+          <option value="daily">
+            Günlük
+          </option>
+
+          <option value="weekly">
+            Həftəlik
+          </option>
+
+          <option value="monthly">
+            Aylıq
+          </option>
+        </select>
+      </label>
+
+      <button
+        type="button"
+        data-confirm-promotion
+        style="
+          width:100%;
+          margin-top:16px;
+          padding:12px;
+          border:0;
+          border-radius:9px;
+          background:#ff2448;
+          color:#fff;
+          font-weight:900;
+          cursor:pointer;
+        "
+      >
+        Davam et
+      </button>
+
+      <div
+        data-promotion-result
+        style="
+          margin-top:12px;
+          font-size:12px;
+          color:#ffcf70;
+        "
+      ></div>
+
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const close=()=>overlay.remove();
+
+  overlay
+    .querySelector('[data-close-promotion]')
+    ?.addEventListener(
+      'click',
+      close
+    );
+
+  overlay.addEventListener(
+    'click',
+    e=>{
+      if(e.target===overlay){
+        close();
+      }
+    }
+  );
+
+  overlay
+    .querySelector('[data-confirm-promotion]')
+    ?.addEventListener(
+      'click',
+      ()=>{
+
+        const duration=
+          overlay
+            .querySelector(
+              '[data-promotion-duration]'
+            )
+            ?.value;
+
+        const result=
+          overlay.querySelector(
+            '[data-promotion-result]'
+          );
+
+        if(result){
+          result.textContent=
+            'Ödəniş sistemi növbəti mərhələdə qoşulacaq. Paket hələ aktiv edilmədi.';
+        }
+
+        console.log(
+          'A-USTA promotion request:',
+          {
+            listingId,
+            packageType,
+            duration
+          }
+        );
+      }
+    );
+};
+
+ 
+  
 /* =========================================================
    GLOBAL EXACT LISTING FUNCTION
    ========================================================= */
@@ -20277,7 +20673,139 @@ function build(id){
   }
 }
  type.onchange=()=>build(type.value);build(type.value);
- $('#austaV53Save').onclick=()=>{const id=type.value,cat=CATS.find(c=>c[0]===id),data={};(QUESTIONS[id]||[]).forEach((q,i)=>{const el=$('#v53f'+i);if(el)data[q[0]]=el.value||''});const item={id:'AUSTA-L-'+Date.now(),type:cat[2],title:cat[1],category:id,...data,name:data['Ad / soyad']||'',phone:data['Telefon']||'',specialty:data['İxtisas']||'',region:data['Region / iş ünvanı']||data['Region / ünvan']||data['Yerləşmə / marina']||'',rating:data['Reytinq']||'0',reviews:data['Rəy sayı']||'0',services:data['Xidmət sahələri']||data['İxtisas / xidmətlər']||'',about:data['Özünüz haqqında']||data['Haqqımızda']||'',createdAt:new Date().toISOString(),vip:false};let a=JSON.parse(localStorage.getItem('austa-user-listings')||'[]');a.push(item);localStorage.setItem('austa-user-listings',JSON.stringify(a));o.remove();renderUsta();CATS.filter(c=>c[0]!=='usta').forEach(c=>renderCategory(c[0]));alert('✅ Elan qeyd edildi: '+cat[1]);};
+$('#austaV53Save').onclick=async()=>{
+
+  try{
+
+    const sb=window.AUSTA_SUPABASE;
+
+    if(!sb){
+      alert('A-USTA giriş sistemi hazır deyil.');
+      return;
+    }
+
+    const {
+      data:sessionData,
+      error:sessionError
+    }=await sb.auth.getSession();
+
+    if(sessionError){
+      console.error(sessionError);
+      alert('Hesab sessiyası yoxlanmadı.');
+      return;
+    }
+
+    const user=sessionData?.session?.user;
+
+    if(!user){
+      alert('Elan yerləşdirmək üçün əvvəlcə hesaba daxil olun.');
+      return;
+    }
+
+    const id=type.value;
+    const cat=CATS.find(c=>c[0]===id);
+
+    if(!cat){
+      alert('Elan kateqoriyası tapılmadı.');
+      return;
+    }
+
+    const data={};
+
+    (QUESTIONS[id]||[]).forEach((q,i)=>{
+      const el=$('#v53f'+i);
+
+      if(!el) return;
+
+      if(el.type==='file'){
+        data[q[0]]=el.files?.[0]?.name || '';
+      }else{
+        data[q[0]]=el.value || '';
+      }
+    });
+
+    const item={
+      id:'AUSTA-L-'+Date.now(),
+
+      owner_id:user.id,
+
+      type:cat[2],
+      title:cat[1],
+      category:id,
+
+      ...data,
+
+      name:data['Ad / soyad']||'',
+      phone:data['Telefon']||'',
+
+      specialty:
+        data['İxtisas']||'',
+
+      region:
+        data['Region / iş ünvanı']||
+        data['Region / ünvan']||
+        data['Yerləşmə / marina']||
+        '',
+
+      rating:
+        data['Reytinq']||'0',
+
+      reviews:
+        data['Rəy sayı']||'0',
+
+      services:
+        data['Xidmət sahələri']||
+        data['İxtisas / xidmətlər']||
+        '',
+
+      about:
+        data['Özünüz haqqında']||
+        data['Haqqımızda']||
+        '',
+
+      createdAt:new Date().toISOString(),
+
+      vip:false,
+      premium:false
+    };
+
+    let a=[];
+
+    try{
+      a=JSON.parse(
+        localStorage.getItem('austa-user-listings')||'[]'
+      );
+    }catch(e){
+      a=[];
+    }
+
+    a.push(item);
+
+    localStorage.setItem(
+      'austa-user-listings',
+      JSON.stringify(a)
+    );
+
+    o.remove();
+
+    renderUsta();
+
+    CATS
+      .filter(c=>c[0]!=='usta')
+      .forEach(c=>renderCategory(c[0]));
+
+    alert('✅ Elan qeyd edildi: '+cat[1]);
+
+  }catch(error){
+
+    console.error(
+      'A-USTA listing save error:',
+      error
+    );
+
+    alert('Elan yadda saxlanılarkən xəta baş verdi.');
+  }
+};
 }
 function bindHeaderPlus(){const btn=$('#austaV33HeaderAddListing');if(btn&&!btn.dataset.v53){btn.dataset.v53='1';btn.onclick=e=>{e.preventDefault();e.stopPropagation();openListing()};}}
 function init(){addOrFixTab();bindHeaderPlus();renderUsta();CATS.filter(c=>c[0]!=='usta').forEach(c=>renderCategory(c[0]));}
