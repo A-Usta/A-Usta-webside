@@ -169,7 +169,42 @@
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+
+ <style id="austa-listing-owner-controls-css">
+.austa-listing-owner-actions{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin:16px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.10);
+}
+
+.austa-listing-owner-actions button{
+  min-height:42px;
+  border:1px solid #31566b;
+  border-radius:9px;
+  background:#0a2030;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.austa-listing-owner-actions button:hover{
+  border-color:#ff2448;
+}
+
+.austa-listing-owner-actions [data-austa-owner-premium]{
+  background:#ff2448;
+  border-color:#ff2448;
+}
+
+@media(max-width:650px){
+  .austa-listing-owner-actions{
+    grid-template-columns:1fr 1fr;
+  }
+}
+ </style> 
 </head>
 <body>
 <header class="site-header">
@@ -11961,46 +11996,7 @@ window.AUSTA_OWNER_PROMOTION=function(
     );
 };
 
-  <style id="austa-listing-owner-controls-css">
-
-.austa-listing-owner-actions{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:8px;
-  margin:16px;
-  padding-top:14px;
-  border-top:1px solid rgba(255,255,255,.10);
-}
-
-.austa-listing-owner-actions button{
-  min-height:42px;
-  border:1px solid #31566b;
-  border-radius:9px;
-  background:#0a2030;
-  color:#fff;
-  font-weight:800;
-  cursor:pointer;
-}
-
-.austa-listing-owner-actions button:hover{
-  border-color:#ff2448;
-}
-
-.austa-listing-owner-actions
-[data-austa-owner-premium]{
-  background:#ff2448;
-  border-color:#ff2448;
-}
-
-@media(max-width:650px){
-
-  .austa-listing-owner-actions{
-    grid-template-columns:1fr 1fr;
-  }
-
-}
-
-</style>
+ 
   
 /* =========================================================
    GLOBAL EXACT LISTING FUNCTION
@@ -20677,7 +20673,139 @@ function build(id){
   }
 }
  type.onchange=()=>build(type.value);build(type.value);
- $('#austaV53Save').onclick=()=>{const id=type.value,cat=CATS.find(c=>c[0]===id),data={};(QUESTIONS[id]||[]).forEach((q,i)=>{const el=$('#v53f'+i);if(el)data[q[0]]=el.value||''});const item={id:'AUSTA-L-'+Date.now(),type:cat[2],title:cat[1],category:id,...data,name:data['Ad / soyad']||'',phone:data['Telefon']||'',specialty:data['İxtisas']||'',region:data['Region / iş ünvanı']||data['Region / ünvan']||data['Yerləşmə / marina']||'',rating:data['Reytinq']||'0',reviews:data['Rəy sayı']||'0',services:data['Xidmət sahələri']||data['İxtisas / xidmətlər']||'',about:data['Özünüz haqqında']||data['Haqqımızda']||'',createdAt:new Date().toISOString(),vip:false};let a=JSON.parse(localStorage.getItem('austa-user-listings')||'[]');a.push(item);localStorage.setItem('austa-user-listings',JSON.stringify(a));o.remove();renderUsta();CATS.filter(c=>c[0]!=='usta').forEach(c=>renderCategory(c[0]));alert('✅ Elan qeyd edildi: '+cat[1]);};
+$('#austaV53Save').onclick=async()=>{
+
+  try{
+
+    const sb=window.AUSTA_SUPABASE;
+
+    if(!sb){
+      alert('A-USTA giriş sistemi hazır deyil.');
+      return;
+    }
+
+    const {
+      data:sessionData,
+      error:sessionError
+    }=await sb.auth.getSession();
+
+    if(sessionError){
+      console.error(sessionError);
+      alert('Hesab sessiyası yoxlanmadı.');
+      return;
+    }
+
+    const user=sessionData?.session?.user;
+
+    if(!user){
+      alert('Elan yerləşdirmək üçün əvvəlcə hesaba daxil olun.');
+      return;
+    }
+
+    const id=type.value;
+    const cat=CATS.find(c=>c[0]===id);
+
+    if(!cat){
+      alert('Elan kateqoriyası tapılmadı.');
+      return;
+    }
+
+    const data={};
+
+    (QUESTIONS[id]||[]).forEach((q,i)=>{
+      const el=$('#v53f'+i);
+
+      if(!el) return;
+
+      if(el.type==='file'){
+        data[q[0]]=el.files?.[0]?.name || '';
+      }else{
+        data[q[0]]=el.value || '';
+      }
+    });
+
+    const item={
+      id:'AUSTA-L-'+Date.now(),
+
+      owner_id:user.id,
+
+      type:cat[2],
+      title:cat[1],
+      category:id,
+
+      ...data,
+
+      name:data['Ad / soyad']||'',
+      phone:data['Telefon']||'',
+
+      specialty:
+        data['İxtisas']||'',
+
+      region:
+        data['Region / iş ünvanı']||
+        data['Region / ünvan']||
+        data['Yerləşmə / marina']||
+        '',
+
+      rating:
+        data['Reytinq']||'0',
+
+      reviews:
+        data['Rəy sayı']||'0',
+
+      services:
+        data['Xidmət sahələri']||
+        data['İxtisas / xidmətlər']||
+        '',
+
+      about:
+        data['Özünüz haqqında']||
+        data['Haqqımızda']||
+        '',
+
+      createdAt:new Date().toISOString(),
+
+      vip:false,
+      premium:false
+    };
+
+    let a=[];
+
+    try{
+      a=JSON.parse(
+        localStorage.getItem('austa-user-listings')||'[]'
+      );
+    }catch(e){
+      a=[];
+    }
+
+    a.push(item);
+
+    localStorage.setItem(
+      'austa-user-listings',
+      JSON.stringify(a)
+    );
+
+    o.remove();
+
+    renderUsta();
+
+    CATS
+      .filter(c=>c[0]!=='usta')
+      .forEach(c=>renderCategory(c[0]));
+
+    alert('✅ Elan qeyd edildi: '+cat[1]);
+
+  }catch(error){
+
+    console.error(
+      'A-USTA listing save error:',
+      error
+    );
+
+    alert('Elan yadda saxlanılarkən xəta baş verdi.');
+  }
+};
 }
 function bindHeaderPlus(){const btn=$('#austaV33HeaderAddListing');if(btn&&!btn.dataset.v53){btn.dataset.v53='1';btn.onclick=e=>{e.preventDefault();e.stopPropagation();openListing()};}}
 function init(){addOrFixTab();bindHeaderPlus();renderUsta();CATS.filter(c=>c[0]!=='usta').forEach(c=>renderCategory(c[0]));}
