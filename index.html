@@ -34376,3 +34376,1342 @@ window.AUSTA_MARKET_V106 = {
     console.log("A-USTA V106 GLOBAL SEARCH BRIDGE READY");
 })();
 </script>
+
+<!-- =========================================================
+     A-USTA V107 FINAL HOME LAYOUT
+     UI ONLY — SERVICE/BACKEND FLOWS ARE NOT CHANGED
+     ========================================================= -->
+
+<style id="austa-v107-final-home-css">
+
+/* =========================================================
+   1. ANA SƏHİFƏ — AĞ MARKETPLACE FONU
+   ========================================================= */
+
+html,
+body{
+    background:#f5f6f7 !important;
+}
+
+body{
+    color:#111827 !important;
+}
+
+/*
+ * Header öz dizaynını saxlasın.
+ */
+header,
+.header,
+.site-header{
+    color:inherit;
+}
+
+
+/* =========================================================
+   2. KÖHNƏ BÖYÜK HERO-NUN GÖRÜNÜŞÜNÜ YIĞIŞDIR
+   Funksiyanı silmirik.
+   ========================================================= */
+
+#home > .hero{
+    display:none !important;
+}
+
+
+/* =========================================================
+   3. EVAKUATOR + YÜKDAŞIMA
+   ========================================================= */
+
+#austaTopUrgentV24{
+    width:min(1380px, calc(100% - 32px));
+    margin:18px auto 12px !important;
+
+    display:grid !important;
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+
+    gap:12px !important;
+}
+
+#austaTopUrgentV24 button{
+    min-height:64px;
+
+    border:0 !important;
+    border-radius:14px !important;
+
+    padding:14px 18px !important;
+
+    background:#e5092f !important;
+    color:#fff !important;
+
+    font-size:15px !important;
+    font-weight:950 !important;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 5px 18px rgba(229,9,47,.18);
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease;
+}
+
+#austaTopUrgentV24 button:hover{
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 9px 24px rgba(229,9,47,.25);
+}
+
+
+/* =========================================================
+   4. BÜTÜN FUNKSİYALARA BAX
+   ========================================================= */
+
+#austaV107FunctionsToggleWrap{
+    width:min(1380px, calc(100% - 32px));
+    margin:0 auto 18px;
+}
+
+#austaV107FunctionsToggle{
+    width:100%;
+
+    min-height:54px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:12px;
+
+    padding:12px 18px;
+
+    border:1px solid #e3e6e9;
+    border-radius:14px;
+
+    background:#fff;
+    color:#111827;
+
+    font-size:15px;
+    font-weight:950;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 3px 12px rgba(0,0,0,.05);
+}
+
+#austaV107FunctionsToggle strong{
+    color:#e5092f;
+}
+
+#austaV107FunctionsToggleArrow{
+    color:#e5092f;
+    font-size:20px;
+
+    transition:
+        transform .2s ease;
+}
+
+#austaV107FunctionsToggle[
+    aria-expanded="true"
+] #austaV107FunctionsToggleArrow{
+    transform:rotate(180deg);
+}
+
+
+/*
+ * Mövcud bütün funksiyalar bölməsini
+ * SİLMİRİK.
+ *
+ * Default olaraq bağlayırıq.
+ */
+
+#austaAllFunctions.austa-v107-functions-collapsed{
+    display:none !important;
+}
+
+
+/*
+ * Açıldıqda ağ panel.
+ */
+
+#austaAllFunctions.austa-v107-functions-open{
+    display:block !important;
+
+    width:min(1380px, calc(100% - 32px));
+
+    margin:0 auto 22px !important;
+
+    padding:18px !important;
+
+    border:1px solid #e5e7eb !important;
+    border-radius:16px !important;
+
+    background:#fff !important;
+
+    color:#111827 !important;
+
+    box-shadow:
+        0 5px 18px rgba(0,0,0,.05);
+}
+
+
+/*
+ * Funksiya daxilindəki mətnləri
+ * ağ fonda oxunaqlı saxla.
+ */
+
+#austaAllFunctions.austa-v107-functions-open h1,
+#austaAllFunctions.austa-v107-functions-open h2,
+#austaAllFunctions.austa-v107-functions-open h3,
+#austaAllFunctions.austa-v107-functions-open h4,
+#austaAllFunctions.austa-v107-functions-open b,
+#austaAllFunctions.austa-v107-functions-open strong{
+    color:#111827;
+}
+
+
+/* =========================================================
+   5. ELAN KATEQORİYALARI
+   Tap.az məntiqi — A-USTA kateqoriyaları
+   ========================================================= */
+
+#austaV107ListingCategories{
+    width:min(1380px, calc(100% - 32px));
+
+    margin:0 auto 24px;
+
+    padding:18px;
+
+    border:1px solid #e4e7ea;
+    border-radius:16px;
+
+    background:#fff;
+
+    box-shadow:
+        0 4px 16px rgba(0,0,0,.045);
+}
+
+.austa-v107-category-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:12px;
+
+    margin-bottom:16px;
+}
+
+.austa-v107-category-head h2{
+    margin:0;
+
+    color:#111827;
+
+    font-size:21px;
+    font-weight:950;
+}
+
+.austa-v107-category-grid{
+    display:grid;
+
+    grid-template-columns:
+        repeat(8,minmax(0,1fr));
+
+    gap:15px 10px;
+}
+
+.austa-v107-category{
+    min-width:0;
+
+    border:0;
+
+    background:transparent;
+
+    padding:4px;
+
+    cursor:pointer;
+
+    text-align:center;
+}
+
+.austa-v107-category-icon{
+    width:82px;
+    height:82px;
+
+    margin:0 auto 8px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:50%;
+
+    background:#f1f3f5;
+
+    border:1px solid #e4e7ea;
+
+    font-size:37px;
+
+    transition:
+        transform .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease;
+}
+
+.austa-v107-category:hover
+.austa-v107-category-icon{
+    transform:translateY(-3px);
+
+    border-color:#e5092f;
+
+    box-shadow:
+        0 7px 18px rgba(0,0,0,.08);
+}
+
+.austa-v107-category-name{
+    display:block;
+
+    color:#1f2937;
+
+    font-size:12px;
+    font-weight:850;
+
+    line-height:1.25;
+}
+
+
+/* =========================================================
+   6. V106 MARKETİ AĞ DİZAYNA KEÇİR
+   ========================================================= */
+
+#austaV106Market,
+#austaV106HomeMarket{
+    width:min(1380px, calc(100% - 32px)) !important;
+
+    margin-left:auto !important;
+    margin-right:auto !important;
+
+    background:transparent !important;
+}
+
+.austa-v106-section-title{
+    color:#111827 !important;
+}
+
+.austa-v106-section-count{
+    color:#6b7280 !important;
+}
+
+
+/* =========================================================
+   7. ELAN KARTLARI — TAP.AZ TİPLİ TƏMİZ KART
+   ========================================================= */
+
+.austa-v52-listing-card,
+.austa-v106-card{
+    border:1px solid #e3e6e9 !important;
+
+    border-radius:12px !important;
+
+    background:#fff !important;
+
+    color:#111827 !important;
+
+    box-shadow:
+        0 3px 12px rgba(0,0,0,.055) !important;
+}
+
+.austa-v52-listing-card:hover,
+.austa-v106-card:hover{
+    transform:translateY(-3px);
+
+    border-color:#d5d9dd !important;
+
+    box-shadow:
+        0 8px 22px rgba(0,0,0,.10) !important;
+}
+
+.austa-v106-card-media{
+    background:#eceff1 !important;
+
+    aspect-ratio:4 / 3 !important;
+}
+
+.austa-v106-card-media img{
+    width:100% !important;
+    height:100% !important;
+
+    object-fit:cover !important;
+}
+
+.austa-v106-card-body{
+    background:#fff !important;
+}
+
+.austa-v106-card-title{
+    color:#111827 !important;
+}
+
+.austa-v106-card-price{
+    color:#111827 !important;
+
+    font-weight:950 !important;
+}
+
+.austa-v106-card-meta,
+.austa-v106-card-location,
+.austa-v106-card-date{
+    color:#6b7280 !important;
+}
+
+
+/* =========================================================
+   8. 4 ELAN HƏR SƏTİRDƏ
+   ========================================================= */
+
+.austa-v52-listings-grid,
+.austa-v106-grid{
+    display:grid !important;
+
+    grid-template-columns:
+        repeat(4,minmax(0,1fr)) !important;
+
+    gap:16px !important;
+}
+
+
+/* =========================================================
+   9. SİZİN ÜÇÜN VİDEOLAR
+   ========================================================= */
+
+#austaV106VideoSection{
+    width:min(1380px, calc(100% - 32px));
+
+    margin:24px auto !important;
+
+    padding:18px;
+
+    border:1px solid #e4e7ea;
+    border-radius:16px;
+
+    background:#fff;
+}
+
+#austaV106VideoSection
+.austa-v106-section-title{
+    color:#111827 !important;
+}
+
+#austaV106VideoRail{
+    gap:12px !important;
+}
+
+.austa-v106-video-card{
+    flex:0 0 215px !important;
+
+    width:215px !important;
+    height:355px !important;
+
+    border-radius:13px !important;
+
+    border:1px solid #e0e3e6 !important;
+
+    background:#111 !important;
+}
+
+
+/* =========================================================
+   10. PAGINATION AĞ DİZAYN
+   ========================================================= */
+
+.austa-v106-pagination button{
+    border:1px solid #dfe3e7 !important;
+
+    background:#fff !important;
+
+    color:#111827 !important;
+}
+
+.austa-v106-pagination button:hover{
+    border-color:#e5092f !important;
+
+    color:#e5092f !important;
+}
+
+.austa-v106-pagination button.active{
+    background:#e5092f !important;
+
+    border-color:#e5092f !important;
+
+    color:#fff !important;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media(max-width:1100px){
+
+    .austa-v107-category-grid{
+        grid-template-columns:
+            repeat(6,minmax(0,1fr));
+    }
+
+    .austa-v52-listings-grid,
+    .austa-v106-grid{
+        grid-template-columns:
+            repeat(3,minmax(0,1fr)) !important;
+    }
+}
+
+
+@media(max-width:760px){
+
+    #austaTopUrgentV24{
+        grid-template-columns:1fr;
+    }
+
+    .austa-v107-category-grid{
+        grid-template-columns:
+            repeat(4,minmax(0,1fr));
+    }
+
+    .austa-v107-category-icon{
+        width:68px;
+        height:68px;
+
+        font-size:30px;
+    }
+
+    .austa-v52-listings-grid,
+    .austa-v106-grid{
+        grid-template-columns:
+            repeat(2,minmax(0,1fr)) !important;
+
+        gap:10px !important;
+    }
+
+    .austa-v106-video-card{
+        flex-basis:190px !important;
+
+        width:190px !important;
+        height:325px !important;
+    }
+}
+
+
+@media(max-width:430px){
+
+    #austaTopUrgentV24,
+    #austaV107FunctionsToggleWrap,
+    #austaV107ListingCategories,
+    #austaV106Market,
+    #austaV106HomeMarket,
+    #austaV106VideoSection{
+        width:calc(100% - 20px) !important;
+    }
+
+    .austa-v107-category-grid{
+        grid-template-columns:
+            repeat(3,minmax(0,1fr));
+    }
+
+}
+
+</style>
+
+
+<script id="austa-v107-final-home-js">
+(function(){
+    "use strict";
+
+
+    /* =====================================================
+       HELPERS
+       ===================================================== */
+
+    function byId(id){
+        return document.getElementById(id);
+    }
+
+
+    /* =====================================================
+       BÜTÜN FUNKSİYALAR TOGGLE
+       ===================================================== */
+
+    function setupFunctionsToggle(){
+
+        const functions =
+            byId("austaAllFunctions");
+
+        if(!functions){
+            console.warn(
+                "V107: austaAllFunctions tapılmadı."
+            );
+
+            return;
+        }
+
+
+        /*
+         * Eyni patch iki dəfə işləsə
+         * ikinci düymə yaratmasın.
+         */
+
+        let wrap =
+            byId(
+                "austaV107FunctionsToggleWrap"
+            );
+
+
+        if(!wrap){
+
+            wrap =
+                document.createElement("div");
+
+            wrap.id =
+                "austaV107FunctionsToggleWrap";
+
+
+            wrap.innerHTML = `
+                <button
+                    id="austaV107FunctionsToggle"
+                    type="button"
+                    aria-expanded="false"
+                >
+                    <span>
+                        ⚡
+                        <strong>
+                            Bütün funksiyalara bax
+                        </strong>
+                    </span>
+
+                    <span
+                        id="austaV107FunctionsToggleArrow"
+                    >
+                        ▼
+                    </span>
+                </button>
+            `;
+
+
+            functions.parentNode.insertBefore(
+                wrap,
+                functions
+            );
+        }
+
+
+        const button =
+            byId(
+                "austaV107FunctionsToggle"
+            );
+
+
+        functions.classList.remove(
+            "austa-v107-functions-open"
+        );
+
+        functions.classList.add(
+            "austa-v107-functions-collapsed"
+        );
+
+
+        if(!button){
+            return;
+        }
+
+
+        button.onclick = function(){
+
+            const closed =
+                functions.classList.contains(
+                    "austa-v107-functions-collapsed"
+                );
+
+
+            if(closed){
+
+                functions.classList.remove(
+                    "austa-v107-functions-collapsed"
+                );
+
+                functions.classList.add(
+                    "austa-v107-functions-open"
+                );
+
+
+                button.setAttribute(
+                    "aria-expanded",
+                    "true"
+                );
+
+
+                /*
+                 * Funksiyaların mövcud
+                 * click handlerlərinə
+                 * toxunmuruq.
+                 */
+
+                functions.scrollIntoView({
+                    behavior:"smooth",
+                    block:"start"
+                });
+
+            }else{
+
+                functions.classList.remove(
+                    "austa-v107-functions-open"
+                );
+
+                functions.classList.add(
+                    "austa-v107-functions-collapsed"
+                );
+
+
+                button.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+            }
+        };
+    }
+
+
+    /* =====================================================
+       ELAN KATEQORİYALARI
+       ===================================================== */
+
+    const categories = [
+
+        {
+            key:"cars",
+            icon:"🚗",
+            title:"Avtomobillər"
+        },
+
+        {
+            key:"rent",
+            icon:"🔑",
+            title:"Rent a Car"
+        },
+
+        {
+            key:"parts",
+            icon:"⚙️",
+            title:"Ehtiyat hissələri"
+        },
+
+        {
+            key:"accessories",
+            icon:"🧰",
+            title:"Aksesuarlar"
+        },
+
+        {
+            key:"moto",
+            icon:"🏍️",
+            title:"Moto / Moped"
+        },
+
+        {
+            key:"special",
+            icon:"🏗️",
+            title:"Xüsusi texnika"
+        },
+
+        {
+            key:"bus",
+            icon:"🚌",
+            title:"Avtobuslar"
+        },
+
+        {
+            key:"trailer",
+            icon:"🚛",
+            title:"Qoşqu / Treyler"
+        },
+
+        {
+            key:"plate",
+            icon:"🔢",
+            title:"Qeydiyyat nömrələri"
+        },
+
+        {
+            key:"service",
+            icon:"🛠️",
+            title:"Avtoservislər"
+        },
+
+        {
+            key:"mechanic",
+            icon:"👨‍🔧",
+            title:"Usta profilləri"
+        },
+
+        {
+            key:"foreign",
+            icon:"✈️",
+            title:"Xaricdən sifariş"
+        }
+
+    ];
+
+
+    function openCategory(key){
+
+        /*
+         * Birinci seçim:
+         * V106 kateqoriya sistemi.
+         */
+
+        if(
+            window.AUSTA_MARKET_V106 &&
+            typeof window
+                .AUSTA_MARKET_V106
+                .category === "function"
+        ){
+
+            try{
+
+                window
+                    .AUSTA_MARKET_V106
+                    .category(
+                        key,
+                        1
+                    );
+
+            }catch(error){
+
+                console.warn(
+                    "V107 CATEGORY:",
+                    error
+                );
+            }
+        }
+
+
+        /*
+         * Mövcud V22 tab varsa
+         * onu da istifadə edirik.
+         */
+
+        const tab =
+            document.querySelector(
+                '#austaV22Tabs ' +
+                '[data-v22-cat="' +
+                key +
+                '"]'
+            );
+
+
+        if(tab){
+
+            tab.click();
+
+            setTimeout(
+                ()=>{
+
+                    const panel =
+                        byId(
+                            "austaV22Panel-" +
+                            key
+                        );
+
+                    panel?.scrollIntoView({
+                        behavior:"smooth",
+                        block:"start"
+                    });
+
+                },
+                80
+            );
+
+            return;
+        }
+
+
+        /*
+         * Cars üçün ana market.
+         */
+
+        if(key === "cars"){
+
+            byId(
+                "austaV106HomeMarket"
+            )?.scrollIntoView({
+                behavior:"smooth",
+                block:"start"
+            });
+
+            return;
+        }
+
+
+        /*
+         * Xaricdən sifariş və s.
+         * mövcud funksiya adı ilə
+         * tapılmağa çalışılır.
+         */
+
+        const text =
+            categories.find(
+                item=>item.key === key
+            )?.title || "";
+
+
+        const existing =
+            [
+                ...document.querySelectorAll(
+                    "#austaAllFunctions button," +
+                    "#austaAllFunctions [data-austa-flow]"
+                )
+            ].find(
+                element=>
+                    String(
+                        element.textContent || ""
+                    )
+                    .toLocaleLowerCase("az")
+                    .includes(
+                        text
+                        .toLocaleLowerCase("az")
+                    )
+            );
+
+
+        if(existing){
+
+            /*
+             * Əvvəl funksiyalar panelini aç.
+             */
+
+            const functions =
+                byId(
+                    "austaAllFunctions"
+                );
+
+
+            functions?.classList.remove(
+                "austa-v107-functions-collapsed"
+            );
+
+            functions?.classList.add(
+                "austa-v107-functions-open"
+            );
+
+
+            byId(
+                "austaV107FunctionsToggle"
+            )?.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+
+
+            existing.click();
+        }
+    }
+
+
+    function setupListingCategories(){
+
+        if(
+            byId(
+                "austaV107ListingCategories"
+            )
+        ){
+            return;
+        }
+
+
+        const section =
+            document.createElement(
+                "section"
+            );
+
+
+        section.id =
+            "austaV107ListingCategories";
+
+
+        section.innerHTML = `
+            <div
+                class="austa-v107-category-head"
+            >
+                <h2>
+                    Elan kateqoriyaları
+                </h2>
+            </div>
+
+            <div
+                class="austa-v107-category-grid"
+            >
+                ${
+                    categories
+                    .map(
+                        item=>`
+                            <button
+                                class="austa-v107-category"
+                                type="button"
+                                data-austa-v107-category="${item.key}"
+                            >
+                                <span
+                                    class="austa-v107-category-icon"
+                                >
+                                    ${item.icon}
+                                </span>
+
+                                <span
+                                    class="austa-v107-category-name"
+                                >
+                                    ${item.title}
+                                </span>
+                            </button>
+                        `
+                    )
+                    .join("")
+                }
+            </div>
+        `;
+
+
+        /*
+         * Bütün funksiyalar bölməsindən
+         * sonra yerləşdiririk.
+         */
+
+        const functions =
+            byId(
+                "austaAllFunctions"
+            );
+
+
+        if(functions){
+
+            functions.insertAdjacentElement(
+                "afterend",
+                section
+            );
+
+        }else{
+
+            byId("home")
+                ?.appendChild(
+                    section
+                );
+        }
+
+
+        section.addEventListener(
+            "click",
+            event=>{
+
+                const button =
+                    event.target.closest(
+                        "[data-austa-v107-category]"
+                    );
+
+
+                if(!button){
+                    return;
+                }
+
+
+                openCategory(
+                    button.dataset
+                        .austaV107Category
+                );
+            }
+        );
+    }
+
+
+    /* =====================================================
+       V106 VİDEONU KATEQORİYALARDAN SONRA QALDIR
+       ===================================================== */
+
+    function moveVideoSection(){
+
+        const categoriesSection =
+            byId(
+                "austaV107ListingCategories"
+            );
+
+
+        const video =
+            byId(
+                "austaV106VideoSection"
+            );
+
+
+        if(
+            !categoriesSection ||
+            !video
+        ){
+            return;
+        }
+
+
+        categoriesSection
+            .insertAdjacentElement(
+                "afterend",
+                video
+            );
+    }
+
+
+    /* =====================================================
+       V106 AVTOMOBİL MARKETİNİ VİDEODAN SONRA QALDIR
+       ===================================================== */
+
+    function moveHomeMarket(){
+
+        const video =
+            byId(
+                "austaV106VideoSection"
+            );
+
+
+        const market =
+            byId(
+                "austaV106HomeMarket"
+            );
+
+
+        if(!market){
+            return;
+        }
+
+
+        if(video){
+
+            video.insertAdjacentElement(
+                "afterend",
+                market
+            );
+
+            return;
+        }
+
+
+        const categoriesSection =
+            byId(
+                "austaV107ListingCategories"
+            );
+
+
+        categoriesSection
+            ?.insertAdjacentElement(
+                "afterend",
+                market
+            );
+    }
+
+
+    /* =====================================================
+       GLOBAL SEARCH → REAL V106 MARKET SEARCH
+       ===================================================== */
+
+    function setupRealV106Search(){
+
+        const input =
+            byId(
+                "globalSearch"
+            );
+
+
+        const button =
+            byId(
+                "globalSearchBtn"
+            );
+
+
+        if(
+            !input ||
+            !button
+        ){
+            return;
+        }
+
+
+        function run(){
+
+            const query =
+                String(
+                    input.value || ""
+                ).trim();
+
+
+            if(!query){
+
+                input.focus();
+
+                return;
+            }
+
+
+            /*
+             * REAL V106 PUBLIC API
+             */
+
+            if(
+                window.AUSTA_MARKET_V106 &&
+                typeof window
+                    .AUSTA_MARKET_V106
+                    .search === "function"
+            ){
+
+                window
+                    .AUSTA_MARKET_V106
+                    .search(
+                        query,
+                        1
+                    );
+
+                return;
+            }
+
+
+            console.warn(
+                "V107: AUSTA_MARKET_V106.search hazır deyil."
+            );
+        }
+
+
+        /*
+         * Property handleri yenilə.
+         */
+
+        button.onclick =
+            function(event){
+
+                event?.preventDefault();
+
+                run();
+            };
+
+
+        /*
+         * Capture mərhələsində V106
+         * axtarışını götürürük.
+         *
+         * Köhnə search handlerlərinin
+         * BMW üçün yanlış alert
+         * verməsinin qarşısını alır.
+         */
+
+        button.addEventListener(
+            "click",
+            function(event){
+
+                event.preventDefault();
+
+                event.stopImmediatePropagation();
+
+                run();
+
+            },
+            true
+        );
+
+
+        input.addEventListener(
+            "keydown",
+            function(event){
+
+                if(
+                    event.key !==
+                    "Enter"
+                ){
+                    return;
+                }
+
+
+                event.preventDefault();
+
+                event.stopImmediatePropagation();
+
+                run();
+
+            },
+            true
+        );
+    }
+
+
+    /* =====================================================
+       INIT
+       ===================================================== */
+
+    function initV107Home(){
+
+        setupFunctionsToggle();
+
+        setupListingCategories();
+
+        setupRealV106Search();
+
+
+        /*
+         * V106 async render ola bilər.
+         * Ona görə bir neçə dəfə
+         * yalnız yerləşməni yoxlayırıq.
+         */
+
+        const arrange = ()=>{
+
+            moveVideoSection();
+
+            moveHomeMarket();
+        };
+
+
+        arrange();
+
+
+        setTimeout(
+            arrange,
+            300
+        );
+
+
+        setTimeout(
+            arrange,
+            1000
+        );
+
+
+        setTimeout(
+            arrange,
+            2500
+        );
+
+
+        console.log(
+            "A-USTA V107 FINAL HOME READY"
+        );
+    }
+
+
+    if(
+        document.readyState ===
+        "loading"
+    ){
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            initV107Home,
+            {
+                once:true
+            }
+        );
+
+    }else{
+
+        initV107Home();
+    }
+
+})();
+</script>
