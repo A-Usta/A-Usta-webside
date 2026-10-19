@@ -35715,3 +35715,1624 @@ header,
 
 })();
 </script>
+
+<!-- =========================================================
+     A-USTA V108 HEADER + LANGUAGE + MARKET UI
+     ========================================================= -->
+
+<style id="austa-v108-ui-css">
+
+/* =========================================================
+   A-USTA SLOQAN
+   ========================================================= */
+
+header .tagline,
+header .subtitle,
+header .brand-subtitle,
+header [class*="tagline"],
+header [class*="slogan"]{
+    color:#159447 !important;
+    font-size:14px !important;
+    font-weight:900 !important;
+    letter-spacing:.1px;
+    white-space:nowrap;
+}
+
+
+/* =========================================================
+   HEADER BUTTONS
+   ========================================================= */
+
+#austaV108Messages,
+#austaV108Language,
+#austaV108Help{
+    min-height:38px;
+    padding:8px 11px;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+
+    border:1px solid #e2e5e9;
+    border-radius:9px;
+
+    background:#fff;
+    color:#172033;
+
+    font-size:12px;
+    font-weight:850;
+
+    cursor:pointer;
+}
+
+#austaV108Messages:hover,
+#austaV108Language:hover,
+#austaV108Help:hover{
+    border-color:#e5092f;
+}
+
+
+/* MESAJ BADGE */
+
+#austaV108Messages{
+    position:relative;
+}
+
+#austaV108MessageBadge{
+    position:absolute;
+    right:-5px;
+    top:-6px;
+
+    min-width:17px;
+    height:17px;
+
+    padding:0 4px;
+
+    display:none;
+    place-items:center;
+
+    border:2px solid #fff;
+    border-radius:999px;
+
+    background:#e5092f;
+    color:#fff;
+
+    font-size:9px;
+    font-weight:950;
+}
+
+
+/* =========================================================
+   DİL DROPDOWN
+   ========================================================= */
+
+#austaV108LanguageWrap{
+    position:relative;
+    display:inline-flex;
+}
+
+#austaV108LanguageMenu{
+    position:absolute;
+
+    top:calc(100% + 8px);
+    right:0;
+
+    width:190px;
+
+    padding:7px;
+
+    display:none;
+
+    border:1px solid #e1e5e9;
+    border-radius:12px;
+
+    background:#fff;
+
+    box-shadow:
+        0 12px 35px rgba(0,0,0,.14);
+
+    z-index:99999;
+}
+
+#austaV108LanguageMenu.open{
+    display:block;
+}
+
+.austa-v108-language-option{
+    width:100%;
+
+    padding:10px 11px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    border:0;
+    border-radius:8px;
+
+    background:transparent;
+    color:#172033;
+
+    font-size:13px;
+    font-weight:800;
+
+    cursor:pointer;
+}
+
+.austa-v108-language-option:hover{
+    background:#f4f5f6;
+}
+
+.austa-v108-language-option.active{
+    background:#eefaf2;
+    color:#159447;
+}
+
+
+/* =========================================================
+   ELAN YERLƏŞDİR — YAŞIL
+   ========================================================= */
+
+header a[href*="listing"],
+header button[id*="listing"],
+header [class*="add-listing"],
+header [data-action*="listing"]{
+    background:#159447 !important;
+    border-color:#159447 !important;
+    color:#fff !important;
+}
+
+
+/* =========================================================
+   HESAB — QIRMIZI
+   ========================================================= */
+
+#austaV108AccountStyle{
+    background:#e5092f !important;
+    border-color:#e5092f !important;
+    color:#fff !important;
+}
+
+
+/* =========================================================
+   SEARCH DÜYMƏSİ
+   ========================================================= */
+
+#globalSearchBtn{
+    min-width:88px !important;
+
+    padding-left:15px !important;
+    padding-right:15px !important;
+
+    background:#e5092f !important;
+    color:#fff !important;
+
+    font-size:13px !important;
+    font-weight:900 !important;
+}
+
+
+/* =========================================================
+   BÜTÜN FUNKSİYALARA BAX
+   V107 GÖRÜNÜŞÜNÜ SAXLA
+   ========================================================= */
+
+#austaV107FunctionsToggleWrap{
+    margin-top:0 !important;
+}
+
+
+/* =========================================================
+   ELAN KATEQORİYALARI — 7 + 6
+   ========================================================= */
+
+.austa-v107-category-grid{
+    grid-template-columns:
+        repeat(7,minmax(0,1fr)) !important;
+
+    gap:18px 14px !important;
+}
+
+.austa-v107-category{
+    width:100%;
+}
+
+.austa-v107-category-icon{
+    width:100% !important;
+    max-width:145px !important;
+    height:92px !important;
+
+    border-radius:12px !important;
+
+    overflow:hidden;
+
+    background:#f5f6f7 !important;
+
+    border:1px solid #e1e5e9 !important;
+
+    font-size:0 !important;
+}
+
+.austa-v108-category-image{
+    display:block;
+
+    width:100%;
+    height:100%;
+
+    object-fit:cover;
+
+    transition:transform .2s ease;
+}
+
+.austa-v107-category:hover
+.austa-v108-category-image{
+    transform:scale(1.04);
+}
+
+.austa-v107-category-name{
+    margin-top:7px;
+
+    font-size:12px !important;
+    font-weight:850 !important;
+}
+
+
+/* =========================================================
+   BÜTÜN ƏSAS MARKET/FUNKSİYA FONLARI AĞ
+   ========================================================= */
+
+#home,
+#austaAllFunctions,
+#austaV106VideoSection,
+#austaV106HomeMarket,
+#austaV106Market,
+[id^="austaV22Panel-"],
+[id^="austaV53List-"]{
+    background:#fff !important;
+    color:#111827 !important;
+}
+
+
+/* =========================================================
+   VIDEO KARTI
+   ========================================================= */
+
+.austa-v106-video-card{
+    background:#fff !important;
+    color:#111827 !important;
+
+    border:1px solid #e1e4e8 !important;
+
+    overflow:hidden;
+
+    height:auto !important;
+    min-height:355px;
+}
+
+.austa-v106-video-card img,
+.austa-v106-video-card video{
+    object-fit:cover;
+}
+
+
+/*
+ * Video alt məlumatı üçün.
+ */
+
+.austa-v108-video-info{
+    padding:9px 9px 10px;
+
+    background:#fff;
+
+    color:#111827;
+}
+
+.austa-v108-video-title{
+    font-size:13px;
+    font-weight:900;
+
+    line-height:1.25;
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.austa-v108-video-price{
+    margin-top:5px;
+
+    color:#e5092f;
+
+    font-size:14px;
+    font-weight:950;
+}
+
+.austa-v108-video-meta{
+    margin-top:4px;
+
+    color:#697386;
+
+    font-size:11px;
+    font-weight:700;
+}
+
+
+/* =========================================================
+   LIKE / COMMENT / SAVE / SHARE
+   ========================================================= */
+
+.austa-v106-video-actions{
+    z-index:20 !important;
+}
+
+.austa-v106-video-action{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+
+    width:34px !important;
+    height:34px !important;
+
+    border-radius:50% !important;
+
+    background:rgba(20,20,20,.72) !important;
+    color:#fff !important;
+
+    backdrop-filter:blur(4px);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media(max-width:1100px){
+
+    .austa-v107-category-grid{
+        grid-template-columns:
+            repeat(5,minmax(0,1fr)) !important;
+    }
+
+}
+
+
+@media(max-width:760px){
+
+    .austa-v107-category-grid{
+        grid-template-columns:
+            repeat(3,minmax(0,1fr)) !important;
+    }
+
+    .austa-v107-category-icon{
+        height:80px !important;
+    }
+
+}
+
+
+@media(max-width:430px){
+
+    .austa-v107-category-grid{
+        grid-template-columns:
+            repeat(2,minmax(0,1fr)) !important;
+    }
+
+}
+
+</style>
+
+
+<script id="austa-v108-ui-js">
+(function(){
+    "use strict";
+
+
+    /* =====================================================
+       HELPERS
+       ===================================================== */
+
+    const $ =
+        selector=>
+            document.querySelector(
+                selector
+            );
+
+
+    const $$ =
+        selector=>
+            [
+                ...document.querySelectorAll(
+                    selector
+                )
+            ];
+
+
+    /* =====================================================
+       SEARCH BUTTON TEXT
+       ===================================================== */
+
+    function setupSearchButton(){
+
+        const button =
+            document.getElementById(
+                "globalSearchBtn"
+            );
+
+
+        if(!button){
+            return;
+        }
+
+
+        /*
+         * Click funksiyasına toxunmuruq.
+         * Yalnız görünən mətni dəyişirik.
+         */
+
+        button.textContent =
+            "Axtarış";
+    }
+
+
+    /* =====================================================
+       SLOQAN
+       ===================================================== */
+
+    function setupSlogan(){
+
+        const candidates =
+            $$(
+                "header span," +
+                "header small," +
+                "header div"
+            );
+
+
+        const slogan =
+            candidates.find(
+                element=>
+                    String(
+                        element.textContent || ""
+                    )
+                    .trim()
+                    .toLocaleLowerCase("az")
+                    .includes(
+                        "bütün avtomobil xidmətləri bir platformada"
+                    )
+            );
+
+
+        if(!slogan){
+            return;
+        }
+
+
+        slogan.style.color =
+            "#159447";
+
+        slogan.style.fontWeight =
+            "900";
+
+        slogan.style.fontSize =
+            "14px";
+
+        slogan.style.letterSpacing =
+            ".1px";
+    }
+
+
+    /* =====================================================
+       HEADER ACTION AREA TAP
+       ===================================================== */
+
+    function findAccount(){
+
+        return $$(
+            "header button," +
+            "header a"
+        ).find(
+            element=>
+                /hesab/i.test(
+                    element.textContent || ""
+                )
+        );
+    }
+
+
+    function findAddListing(){
+
+        return $$(
+            "header button," +
+            "header a"
+        ).find(
+            element=>
+                /elan yerləşdir/i.test(
+                    element.textContent || ""
+                )
+        );
+    }
+
+
+    function createHeaderActions(){
+
+        if(
+            document.getElementById(
+                "austaV108HeaderActions"
+            )
+        ){
+            return;
+        }
+
+
+        const account =
+            findAccount();
+
+
+        const addListing =
+            findAddListing();
+
+
+        if(!account){
+            console.warn(
+                "V108: Hesab düyməsi tapılmadı."
+            );
+
+            return;
+        }
+
+
+        /*
+         * Mövcud Hesab düyməsini
+         * olduğu yerdə saxlayırıq.
+         */
+
+        account.id =
+            "austaV108AccountStyle";
+
+
+        if(addListing){
+
+            addListing.style.background =
+                "#159447";
+
+            addListing.style.borderColor =
+                "#159447";
+
+            addListing.style.color =
+                "#fff";
+        }
+
+
+        const actions =
+            document.createElement(
+                "div"
+            );
+
+
+        actions.id =
+            "austaV108HeaderActions";
+
+
+        actions.style.display =
+            "inline-flex";
+
+        actions.style.alignItems =
+            "center";
+
+        actions.style.gap =
+            "6px";
+
+
+        actions.innerHTML = `
+
+            <button
+                id="austaV108Messages"
+                type="button"
+                title="Mesajlar"
+            >
+                💬
+                <span>
+                    Mesajlar
+                </span>
+
+                <span
+                    id="austaV108MessageBadge"
+                >
+                    0
+                </span>
+            </button>
+
+
+            <div
+                id="austaV108LanguageWrap"
+            >
+
+                <button
+                    id="austaV108Language"
+                    type="button"
+                    aria-expanded="false"
+                >
+                    🌐
+                    <span
+                        id="austaV108CurrentLanguage"
+                    >
+                        AZ
+                    </span>
+
+                    ▾
+                </button>
+
+
+                <div
+                    id="austaV108LanguageMenu"
+                >
+
+                    <button
+                        class="austa-v108-language-option"
+                        type="button"
+                        data-austa-language="az"
+                    >
+                        <span>
+                            🇦🇿 Azərbaycan
+                        </span>
+
+                        <strong>
+                            AZ
+                        </strong>
+                    </button>
+
+
+                    <button
+                        class="austa-v108-language-option"
+                        type="button"
+                        data-austa-language="ru"
+                    >
+                        <span>
+                            🇷🇺 Русский
+                        </span>
+
+                        <strong>
+                            RU
+                        </strong>
+                    </button>
+
+
+                    <button
+                        class="austa-v108-language-option"
+                        type="button"
+                        data-austa-language="en"
+                    >
+                        <span>
+                            🇬🇧 English
+                        </span>
+
+                        <strong>
+                            EN
+                        </strong>
+                    </button>
+
+
+                    <button
+                        class="austa-v108-language-option"
+                        type="button"
+                        data-austa-language="ar"
+                    >
+                        <span>
+                            🇸🇦 العربية
+                        </span>
+
+                        <strong>
+                            AR
+                        </strong>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <button
+                id="austaV108Help"
+                type="button"
+                title="Kömək"
+            >
+                ❔
+                <span>
+                    Kömək
+                </span>
+            </button>
+        `;
+
+
+        /*
+         * İstənilən sıra:
+         *
+         * ... səbət
+         * Mesajlar
+         * Dil
+         * Kömək
+         * Elan yerləşdir
+         * Hesab
+         *
+         * Ona görə actions blokunu
+         * Elan yerləşdir düyməsindən
+         * qabağa salırıq.
+         */
+
+        if(addListing){
+
+            addListing.parentNode
+                .insertBefore(
+                    actions,
+                    addListing
+                );
+
+        }else{
+
+            account.parentNode
+                .insertBefore(
+                    actions,
+                    account
+                );
+        }
+
+
+        setupLanguageMenu();
+
+        setupMessages();
+
+        setupHelp();
+    }
+
+
+    /* =====================================================
+       LANGUAGE SYSTEM
+       ===================================================== */
+
+    const languageNames = {
+
+        az:"AZ",
+
+        ru:"RU",
+
+        en:"EN",
+
+        ar:"AR"
+    };
+
+
+    function currentLanguage(){
+
+        return (
+            localStorage.getItem(
+                "austa_language"
+            ) ||
+            "az"
+        );
+    }
+
+
+    function applyLanguage(
+        language
+    ){
+
+        if(
+            !languageNames[
+                language
+            ]
+        ){
+            language =
+                "az";
+        }
+
+
+        localStorage.setItem(
+            "austa_language",
+            language
+        );
+
+
+        document.documentElement.lang =
+            language;
+
+
+        /*
+         * Ərəb dili üçün RTL.
+         */
+
+        document.documentElement.dir =
+            language === "ar"
+                ? "rtl"
+                : "ltr";
+
+
+        const label =
+            document.getElementById(
+                "austaV108CurrentLanguage"
+            );
+
+
+        if(label){
+
+            label.textContent =
+                languageNames[
+                    language
+                ];
+        }
+
+
+        $$(
+            ".austa-v108-language-option"
+        ).forEach(
+            button=>{
+
+                button.classList.toggle(
+                    "active",
+                    button.dataset
+                        .austaLanguage ===
+                        language
+                );
+            }
+        );
+
+
+        /*
+         * V108-də dil sistemi hazırdır.
+         *
+         * Mövcud böyük service formalarını
+         * avtomatik dəyişmirik.
+         * Sonrakı mərhələdə bütün mətnlər
+         * translation map-a bağlanacaq.
+         */
+
+        window.dispatchEvent(
+            new CustomEvent(
+                "austa:language-change",
+                {
+                    detail:{
+                        language
+                    }
+                }
+            )
+        );
+    }
+
+
+    function setupLanguageMenu(){
+
+        const button =
+            document.getElementById(
+                "austaV108Language"
+            );
+
+
+        const menu =
+            document.getElementById(
+                "austaV108LanguageMenu"
+            );
+
+
+        if(
+            !button ||
+            !menu
+        ){
+            return;
+        }
+
+
+        applyLanguage(
+            currentLanguage()
+        );
+
+
+        button.addEventListener(
+            "click",
+            event=>{
+
+                event.stopPropagation();
+
+
+                const open =
+                    menu.classList.toggle(
+                        "open"
+                    );
+
+
+                button.setAttribute(
+                    "aria-expanded",
+                    String(open)
+                );
+            }
+        );
+
+
+        menu.addEventListener(
+            "click",
+            event=>{
+
+                const option =
+                    event.target.closest(
+                        "[data-austa-language]"
+                    );
+
+
+                if(!option){
+                    return;
+                }
+
+
+                applyLanguage(
+                    option.dataset
+                        .austaLanguage
+                );
+
+
+                menu.classList.remove(
+                    "open"
+                );
+
+
+                button.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+            }
+        );
+
+
+        document.addEventListener(
+            "click",
+            event=>{
+
+                if(
+                    event.target.closest(
+                        "#austaV108LanguageWrap"
+                    )
+                ){
+                    return;
+                }
+
+
+                menu.classList.remove(
+                    "open"
+                );
+
+
+                button.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+            }
+        );
+    }
+
+
+    /* =====================================================
+       MESAJLAR
+       ===================================================== */
+
+    function setupMessages(){
+
+        const button =
+            document.getElementById(
+                "austaV108Messages"
+            );
+
+
+        if(!button){
+            return;
+        }
+
+
+        button.addEventListener(
+            "click",
+            ()=>{
+
+                /*
+                 * Əgər mövcud mesaj sistemi
+                 * varsa onu aç.
+                 */
+
+                if(
+                    window.AUSTA_MESSAGES &&
+                    typeof window
+                        .AUSTA_MESSAGES
+                        .open === "function"
+                ){
+
+                    window
+                        .AUSTA_MESSAGES
+                        .open();
+
+                    return;
+                }
+
+
+                /*
+                 * Mövcud DOM panelini tap.
+                 */
+
+                const existing =
+                    document.querySelector(
+                        "#messages," +
+                        "#messagesPanel," +
+                        "[data-panel='messages']"
+                    );
+
+
+                if(existing){
+
+                    existing.scrollIntoView({
+                        behavior:"smooth",
+                        block:"start"
+                    });
+
+                    return;
+                }
+
+
+                console.log(
+                    "A-USTA Mesajlar modulu üçün header girişi hazırdır."
+                );
+            }
+        );
+    }
+
+
+    /* =====================================================
+       KÖMƏK
+       ===================================================== */
+
+    function setupHelp(){
+
+        const button =
+            document.getElementById(
+                "austaV108Help"
+            );
+
+
+        if(!button){
+            return;
+        }
+
+
+        button.addEventListener(
+            "click",
+            ()=>{
+
+                /*
+                 * Mövcud yardım düyməsi/paneli
+                 * varsa ona ötür.
+                 */
+
+                const existing =
+                    $$(
+                        "button,a"
+                    ).find(
+                        element=>
+                            element !== button &&
+                            /kömək|yardım|faq/i.test(
+                                element.textContent || ""
+                            )
+                    );
+
+
+                if(existing){
+
+                    existing.click();
+
+                    return;
+                }
+
+
+                const footer =
+                    document.querySelector(
+                        "footer"
+                    );
+
+
+                footer?.scrollIntoView({
+                    behavior:"smooth",
+                    block:"start"
+                });
+            }
+        );
+    }
+
+
+    /* =====================================================
+       13 KATEQORİYA
+       7 + 6
+       ===================================================== */
+
+    const finalCategories = [
+
+        {
+            key:"cars",
+            title:"Avtomobillər",
+            query:
+                "modern car isolated white background"
+        },
+
+        {
+            key:"rent",
+            title:"Rent a Car",
+            query:
+                "white rental car isolated"
+        },
+
+        {
+            key:"parts",
+            title:"Ehtiyat hissələri",
+            query:
+                "car brake disc auto parts"
+        },
+
+        {
+            key:"accessories",
+            title:"Aksesuarlar",
+            query:
+                "car alloy wheel tire"
+        },
+
+        {
+            key:"moto",
+            title:"Moto / Moped",
+            query:
+                "motorcycle isolated"
+        },
+
+        {
+            key:"special",
+            title:"Xüsusi texnika",
+            query:
+                "construction excavator isolated"
+        },
+
+        {
+            key:"bus",
+            title:"Avtobuslar",
+            query:
+                "passenger bus isolated"
+        },
+
+        {
+            key:"water",
+            title:"Su nəqliyyatı",
+            query:
+                "motor yacht boat"
+        },
+
+        {
+            key:"caravan",
+            title:"Karavanlar",
+            query:
+                "camper caravan motorhome"
+        },
+
+        {
+            key:"trailer",
+            title:"Qoşqu / Treyler",
+            query:
+                "cargo trailer truck"
+        },
+
+        {
+            key:"plate",
+            title:"Qeydiyyat nömrələri",
+            query:
+                "car license plate"
+        },
+
+        {
+            key:"service",
+            title:"Avtoservislər",
+            query:
+                "modern auto repair service garage"
+        },
+
+        {
+            key:"mechanic",
+            title:"Usta profilləri",
+            query:
+                "auto mechanic repairing car"
+        }
+
+    ];
+
+
+    /*
+     * Emoji-ni çıxarırıq.
+     *
+     * Hələlik real elan/media şəkli varsa
+     * ondan istifadə etməyə çalışırıq.
+     * Yoxdursa neytral placeholder.
+     *
+     * Xarici random URL yazmırıq.
+     */
+
+    function findExistingImage(
+        key
+    ){
+
+        const selectors = [
+
+            '[data-category="' +
+                key +
+                '"] img',
+
+            '[data-v22-cat="' +
+                key +
+                '"] img',
+
+            '#austaV22Panel-' +
+                key +
+                ' img',
+
+            '[data-austa-category="' +
+                key +
+                '"] img'
+
+        ];
+
+
+        for(
+            const selector
+            of selectors
+        ){
+
+            const image =
+                document.querySelector(
+                    selector
+                );
+
+
+            if(
+                image?.src
+            ){
+                return image.src;
+            }
+        }
+
+
+        return "";
+    }
+
+
+    function categoryPlaceholder(
+        title
+    ){
+
+        return (
+            "data:image/svg+xml;charset=UTF-8," +
+            encodeURIComponent(
+                `
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="320"
+                    height="200"
+                    viewBox="0 0 320 200"
+                >
+                    <rect
+                        width="320"
+                        height="200"
+                        fill="#f1f3f5"
+                    />
+
+                    <text
+                        x="160"
+                        y="102"
+                        text-anchor="middle"
+                        dominant-baseline="middle"
+                        font-family="Arial,sans-serif"
+                        font-size="18"
+                        font-weight="700"
+                        fill="#5f6874"
+                    >
+                        ${
+                            String(title)
+                                .replaceAll(
+                                    "&",
+                                    "&amp;"
+                                )
+                        }
+                    </text>
+                </svg>
+                `
+            )
+        );
+    }
+
+
+    function rebuildCategories(){
+
+        const grid =
+            document.querySelector(
+                ".austa-v107-category-grid"
+            );
+
+
+        if(!grid){
+            return;
+        }
+
+
+        grid.innerHTML =
+            finalCategories
+            .map(
+                item=>{
+
+                    const src =
+                        findExistingImage(
+                            item.key
+                        ) ||
+                        categoryPlaceholder(
+                            item.title
+                        );
+
+
+                    return `
+                        <button
+                            class="austa-v107-category"
+                            type="button"
+                            data-austa-v107-category="${item.key}"
+                        >
+
+                            <span
+                                class="austa-v107-category-icon"
+                            >
+
+                                <img
+                                    class="austa-v108-category-image"
+                                    src="${src}"
+                                    alt="${item.title}"
+                                    loading="lazy"
+                                >
+
+                            </span>
+
+                            <span
+                                class="austa-v107-category-name"
+                            >
+                                ${item.title}
+                            </span>
+
+                        </button>
+                    `;
+                }
+            )
+            .join("");
+    }
+
+
+    /* =====================================================
+       VIDEO MƏLUMATI
+       ===================================================== */
+
+    function enhanceVideoCards(){
+
+        const cards =
+            $$(
+                ".austa-v106-video-card"
+            );
+
+
+        cards.forEach(
+            card=>{
+
+                if(
+                    card.querySelector(
+                        ".austa-v108-video-info"
+                    )
+                ){
+                    return;
+                }
+
+
+                /*
+                 * Mövcud listing ID saxlanılır.
+                 */
+
+                const listingId =
+                    card.dataset
+                        .austaV106ListingId ||
+
+                    card.dataset
+                        .austaListingId ||
+
+                    card.dataset
+                        .listingId;
+
+
+                /*
+                 * Əvvəl kartın öz mövcud
+                 * məlumatlarından oxuyuruq.
+                 */
+
+                const oldText =
+                    String(
+                        card.innerText || ""
+                    ).trim();
+
+
+                const title =
+                    card.dataset.title ||
+                    card.dataset.name ||
+                    "A-USTA elan";
+
+
+                const price =
+                    card.dataset.price ||
+                    "";
+
+
+                const year =
+                    card.dataset.year ||
+                    "";
+
+
+                const brand =
+                    card.dataset.brand ||
+                    "";
+
+
+                const model =
+                    card.dataset.model ||
+                    "";
+
+
+                const info =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                info.className =
+                    "austa-v108-video-info";
+
+
+                info.innerHTML = `
+
+                    <div
+                        class="austa-v108-video-title"
+                    >
+                        ${
+                            brand ||
+                            model
+                                ? [
+                                    brand,
+                                    model
+                                  ]
+                                  .filter(Boolean)
+                                  .join(" ")
+                                : title
+                        }
+                    </div>
+
+
+                    ${
+                        price
+                            ? `
+                                <div
+                                    class="austa-v108-video-price"
+                                >
+                                    ${price}
+                                </div>
+                              `
+                            : ""
+                    }
+
+
+                    <div
+                        class="austa-v108-video-meta"
+                    >
+                        ${
+                            [
+                                year,
+                                brand,
+                                model
+                            ]
+                            .filter(Boolean)
+                            .join(" • ") ||
+                            oldText
+                                .split("\n")
+                                .slice(0,1)
+                                .join("")
+                        }
+                    </div>
+
+                `;
+
+
+                card.appendChild(
+                    info
+                );
+
+
+                if(listingId){
+
+                    info.dataset
+                        .austaListingId =
+                        listingId;
+                }
+            }
+        );
+    }
+
+
+    /* =====================================================
+       INIT
+       ===================================================== */
+
+    function initV108(){
+
+        setupSearchButton();
+
+        setupSlogan();
+
+        createHeaderActions();
+
+        rebuildCategories();
+
+        enhanceVideoCards();
+
+
+        /*
+         * V106 video feed sonradan
+         * yenilənə bilər.
+         */
+
+        const observer =
+            new MutationObserver(
+                ()=>{
+
+                    enhanceVideoCards();
+                }
+            );
+
+
+        const videoSection =
+            document.getElementById(
+                "austaV106VideoSection"
+            );
+
+
+        if(videoSection){
+
+            observer.observe(
+                videoSection,
+                {
+                    childList:true,
+                    subtree:true
+                }
+            );
+        }
+
+
+        console.log(
+            "A-USTA V108 HEADER / LANGUAGE / MARKET UI READY"
+        );
+    }
+
+
+    if(
+        document.readyState ===
+        "loading"
+    ){
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            initV108,
+            {
+                once:true
+            }
+        );
+
+    }else{
+
+        initV108();
+    }
+
+})();
+</script>
