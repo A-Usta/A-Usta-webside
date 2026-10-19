@@ -29576,6 +29576,573 @@ async function hydrateCardImages(root){
   }
 }
 
+  /*
+ * =========================================================
+ * A-USTA ÜMUMİ ELAN AXTARIŞI
+ *
+ * - bütün elan kateqoriyaları
+ * - Premium → VIP → İrəli çək → yeni
+ * - 40 elan / səhifə
+ * - ‹ 1 2 3 … › pagination
+ * =========================================================
+ */
+
+let searchCurrentQuery = '';
+let searchCurrentPage = 1;
+
+
+function listingSearchText(item){
+
+  const values = [
+    item?.title,
+    item?.name,
+    item?.category,
+    item?.type,
+
+    item?.['Marka'],
+    item?.['Model'],
+    item?.['Buraxılış ili'],
+    item?.['Ban tipi'],
+    item?.['Yanacaq'],
+    item?.['Sürətlər qutusu'],
+    item?.['Vəziyyət'],
+    item?.['Elan statusu'],
+    item?.['Region / ünvan'],
+    item?.['Avtomobil haqqında əlavə məlumat'],
+
+    item?.brand,
+    item?.model,
+    item?.year,
+    item?.region,
+    item?.location,
+    item?.description
+  ];
+
+
+  return normalize(
+    values
+      .filter(
+        value =>
+          value !== undefined &&
+          value !== null
+      )
+      .join(' ')
+  );
+}
+
+
+function searchedListings(query){
+
+  const clean =
+    normalize(query).trim();
+
+
+  if(!clean){
+    return [];
+  }
+
+
+  const words =
+    clean
+      .split(/\s+/)
+      .filter(Boolean);
+
+
+  return sortListings(
+    getListings().filter(
+      item=>{
+
+        const text =
+          listingSearchText(item);
+
+
+        return words.every(
+          word =>
+            text.includes(word)
+        );
+      }
+    )
+  );
+}
+
+
+function getSearchResultsHost(){
+
+  let host =
+    document.getElementById(
+      'austaV106SearchResults'
+    );
+
+
+  if(host){
+    return host;
+  }
+
+
+  host =
+    document.createElement(
+      'section'
+    );
+
+
+  host.id =
+    'austaV106SearchResults';
+
+
+  host.className =
+    'austa-v106-search-results';
+
+
+  host.style.display =
+    'none';
+
+
+  const searchElement =
+    document.getElementById(
+      'globalSearch'
+    );
+
+
+  const searchArea =
+    searchElement?.closest(
+      'section,header,.container,.search-wrap,.search-box'
+    );
+
+
+  if(searchArea){
+
+    searchArea.insertAdjacentElement(
+      'afterend',
+      host
+    );
+
+  }else{
+
+    const homeMarket =
+      document.getElementById(
+        'austaV106HomeMarket'
+      );
+
+
+    if(homeMarket){
+
+      homeMarket.insertAdjacentElement(
+        'beforebegin',
+        host
+      );
+
+    }else{
+
+      document.body.appendChild(
+        host
+      );
+    }
+  }
+
+
+  return host;
+}
+
+
+function searchPaginationHtml(
+  page,
+  totalPages
+){
+
+  if(totalPages <= 1){
+    return '';
+  }
+
+
+  const numbers = [];
+
+
+  for(
+    let number = 1;
+    number <= totalPages;
+    number++
+  ){
+
+    if(
+      number === 1 ||
+      number === totalPages ||
+      Math.abs(
+        number - page
+      ) <= 2
+    ){
+
+      numbers.push(number);
+    }
+  }
+
+
+  let previous = 0;
+  let buttons = '';
+
+
+  numbers.forEach(
+    number=>{
+
+      if(
+        previous &&
+        number - previous > 1
+      ){
+
+        buttons += `
+          <span
+            style="
+              color:#7890a2;
+              padding:0 2px;
+            "
+          >
+            …
+          </span>
+        `;
+      }
+
+
+      buttons += `
+        <button
+          type="button"
+          data-austa-search-page="${number}"
+          class="${
+            number === page
+              ? 'active'
+              : ''
+          }"
+        >
+          ${number}
+        </button>
+      `;
+
+
+      previous =
+        number;
+    }
+  );
+
+
+  return `
+    <nav
+      class="austa-v106-pagination"
+      data-austa-search-pagination
+      aria-label="Axtarış nəticələri səhifələri"
+    >
+
+      <button
+        type="button"
+        data-austa-search-prev
+        ${
+          page <= 1
+            ? 'disabled'
+            : ''
+        }
+      >
+        ‹
+      </button>
+
+      ${buttons}
+
+      <button
+        type="button"
+        data-austa-search-next
+        ${
+          page >= totalPages
+            ? 'disabled'
+            : ''
+        }
+      >
+        ›
+      </button>
+
+    </nav>
+  `;
+}
+
+
+async function renderSearchResults(
+  query,
+  page = 1
+){
+
+  const clean =
+    String(
+      query || ''
+    ).trim();
+
+
+  const host =
+    getSearchResultsHost();
+
+
+  if(!host){
+    return;
+  }
+
+
+  if(!clean){
+
+    searchCurrentQuery = '';
+    searchCurrentPage = 1;
+
+    host.innerHTML = '';
+    host.style.display = 'none';
+
+    return;
+  }
+
+
+  searchCurrentQuery =
+    clean;
+
+
+  const items =
+    searchedListings(clean);
+
+
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        items.length /
+        PAGE_SIZE
+      )
+    );
+
+
+  searchCurrentPage =
+    Math.max(
+      1,
+      Math.min(
+        Number(page) || 1,
+        totalPages
+      )
+    );
+
+
+  host.style.display =
+    'block';
+
+
+  if(!items.length){
+
+    host.innerHTML = `
+      <section class="austa-v106-section">
+
+        <div class="austa-v106-section-head">
+
+          <h2 class="austa-v106-section-title">
+            Axtarış nəticələri
+          </h2>
+
+          <span class="austa-v106-section-count">
+            0 elan
+          </span>
+
+        </div>
+
+        <div class="austa-v106-empty">
+          “${escapeHtml(clean)}” üçün elan tapılmadı.
+        </div>
+
+      </section>
+    `;
+
+    return;
+  }
+
+
+  const start =
+    (
+      searchCurrentPage - 1
+    ) * PAGE_SIZE;
+
+
+  const visible =
+    items.slice(
+      start,
+      start + PAGE_SIZE
+    );
+
+
+  const groups = {
+    premium:[],
+    vip:[],
+    boost:[],
+    normal:[]
+  };
+
+
+  visible.forEach(
+    item=>{
+
+      groups[
+        groupOf(item)
+      ].push(item);
+    }
+  );
+
+
+  host.innerHTML = `
+
+    <div class="austa-v106-section-head">
+
+      <h2 class="austa-v106-section-title">
+        Axtarış nəticələri:
+        “${escapeHtml(clean)}”
+      </h2>
+
+      <span class="austa-v106-section-count">
+        ${items.length} elan
+      </span>
+
+    </div>
+
+    ${
+      sectionHtml(
+        'premium',
+        groups.premium,
+        'search'
+      )
+    }
+
+    ${
+      sectionHtml(
+        'vip',
+        groups.vip,
+        'search'
+      )
+    }
+
+    ${
+      sectionHtml(
+        'boost',
+        groups.boost,
+        'search'
+      )
+    }
+
+    ${
+      sectionHtml(
+        'normal',
+        groups.normal,
+        'search'
+      )
+    }
+
+    ${
+      searchPaginationHtml(
+        searchCurrentPage,
+        totalPages
+      )
+    }
+  `;
+
+
+  await hydrateCardImages(
+    host
+  );
+
+
+  host.scrollIntoView({
+    behavior:'smooth',
+    block:'start'
+  });
+}
+
+
+/*
+ * =========================================================
+ * SEARCH PAGINATION
+ * =========================================================
+ */
+
+document.addEventListener(
+  'click',
+  event=>{
+
+    const pagination =
+      event.target.closest(
+        '[data-austa-search-pagination]'
+      );
+
+
+    if(!pagination){
+      return;
+    }
+
+
+    const items =
+      searchedListings(
+        searchCurrentQuery
+      );
+
+
+    const totalPages =
+      Math.max(
+        1,
+        Math.ceil(
+          items.length /
+          PAGE_SIZE
+        )
+      );
+
+
+    let page =
+      searchCurrentPage;
+
+
+    const direct =
+      event.target.closest(
+        '[data-austa-search-page]'
+      );
+
+
+    if(direct){
+
+      page =
+        Number(
+          direct.dataset
+            .austaSearchPage
+        ) || 1;
+    }
+
+
+    if(
+      event.target.closest(
+        '[data-austa-search-prev]'
+      )
+    ){
+
+      page =
+        Math.max(
+          1,
+          page - 1
+        );
+    }
+
+
+    if(
+      event.target.closest(
+        '[data-austa-search-next]'
+      )
+    ){
+
+      page =
+        Math.min(
+          totalPages,
+          page + 1
+        );
+    }
+
+
+    renderSearchResults(
+      searchCurrentQuery,
+      page
+    );
+
+  }
+);
 
 /*
  * =========================================================
@@ -33730,5 +34297,82 @@ window.AUSTA_MARKET_V106 = {
  * =========================================================
  */
 
+})();
+</script>
+
+<script id="austa-v106-global-search-bridge">
+(function () {
+    "use strict";
+
+    const search = document.getElementById("globalSearch");
+    const searchBtn = document.getElementById("globalSearchBtn");
+
+    if (!search || !searchBtn) {
+        console.warn("V106 SEARCH BRIDGE: globalSearch/globalSearchBtn tapılmadı.");
+        return;
+    }
+
+    function runV106GlobalSearch() {
+        const query = (search.value || "").trim();
+
+        if (!query) {
+            search.focus();
+            return;
+        }
+
+        /*
+         * V106 axtarışına ötürürük.
+         * Mövcud köhnə service-card koduna toxunmuruq.
+         */
+
+        if (
+            window.AUSTA_V106_SEARCH &&
+            typeof window.AUSTA_V106_SEARCH.search === "function"
+        ) {
+            window.AUSTA_V106_SEARCH.search(query);
+            return;
+        }
+
+        if (
+            window.AUSTA_SEARCH_CORE &&
+            typeof window.AUSTA_SEARCH_CORE.search === "function"
+        ) {
+            window.AUSTA_SEARCH_CORE.search(query);
+            return;
+        }
+
+        /*
+         * V106 custom event dinləyirsə,
+         * sorğunu event kimi də göndəririk.
+         */
+        window.dispatchEvent(
+            new CustomEvent("austa:v106:search", {
+                detail: {
+                    query: query
+                }
+            })
+        );
+
+        console.log("V106 GLOBAL SEARCH:", query);
+    }
+
+    /*
+     * Köhnə onclick-i dəyişirik,
+     * amma yuxarıdakı kodu fiziki olaraq silmirik.
+     * Bu kod aşağıda olduğu üçün son idarəni V106 götürür.
+     */
+    searchBtn.onclick = runV106GlobalSearch;
+
+    /*
+     * ENTER ilə də axtarış.
+     */
+    search.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            runV106GlobalSearch();
+        }
+    });
+
+    console.log("A-USTA V106 GLOBAL SEARCH BRIDGE READY");
 })();
 </script>
