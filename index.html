@@ -29710,6 +29710,302 @@ function sectionHtml(
   `;
 }
 
+  /*
+ * =========================================================
+ * ANA SƏHİFƏ — YALNIZ AVTOMOBİL
+ * SONSUZ SCROLL — 40 + 40 + 40...
+ * =========================================================
+ */
+
+let homeCarsVisibleCount =
+  HOME_LOAD_SIZE;
+
+let homeCarsLoading =
+  false;
+
+let homeCarsScrollBound =
+  false;
+
+
+function getHomeMarket(){
+
+  let market =
+    document.getElementById(
+      'austaV106HomeMarket'
+    );
+
+
+  if(market){
+    return market;
+  }
+
+
+  market =
+    document.createElement('section');
+
+
+  market.id =
+    'austaV106HomeMarket';
+
+
+  market.className =
+    'austa-v106-home-market';
+
+
+  /*
+   * Ana səhifədə mövcud elan/video
+   * sahəsinə yaxın yerləşdir.
+   */
+  const anchor =
+    document.getElementById(
+      'austaV22VideoGrid'
+    ) ||
+    document.getElementById(
+      'austaMarketFeed'
+    ) ||
+    document.getElementById(
+      'austaV22Tabs'
+    );
+
+
+  if(anchor){
+
+    anchor.insertAdjacentElement(
+      'afterend',
+      market
+    );
+
+  }else{
+
+    document.body.appendChild(
+      market
+    );
+  }
+
+
+  return market;
+}
+
+
+function homeCars(){
+
+  return sortListings(
+    getListings().filter(
+      item =>
+        categoryOf(item) ===
+        'cars'
+    )
+  );
+}
+
+
+async function renderHomeCars(
+  reset = false
+){
+
+  if(homeCarsLoading){
+    return;
+  }
+
+
+  homeCarsLoading =
+    true;
+
+
+  try{
+
+    if(reset){
+
+      homeCarsVisibleCount =
+        HOME_LOAD_SIZE;
+    }
+
+
+    const market =
+      getHomeMarket();
+
+
+    if(!market){
+      return;
+    }
+
+
+    const items =
+      homeCars();
+
+
+    if(!items.length){
+
+      market.innerHTML = `
+        <div class="austa-v106-empty">
+          Hələ avtomobil elanı yoxdur.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    const visible =
+      items.slice(
+        0,
+        homeCarsVisibleCount
+      );
+
+
+    const groups = {
+      premium:[],
+      vip:[],
+      boost:[],
+      normal:[]
+    };
+
+
+    visible.forEach(
+      item=>{
+
+        groups[
+          groupOf(item)
+        ].push(item);
+      }
+    );
+
+
+    market.innerHTML = `
+
+      ${
+        sectionHtml(
+          'premium',
+          groups.premium,
+          'cars'
+        )
+      }
+
+      ${
+        sectionHtml(
+          'vip',
+          groups.vip,
+          'cars'
+        )
+      }
+
+      ${
+        sectionHtml(
+          'boost',
+          groups.boost,
+          'cars'
+        )
+      }
+
+      ${
+        sectionHtml(
+          'normal',
+          groups.normal,
+          'cars'
+        )
+      }
+
+      ${
+        visible.length < items.length
+          ? `
+              <div
+                id="austaV106HomeLoader"
+                class="austa-v106-home-loader"
+                style="
+                  text-align:center;
+                  padding:20px;
+                "
+              >
+                Daha çox avtomobil yüklənir...
+              </div>
+            `
+          : ''
+      }
+    `;
+
+
+    await hydrateCardImages(
+      market
+    );
+
+
+    bindHomeCarsInfiniteScroll();
+
+  }finally{
+
+    homeCarsLoading =
+      false;
+  }
+}
+
+
+function bindHomeCarsInfiniteScroll(){
+
+  if(homeCarsScrollBound){
+    return;
+  }
+
+
+  homeCarsScrollBound =
+    true;
+
+
+  window.addEventListener(
+    'scroll',
+    ()=>{
+
+      const market =
+        document.getElementById(
+          'austaV106HomeMarket'
+        );
+
+
+      if(
+        !market ||
+        homeCarsLoading
+      ){
+        return;
+      }
+
+
+      const items =
+        homeCars();
+
+
+      if(
+        homeCarsVisibleCount >=
+        items.length
+      ){
+        return;
+      }
+
+
+      const rect =
+        market.getBoundingClientRect();
+
+
+      /*
+       * Marketin sonuna təxminən
+       * 800px qalmış növbəti 40-ı yüklə.
+       */
+      if(
+        rect.bottom <=
+        window.innerHeight + 800
+      ){
+
+        homeCarsVisibleCount +=
+          HOME_LOAD_SIZE;
+
+
+        renderHomeCars(false);
+      }
+
+    },
+    {
+      passive:true
+    }
+  );
+}
 
 /*
  * =========================================================
