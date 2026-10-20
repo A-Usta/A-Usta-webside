@@ -207,14 +207,211 @@
  </style> 
 </head>
 <body>
-<header class="site-header">
-<div class="header-top">
-<a class="brand" href="#home"><span class="brand-logo brand-logo-full">A-USTA</span><span class="brand-text"><strong>A-USTA</strong><small>Bütün avtomobil xidmətləri bir platformada</small></span></a>
-<div class="location-picker" id="locationPicker"><button aria-expanded="false" class="location-selector" id="locationSelector" type="button">📍 <span id="selectedLocation">Bakı</span>⌄</button><div class="location-menu" hidden="" id="locationMenu"><b>📍 Məkanınızı seçin</b><input autocomplete="off" class="location-search" id="locationSearch" placeholder="Şəhər və ya rayon axtar..." type="search"/><button class="location-gps-button" id="locationGpsButton" type="button">📍 Mənim yerimi müəyyən et</button><div class="location-list" id="locationList"></div></div></div>
-<div class="global-search"><input id="globalSearch" placeholder="Xidmət, usta, marka və ya kateqoriya axtar..." type="search"/><button id="globalSearchBtn" type="button">⌕</button><div class="austa-search-panel" id="austaSearchPanel"></div></div>
-<span class="header-icon">♧<i class="badge">3</i></span><span class="header-icon">♡</span><span class="header-icon">▤<i class="badge">2</i></span><span class="header-icon">🛒</span><a class="account-link" href="#account" id="headerAccountLink">👤 Hesab⌄</a>
-</div>
-<nav class="main-navigation"><a class="active" href="#home">⌂ Əsas səhifə</a><a href="#austaAllFunctions">⚡ Bütün funksiyalar</a><a href="#austaAllFunctions">♙ Usta çağırışı</a><a href="#austaAllFunctions">⚙ Ehtiyat hissələri</a><a href="#austaAllFunctions">🚗 Avtomobil bazarı</a><a href="#austaAllFunctions">🚚 Logistika</a><a href="#austaAllFunctions">▣ Hüquqi xidmətlər</a><a href="#austaAllFunctions">✈ Xaricdən sifariş</a><a href="#austaMarketFeed">◉ Video elanlar</a><a href="#austaAllFunctions">♙ İcarə</a><a href="#austaAllFunctions">⌘ Daha çox⌄</a></nav>
+<header class="site-header" id="austaMainHeader">
+
+  <div class="header-top austa-main-header-row">
+
+    <!-- A-USTA -->
+    <a class="austa-header-logo" href="#home" aria-label="A-USTA">
+      A-USTA
+    </a>
+
+    <!-- SLOQAN -->
+    <div class="austa-header-slogan">
+      Bütün avtomobil xidmətləri bir platformada
+    </div>
+
+    <!-- SEARCH -->
+    <div class="global-search austa-header-search">
+      <input
+        id="globalSearch"
+        type="search"
+        placeholder="Xidmət, usta, marka və ya kateqoriya axtar..."
+        autocomplete="off"
+      />
+
+      <button
+        id="globalSearchBtn"
+        class="austa-search-button"
+        type="button"
+      >
+        Axtarış
+      </button>
+
+      <div
+        class="austa-search-panel"
+        id="austaSearchPanel"
+      ></div>
+    </div>
+
+    <!-- LOCATION -->
+    <div
+      class="location-picker austa-header-location"
+      id="locationPicker"
+    >
+      <button
+        aria-expanded="false"
+        class="location-selector"
+        id="locationSelector"
+        type="button"
+        title="Məkan"
+      >
+        📍
+        <span id="selectedLocation">Bakı</span>
+        <span class="austa-header-arrow">⌄</span>
+      </button>
+
+      <div
+        class="location-menu"
+        id="locationMenu"
+        hidden
+      >
+        <b>📍 Məkanınızı seçin</b>
+
+        <input
+          autocomplete="off"
+          class="location-search"
+          id="locationSearch"
+          placeholder="Şəhər və ya rayon axtar..."
+          type="search"
+        />
+
+        <button
+          class="location-gps-button"
+          id="locationGpsButton"
+          type="button"
+        >
+          📍 Mənim yerimi müəyyən et
+        </button>
+
+        <div
+          class="location-list"
+          id="locationList"
+        ></div>
+      </div>
+    </div>
+
+    <!-- HEADER ACTIONS -->
+    <div class="austa-header-actions">
+
+      <!-- SƏBƏT -->
+      <button
+        class="austa-header-mini"
+        id="austaHeaderCart"
+        type="button"
+        title="Səbət"
+        aria-label="Səbət"
+      >
+        <span class="austa-header-mini-icon">🛒</span>
+        <span
+          class="austa-header-count"
+          id="austaHeaderCartCount"
+          hidden
+        >0</span>
+      </button>
+
+      <!-- MESAJLAR -->
+      <button
+        class="austa-header-mini"
+        id="austaHeaderMessages"
+        type="button"
+        title="Mesajlar"
+        aria-label="Mesajlar"
+      >
+        <span class="austa-header-mini-icon">💬</span>
+        <span
+          class="austa-header-count"
+          id="austaHeaderMessageCount"
+          hidden
+        >0</span>
+      </button>
+
+      <!-- BİLDİRİŞLƏR -->
+      <button
+        class="austa-header-mini"
+        id="austaHeaderNotifications"
+        type="button"
+        title="Bildirişlər"
+        aria-label="Bildirişlər"
+      >
+        <span class="austa-header-mini-icon">🔔</span>
+        <span
+          class="austa-header-count"
+          id="austaHeaderNotificationCount"
+          hidden
+        >0</span>
+      </button>
+
+      <!-- DİL -->
+      <div class="austa-header-language">
+
+        <button
+          class="austa-header-mini austa-language-button"
+          id="austaHeaderLanguage"
+          type="button"
+          aria-expanded="false"
+        >
+          <span id="austaHeaderLanguageLabel">AZ</span>
+          <span class="austa-header-arrow">⌄</span>
+        </button>
+
+        <div
+          class="austa-language-menu"
+          id="austaHeaderLanguageMenu"
+          hidden
+        >
+          <button type="button" data-austa-language="az">
+            AZ — Azərbaycan
+          </button>
+
+          <button type="button" data-austa-language="ru">
+            RU — Русский
+          </button>
+
+          <button type="button" data-austa-language="en">
+            EN — English
+          </button>
+
+          <button type="button" data-austa-language="ar">
+            AR — العربية
+          </button>
+        </div>
+
+      </div>
+
+      <!-- KÖMƏK -->
+      <button
+        class="austa-header-mini"
+        id="austaHeaderHelp"
+        type="button"
+        title="Kömək"
+        aria-label="Kömək"
+      >
+        <span class="austa-header-mini-icon">?</span>
+      </button>
+
+    </div>
+
+    <!-- ELAN YERLƏŞDİR -->
+    <button
+      class="austa-header-add"
+      id="austaHeaderAddListing"
+      type="button"
+    >
+      + Elan yerləşdir
+    </button>
+
+    <!-- HESAB -->
+    <a
+      class="austa-header-account"
+      href="#account"
+      id="headerAccountLink"
+    >
+      Hesab
+    </a>
+
+  </div>
+
 </header>
 <main id="home">
 <div class="austa-top-urgent-v24" id="austaTopUrgentV24">
@@ -38209,6 +38406,653 @@ header [class*="brand-logo"] *{
 
         init();
     }
+
+})();
+</script>
+
+<style id="austa-clean-header-css">
+
+/* =========================================================
+   A-USTA CLEAN HEADER
+   ========================================================= */
+
+#austaMainHeader{
+  width:100%;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+  position:relative;
+  z-index:1000;
+}
+
+#austaMainHeader .austa-main-header-row{
+  width:min(1500px, calc(100% - 28px));
+  min-height:64px;
+  margin:0 auto;
+  padding:8px 0;
+
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  background:#ffffff;
+}
+
+
+/* LOGO */
+
+#austaMainHeader .austa-header-logo{
+  height:42px;
+  min-width:94px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:0 14px;
+
+  background:#e5092f;
+  color:#ffffff;
+
+  border-radius:7px;
+
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:.3px;
+
+  text-decoration:none;
+  white-space:nowrap;
+}
+
+
+/* SLOQAN */
+
+#austaMainHeader .austa-header-slogan{
+  min-height:42px;
+
+  display:flex;
+  align-items:center;
+
+  padding:0 13px;
+
+  background:#159447;
+  color:#ffffff;
+
+  border-radius:7px;
+
+  font-size:12px;
+  line-height:1.2;
+  font-weight:800;
+
+  white-space:nowrap;
+}
+
+
+/* SEARCH */
+
+#austaMainHeader .austa-header-search{
+  flex:1 1 320px;
+  min-width:220px;
+  height:42px;
+
+  display:flex;
+  align-items:stretch;
+
+  position:relative;
+
+  margin:0;
+  padding:0;
+
+  background:#ffffff;
+
+  border:1px solid #d8dde3;
+  border-radius:7px;
+
+  overflow:visible;
+}
+
+#austaMainHeader #globalSearch{
+  flex:1 1 auto;
+  min-width:0;
+  height:40px;
+
+  margin:0;
+  padding:0 12px;
+
+  background:#ffffff;
+  color:#1f2937;
+
+  border:0;
+  outline:0;
+
+  font-size:12px;
+}
+
+#austaMainHeader #globalSearch::placeholder{
+  color:#8a929d;
+}
+
+#austaMainHeader #globalSearchBtn{
+  width:auto;
+  min-width:82px;
+  height:40px;
+
+  margin:0;
+  padding:0 14px;
+
+  background:#159447;
+  color:#ffffff;
+
+  border:0;
+  border-radius:0 6px 6px 0;
+
+  font-size:12px;
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+#austaMainHeader #globalSearchBtn:hover{
+  background:#117c3c;
+}
+
+
+/* SEARCH RESULT PANEL */
+
+#austaMainHeader #austaSearchPanel{
+  position:absolute;
+  top:46px;
+  left:0;
+  right:0;
+  z-index:1100;
+}
+
+
+/* LOCATION */
+
+#austaMainHeader .austa-header-location{
+  flex:0 0 auto;
+}
+
+#austaMainHeader #locationSelector{
+  height:42px;
+
+  display:flex;
+  align-items:center;
+  gap:4px;
+
+  padding:0 9px;
+
+  background:#ffffff;
+  color:#26313d;
+
+  border:1px solid #dfe3e8;
+  border-radius:7px;
+
+  font-size:11px;
+  font-weight:800;
+
+  cursor:pointer;
+}
+
+#austaMainHeader #locationSelector:hover{
+  border-color:#159447;
+}
+
+
+/* HEADER MINI ACTIONS */
+
+#austaMainHeader .austa-header-actions{
+  display:flex;
+  align-items:center;
+  gap:4px;
+
+  flex:0 0 auto;
+}
+
+#austaMainHeader .austa-header-mini{
+  width:36px;
+  min-width:36px;
+  height:36px;
+
+  position:relative;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:0;
+
+  background:#ffffff;
+  color:#374151;
+
+  border:1px solid #dfe3e8;
+  border-radius:7px;
+
+  font-size:14px;
+
+  cursor:pointer;
+}
+
+#austaMainHeader .austa-header-mini:hover{
+  background:#f7f9f8;
+  border-color:#159447;
+}
+
+#austaMainHeader .austa-header-mini-icon{
+  display:block;
+  line-height:1;
+}
+
+
+/* BADGE */
+
+#austaMainHeader .austa-header-count{
+  position:absolute;
+  top:-5px;
+  right:-5px;
+
+  min-width:16px;
+  height:16px;
+
+  padding:0 4px;
+
+  align-items:center;
+  justify-content:center;
+
+  background:#e5092f;
+  color:#ffffff;
+
+  border:2px solid #ffffff;
+  border-radius:999px;
+
+  font-size:9px;
+  line-height:12px;
+  font-weight:900;
+}
+
+
+/* LANGUAGE */
+
+#austaMainHeader .austa-header-language{
+  position:relative;
+}
+
+#austaMainHeader .austa-language-button{
+  width:auto;
+  min-width:49px;
+
+  gap:3px;
+
+  padding:0 7px;
+
+  font-size:10px;
+  font-weight:900;
+}
+
+#austaMainHeader .austa-header-arrow{
+  font-size:9px;
+}
+
+#austaMainHeader .austa-language-menu{
+  position:absolute;
+
+  top:42px;
+  right:0;
+
+  width:150px;
+
+  padding:5px;
+
+  background:#ffffff;
+
+  border:1px solid #e0e4e8;
+  border-radius:8px;
+
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
+
+  z-index:1200;
+}
+
+#austaMainHeader .austa-language-menu button{
+  width:100%;
+
+  padding:8px 9px;
+
+  text-align:left;
+
+  background:#ffffff;
+  color:#1f2937;
+
+  border:0;
+  border-radius:5px;
+
+  font-size:11px;
+  font-weight:700;
+
+  cursor:pointer;
+}
+
+#austaMainHeader .austa-language-menu button:hover{
+  background:#f1f5f3;
+}
+
+
+/* ELAN */
+
+#austaMainHeader .austa-header-add{
+  height:38px;
+
+  padding:0 11px;
+
+  background:#159447;
+  color:#ffffff;
+
+  border:1px solid #159447;
+  border-radius:7px;
+
+  font-size:11px;
+  font-weight:900;
+
+  white-space:nowrap;
+
+  cursor:pointer;
+}
+
+#austaMainHeader .austa-header-add:hover{
+  background:#117c3c;
+}
+
+
+/* HESAB */
+
+#austaMainHeader .austa-header-account{
+  height:38px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:0 12px;
+
+  background:#e5092f;
+  color:#ffffff;
+
+  border:1px solid #e5092f;
+  border-radius:7px;
+
+  font-size:11px;
+  font-weight:900;
+
+  text-decoration:none;
+  white-space:nowrap;
+}
+
+
+/* LOCATION MENU */
+
+#austaMainHeader #locationMenu{
+  background:#ffffff;
+  color:#1f2937;
+
+  border:1px solid #e0e4e8;
+
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
+}
+
+
+/* TABLET */
+
+@media(max-width:1150px){
+
+  #austaMainHeader .austa-header-slogan{
+    display:none;
+  }
+
+}
+
+
+/* MOBILE */
+
+@media(max-width:850px){
+
+  #austaMainHeader .austa-main-header-row{
+    width:calc(100% - 16px);
+
+    flex-wrap:wrap;
+  }
+
+  #austaMainHeader .austa-header-search{
+    order:20;
+    flex:1 0 100%;
+  }
+
+}
+
+
+@media(max-width:620px){
+
+  #austaMainHeader .austa-header-actions{
+    margin-left:auto;
+  }
+
+  #austaMainHeader .austa-header-add{
+    font-size:0;
+    width:38px;
+    padding:0;
+  }
+
+  #austaMainHeader .austa-header-add::after{
+    content:"+";
+    font-size:20px;
+    color:#ffffff;
+  }
+
+  #austaMainHeader .austa-header-account{
+    padding:0 8px;
+  }
+
+}
+
+</style>
+
+<script id="austa-clean-header-js">
+(function(){
+
+  "use strict";
+
+  const languageButton =
+    document.getElementById("austaHeaderLanguage");
+
+  const languageMenu =
+    document.getElementById("austaHeaderLanguageMenu");
+
+  const languageLabel =
+    document.getElementById("austaHeaderLanguageLabel");
+
+
+  /* DİL MENYUSU */
+
+  languageButton?.addEventListener("click", function(event){
+
+    event.stopPropagation();
+
+    const isOpen =
+      !languageMenu.hidden;
+
+    languageMenu.hidden =
+      isOpen;
+
+    languageButton.setAttribute(
+      "aria-expanded",
+      String(!isOpen)
+    );
+
+  });
+
+
+  languageMenu
+    ?.querySelectorAll("[data-austa-language]")
+    .forEach(function(button){
+
+      button.addEventListener("click", function(){
+
+        const language =
+          button.dataset.austaLanguage;
+
+        const labels = {
+          az:"AZ",
+          ru:"RU",
+          en:"EN",
+          ar:"AR"
+        };
+
+        languageLabel.textContent =
+          labels[language] || "AZ";
+
+        localStorage.setItem(
+          "austa_language",
+          language
+        );
+
+        languageMenu.hidden = true;
+
+        languageButton.setAttribute(
+          "aria-expanded",
+          "false"
+        );
+
+        document.documentElement.lang =
+          language;
+
+        document.documentElement.dir =
+          language === "ar"
+            ? "rtl"
+            : "ltr";
+
+        window.dispatchEvent(
+          new CustomEvent(
+            "austa:language-change",
+            {
+              detail:{
+                language
+              }
+            }
+          )
+        );
+
+      });
+
+    });
+
+
+  document.addEventListener("click", function(event){
+
+    if(
+      !event.target.closest(
+        ".austa-header-language"
+      )
+    ){
+      languageMenu.hidden = true;
+
+      languageButton?.setAttribute(
+        "aria-expanded",
+        "false"
+      );
+    }
+
+  });
+
+
+  /* ELAN YERLƏŞDİR
+     Mövcud elan sisteminə ötürür.
+  */
+
+  document
+    .getElementById("austaHeaderAddListing")
+    ?.addEventListener("click", function(){
+
+      const existing =
+        document.querySelector(
+          '[data-top-flow="listing"][data-top-title="Elan yerləşdir"]'
+        );
+
+      if(existing){
+        existing.click();
+      }
+
+    });
+
+
+  /* MESAJ */
+
+  document
+    .getElementById("austaHeaderMessages")
+    ?.addEventListener("click", function(){
+
+      if(
+        window.AUSTA_MESSAGES &&
+        typeof window.AUSTA_MESSAGES.open === "function"
+      ){
+        window.AUSTA_MESSAGES.open();
+      }
+
+    });
+
+
+  /* BİLDİRİŞ */
+
+  document
+    .getElementById("austaHeaderNotifications")
+    ?.addEventListener("click", function(){
+
+      if(
+        window.AUSTA_NOTIFICATIONS &&
+        typeof window.AUSTA_NOTIFICATIONS.open === "function"
+      ){
+        window.AUSTA_NOTIFICATIONS.open();
+      }
+
+    });
+
+
+  /* SƏBƏT */
+
+  document
+    .getElementById("austaHeaderCart")
+    ?.addEventListener("click", function(){
+
+      if(
+        window.AUSTA_CART &&
+        typeof window.AUSTA_CART.open === "function"
+      ){
+        window.AUSTA_CART.open();
+      }
+
+    });
+
+
+  /* SAXLANMIŞ DİL */
+
+  const savedLanguage =
+    localStorage.getItem("austa_language") || "az";
+
+  const labels = {
+    az:"AZ",
+    ru:"RU",
+    en:"EN",
+    ar:"AR"
+  };
+
+  if(languageLabel){
+    languageLabel.textContent =
+      labels[savedLanguage] || "AZ";
+  }
+
+
+  console.log(
+    "A-USTA CLEAN HEADER READY"
+  );
 
 })();
 </script>
