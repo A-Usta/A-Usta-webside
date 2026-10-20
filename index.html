@@ -37468,7 +37468,10 @@ header [data-action*="listing"]{
 
         setupSlogan();
 
-        createHeaderActions();
+       // V110 artıq vahid header yaradır.
+    // Köhnə V108 header action-ları söndürülüb.
+    // createHeaderActions();
+
 
         rebuildCategories();
 
@@ -38366,27 +38369,25 @@ header [class*="brand-logo"] *{
        8. INIT
        ===================================================== */
 
-    function init(){
+ function init(){
 
-        setupSlogan();
+    /*
+     * V110 vahid header aktivdir.
+     * V109 artıq yeni header elementi yaratmır.
+     */
 
-        setupSearch();
+    // setupSlogan();
+    // setupSearch();
+    // setupAddListing();
+    // createCart();
+    // createNotifications();
+    // hideDuplicateMessage();
+    // hideOldNavigation();
 
-        setupAddListing();
-
-        createCart();
-
-        createNotifications();
-
-        hideDuplicateMessage();
-
-        hideOldNavigation();
-
-
-        console.log(
-            "A-USTA V109 HEADER ONLY READY"
-        );
-    }
+    console.log(
+        "A-USTA V109 LEGACY HEADER DISABLED — V110 ACTIVE"
+    );
+}
 
 
     if(
@@ -38473,14 +38474,14 @@ header [class*="brand-logo"] *{
   display:flex;
   align-items:center;
 
-  padding:0 13px;
+  padding:0 16px;
 
   background:#159447;
   color:#ffffff;
 
   border-radius:7px;
 
-  font-size:12px;
+  font-size:14px;
   line-height:1.2;
   font-weight:800;
 
@@ -38534,7 +38535,7 @@ header [class*="brand-logo"] *{
 
 #austaMainHeader #globalSearchBtn{
   width:auto;
-  min-width:82px;
+  min-width:96px;
   height:40px;
 
   margin:0;
@@ -38546,7 +38547,7 @@ header [class*="brand-logo"] *{
   border:0;
   border-radius:0 6px 6px 0;
 
-  font-size:12px;
+  font-size:14px;
   font-weight:900;
 
   cursor:pointer;
@@ -38741,9 +38742,9 @@ header [class*="brand-logo"] *{
 /* ELAN */
 
 #austaMainHeader .austa-header-add{
-  height:38px;
+  height:42px;
 
-  padding:0 11px;
+  padding:0 16px;
 
   background:#159447;
   color:#ffffff;
@@ -38751,7 +38752,7 @@ header [class*="brand-logo"] *{
   border:1px solid #159447;
   border-radius:7px;
 
-  font-size:11px;
+  font-size:13px;
   font-weight:900;
 
   white-space:nowrap;
@@ -38800,6 +38801,29 @@ header [class*="brand-logo"] *{
   box-shadow:0 12px 30px rgba(0,0,0,.12);
 }
 
+  /* LOCATION — TAM AĞ */
+
+#austaMainHeader #locationMenu,
+#austaMainHeader #locationMenu *,
+#austaMainHeader .location-menu{
+    color:#172033;
+}
+
+#austaMainHeader #locationMenu,
+#austaMainHeader .location-menu{
+    background:#ffffff !important;
+    border:1px solid #e1e5e9 !important;
+}
+
+#austaMainHeader #locationMenu input,
+#austaMainHeader #locationMenu button{
+    background:#ffffff !important;
+    color:#172033 !important;
+}
+
+#austaMainHeader #locationMenu button:hover{
+    background:#f4f6f5 !important;
+}
 
 /* TABLET */
 
