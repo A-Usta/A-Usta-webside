@@ -37336,3 +37336,879 @@ header [data-action*="listing"]{
 
 })();
 </script>
+
+<!-- =========================================================
+     A-USTA V109 HEADER ONLY
+     YALNIZ YUXARI HİSSƏ
+     ========================================================= -->
+
+<style id="austa-v109-header-only-css">
+
+/* =========================================================
+   HEADER FONU — AĞ
+   ========================================================= */
+
+header{
+    background:#ffffff !important;
+    color:#172033 !important;
+    border-bottom:1px solid #e5e7eb !important;
+}
+
+
+/* =========================================================
+   A-USTA LOGO
+   QIRMIZI FON + AĞ YAZI
+   ========================================================= */
+
+header .logo,
+header .brand,
+header [class*="logo"],
+header [class*="brand-logo"]{
+    background:#e5092f !important;
+    color:#ffffff !important;
+}
+
+header .logo *,
+header .brand *,
+header [class*="logo"] *,
+header [class*="brand-logo"] *{
+    color:#ffffff !important;
+}
+
+
+/* =========================================================
+   SLOQAN
+   YAŞIL FON + AĞ YAZI
+   ========================================================= */
+
+#austaV109Slogan{
+    display:inline-flex !important;
+    align-items:center !important;
+
+    min-height:36px !important;
+
+    padding:7px 12px !important;
+
+    background:#159447 !important;
+    color:#ffffff !important;
+
+    border-radius:8px !important;
+
+    font-size:13px !important;
+    font-weight:850 !important;
+
+    line-height:1.15 !important;
+
+    white-space:nowrap !important;
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+#globalSearch{
+    background:#ffffff !important;
+    color:#172033 !important;
+
+    border:1px solid #d9dde3 !important;
+}
+
+
+/* AXTARIŞ — YAŞIL + AĞ */
+
+#globalSearchBtn{
+    min-width:90px !important;
+
+    padding-left:16px !important;
+    padding-right:16px !important;
+
+    background:#159447 !important;
+    border-color:#159447 !important;
+
+    color:#ffffff !important;
+
+    font-size:13px !important;
+    font-weight:900 !important;
+
+    white-space:nowrap !important;
+}
+
+
+/* =========================================================
+   HEADER ACTIONS
+   SƏBƏT / MESAJ / BİLDİRİŞ / DİL / KÖMƏK
+   ========================================================= */
+
+#austaV108HeaderActions{
+    display:inline-flex !important;
+    align-items:center !important;
+
+    gap:5px !important;
+
+    flex:0 0 auto !important;
+}
+
+
+/* HAMISI EYNİ ÖLÇÜDƏ */
+
+#austaV109Cart,
+#austaV108Messages,
+#austaV109Notifications,
+#austaV108Language,
+#austaV108Help{
+
+    position:relative !important;
+
+    display:inline-flex !important;
+
+    align-items:center !important;
+    justify-content:center !important;
+
+    width:36px !important;
+    min-width:36px !important;
+    height:36px !important;
+    min-height:36px !important;
+
+    padding:0 !important;
+
+    background:#ffffff !important;
+    color:#374151 !important;
+
+    border:1px solid #dfe3e8 !important;
+    border-radius:8px !important;
+
+    font-size:15px !important;
+
+    cursor:pointer !important;
+
+    transition:
+        border-color .15s ease,
+        background .15s ease,
+        transform .15s ease !important;
+}
+
+
+#austaV109Cart:hover,
+#austaV108Messages:hover,
+#austaV109Notifications:hover,
+#austaV108Language:hover,
+#austaV108Help:hover{
+
+    background:#f7f8f9 !important;
+
+    border-color:#159447 !important;
+
+    transform:translateY(-1px);
+}
+
+
+/* =========================================================
+   MESAJ — BÖYÜK "MESAJLAR" YAZISINI GİZLƏT
+   ========================================================= */
+
+#austaV108Messages > span:not(#austaV108MessageBadge){
+    display:none !important;
+}
+
+
+/* =========================================================
+   KÖMƏK — BÖYÜK "KÖMƏK" YAZISINI GİZLƏT
+   ========================================================= */
+
+#austaV108Help > span{
+    display:none !important;
+}
+
+
+/* =========================================================
+   DİL
+   ========================================================= */
+
+#austaV108Language{
+    width:auto !important;
+    min-width:55px !important;
+
+    padding:0 7px !important;
+
+    gap:3px !important;
+
+    font-size:11px !important;
+    font-weight:900 !important;
+}
+
+
+/* Dil menyusu ağ */
+
+#austaV108LanguageMenu{
+    background:#ffffff !important;
+
+    border:1px solid #e1e5e9 !important;
+
+    color:#172033 !important;
+}
+
+
+/* =========================================================
+   BADGE
+   ========================================================= */
+
+.austa-v109-header-badge{
+
+    position:absolute;
+
+    top:-5px;
+    right:-5px;
+
+    display:none;
+
+    min-width:16px;
+    height:16px;
+
+    padding:0 4px;
+
+    align-items:center;
+    justify-content:center;
+
+    background:#e5092f;
+    color:#ffffff;
+
+    border:2px solid #ffffff;
+    border-radius:999px;
+
+    font-size:9px;
+    font-weight:900;
+
+    line-height:1;
+}
+
+
+/* =========================================================
+   ELAN YERLƏŞDİR
+   YAŞIL + AĞ
+   ========================================================= */
+
+#austaV109AddListing{
+    background:#159447 !important;
+
+    border-color:#159447 !important;
+
+    color:#ffffff !important;
+
+    font-weight:900 !important;
+}
+
+#austaV109AddListing *{
+    color:#ffffff !important;
+}
+
+
+/* =========================================================
+   HESAB
+   QIRMIZI + AĞ
+   ========================================================= */
+
+#austaV108AccountStyle{
+    background:#e5092f !important;
+
+    border-color:#e5092f !important;
+
+    color:#ffffff !important;
+
+    font-weight:900 !important;
+}
+
+#austaV108AccountStyle *{
+    color:#ffffff !important;
+}
+
+
+/* =========================================================
+   YALNIZ KÖHNƏ İKİNCİ NAV ELEMENTLƏRİ
+   ========================================================= */
+
+.austa-v109-old-header-nav-item{
+    display:none !important;
+}
+
+
+/* =========================================================
+   MOBİL
+   ========================================================= */
+
+@media(max-width:900px){
+
+    #austaV109Slogan{
+        font-size:11px !important;
+
+        padding:6px 8px !important;
+    }
+
+}
+
+
+@media(max-width:700px){
+
+    #austaV109Slogan{
+        white-space:normal !important;
+    }
+
+    #austaV109Cart,
+    #austaV108Messages,
+    #austaV109Notifications,
+    #austaV108Help{
+
+        width:34px !important;
+        min-width:34px !important;
+        height:34px !important;
+    }
+
+}
+
+</style>
+
+
+<script id="austa-v109-header-only-js">
+(function(){
+
+    "use strict";
+
+
+    /* =====================================================
+       HELPERS
+       ===================================================== */
+
+    const header =
+        document.querySelector(
+            "header"
+        );
+
+
+    if(!header){
+
+        console.warn(
+            "A-USTA V109 HEADER: header tapılmadı"
+        );
+
+        return;
+    }
+
+
+    const controls =
+        ()=>[
+            ...header.querySelectorAll(
+                "a,button"
+            )
+        ];
+
+
+    const cleanText =
+        element=>
+            String(
+                element?.textContent || ""
+            )
+            .replace(/\s+/g," ")
+            .trim();
+
+
+    /* =====================================================
+       1. SLOQAN
+       ===================================================== */
+
+    function setupSlogan(){
+
+        const candidates =
+            [
+                ...header.querySelectorAll(
+                    "span,small,div,p"
+                )
+            ];
+
+
+        const slogan =
+            candidates.find(
+                element=>
+                    cleanText(element) ===
+                    "Bütün avtomobil xidmətləri bir platformada"
+            );
+
+
+        if(!slogan){
+            return;
+        }
+
+
+        slogan.id =
+            "austaV109Slogan";
+
+
+        /*
+         * V108 inline yaşıl yazı vermişdi.
+         * İndi yazı ağdır.
+         */
+
+        slogan.style.color =
+            "#ffffff";
+
+
+        slogan.style.background =
+            "#159447";
+    }
+
+
+    /* =====================================================
+       2. SEARCH
+       ===================================================== */
+
+    function setupSearch(){
+
+        const button =
+            document.getElementById(
+                "globalSearchBtn"
+            );
+
+
+        if(!button){
+            return;
+        }
+
+
+        /*
+         * Mövcud click funksiyasına toxunmuruq.
+         */
+
+        button.textContent =
+            "Axtarış";
+    }
+
+
+    /* =====================================================
+       3. ELAN YERLƏŞDİR
+       ===================================================== */
+
+    function setupAddListing(){
+
+        const button =
+            controls().find(
+                element=>
+                    cleanText(element)
+                        .includes(
+                            "Elan yerləşdir"
+                        )
+            );
+
+
+        if(!button){
+            return;
+        }
+
+
+        button.id =
+            "austaV109AddListing";
+    }
+
+
+    /* =====================================================
+       4. SƏBƏT
+       ===================================================== */
+
+    function createCart(){
+
+        const actions =
+            document.getElementById(
+                "austaV108HeaderActions"
+            );
+
+
+        const messages =
+            document.getElementById(
+                "austaV108Messages"
+            );
+
+
+        if(
+            !actions ||
+            !messages ||
+            document.getElementById(
+                "austaV109Cart"
+            )
+        ){
+            return;
+        }
+
+
+        const button =
+            document.createElement(
+                "button"
+            );
+
+
+        button.id =
+            "austaV109Cart";
+
+
+        button.type =
+            "button";
+
+
+        button.title =
+            "Səbət";
+
+
+        button.setAttribute(
+            "aria-label",
+            "Səbət"
+        );
+
+
+        button.innerHTML = `
+            🛒
+
+            <span
+                id="austaV109CartBadge"
+                class="austa-v109-header-badge"
+            >
+                0
+            </span>
+        `;
+
+
+        /*
+         * Mesajdan əvvəl.
+         */
+
+        actions.insertBefore(
+            button,
+            messages
+        );
+
+
+        button.addEventListener(
+            "click",
+            ()=>{
+
+                /*
+                 * Mövcud səbət düyməsi varsa
+                 * onu işə sal.
+                 */
+
+                const existing =
+                    controls().find(
+                        element=>
+
+                            element !== button &&
+
+                            (
+                                /səbət/i.test(
+                                    cleanText(element)
+                                ) ||
+
+                                /cart/i.test(
+                                    element.id || ""
+                                ) ||
+
+                                /cart/i.test(
+                                    element.className || ""
+                                )
+                            )
+                    );
+
+
+                if(existing){
+
+                    existing.click();
+
+                    return;
+                }
+
+
+                /*
+                 * Mövcud A-USTA cart API varsa.
+                 */
+
+                if(
+                    window.AUSTA_CART &&
+                    typeof window
+                        .AUSTA_CART
+                        .open ===
+                        "function"
+                ){
+
+                    window
+                        .AUSTA_CART
+                        .open();
+                }
+            }
+        );
+    }
+
+
+    /* =====================================================
+       5. BİLDİRİŞLƏR
+       ===================================================== */
+
+    function createNotifications(){
+
+        const actions =
+            document.getElementById(
+                "austaV108HeaderActions"
+            );
+
+
+        const languageWrap =
+            document.getElementById(
+                "austaV108LanguageWrap"
+            );
+
+
+        if(
+            !actions ||
+            !languageWrap ||
+            document.getElementById(
+                "austaV109Notifications"
+            )
+        ){
+            return;
+        }
+
+
+        const button =
+            document.createElement(
+                "button"
+            );
+
+
+        button.id =
+            "austaV109Notifications";
+
+
+        button.type =
+            "button";
+
+
+        button.title =
+            "Bildirişlər";
+
+
+        button.setAttribute(
+            "aria-label",
+            "Bildirişlər"
+        );
+
+
+        button.innerHTML = `
+            🔔
+
+            <span
+                id="austaV109NotificationBadge"
+                class="austa-v109-header-badge"
+            >
+                0
+            </span>
+        `;
+
+
+        /*
+         * Dil düyməsindən əvvəl.
+         */
+
+        actions.insertBefore(
+            button,
+            languageWrap
+        );
+
+
+        button.addEventListener(
+            "click",
+            ()=>{
+
+                /*
+                 * Mövcud bildiriş sistemi varsa
+                 * ona ötür.
+                 */
+
+                if(
+                    window.AUSTA_NOTIFICATIONS &&
+                    typeof window
+                        .AUSTA_NOTIFICATIONS
+                        .open ===
+                        "function"
+                ){
+
+                    window
+                        .AUSTA_NOTIFICATIONS
+                        .open();
+
+                    return;
+                }
+
+
+                const existing =
+                    controls().find(
+                        element=>
+
+                            element !== button &&
+
+                            (
+                                /bildiriş/i.test(
+                                    cleanText(element)
+                                ) ||
+
+                                /notification/i.test(
+                                    element.id || ""
+                                ) ||
+
+                                /notification/i.test(
+                                    element.className || ""
+                                )
+                            )
+                    );
+
+
+                if(existing){
+
+                    existing.click();
+                }
+            }
+        );
+    }
+
+
+    /* =====================================================
+       6. DUBLİKAT KÖHNƏ MESAJ DÜYMƏSİ
+       ===================================================== */
+
+    function hideDuplicateMessage(){
+
+        const current =
+            document.getElementById(
+                "austaV108Messages"
+            );
+
+
+        if(!current){
+            return;
+        }
+
+
+        controls()
+            .filter(
+                element=>
+
+                    element !== current &&
+
+                    cleanText(element) ===
+                    "Mesajlar"
+            )
+            .forEach(
+                element=>{
+
+                    element.classList.add(
+                        "austa-v109-old-header-nav-item"
+                    );
+                }
+            );
+    }
+
+
+    /* =====================================================
+       7. KÖHNƏ İKİNCİ NAV
+       YALNIZ DƏQİQ ADLARI GİZLƏDİRİK
+       ===================================================== */
+
+    const oldNavigation = new Set([
+
+        "Əsas səhifə",
+        "Bütün funksiyalar",
+        "Usta çağırışı",
+        "Ehtiyat hissələri",
+        "Avtomobil bazarı",
+        "Logistika",
+        "Hüquqi xidmətlər",
+        "Xaricdən sifariş",
+        "Video elanlar",
+        "İcarə",
+        "Daha çox",
+        "Daha çox⌄"
+
+    ]);
+
+
+    function hideOldNavigation(){
+
+        controls().forEach(
+            element=>{
+
+                const value =
+                    cleanText(element);
+
+
+                /*
+                 * Yalnız tam uyğun gələn
+                 * köhnə nav düyməsini gizlədir.
+                 *
+                 * Heç bir section/div gizlədilmir.
+                 */
+
+                if(
+                    oldNavigation.has(
+                        value
+                    )
+                ){
+
+                    element.classList.add(
+                        "austa-v109-old-header-nav-item"
+                    );
+                }
+            }
+        );
+    }
+
+
+    /* =====================================================
+       8. INIT
+       ===================================================== */
+
+    function init(){
+
+        setupSlogan();
+
+        setupSearch();
+
+        setupAddListing();
+
+        createCart();
+
+        createNotifications();
+
+        hideDuplicateMessage();
+
+        hideOldNavigation();
+
+
+        console.log(
+            "A-USTA V109 HEADER ONLY READY"
+        );
+    }
+
+
+    if(
+        document.readyState ===
+        "loading"
+    ){
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            init,
+            {
+                once:true
+            }
+        );
+
+    }else{
+
+        init();
+    }
+
+})();
+</script>
