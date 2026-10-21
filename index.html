@@ -14896,7 +14896,25 @@ window.addEventListener('resize',()=>{const g=document.getElementById('austaV22V
     const close=()=>o.classList.remove('open');
     o.addEventListener('click',e=>{if(e.target===o)close()});
     document.getElementById('austaCargoClose').onclick=close;document.getElementById('austaCargoCancel').onclick=close;
-    function calc(){const km=Math.max(0,Number(document.getElementById('cargoKm').value)||0);const kg=Math.max(0,Number(document.getElementById('cargoWeight').value)||0);let p=20+km*.90;if(kg>300)p+=Math.ceil((kg-300)/50)*2;p=Math.max(20,p);document.getElementById('cargoPrice').textContent=`${p.toFixed(2)} AZN`;document.getElementById('cargoPriceNote').textContent=`${km.toFixed(1)} km • ${kg||0} kq • A-USTA avtomatik ilkin qiymət`;}
+    function calc(){
+  const km=Math.max(0,Number(document.getElementById('cargoKm').value)||0);
+  const kg=Math.max(0,Number(document.getElementById('cargoWeight').value)||0);
+
+  if(km<=0){
+    document.getElementById('cargoPrice').textContent='Qiymət hesablanacaq';
+    document.getElementById('cargoPriceNote').textContent='Məsafə və yük məlumatlarını daxil edin';
+    return;
+  }
+
+  let p=20+km*.90;
+
+  if(kg>300){
+    p+=Math.ceil((kg-300)/50)*2;
+  }
+
+  document.getElementById('cargoPrice').textContent=`${p.toFixed(2)} AZN`;
+  document.getElementById('cargoPriceNote').textContent=`${km.toFixed(1)} km • ${kg||0} kq • A-USTA avtomatik hesablanmış qiymət`;
+}
     ['cargoKm','cargoWeight'].forEach(id=>document.getElementById(id).addEventListener('input',calc));
     document.getElementById('austaCargoSubmit').onclick=()=>{const from=document.getElementById('cargoFrom').value.trim(),to=document.getElementById('cargoTo').value.trim(),km=Number(document.getElementById('cargoKm').value)||0;if(!from||!to){alert('Haradan və Haraya məkanlarını daxil edin.');return;}if(km<=0){alert('İlkin qiymət üçün məsafəni daxil edin.');return;}const order={id:'AU-CARGO-'+Date.now(),name:document.getElementById('cargoName').value.trim(),phone:document.getElementById('cargoPhone').value.trim(),type:document.getElementById('cargoType').value,weight:Number(document.getElementById('cargoWeight').value)||0,from,to,date:document.getElementById('cargoDate').value,time:document.getElementById('cargoTime').value,km,size:document.getElementById('cargoSize').value,note:document.getElementById('cargoNote').value,price:Math.max(20,20+km*.90),createdAt:new Date().toISOString()};localStorage.setItem('austa-last-cargo-order',JSON.stringify(order));alert('Yük daşıma sifarişi yaradıldı.\nSifariş №: '+order.id);close();};
   }
@@ -14925,7 +14943,25 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const norm=v=>String(v||'').toLocaleLowerCase('az-AZ').replace(/ə/g,'e').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ç/g,'c').replace(/ğ/g,'g');
 function selectedPlace(){return (document.getElementById('selectedLocation')?.textContent||'Bakı').trim()||'Bakı';}
 function saveOrder(key,obj){localStorage.setItem(key,JSON.stringify(obj));}
-function calcTransport(kind,km,kg){km=Math.max(0,Number(km)||0);kg=Math.max(0,Number(kg)||0); if(kind==='cargo'){let p=20+km*.90;if(kg>300)p+=Math.ceil((kg-300)/50)*2;return Math.round(p*100)/100;} let p=25+km*1.20; return Math.max(35,Math.round(p*100)/100);}
+function calcTransport(kind,km,kg){
+  km=Math.max(0,Number(km)||0);
+  kg=Math.max(0,Number(kg)||0);
+
+  if(kind==='cargo'){
+    if(km<=0)return null;
+
+    let p=20+km*.90;
+
+    if(kg>300){
+      p+=Math.ceil((kg-300)/50)*2;
+    }
+
+    return Math.round(p*100)/100;
+  }
+
+  let p=25+km*1.20;
+  return Math.max(25,Math.round(p*100)/100);
+}
 function slots(){let a=[];for(let h=7;h<=23;h++)for(let m of [0,15,30,45]){if(h===23&&m>0)continue;a.push(String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'));}return a;}
 function directTransport(kind){
  const old=document.getElementById('austaV32TransportOverlay'); if(old)old.remove();
