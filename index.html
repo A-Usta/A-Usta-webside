@@ -39101,12 +39101,93 @@ left: auto !important;
 })();
 </script>
 
-<style id="austa-search-button-real-final-fix">
-#austaMainHeader #globalSearchBtn{
-    position: static !important;
-    top: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    left: auto !important;
-}
-</style>
+<script id="austa-search-button-position-lock">
+(function () {
+    'use strict';
+
+    const BUTTON_ID = 'globalSearchBtn';
+
+    function lockSearchButton() {
+        const btn = document.getElementById(BUTTON_ID);
+        if (!btn) return;
+
+        btn.style.setProperty('position', 'static', 'important');
+        btn.style.setProperty('top', 'auto', 'important');
+        btn.style.setProperty('right', 'auto', 'important');
+        btn.style.setProperty('bottom', 'auto', 'important');
+        btn.style.setProperty('left', 'auto', 'important');
+    }
+
+    function startSearchButtonLock() {
+        const btn = document.getElementById(BUTTON_ID);
+
+        if (!btn) {
+            setTimeout(startSearchButtonLock, 100);
+            return;
+        }
+
+        lockSearchButton();
+
+        const observer = new MutationObserver(function (mutations) {
+            let needsRepair = false;
+
+            for (const mutation of mutations) {
+                if (
+                    mutation.type === 'attributes' &&
+                    mutation.target === btn &&
+                    mutation.attributeName === 'style'
+                ) {
+                    const style = getComputedStyle(btn);
+
+                    if (
+                        style.position !== 'static' ||
+                        style.top !== 'auto'
+                    ) {
+                        needsRepair = true;
+                        break;
+                    }
+                }
+            }
+
+            if (needsRepair) {
+                observer.disconnect();
+                lockSearchButton();
+                observer.observe(btn, {
+                    attributes: true,
+                    attributeFilter: ['style']
+                });
+            }
+        });
+
+        observer.observe(btn, {
+            attributes: true,
+            attributeFilter: ['style']
+        });
+
+        window.AUSTA_SEARCH_BUTTON_LOCK = {
+            repair: lockSearchButton,
+            status: function () {
+                const button = document.getElementById(BUTTON_ID);
+                const input = document.getElementById('globalSearch');
+
+                if (!button) return null;
+
+                return {
+                    position: getComputedStyle(button).position,
+                    top: getComputedStyle(button).top,
+                    buttonY: button.getBoundingClientRect().y,
+                    inputY: input ? input.getBoundingClientRect().y : null
+                };
+            }
+        };
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startSearchButtonLock, {
+            once: true
+        });
+    } else {
+        startSearchButtonLock();
+    }
+})();
+</script>
