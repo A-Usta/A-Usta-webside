@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 
 <html lang="az">
@@ -15013,13 +15014,22 @@ window.AUSTA_V32={directTransport,openListingV32};
    if(window.AUSTA_UNIFIED_FLOW?.open)window.AUSTA_UNIFIED_FLOW.open('listing','Elan yerləşdir');
  }
  function setupHeader(){
-   const top=document.querySelector('.header-top'); if(!top)return;
-   let b=document.getElementById('austaV33HeaderAddListing');
-   if(!b){
-     b=document.createElement('button');b.id='austaV33HeaderAddListing';b.type='button';b.textContent='＋ Elan yerləşdir';
-     const acc=document.getElementById('headerAccountLink'); top.insertBefore(b,acc||null);
-   }
-   b.onclick=e=>{e.preventDefault();e.stopPropagation();openListing();};
+   // V110 clean header aktivdir: köhnə V33 ikinci Elan düyməsi yaradılmır.
+   document.getElementById('austaV33HeaderAddListing')?.remove();
+   document.getElementById('v32HeaderAddListing')?.remove();
+
+   const b=document.getElementById('austaHeaderAddListing');
+   if(!b||b.dataset.v33CleanBound==='1')return;
+   b.dataset.v33CleanBound='1';
+   b.addEventListener('click',e=>{
+     e.preventDefault();
+     e.stopPropagation();
+     if(window.AUSTA_V53?.openListing){
+       window.AUSTA_V53.openListing();
+       return;
+     }
+     openListing();
+   });
  }
  function setupAccount(){
    const a=$('#headerAccountLink'); if(!a||a.dataset.v33Account)return;
@@ -37472,7 +37482,8 @@ header [data-action*="listing"]{
 
         setupSearchButton();
 
-        setupSlogan();
+        // V110 clean header sloganını V108 artıq dəyişmir.
+        // setupSlogan();
 
        // V110 artıq vahid header yaradır.
     // Köhnə V108 header action-ları söndürülüb.
@@ -38483,11 +38494,11 @@ header [class*="brand-logo"] *{
   padding:0 16px;
 
   background:#159447;
-  color:#ffffff;
+  color:#ffffff !important;
 
   border-radius:7px;
 
-  font-size:14px;
+  font-size:15px;
   line-height:1.2;
   font-weight:800;
 
@@ -38503,7 +38514,7 @@ header [class*="brand-logo"] *{
   height:42px;
 
   display:flex;
-  align-items:stretch;
+  align-items:center;
 
   position:relative;
 
@@ -38515,7 +38526,7 @@ header [class*="brand-logo"] *{
   border:1px solid #d8dde3;
   border-radius:7px;
 
-  overflow:visible;
+  overflow:hidden;
 }
 
 #austaMainHeader #globalSearch{
@@ -38540,39 +38551,34 @@ header [class*="brand-logo"] *{
 }
 
 #austaMainHeader #globalSearchBtn{
-    position: static !important;
-    top: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    left: auto !important;
-  
-    
-    flex:0 0 105px !important;
-    width:105px !important;
-    min-width:105px !important;
+  flex:0 0 105px !important;
+  width:105px !important;
+  min-width:105px !important;
+  height:100% !important;
+  align-self:stretch !important;
 
-    height:40px !important;
-    align-self:center !important;
+  margin:0 !important;
+  padding:0 14px !important;
+  box-sizing:border-box !important;
 
-    margin:0 !important;
-    padding:0 14px !important;
-    box-sizing:border-box !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
 
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
+  background:#159447 !important;
+  color:#ffffff !important;
 
-    background:#159447 !important;
-    color:#fff !important;
-    border:0 !important;
-    border-radius:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
 
-    font-size:14px !important;
-    font-weight:900 !important;
-    line-height:normal !important;
-    white-space:nowrap !important;
+  font-size:14px !important;
+  font-weight:900 !important;
+  line-height:normal !important;
+  white-space:nowrap !important;
+
+  cursor:pointer;
 }
-  
+
 #austaMainHeader #globalSearchBtn:hover{
   background:#117c3c;
 }
@@ -38762,9 +38768,9 @@ header [class*="brand-logo"] *{
 /* ELAN */
 
 #austaMainHeader .austa-header-add{
-  height:42px;
+  height:46px;
 
-  padding:0 16px;
+  padding:0 20px;
 
   background:#159447;
   color:#ffffff;
@@ -38772,7 +38778,7 @@ header [class*="brand-logo"] *{
   border:1px solid #159447;
   border-radius:7px;
 
-  font-size:13px;
+  font-size:15px;
   font-weight:900;
 
   white-space:nowrap;
@@ -38902,203 +38908,107 @@ header [class*="brand-logo"] *{
 
 <script id="austa-clean-header-js">
 (function(){
-
   "use strict";
 
-  const languageButton =
-    document.getElementById("austaHeaderLanguage");
+  const $ = id => document.getElementById(id);
+  const languageButton = $("austaHeaderLanguage");
+  const languageMenu = $("austaHeaderLanguageMenu");
+  const languageLabel = $("austaHeaderLanguageLabel");
 
-  const languageMenu =
-    document.getElementById("austaHeaderLanguageMenu");
-
-  const languageLabel =
-    document.getElementById("austaHeaderLanguageLabel");
-
-
-  /* DİL MENYUSU */
-
-  languageButton?.addEventListener("click", function(event){
-
-    event.stopPropagation();
-
-    const isOpen =
-      !languageMenu.hidden;
-
-    languageMenu.hidden =
-      isOpen;
-
-    languageButton.setAttribute(
-      "aria-expanded",
-      String(!isOpen)
-    );
-
-  });
-
-
-  languageMenu
-    ?.querySelectorAll("[data-austa-language]")
-    .forEach(function(button){
-
-      button.addEventListener("click", function(){
-
-        const language =
-          button.dataset.austaLanguage;
-
-        const labels = {
-          az:"AZ",
-          ru:"RU",
-          en:"EN",
-          ar:"AR"
-        };
-
-        languageLabel.textContent =
-          labels[language] || "AZ";
-
-        localStorage.setItem(
-          "austa_language",
-          language
-        );
-
-        languageMenu.hidden = true;
-
-        languageButton.setAttribute(
-          "aria-expanded",
-          "false"
-        );
-
-        document.documentElement.lang =
-          language;
-
-        document.documentElement.dir =
-          language === "ar"
-            ? "rtl"
-            : "ltr";
-
-        window.dispatchEvent(
-          new CustomEvent(
-            "austa:language-change",
-            {
-              detail:{
-                language
-              }
-            }
-          )
-        );
-
-      });
-
-    });
-
-
-  document.addEventListener("click", function(event){
-
-    if(
-      !event.target.closest(
-        ".austa-header-language"
-      )
-    ){
-      languageMenu.hidden = true;
-
-      languageButton?.setAttribute(
-        "aria-expanded",
-        "false"
-      );
-    }
-
-  });
-
-
-  /* ELAN YERLƏŞDİR
-     Mövcud elan sisteminə ötürür.
-  */
-
-  document
-    .getElementById("austaHeaderAddListing")
-    ?.addEventListener("click", function(){
-
-      const existing =
-        document.querySelector(
-          '[data-top-flow="listing"][data-top-title="Elan yerləşdir"]'
-        );
-
-      if(existing){
-        existing.click();
-      }
-
-    });
-
-
-  /* MESAJ */
-
-  document
-    .getElementById("austaHeaderMessages")
-    ?.addEventListener("click", function(){
-
-      if(
-        window.AUSTA_MESSAGES &&
-        typeof window.AUSTA_MESSAGES.open === "function"
-      ){
-        window.AUSTA_MESSAGES.open();
-      }
-
-    });
-
-
-  /* BİLDİRİŞ */
-
-  document
-    .getElementById("austaHeaderNotifications")
-    ?.addEventListener("click", function(){
-
-      if(
-        window.AUSTA_NOTIFICATIONS &&
-        typeof window.AUSTA_NOTIFICATIONS.open === "function"
-      ){
-        window.AUSTA_NOTIFICATIONS.open();
-      }
-
-    });
-
-
-  /* SƏBƏT */
-
-  document
-    .getElementById("austaHeaderCart")
-    ?.addEventListener("click", function(){
-
-      if(
-        window.AUSTA_CART &&
-        typeof window.AUSTA_CART.open === "function"
-      ){
-        window.AUSTA_CART.open();
-      }
-
-    });
-
-
-  /* SAXLANMIŞ DİL */
-
-  const savedLanguage =
-    localStorage.getItem("austa_language") || "az";
-
-  const labels = {
-    az:"AZ",
-    ru:"RU",
-    en:"EN",
-    ar:"AR"
+  const labels = {az:"AZ",ru:"RU",en:"EN",ar:"AR"};
+  const headerText = {
+    az:{slogan:"Bütün avtomobil xidmətləri bir platformada",search:"Axtarış",placeholder:"Xidmət, usta, marka və ya kateqoriya axtar...",cart:"Səbət",messages:"Mesajlar",notifications:"Bildirişlər",help:"Kömək",listing:"+ Elan yerləşdir",account:"Hesab"},
+    ru:{slogan:"Все автомобильные услуги на одной платформе",search:"Поиск",placeholder:"Поиск услуги, мастера, марки или категории...",cart:"Корзина",messages:"Сообщения",notifications:"Уведомления",help:"Помощь",listing:"+ Разместить объявление",account:"Аккаунт"},
+    en:{slogan:"All automotive services on one platform",search:"Search",placeholder:"Search service, mechanic, brand or category...",cart:"Cart",messages:"Messages",notifications:"Notifications",help:"Help",listing:"+ Post listing",account:"Account"},
+    ar:{slogan:"جميع خدمات السيارات في منصة واحدة",search:"بحث",placeholder:"ابحث عن خدمة أو فني أو علامة أو فئة...",cart:"السلة",messages:"الرسائل",notifications:"الإشعارات",help:"المساعدة",listing:"+ إضافة إعلان",account:"الحساب"}
   };
 
-  if(languageLabel){
-    languageLabel.textContent =
-      labels[savedLanguage] || "AZ";
+  function applyHeaderLanguage(language){
+    if(!headerText[language]) language="az";
+    const t=headerText[language];
+    const slogan=document.querySelector("#austaMainHeader .austa-header-slogan");
+    if(slogan) slogan.textContent=t.slogan;
+    const search=$("globalSearch"); if(search) search.placeholder=t.placeholder;
+    const searchBtn=$("globalSearchBtn"); if(searchBtn) searchBtn.textContent=t.search;
+    const listing=$("austaHeaderAddListing"); if(listing) listing.textContent=t.listing;
+    const account=$("headerAccountLink"); if(account) account.textContent=t.account;
+    [["austaHeaderCart","cart"],["austaHeaderMessages","messages"],["austaHeaderNotifications","notifications"],["austaHeaderHelp","help"]].forEach(([id,key])=>{
+      const el=$(id); if(el){el.title=t[key];el.setAttribute("aria-label",t[key]);}
+    });
+    if(languageLabel) languageLabel.textContent=labels[language]||"AZ";
+    document.documentElement.lang=language;
+    document.documentElement.dir=language==="ar"?"rtl":"ltr";
+    localStorage.setItem("austa_language",language);
   }
 
+  languageButton?.addEventListener("click",function(event){
+    event.stopPropagation();
+    const isOpen=!languageMenu.hidden;
+    languageMenu.hidden=isOpen;
+    languageButton.setAttribute("aria-expanded",String(!isOpen));
+  });
 
-  console.log(
-    "A-USTA CLEAN HEADER READY"
-  );
+  languageMenu?.querySelectorAll("[data-austa-language]").forEach(button=>{
+    button.addEventListener("click",function(){
+      const language=button.dataset.austaLanguage||"az";
+      applyHeaderLanguage(language);
+      languageMenu.hidden=true;
+      languageButton.setAttribute("aria-expanded","false");
+      window.dispatchEvent(new CustomEvent("austa:language-change",{detail:{language}}));
+    });
+  });
 
+  document.addEventListener("click",function(event){
+    if(!event.target.closest(".austa-header-language") && languageMenu){
+      languageMenu.hidden=true;
+      languageButton?.setAttribute("aria-expanded","false");
+    }
+  });
+
+  function closeHeaderPanel(){ $("austaCleanHeaderPanel")?.remove(); }
+  function openHeaderPanel(title,body){
+    const old=$("austaCleanHeaderPanel");
+    if(old){old.remove();return;}
+    const panel=document.createElement("div");
+    panel.id="austaCleanHeaderPanel";
+    panel.style.cssText="position:fixed;right:18px;top:72px;z-index:10000001;width:min(360px,calc(100vw - 36px));background:#fff;color:#172033;border:1px solid #dfe5e8;border-radius:14px;padding:16px;box-shadow:0 18px 50px rgba(0,0,0,.22)";
+    panel.innerHTML='<button type="button" data-austa-close style="float:right;border:0;background:#e5092f;color:#fff;border-radius:7px;width:30px;height:30px;cursor:pointer">×</button><h3 style="margin:2px 40px 12px 0">'+title+'</h3><div style="font-size:13px;line-height:1.55;color:#52606d">'+body+'</div>';
+    document.body.appendChild(panel);
+    panel.querySelector("[data-austa-close]").onclick=closeHeaderPanel;
+  }
+
+  $("austaHeaderCart")?.addEventListener("click",function(){
+    openHeaderPanel("🛒 Səbət","Səbətiniz hazırda boşdur. Ehtiyat hissəsi və aksesuar əlavə etdikdə burada görünəcək.");
+  });
+
+  $("austaHeaderMessages")?.addEventListener("click",function(){
+    const existing=document.querySelector("#messages,#messagesPanel,[data-panel='messages']");
+    if(existing){existing.scrollIntoView({behavior:"smooth",block:"start"});return;}
+    openHeaderPanel("💬 Mesajlar","Mesajlarınız burada görünəcək.");
+  });
+
+  $("austaHeaderNotifications")?.addEventListener("click",function(){
+    const n=window.AUSTA_LAST_PROVIDER_NOTIFICATION;
+    const text=n ? String(n.message||n.text||n.title||"Yeni bildiriş var.") : "Hazırda yeni bildiriş yoxdur.";
+    openHeaderPanel("🔔 Bildirişlər",text);
+  });
+
+  $("austaHeaderHelp")?.addEventListener("click",function(){
+    const existing=[...document.querySelectorAll("button,a")].find(el=>el.id!=="austaHeaderHelp" && /kömək|yardım|faq/i.test(el.textContent||""));
+    if(existing){existing.click();return;}
+    const footer=document.querySelector("footer,.footer");
+    if(footer){footer.scrollIntoView({behavior:"smooth",block:"start"});return;}
+    openHeaderPanel("❔ Kömək","A-USTA yardım bölməsi hazırlanır.");
+  });
+
+  $("austaHeaderAddListing")?.addEventListener("click",function(event){
+    event.preventDefault();
+    if(window.AUSTA_V53?.openListing){window.AUSTA_V53.openListing();return;}
+    const existing=document.querySelector('[data-top-flow="listing"][data-top-title="Elan yerləşdir"]');
+    existing?.click();
+  });
+
+  applyHeaderLanguage(localStorage.getItem("austa_language")||"az");
+  console.log("A-USTA CLEAN HEADER READY");
 })();
 </script>
-
-
