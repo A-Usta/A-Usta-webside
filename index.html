@@ -14959,8 +14959,13 @@ function calcTransport(kind,km,kg){
     return Math.round(p*100)/100;
   }
 
-  let p=25+km*1.20;
-  return Math.max(25,Math.round(p*100)/100);
+ let p=25;
+
+if(km>5){
+  p+=(km-5)*1.20;
+}
+
+return Math.round(p*100)/100;
 }
 function slots(){let a=[];for(let h=7;h<=23;h++)for(let m of [0,15,30,45]){if(h===23&&m>0)continue;a.push(String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'));}return a;}
 function directTransport(kind){
@@ -14971,13 +14976,40 @@ function directTransport(kind){
  o.innerHTML=`<div class="v32-t-box"><button type="button" class="v32-x">×</button><h2>${title}</h2><p class="v32-sub">Məsafə${cargo?' və yük çəkisi':''} əsasında yalnız ilkin qiymət hesablanır. Sifarişi qəbul edən daşıyıcıya ünvan, qiymət və vaxt görünəcək.</p><div class="v32-grid">
  <label>Ad / soyad<input id="v32Name" placeholder="Ad və soyad"></label><label>Telefon<input id="v32Phone" type="tel" placeholder="+994"></label>
  ${cargo?'<label>Yük növü<select id="v32Type"><option>Ümumi yük</option><option>Mebel</option><option>Texnika</option><option>Tikinti materialı</option><option>Avtomobil hissəsi</option><option>Digər</option></select></label><label>Çəki (kq)<input id="v32Kg" type="number" min="1" max="3000" value="100"></label>':'<label>Avtomobil marka / model<input id="v32Car" placeholder="Məs: Mercedes E-Class"></label><label>Vəziyyət<select id="v32Cond"><option>Yolda qalıb</option><option>Qəza</option><option>Mühərrik işləmir</option><option>Parkdan götürülmə</option><option>Digər</option></select></label>'}
- <label>Təxmini məsafə (km)<input id="v32Km" type="number" min="0" step="0.1" value="5"></label><label>Dəqiq saat<select id="v32Time">${slots().map(x=>`<option>${x}</option>`).join('')}</select></label>
+ <label>Təxmini məsafə (km)<input id="v32Km" type="number" min="0" step="0.1" value="0"></label><label>Dəqiq saat<select id="v32Time">${slots().map(x=>`<option>${x}</option>`).join('')}</select></label>
  <label>Tarix<input id="v32Date" type="date"></label><label>📍 Götürülmə ünvanı<input id="v32Pickup" placeholder="Ünvan / xəritədə seç"></label>
  <label>📍 Təyinat ünvanı<input id="v32Drop" placeholder="Ünvan / xəritədə seç"></label><label>Əlavə məlumat<textarea id="v32Note" placeholder="Əlavə məlumat"></textarea></label>
  </div><div class="v32-map-note">🗺️ <b>Xəritə:</b> tətbiqdə GPS ilə dəqiq götürülmə və təyinat nöqtəsi burada xəritədə görünəcək. Frontend mərhələsində xəritə API-si qoşulanda avtomatik ünvan/məsafə alınacaq.</div><div id="v32Price" class="v32-price"></div><label class="v32-consent"><input id="v32Consent" type="checkbox"> Ünvan və sifariş məlumatlarının qəbul edən daşıyıcıya göstərilməsinə razıyam.</label><button type="button" class="btn btn-primary v32-submit">📤 Sifarişi göndər</button><div id="v32Result"></div><div id="v32ProviderPanel" class="v32-provider" hidden></div></div>`;
  document.body.appendChild(o);
  const date=o.querySelector('#v32Date'); if(date)date.value=new Date().toISOString().slice(0,10);
- const update=()=>{const p=calcTransport(cargo?'cargo':'evac',o.querySelector('#v32Km').value,o.querySelector('#v32Kg')?.value);o.querySelector('#v32Price').innerHTML=`<b>A-USTA ilkin qiymət: ${p.toFixed(2)} AZN</b><small>Yekun qiyməti sifarişi qəbul edən daşıyıcı məsafə, yük, gözləmə və real şəraitə görə təsdiqləyir.</small>`};
+const update=()=>{
+  const km=Number(o.querySelector('#v32Km').value)||0;
+  const kg=Number(o.querySelector('#v32Kg')?.value)||0;
+  const priceBox=o.querySelector('#v32Price');
+
+  if(cargo && km<=0){
+    priceBox.innerHTML=`
+      <b>Qiymət avtomatik hesablanacaq</b>
+      <small>Məsafə və yük məlumatlarını daxil edin. Sistem avtomatik qiyməti hesablayacaq.</small>
+    `;
+    return;
+  }
+
+  const p=calcTransport(cargo?'cargo':'evac',km,kg);
+
+  if(cargo){
+    priceBox.innerHTML=`
+      <b>A-USTA hesablanmış qiymət: ${p.toFixed(2)} AZN</b>
+      <small>Məsafə, yük, gözləmə və real şəraitə görə daşıyıcı yekun qiyməti təsdiqləyir.</small>
+    `;
+    return;
+  }
+
+  priceBox.innerHTML=`
+    <b>Evakuator: ${p.toFixed(2)} AZN-dən</b>
+    <small>Məsafə artdıqca qiymət avtomatik hesablanır. Yekun qiyməti daşıyıcı marşrut, gözləmə və avtomobilin vəziyyətinə görə təsdiqləyir.</small>
+  `;
+};
  o.addEventListener('input',e=>{if(['v32Km','v32Kg'].includes(e.target.id))update()});o.addEventListener('change',e=>{if(['v32Km','v32Kg'].includes(e.target.id))update()});update();
  o.querySelector('.v32-x').onclick=()=>o.remove();
  o.querySelector('.v32-submit').onclick=()=>{
