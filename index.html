@@ -40559,6 +40559,15 @@ align-self:center !important;
     text-shadow:0 1px 3px #000;
 }
 
+  <button
+    class="austa-v137-sound"
+    type="button"
+    title="Səsi aç / bağla"
+>
+    <span>🔊</span>
+    <small>Səs</small>
+</button>
+
 .austa-v137-actions .austa-v137-like.active > span{
     background:#e6002d;
 }
@@ -40567,6 +40576,31 @@ align-self:center !important;
     background:#e6002d;
 }
 
+.austa-v137-stage.austa-v137-paused::before{
+    content:"▶";
+    position:absolute;
+    z-index:5;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+
+    width:68px;
+    height:68px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+    background:rgba(0,0,0,.58);
+
+    color:#fff;
+    font-size:30px;
+    padding-left:4px;
+
+    pointer-events:none;
+}
+  
 </style>
 
 
@@ -41003,7 +41037,10 @@ function render(){
 
     if(!item || !stage) return;
 
-
+    stage.classList.remove(
+    "austa-v137-paused"
+);
+  
     /* əvvəlki real videonu dayandır və sil */
 
     const oldVideo =
@@ -41041,9 +41078,11 @@ function render(){
 
         video.autoplay = true;
 
-        video.muted = true;
+        video.muted = false;
 
-        video.loop = true;
+         video.volume = 1;
+
+         video.loop = true;
 
         video.playsInline = true;
 
@@ -41053,12 +41092,17 @@ function render(){
 
         video.play().catch(function(err){
 
-            console.log(
-                "A-USTA autoplay:",
-                err
-            );
+    console.log(
+        "A-USTA sound autoplay blocked:",
+        err
+    );
 
-        });
+    video.muted = true;
+
+    video.play().catch(function(){});
+
+    syncVideoSound();
+});
 
     }
 
@@ -41427,6 +41471,9 @@ listing?.addEventListener(
  * =========================================================
  */
 
+const soundBtn =
+    viewer?.querySelector(".austa-v137-sound");
+  
 const likeBtn =
     viewer?.querySelector(".austa-v137-like");
 
@@ -41439,6 +41486,99 @@ const saveBtn =
 const shareBtn =
     viewer?.querySelector(".austa-v137-share");
 
+  function syncVideoSound(){
+
+    const video =
+        stage?.querySelector(
+            ".austa-v137-real-video"
+        );
+
+    const icon =
+        soundBtn?.querySelector("span");
+
+    if(!video || !icon) return;
+
+    icon.textContent =
+        video.muted ? "🔇" : "🔊";
+}
+
+
+soundBtn?.addEventListener(
+    "click",
+    async function(e){
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const video =
+            stage?.querySelector(
+                ".austa-v137-real-video"
+            );
+
+        if(!video) return;
+
+        video.muted =
+            !video.muted;
+
+        video.volume = 1;
+
+        if(!video.paused){
+
+            try{
+                await video.play();
+            }catch(err){
+                console.log(
+                    "A-USTA sound:",
+                    err
+                );
+            }
+        }
+
+        syncVideoSound();
+    }
+);
+
+  stage?.addEventListener(
+    "click",
+    async function(e){
+
+        const video =
+            stage.querySelector(
+                ".austa-v137-real-video"
+            );
+
+        if(!video) return;
+
+        if(video.paused){
+
+            try{
+
+                await video.play();
+
+                stage.classList.remove(
+                    "austa-v137-paused"
+                );
+
+            }catch(err){
+
+                console.log(
+                    "A-USTA video play:",
+                    err
+                );
+
+            }
+
+        }else{
+
+            video.pause();
+
+            stage.classList.add(
+                "austa-v137-paused"
+            );
+
+        }
+    }
+);
 
 function getActionKey(type, id){
     return "austa-v137-" + type + "-" + id;
