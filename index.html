@@ -26676,13 +26676,111 @@ function listings(){
 }
 
 
+function mapSupabaseListing(item){
+
+  if(!item){
+    return null;
+  }
+
+  const isRent=
+    item.listing_type === 'rent';
+
+  return {
+    ...item,
+
+    category:
+      isRent
+        ? 'rent'
+        : 'cars',
+
+    type:
+      isRent
+        ? 'Rent a Car'
+        : 'Avtomobil satışı',
+
+    'Marka':
+      item.brand || '',
+
+    'Model':
+      item.model || '',
+
+    'Buraxılış ili':
+      item.year || '',
+
+    'Yürüş (km)':
+      item.mileage ?? '',
+
+    'Ban tipi':
+      item.body_type || '',
+
+    'Yanacaq':
+      item.fuel_type || '',
+
+    'Sürətlər qutusu':
+      item.transmission || '',
+
+    'Mühərrik həcmi':
+      item.engine || '',
+
+    'Rəng':
+      item.color || '',
+
+    'Region / ünvan':
+      [
+        item.region,
+        item.district,
+        item.address
+      ]
+      .filter(Boolean)
+      .join(', '),
+
+    'Telefon':
+      item.phone || '',
+
+    'Avtomobil haqqında əlavə məlumat':
+      item.description || '',
+
+    'Qiymət':
+      isRent
+        ? item.daily_price
+        : item.price,
+
+    _austaSupabase:
+      true,
+
+    _austaListingType:
+      item.listing_type
+  };
+}
+
+
 function findListing(id){
 
-  return listings().find(
-    item=>
-      String(item?.id || '')===
+  const localItem=
+    listings().find(
+      item=>
+        String(item?.id || '')===
+        String(id || '')
+    );
+
+  if(localItem){
+    return localItem;
+  }
+
+  const supabaseItem=
+    window.AUSTA_CURRENT_SUPABASE_LISTING;
+
+  if(
+    supabaseItem &&
+    String(supabaseItem.id || '')===
       String(id || '')
-  ) || null;
+  ){
+    return mapSupabaseListing(
+      supabaseItem
+    );
+  }
+
+  return null;
 }
 
 
