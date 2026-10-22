@@ -41764,23 +41764,50 @@ listing?.addEventListener(
              * tam elan səhifəsini yaradacaq.
              */
 
-            window.dispatchEvent(
-                new CustomEvent(
-                    "austa:supabase-listing-open",
-                    {
-                        detail:{
-                            listing:
-                                realListing,
+          closeViewer();
 
-                            videoItem:
-                                item
-                        }
-                    }
-                )
-            );
+if(
+    typeof window.AUSTA_OPEN_FULL_LISTING === "function"
+){
+
+    const opened =
+        await window.AUSTA_OPEN_FULL_LISTING(
+            realListing.id
+        );
+
+    console.log(
+        "A-USTA VIDEO -> FULL LISTING:",
+        realListing.id,
+        opened
+    );
+
+    if(opened){
+        return;
+    }
+}
 
 
-            return;
+/*
+ * Full listing açıla bilməsə,
+ * köhnə event fallback kimi qalsın.
+ */
+
+window.dispatchEvent(
+    new CustomEvent(
+        "austa:supabase-listing-open",
+        {
+            detail:{
+                listing:
+                    realListing,
+
+                videoItem:
+                    item
+            }
+        }
+    )
+);
+
+return;
         }
 
 
