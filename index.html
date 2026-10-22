@@ -10554,8 +10554,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('.premium-chip,.
 </script>
 
 </body>
-<style id="austa-v18-market-css">
-.austa-market-after-video{margin-top:4px}.austa-after-video-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1f
+
 <style id="austa-v38-account-css">
 /* V38 — Hesab yalnız header-dən açılır */
 #austaAccountModal{position:fixed!important;inset:0!important;z-index:2000000!important;display:none;align-items:flex-start;justify-content:center;padding:28px 16px;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);overflow:auto}
@@ -10651,7 +10650,7 @@ function initAccount(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initAccount);else initAccount();
 })();
 </script>
-r));gap:12px}.austa-after-video-grid article{background:linear-gradient(180deg,#071c2d,#04121e);border:1px solid #14517b;border-radius:14px;padding:16px;min-height:190px;box-shadow:0 12px 30px rgba(0,0,0,.22)}.austa-after-video-grid article.large{grid-column:span 2}.austa-addon-icon{font-size:28px;margin-bottom:9px}.austa-after-video-grid h3{margin:0 0 7px;font-size:16px}.austa-after-video-grid p{color:#9db2c4;font-size:11px;line-height:1.55;min-height:52px}.austa-logistics-highlight{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:14px 0;padding:18px;border:1px solid #c91c37;border-radius:16px;background:linear-gradient(135deg,#210914,#071b2b);box-shadow:0 14px 35px rgba(0,0,0,.25)}.austa-highlight-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;color:#ff6c7e;margin-bottom:7px}.austa-logistics-highlight h3{margin:0 0 6px;font-size:20px}.austa-logistics-highlight p{margin:0;color:#a8bac9;font-size:12px;line-height:1.55;max-width:850px}.austa-market-after-video #austaPlateMarketplaceSlot .austa-module{display:block;margin-top:12px}.austa-market-after-video #austaPlateMarketplaceSlot:empty{display:none}@media(max-width:1100px){.austa-after-video-grid{grid-template-columns:repeat(3,1fr)}.austa-after-video-grid article.large{grid-column:span 2}}@media(max-width:700px){.austa-after-video-grid{grid-template-columns:repeat(2,1fr)}.austa-after-video-grid article.large{grid-column:span 2}.austa-logistics-highlight{display:block}.austa-logistics-highlight .btn{margin-top:12px}}@media(max-width:460px){.austa-after-video-grid{grid-template-columns:1fr}.austa-after-video-grid article.large{grid-column:auto}}
+
 \n\n<script id="austa-v18-market-logistics-patch">
 (function(){
 "use strict";
@@ -42346,4 +42345,176 @@ console.log(
 
 })();
 
+</script>
+
+<style id="austa-v145-home-cleanup-css">
+
+/* =========================================================
+   A-USTA V145 — HOME CLEANUP
+   Köhnə aşağı kateqoriya panelini HOME-dan çıxar
+   ========================================================= */
+
+#austaV22CategoryTabs,
+#austaVideoCategoryTabs,
+.austa-v22-category-tabs,
+.austa-video-category-tabs,
+.austa-category-tabs-after-video {
+    display:none !important;
+}
+
+
+/* =========================================================
+   HOME / PAGE BOTTOM — WHITE THEME
+   ========================================================= */
+
+html,
+body {
+    background:#ffffff !important;
+}
+
+footer,
+.austa-footer,
+#austaFooter {
+    background:#ffffff !important;
+    color:#111827 !important;
+    border-top:1px solid #e5e7eb !important;
+}
+
+footer h1,
+footer h2,
+footer h3,
+footer h4,
+footer strong,
+.austa-footer h1,
+.austa-footer h2,
+.austa-footer h3,
+.austa-footer h4,
+.austa-footer strong {
+    color:#111827 !important;
+}
+
+footer p,
+footer span,
+footer a,
+footer li,
+.austa-footer p,
+.austa-footer span,
+.austa-footer a,
+.austa-footer li {
+    color:#4b5563 !important;
+}
+
+footer a:hover,
+.austa-footer a:hover {
+    color:#dc2626 !important;
+}
+
+
+/* =========================================================
+   Hesab daxilində işləməli olan sifariş sistemlərini saxla,
+   amma HOME səhifəsinin aşağısında göstərmə.
+   ========================================================= */
+
+body > #providerOrders,
+body > #customerOrders,
+body > #austaProviderOrders,
+body > #austaCustomerOrders,
+body > .austa-provider-orders,
+body > .austa-customer-orders {
+    display:none !important;
+}
+
+</style>
+
+<script id="austa-v145-home-cleanup-js">
+(function(){
+
+    'use strict';
+
+    function normalizeText(value){
+        return String(value || '')
+            .replace(/\s+/g,' ')
+            .trim()
+            .toLocaleLowerCase('az-AZ');
+    }
+
+    function cleanOldHomeSections(){
+
+        /*
+         * Köhnə aşağı kateqoriya sətri.
+         * Yalnız bütün bu kateqoriyaları birlikdə daşıyan
+         * köhnə panel hədəflənir.
+         */
+
+        document.querySelectorAll(
+            '.austa-v22-category-tabs,' +
+            '.austa-video-category-tabs,' +
+            '.austa-category-tabs-after-video'
+        ).forEach(function(section){
+            section.style.setProperty(
+                'display',
+                'none',
+                'important'
+            );
+        });
+
+
+        /*
+         * HOME-un sonunda qalan köhnə sifariş panelləri.
+         * Funksiyalar və JS silinmir.
+         */
+
+        document.querySelectorAll(
+            'body > section,' +
+            'body > .section,' +
+            'body > main > section'
+        ).forEach(function(section){
+
+            const text=
+                normalizeText(
+                    section.textContent
+                );
+
+            if(
+                text.startsWith('👨‍🔧 usta sifarişləri') ||
+                text.startsWith('usta sifarişləri')
+            ){
+                section.style.setProperty(
+                    'display',
+                    'none',
+                    'important'
+                );
+            }
+
+            if(
+                text.startsWith('🚘 sifarişlərim') ||
+                text.startsWith('sifarişlərim')
+            ){
+                section.style.setProperty(
+                    'display',
+                    'none',
+                    'important'
+                );
+            }
+
+        });
+
+    }
+
+
+    if(
+        document.readyState === 'loading'
+    ){
+        document.addEventListener(
+            'DOMContentLoaded',
+            cleanOldHomeSections,
+            {
+                once:true
+            }
+        );
+    }else{
+        cleanOldHomeSections();
+    }
+
+})();
 </script>
