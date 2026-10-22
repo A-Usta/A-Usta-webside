@@ -41434,12 +41434,125 @@ document.addEventListener(
 
 listing?.addEventListener(
     "click",
-    function(){
+    async function(){
 
         const item =
             items[current];
 
+        if(!item) return;
+
+
+        /*
+         * REAL SUPABASE LISTING
+         */
+
+        if(
+            item.real &&
+            item.listingId
+        ){
+
+            const sb =
+                window.AUSTA_SUPABASE;
+
+            if(!sb){
+
+                console.error(
+                    "A-USTA Supabase client tapılmadı"
+                );
+
+                return;
+            }
+
+
+            const {
+                data:realListing,
+                error
+            } = await sb
+                .from("vehicle_listings")
+                .select("*")
+                .eq(
+                    "id",
+                    item.listingId
+                )
+                .single();
+
+
+            if(error || !realListing){
+
+                console.error(
+                    "A-USTA real elan tapılmadı:",
+                    error
+                );
+
+                return;
+            }
+
+
+            console.log(
+                "A-USTA REAL LISTING:",
+                realListing
+            );
+
+
+            /*
+             * Detail səhifəsi üçün real elanı
+             * ayrıca saxlayırıq.
+             */
+
+            window.AUSTA_CURRENT_SUPABASE_LISTING =
+                realListing;
+
+
+            closeViewer();
+
+
+            /*
+             * Real Supabase detail event.
+             * Növbəti blok bunu qəbul edib
+             * tam elan səhifəsini yaradacaq.
+             */
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    "austa:supabase-listing-open",
+                    {
+                        detail:{
+                            listing:
+                                realListing,
+
+                            videoItem:
+                                item
+                        }
+                    }
+                )
+            );
+
+
+            return;
+        }
+
+
+        /*
+         * DEMO / KÖHNƏ LISTING FALLBACK
+         */
+
         closeViewer();
+
+
+        if(
+            window.AUSTA_LISTING_DETAIL?.open
+        ){
+
+            const opened =
+                window.AUSTA_LISTING_DETAIL.open(
+                    item.id
+                );
+
+            if(opened){
+                return;
+            }
+        }
+
 
         if(
             window.AUSTA_UNIFIED_FLOW?.open
@@ -41451,19 +41564,10 @@ listing?.addEventListener(
                     ? "Avtomobil icarəsi"
                     : "Avtomobil satışı"
             );
-
-            return;
-
         }
-
-        document.getElementById("cars")
-            ?.scrollIntoView({
-                behavior:"smooth"
-            });
 
     }
 );
-
   /*
  * =========================================================
  * V137 VIDEO ACTIONS
