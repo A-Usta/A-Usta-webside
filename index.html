@@ -40494,6 +40494,61 @@ align-self:center !important;
 
 }
 
+  .austa-v137-actions{
+    position:absolute;
+    z-index:16;
+    right:14px;
+    bottom:145px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+}
+
+.austa-v137-actions button{
+    width:52px;
+    min-height:52px;
+    padding:0;
+    border:0;
+    background:transparent;
+    color:#fff;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+}
+
+.austa-v137-actions button > span{
+    width:44px;
+    height:44px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    background:rgba(0,0,0,.55);
+    color:#fff;
+    font-size:21px;
+    line-height:1;
+    backdrop-filter:blur(5px);
+}
+
+.austa-v137-actions button small{
+    color:#fff;
+    font-size:10px;
+    font-weight:800;
+    text-shadow:0 1px 3px #000;
+}
+
+.austa-v137-actions .austa-v137-like.active > span{
+    background:#e6002d;
+}
+
+.austa-v137-actions .austa-v137-save.active > span{
+    background:#e6002d;
+}
+
 </style>
 
 
@@ -40550,6 +40605,45 @@ align-self:center !important;
 
 </div>
 
+<div class="austa-v137-actions">
+
+    <button
+        class="austa-v137-like"
+        type="button"
+        title="Bəyən"
+    >
+        <span>♥</span>
+        <small>Bəyən</small>
+    </button>
+
+    <button
+        class="austa-v137-comment"
+        type="button"
+        title="Şərh"
+    >
+        <span>💬</span>
+        <small>Şərh</small>
+    </button>
+
+    <button
+        class="austa-v137-save"
+        type="button"
+        title="Saxla"
+    >
+        <span>🔖</span>
+        <small>Saxla</small>
+    </button>
+
+    <button
+        class="austa-v137-share"
+        type="button"
+        title="Paylaş"
+    >
+        <span>↗</span>
+        <small>Paylaş</small>
+    </button>
+
+</div>
 
 <script id="austa-v137-video-viewer-js">
 
@@ -41038,6 +41132,241 @@ listing?.addEventListener(
     }
 );
 
+  /*
+ * =========================================================
+ * V137 VIDEO ACTIONS
+ * Like • Comment • Save • Share
+ * =========================================================
+ */
+
+const likeBtn =
+    viewer?.querySelector(".austa-v137-like");
+
+const commentBtn =
+    viewer?.querySelector(".austa-v137-comment");
+
+const saveBtn =
+    viewer?.querySelector(".austa-v137-save");
+
+const shareBtn =
+    viewer?.querySelector(".austa-v137-share");
+
+
+function getActionKey(type, id){
+    return "austa-v137-" + type + "-" + id;
+}
+
+
+function syncVideoActions(){
+
+    const item = items[current];
+
+    if(!item) return;
+
+    const liked =
+        localStorage.getItem(
+            getActionKey("like", item.id)
+        ) === "1";
+
+    const saved =
+        localStorage.getItem(
+            getActionKey("save", item.id)
+        ) === "1";
+
+    likeBtn?.classList.toggle(
+        "active",
+        liked
+    );
+
+    saveBtn?.classList.toggle(
+        "active",
+        saved
+    );
+
+}
+
+
+likeBtn?.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+        const item = items[current];
+
+        if(!item) return;
+
+        const key =
+            getActionKey(
+                "like",
+                item.id
+            );
+
+        const active =
+            localStorage.getItem(key) === "1";
+
+        if(active){
+            localStorage.removeItem(key);
+        }else{
+            localStorage.setItem(key,"1");
+        }
+
+        syncVideoActions();
+
+    }
+);
+
+
+saveBtn?.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+        const item = items[current];
+
+        if(!item) return;
+
+        const key =
+            getActionKey(
+                "save",
+                item.id
+            );
+
+        const active =
+            localStorage.getItem(key) === "1";
+
+        if(active){
+            localStorage.removeItem(key);
+        }else{
+            localStorage.setItem(key,"1");
+        }
+
+        syncVideoActions();
+
+    }
+);
+
+
+commentBtn?.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+        const item = items[current];
+
+        if(!item) return;
+
+        const text =
+            prompt(
+                item.title +
+                " üçün şərhinizi yazın:"
+            );
+
+        if(!text?.trim()) return;
+
+        const key =
+            getActionKey(
+                "comments",
+                item.id
+            );
+
+        let comments = [];
+
+        try{
+            comments =
+                JSON.parse(
+                    localStorage.getItem(key) ||
+                    "[]"
+                );
+        }catch{
+            comments = [];
+        }
+
+        comments.push({
+            text:text.trim(),
+            createdAt:
+                new Date().toISOString()
+        });
+
+        localStorage.setItem(
+            key,
+            JSON.stringify(comments)
+        );
+
+        alert("Şərh əlavə edildi.");
+
+    }
+);
+
+
+shareBtn?.addEventListener(
+    "click",
+    async function(e){
+
+        e.stopPropagation();
+
+        const item = items[current];
+
+        if(!item) return;
+
+        const shareData = {
+            title:item.title,
+            text:
+                item.title +
+                " • " +
+                item.price,
+            url:location.href
+        };
+
+        try{
+
+            if(navigator.share){
+
+                await navigator.share(
+                    shareData
+                );
+
+                return;
+
+            }
+
+            await navigator.clipboard.writeText(
+                location.href
+            );
+
+            alert(
+                "Elanın linki kopyalandı."
+            );
+
+        }catch(err){
+
+            console.log(
+                "A-USTA share cancelled:",
+                err
+            );
+
+        }
+
+    }
+);
+
+
+/*
+ * Video dəyişəndə həmin videonun
+ * Like / Save vəziyyətini göstər.
+ */
+
+const originalRenderV137 = render;
+
+render = function(){
+
+    originalRenderV137();
+
+    syncVideoActions();
+
+};
 
 window.AUSTA_V137_VIDEO_VIEWER = {
 
