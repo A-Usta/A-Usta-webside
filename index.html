@@ -26789,6 +26789,30 @@ function titleOf(item){
 
 function priceOf(item){
 
+  if(
+    item?._austaSupabase &&
+    item?._austaListingType === "rent"
+  ){
+
+    const daily=
+      item?.daily_price;
+
+    if(
+      daily === null ||
+      daily === undefined ||
+      String(daily).trim() === ""
+    ){
+      return "";
+    }
+
+    return (
+      Number(daily)
+        .toLocaleString("az-AZ") +
+      " ₼ / gün"
+    );
+  }
+
+
   const value=
     item?.['Qiymət (AZN)'] ??
     item?.['Qiymət'] ??
@@ -28121,6 +28145,40 @@ window.AUSTA_OPEN_LISTING=
 window.AUSTA_OPEN_FULL_LISTING=
   openFullListing;
 
+  /* =========================================================
+   SUPABASE REAL LISTING OPEN
+   V137/V140 video viewer -> full listing page
+   ========================================================= */
+
+window.addEventListener(
+  "austa:supabase-listing-open",
+  async function(event){
+
+    const realListing=
+      event.detail?.listing;
+
+    if(
+      !realListing ||
+      !realListing.id
+    ){
+      return;
+    }
+
+    window.AUSTA_CURRENT_SUPABASE_LISTING=
+      realListing;
+
+    const opened=
+      await openFullListing(
+        realListing.id
+      );
+
+    console.log(
+      "A-USTA SUPABASE FULL LISTING:",
+      realListing.id,
+      opened
+    );
+  }
+);
 
 /* =========================================================
    VIDEO FEED GUARD
@@ -28843,15 +28901,111 @@ function saveListings(items){
     );
   }
 }
+  
+function mapSupabaseListing(item){
 
+  if(!item){
+    return null;
+  }
+
+  const isRent=
+    item.listing_type === "rent";
+
+  return {
+    ...item,
+
+    category:
+      isRent
+        ? "rent"
+        : "cars",
+
+    type:
+      isRent
+        ? "Rent a Car"
+        : "Avtomobil satışı",
+
+    "Marka":
+      item.brand || "",
+
+    "Model":
+      item.model || "",
+
+    "Buraxılış ili":
+      item.year || "",
+
+    "Yürüş (km)":
+      item.mileage ?? "",
+
+    "Ban tipi":
+      item.body_type || "",
+
+    "Yanacaq":
+      item.fuel_type || "",
+
+    "Sürətlər qutusu":
+      item.transmission || "",
+
+    "Mühərrik həcmi":
+      item.engine || "",
+
+    "Rəng":
+      item.color || "",
+
+    "Region / ünvan":
+      [
+        item.region,
+        item.district,
+        item.address
+      ]
+      .filter(Boolean)
+      .join(", "),
+
+    "Telefon":
+      item.phone || "",
+
+    "Avtomobil haqqında əlavə məlumat":
+      item.description || "",
+
+    "Qiymət":
+      isRent
+        ? item.daily_price
+        : item.price,
+
+    _austaSupabase:
+      true,
+
+    _austaListingType:
+      item.listing_type
+  };
+}
 
 function findListing(id){
 
-  return getListings().find(
-    item =>
-      String(item?.id || '') ===
+  const localItem=
+    listings().find(
+      item=>
+        String(item?.id || '')===
+        String(id || '')
+    );
+
+  if(localItem){
+    return localItem;
+  }
+
+  const supabaseItem=
+    window.AUSTA_CURRENT_SUPABASE_LISTING;
+
+  if(
+    supabaseItem &&
+    String(supabaseItem.id || '')===
       String(id || '')
-  ) || null;
+  ){
+    return mapSupabaseListing(
+      supabaseItem
+    );
+  }
+
+  return null;
 }
 
 
