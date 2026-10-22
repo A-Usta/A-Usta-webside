@@ -42523,3 +42523,1221 @@ body > .austa-customer-orders {
 
 })();
 </script>
+
+<style id="austa-v146-home-real-feed-css">
+
+#austaV146HomeFeed{
+  max-width:1440px;
+  margin:28px auto 60px;
+  padding:0 18px;
+  background:#fff;
+}
+
+.austa-v146-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.austa-v146-head h2{
+  margin:0;
+  color:#111827;
+  font-size:26px;
+  font-weight:900;
+}
+
+.austa-v146-head p{
+  margin:5px 0 0;
+  color:#6b7280;
+  font-size:14px;
+}
+
+#austaV146Grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:18px;
+}
+
+.austa-v146-card{
+  position:relative;
+  overflow:hidden;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  cursor:pointer;
+  box-shadow:0 4px 18px rgba(0,0,0,.06);
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease;
+}
+
+.austa-v146-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 28px rgba(0,0,0,.12);
+}
+
+.austa-v146-media{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/10;
+  overflow:hidden;
+  background:#f3f4f6;
+}
+
+.austa-v146-media img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.austa-v146-no-image{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#9ca3af;
+  font-weight:800;
+  font-size:14px;
+}
+
+.austa-v146-badge{
+  position:absolute;
+  top:10px;
+  left:10px;
+  z-index:3;
+  padding:7px 10px;
+  border-radius:999px;
+  color:#fff;
+  font-size:11px;
+  line-height:1;
+  font-weight:900;
+  box-shadow:0 4px 12px rgba(0,0,0,.22);
+}
+
+.austa-v146-badge.premium{
+  background:linear-gradient(135deg,#111827,#dc2626);
+}
+
+.austa-v146-badge.vip{
+  background:linear-gradient(135deg,#b45309,#f59e0b);
+}
+
+.austa-v146-badge.boost{
+  background:linear-gradient(135deg,#dc2626,#ef4444);
+}
+
+.austa-v146-body{
+  padding:14px;
+}
+
+.austa-v146-type{
+  display:block;
+  margin-bottom:6px;
+  color:#dc2626;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.austa-v146-price{
+  display:block;
+  color:#111827;
+  font-size:21px;
+  line-height:1.2;
+  font-weight:950;
+  margin-bottom:7px;
+}
+
+.austa-v146-title{
+  display:block;
+  color:#111827;
+  font-size:16px;
+  line-height:1.35;
+  font-weight:850;
+  margin-bottom:9px;
+}
+
+.austa-v146-specs{
+  color:#4b5563;
+  font-size:13px;
+  line-height:1.55;
+  min-height:21px;
+}
+
+.austa-v146-bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:10px;
+  margin-top:12px;
+  padding-top:11px;
+  border-top:1px solid #f0f1f3;
+}
+
+.austa-v146-location,
+.austa-v146-time{
+  color:#6b7280;
+  font-size:12px;
+  line-height:1.35;
+}
+
+.austa-v146-time{
+  text-align:right;
+  white-space:nowrap;
+}
+
+.austa-v146-empty{
+  grid-column:1/-1;
+  padding:40px 20px;
+  text-align:center;
+  border:1px dashed #d1d5db;
+  border-radius:16px;
+  color:#6b7280;
+  background:#fff;
+}
+
+.austa-v146-more{
+  grid-column:1/-1;
+  display:flex;
+  justify-content:center;
+  padding:12px 0 4px;
+}
+
+#austaV146More{
+  min-width:190px;
+  padding:12px 20px;
+  border:0;
+  border-radius:10px;
+  background:#111827;
+  color:#fff;
+  font-weight:850;
+  cursor:pointer;
+}
+
+@media(max-width:1100px){
+  #austaV146Grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+@media(max-width:780px){
+  #austaV146Grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+}
+
+@media(max-width:520px){
+  #austaV146HomeFeed{
+    padding:0 10px;
+  }
+
+  #austaV146Grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+  }
+
+  .austa-v146-body{
+    padding:10px;
+  }
+
+  .austa-v146-price{
+    font-size:17px;
+  }
+
+  .austa-v146-title{
+    font-size:14px;
+  }
+
+  .austa-v146-specs{
+    font-size:11px;
+  }
+
+  .austa-v146-bottom{
+    display:block;
+  }
+
+  .austa-v146-time{
+    text-align:left;
+    margin-top:4px;
+  }
+}
+
+</style>
+
+<script id="austa-v146-home-real-feed-js">
+(function(){
+
+'use strict';
+
+const PAGE_SIZE = 40;
+
+let offset = 0;
+let loading = false;
+let finished = false;
+
+function esc(value){
+  return String(value ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function ensureFeed(){
+
+  let section =
+    document.getElementById(
+      'austaV146HomeFeed'
+    );
+
+  if(section){
+    return section;
+  }
+
+  section =
+    document.createElement('section');
+
+  section.id =
+    'austaV146HomeFeed';
+
+  section.innerHTML = `
+    <div class="austa-v146-head">
+      <div>
+        <h2>Avtomobil elanları</h2>
+        <p>
+          Premium, VIP və ən yeni avtomobil elanları
+        </p>
+      </div>
+    </div>
+
+    <div id="austaV146Grid"></div>
+  `;
+
+  /*
+   * HOME video blokundan sonra yerləşdiririk.
+   */
+
+  const videoGrid =
+    document.getElementById(
+      'austaV22VideoGrid'
+    );
+
+  if(
+    videoGrid &&
+    videoGrid.parentElement
+  ){
+
+    videoGrid.parentElement
+      .insertAdjacentElement(
+        'afterend',
+        section
+      );
+
+  }else{
+
+    document.body.appendChild(
+      section
+    );
+
+  }
+
+  return section;
+}
+
+
+function promotionLevel(item){
+
+  const type =
+    String(
+      item?.promotion_type ||
+      'standard'
+    ).toLowerCase();
+
+  const until =
+    item?.promotion_until
+      ? Date.parse(
+          item.promotion_until
+        )
+      : null;
+
+  /*
+   * Vaxtı bitmiş paket = standard.
+   */
+
+  if(
+    until &&
+    Number.isFinite(until) &&
+    until <= Date.now()
+  ){
+    return 0;
+  }
+
+  if(type === 'premium'){
+    return 3;
+  }
+
+  if(type === 'vip'){
+    return 2;
+  }
+
+  if(type === 'boost'){
+    return 1;
+  }
+
+  return 0;
+}
+
+
+function promotionBadge(item){
+
+  const level =
+    promotionLevel(item);
+
+  if(level === 3){
+    return `
+      <span class="austa-v146-badge premium">
+        👑 PREMIUM
+      </span>
+    `;
+  }
+
+  if(level === 2){
+    return `
+      <span class="austa-v146-badge vip">
+        ⭐ VIP
+      </span>
+    `;
+  }
+
+  if(level === 1){
+    return `
+      <span class="austa-v146-badge boost">
+        🔥 İRƏLİ ÇƏK
+      </span>
+    `;
+  }
+
+  return '';
+}
+
+
+function listingTime(item){
+
+  const raw =
+    item?.published_at ||
+    item?.created_at;
+
+  if(!raw){
+    return '';
+  }
+
+  const date =
+    new Date(raw);
+
+  if(
+    Number.isNaN(
+      date.getTime()
+    )
+  ){
+    return '';
+  }
+
+  const now =
+    new Date();
+
+  const diff =
+    Math.max(
+      0,
+      now.getTime() -
+      date.getTime()
+    );
+
+  const minutes =
+    Math.floor(
+      diff / 60000
+    );
+
+  const hours =
+    Math.floor(
+      diff / 3600000
+    );
+
+  if(minutes < 1){
+    return 'İndi';
+  }
+
+  if(minutes < 60){
+    return minutes +
+      ' dəqiqə əvvəl';
+  }
+
+  /*
+   * Eyni təqvim günü.
+   */
+
+  if(
+    date.getFullYear() ===
+      now.getFullYear() &&
+    date.getMonth() ===
+      now.getMonth() &&
+    date.getDate() ===
+      now.getDate()
+  ){
+
+    return (
+      'Bu gün, ' +
+      date.toLocaleTimeString(
+        'az-AZ',
+        {
+          hour:'2-digit',
+          minute:'2-digit'
+        }
+      )
+    );
+  }
+
+  const yesterday =
+    new Date(now);
+
+  yesterday.setDate(
+    now.getDate() - 1
+  );
+
+  if(
+    date.getFullYear() ===
+      yesterday.getFullYear() &&
+    date.getMonth() ===
+      yesterday.getMonth() &&
+    date.getDate() ===
+      yesterday.getDate()
+  ){
+
+    return (
+      'Dünən, ' +
+      date.toLocaleTimeString(
+        'az-AZ',
+        {
+          hour:'2-digit',
+          minute:'2-digit'
+        }
+      )
+    );
+  }
+
+  if(hours < 48){
+    return hours +
+      ' saat əvvəl';
+  }
+
+  return date.toLocaleDateString(
+    'az-AZ',
+    {
+      day:'numeric',
+      month:'long',
+      year:
+        date.getFullYear() !==
+        now.getFullYear()
+          ? 'numeric'
+          : undefined
+    }
+  );
+}
+
+
+function formatNumber(value){
+
+  const number =
+    Number(value);
+
+  if(!Number.isFinite(number)){
+    return '';
+  }
+
+  return number.toLocaleString(
+    'az-AZ'
+  );
+}
+
+
+function priceText(item){
+
+  if(
+    item.listing_type ===
+    'rent'
+  ){
+
+    const price =
+      formatNumber(
+        item.daily_price
+      );
+
+    return price
+      ? price + ' ₼ / gün'
+      : 'Qiymət razılaşma ilə';
+  }
+
+  const price =
+    formatNumber(
+      item.price
+    );
+
+  return price
+    ? price + ' ₼'
+    : 'Qiymət razılaşma ilə';
+}
+
+
+function typeText(item){
+
+  return (
+    item.listing_type ===
+    'rent'
+  )
+    ? 'Rent a Car'
+    : 'Avtomobil satışı';
+}
+
+
+function titleText(item){
+
+  return [
+    item.year,
+    item.brand,
+    item.model
+  ]
+  .filter(Boolean)
+  .join(' ');
+}
+
+
+function specsText(item){
+
+  const specs = [];
+
+  if(item.engine){
+    specs.push(
+      String(item.engine)
+    );
+  }
+
+  if(
+    item.mileage !== null &&
+    item.mileage !== undefined &&
+    item.mileage !== ''
+  ){
+
+    const km =
+      formatNumber(
+        item.mileage
+      );
+
+    if(km){
+      specs.push(
+        km + ' km'
+      );
+    }
+  }
+
+  if(item.fuel_type){
+    specs.push(
+      item.fuel_type
+    );
+  }
+
+  if(item.transmission){
+    specs.push(
+      item.transmission
+    );
+  }
+
+  return specs.join(' • ');
+}
+
+
+function locationText(item){
+
+  return [
+    item.region,
+    item.district
+  ]
+  .filter(Boolean)
+  .join(', ');
+}
+
+
+async function signedImageUrl(
+  supabase,
+  storagePath
+){
+
+  if(!storagePath){
+    return '';
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabase.storage
+      .from('listing-media')
+      .createSignedUrl(
+        storagePath,
+        3600
+      );
+
+  if(
+    error ||
+    !data?.signedUrl
+  ){
+    return '';
+  }
+
+  return data.signedUrl;
+}
+
+
+async function loadCoverImages(
+  supabase,
+  listings
+){
+
+  if(!listings.length){
+    return listings;
+  }
+
+  const ids =
+    listings.map(
+      item => item.id
+    );
+
+  const {
+    data:media,
+    error
+  } =
+    await supabase
+      .from('listing_media')
+      .select(
+        'id,listing_id,media_type,storage_path,sort_order'
+      )
+      .in(
+        'listing_id',
+        ids
+      )
+      .eq(
+        'media_type',
+        'image'
+      )
+      .order(
+        'sort_order',
+        {
+          ascending:true
+        }
+      );
+
+  if(error){
+
+    console.error(
+      'A-USTA V146 MEDIA:',
+      error
+    );
+
+    return listings;
+  }
+
+  const firstImage =
+    new Map();
+
+  for(
+    const mediaRow of
+    media || []
+  ){
+
+    if(
+      !firstImage.has(
+        mediaRow.listing_id
+      )
+    ){
+
+      firstImage.set(
+        mediaRow.listing_id,
+        mediaRow.storage_path
+      );
+
+    }
+  }
+
+  for(const item of listings){
+
+    const path =
+      firstImage.get(
+        item.id
+      );
+
+    item._coverPath =
+      path || '';
+
+    item._coverUrl =
+      await signedImageUrl(
+        supabase,
+        path
+      );
+
+  }
+
+  return listings;
+}
+
+
+function sortListings(listings){
+
+  return [...listings].sort(
+    (a,b)=>{
+
+      const levelDiff =
+        promotionLevel(b) -
+        promotionLevel(a);
+
+      if(levelDiff){
+        return levelDiff;
+      }
+
+      /*
+       * Eyni promotion səviyyəsində:
+       * son boost / publication / creation.
+       */
+
+      const aTime =
+        Date.parse(
+          a.last_boosted_at ||
+          a.published_at ||
+          a.created_at ||
+          0
+        ) || 0;
+
+      const bTime =
+        Date.parse(
+          b.last_boosted_at ||
+          b.published_at ||
+          b.created_at ||
+          0
+        ) || 0;
+
+      return bTime - aTime;
+    }
+  );
+}
+
+
+function cardHtml(item){
+
+  const image =
+    item._coverUrl
+      ? `
+        <img
+          src="${esc(item._coverUrl)}"
+          alt="${esc(titleText(item))}"
+          loading="lazy"
+        >
+      `
+      : `
+        <div class="austa-v146-no-image">
+          Şəkil yoxdur
+        </div>
+      `;
+
+  return `
+    <article
+      class="austa-v146-card"
+      data-v146-listing-id="${esc(item.id)}"
+      tabindex="0"
+      role="button"
+    >
+
+      <div class="austa-v146-media">
+
+        ${image}
+
+        ${promotionBadge(item)}
+
+      </div>
+
+      <div class="austa-v146-body">
+
+        <span class="austa-v146-type">
+          ${esc(typeText(item))}
+        </span>
+
+        <strong class="austa-v146-price">
+          ${esc(priceText(item))}
+        </strong>
+
+        <strong class="austa-v146-title">
+          ${esc(titleText(item))}
+        </strong>
+
+        <div class="austa-v146-specs">
+          ${esc(specsText(item))}
+        </div>
+
+        <div class="austa-v146-bottom">
+
+          <span class="austa-v146-location">
+            ${
+              locationText(item)
+                ? '📍 '+
+                  esc(
+                    locationText(item)
+                  )
+                : ''
+            }
+          </span>
+
+          <span class="austa-v146-time">
+            ${esc(listingTime(item))}
+          </span>
+
+        </div>
+
+      </div>
+
+    </article>
+  `;
+}
+
+
+async function openListing(id){
+
+  if(
+    typeof
+      window.AUSTA_OPEN_FULL_LISTING ===
+      'function'
+  ){
+
+    const opened =
+      await window
+        .AUSTA_OPEN_FULL_LISTING(
+          id
+        );
+
+    if(opened){
+      return;
+    }
+  }
+
+  console.log(
+    'A-USTA V146 listing:',
+    id
+  );
+}
+
+
+function bindCards(grid){
+
+  grid
+    .querySelectorAll(
+      '[data-v146-listing-id]'
+    )
+    .forEach(card=>{
+
+      async function open(){
+
+        const id =
+          card.dataset
+            .v146ListingId;
+
+        if(id){
+          await openListing(id);
+        }
+      }
+
+      card.addEventListener(
+        'click',
+        open
+      );
+
+      card.addEventListener(
+        'keydown',
+        event=>{
+
+          if(
+            event.key === 'Enter' ||
+            event.key === ' '
+          ){
+
+            event.preventDefault();
+            open();
+
+          }
+        }
+      );
+
+    });
+}
+
+
+async function fetchListings(){
+
+  const supabase =
+    window.AUSTA_SUPABASE;
+
+  if(!supabase){
+
+    console.error(
+      'A-USTA V146: Supabase hazır deyil'
+    );
+
+    return [];
+  }
+
+  /*
+   * HOME:
+   * yalnız Avtomobil satışı + Rent.
+   */
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from('vehicle_listings')
+      .select(`
+        id,
+        listing_type,
+        status,
+        brand,
+        model,
+        year,
+        mileage,
+        body_type,
+        fuel_type,
+        transmission,
+        engine,
+        color,
+        price,
+        daily_price,
+        deposit,
+        region,
+        district,
+        address,
+        has_video,
+        promotion_type,
+        promotion_started_at,
+        promotion_until,
+        last_boosted_at,
+        created_at,
+        published_at
+      `)
+      .eq(
+        'status',
+        'active'
+      )
+      .in(
+        'listing_type',
+        [
+          'sale',
+          'rent'
+        ]
+      )
+      .order(
+        'created_at',
+        {
+          ascending:false
+        }
+      )
+      .range(
+        offset,
+        offset + PAGE_SIZE - 1
+      );
+
+  if(error){
+
+    console.error(
+      'A-USTA V146 LISTINGS:',
+      error
+    );
+
+    return [];
+  }
+
+  return data || [];
+}
+
+
+async function loadMore(){
+
+  if(
+    loading ||
+    finished
+  ){
+    return;
+  }
+
+  loading = true;
+
+  ensureFeed();
+
+  const grid =
+    document.getElementById(
+      'austaV146Grid'
+    );
+
+  if(!grid){
+    loading = false;
+    return;
+  }
+
+  const supabase =
+    window.AUSTA_SUPABASE;
+
+  if(!supabase){
+    loading = false;
+    return;
+  }
+
+  const rows =
+    await fetchListings();
+
+  if(!rows.length){
+
+    finished = true;
+
+    if(offset === 0){
+
+      grid.innerHTML = `
+        <div class="austa-v146-empty">
+          Hazırda aktiv avtomobil elanı yoxdur.
+        </div>
+      `;
+
+    }
+
+    loading = false;
+    return;
+  }
+
+  await loadCoverImages(
+    supabase,
+    rows
+  );
+
+  const sorted =
+    sortListings(rows);
+
+  const html =
+    sorted
+      .map(cardHtml)
+      .join('');
+
+  grid.insertAdjacentHTML(
+    'beforeend',
+    html
+  );
+
+  bindCards(grid);
+
+  offset += rows.length;
+
+  if(
+    rows.length <
+    PAGE_SIZE
+  ){
+    finished = true;
+  }
+
+  loading = false;
+}
+
+
+function setupInfiniteScroll(){
+
+  window.addEventListener(
+    'scroll',
+    function(){
+
+      if(
+        loading ||
+        finished
+      ){
+        return;
+      }
+
+      const remaining =
+        document.documentElement
+          .scrollHeight -
+        (
+          window.scrollY +
+          window.innerHeight
+        );
+
+      if(remaining < 900){
+        loadMore();
+      }
+
+    },
+    {
+      passive:true
+    }
+  );
+}
+
+
+async function boot(){
+
+  ensureFeed();
+
+  await loadMore();
+
+  setupInfiniteScroll();
+
+  /*
+   * Köhnə unified HOME listing
+   * görünüşünü gizlədirik.
+   * Kodunu silmirik.
+   */
+
+  const old =
+    document.getElementById(
+      'austaUnifiedHomeListings'
+    );
+
+  if(old){
+    old.style.display='none';
+  }
+
+  console.log(
+    'A-USTA V146 REAL HOME FEED READY'
+  );
+}
+
+
+if(
+  document.readyState ===
+  'loading'
+){
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    boot,
+    {
+      once:true
+    }
+  );
+
+}else{
+
+  boot();
+
+}
+
+window.AUSTA_V146_HOME_FEED = {
+  loadMore
+};
+
+})();
+</script>
