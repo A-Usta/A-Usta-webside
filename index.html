@@ -40342,3 +40342,724 @@ align-self:center !important;
 </script>
 
 <!-- ================= END V136 ================= -->
+
+<!-- =========================================================
+     A-USTA V137
+     HOME 6-CARD SHOWCASE + FULL VIDEO VIEWER
+========================================================= -->
+
+<style id="austa-v137-video-viewer-css">
+
+#austaV137Viewer{
+    position:fixed;
+    inset:0;
+    z-index:999999;
+    display:none;
+    background:rgba(0,0,0,.96);
+}
+
+#austaV137Viewer.open{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.austa-v137-shell{
+    position:relative;
+    width:min(460px,100%);
+    height:min(900px,100vh);
+    background:#050505;
+    overflow:hidden;
+}
+
+.austa-v137-close{
+    position:absolute;
+    top:14px;
+    right:14px;
+    z-index:20;
+    width:42px;
+    height:42px;
+    border:0;
+    border-radius:50%;
+    background:rgba(0,0,0,.65);
+    color:#fff;
+    font-size:26px;
+    cursor:pointer;
+}
+
+.austa-v137-counter{
+    position:absolute;
+    top:18px;
+    left:18px;
+    z-index:20;
+    padding:7px 11px;
+    border-radius:20px;
+    background:rgba(0,0,0,.58);
+    color:#fff;
+    font-size:12px;
+    font-weight:800;
+}
+
+.austa-v137-stage{
+    position:absolute;
+    inset:0;
+    background:#111 center / cover no-repeat;
+    transition:background-image .18s ease;
+}
+
+.austa-v137-stage::after{
+    content:"";
+    position:absolute;
+    inset:40% 0 0;
+    background:linear-gradient(
+        transparent,
+        rgba(0,0,0,.25),
+        rgba(0,0,0,.92)
+    );
+}
+
+.austa-v137-info{
+    position:absolute;
+    z-index:10;
+    left:18px;
+    right:78px;
+    bottom:26px;
+    color:#fff;
+}
+
+.austa-v137-info h2{
+    margin:0 0 6px;
+    color:#fff;
+    font-size:20px;
+    line-height:1.2;
+}
+
+.austa-v137-price{
+    display:block;
+    margin-bottom:14px;
+    color:#fff;
+    font-size:18px;
+    font-weight:900;
+}
+
+.austa-v137-mode{
+    display:inline-block;
+    margin-bottom:9px;
+    padding:5px 9px;
+    border-radius:7px;
+    background:#e6002d;
+    color:#fff;
+    font-size:11px;
+    font-weight:900;
+}
+
+.austa-v137-listing{
+    border:0;
+    border-radius:9px;
+    padding:11px 17px;
+    background:#e6002d;
+    color:#fff;
+    font-size:13px;
+    font-weight:900;
+    cursor:pointer;
+}
+
+.austa-v137-controls{
+    position:absolute;
+    z-index:15;
+    right:15px;
+    bottom:25px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.austa-v137-controls button{
+    width:48px;
+    height:48px;
+    border:0;
+    border-radius:50%;
+    background:rgba(255,255,255,.18);
+    color:#fff;
+    font-size:21px;
+    cursor:pointer;
+}
+
+@media(max-width:600px){
+
+    .austa-v137-shell{
+        width:100%;
+        height:100vh;
+    }
+
+}
+
+</style>
+
+
+<div id="austaV137Viewer">
+
+    <div class="austa-v137-shell">
+
+        <button
+            class="austa-v137-close"
+            type="button"
+            aria-label="Bağla"
+        >×</button>
+
+        <div class="austa-v137-counter"></div>
+
+        <div class="austa-v137-stage"></div>
+
+        <div class="austa-v137-info">
+
+            <span class="austa-v137-mode"></span>
+
+            <h2></h2>
+
+            <strong class="austa-v137-price"></strong>
+
+            <br>
+
+            <button
+                class="austa-v137-listing"
+                type="button"
+            >
+                Elana bax →
+            </button>
+
+        </div>
+
+        <div class="austa-v137-controls">
+
+            <button
+                class="austa-v137-prev"
+                type="button"
+                title="Əvvəlki"
+            >↑</button>
+
+            <button
+                class="austa-v137-next"
+                type="button"
+                title="Növbəti"
+            >↓</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script id="austa-v137-video-viewer-js">
+
+(function(){
+
+"use strict";
+
+const viewer =
+    document.getElementById("austaV137Viewer");
+
+const stage =
+    viewer?.querySelector(".austa-v137-stage");
+
+const title =
+    viewer?.querySelector(".austa-v137-info h2");
+
+const price =
+    viewer?.querySelector(".austa-v137-price");
+
+const mode =
+    viewer?.querySelector(".austa-v137-mode");
+
+const counter =
+    viewer?.querySelector(".austa-v137-counter");
+
+const close =
+    viewer?.querySelector(".austa-v137-close");
+
+const prev =
+    viewer?.querySelector(".austa-v137-prev");
+
+const next =
+    viewer?.querySelector(".austa-v137-next");
+
+const listing =
+    viewer?.querySelector(".austa-v137-listing");
+
+
+/*
+ * Hələlik viewer məlumatları.
+ *
+ * HOME yalnız ilk 3 Satış + ilk 3 Rent göstərir.
+ * Viewer isə bu siyahının HAMISINI göstərə bilər.
+ *
+ * Sonrakı mərhələdə bu array Supabase elanları ilə
+ * əvəz olunacaq.
+ */
+
+const items = [
+
+    {
+        id:"VIDEO-CAR-001",
+        type:"sale",
+        mode:"AVTOMOBİL",
+        title:"2015 BMW 528",
+        price:"29,500 ₼",
+        image:"https://ilex.az/storage/24906/conversions/image_picker_638A960B-BEE0-42AA-8190-DEFE1AD4DF11-1291-0000005453CC7DD7-card.webp"
+    },
+
+    {
+        id:"VIDEO-CAR-002",
+        type:"sale",
+        mode:"AVTOMOBİL",
+        title:"2010 Hyundai Sonata",
+        price:"17,900 ₼",
+        image:"https://ilex.az/storage/3787/conversions/scaled_1000251671-card.webp"
+    },
+
+    {
+        id:"VIDEO-CAR-003",
+        type:"sale",
+        mode:"AVTOMOBİL",
+        title:"2021 Hyundai Sonata",
+        price:"37,500 ₼",
+        image:"https://ilex.az/storage/1446/conversions/image_picker_40F2EF6E-0AED-4245-8A14-E6C81E8C5B83-5782-000002DEE9916AAB-card.webp"
+    },
+
+    {
+        id:"VIDEO-CAR-004",
+        type:"sale",
+        mode:"AVTOMOBİL",
+        title:"2013 Nissan Leaf",
+        price:"12,400 ₼",
+        image:"https://ilex.az/storage/35015/conversions/01M2SNM3S3Y9P01NPTRZG5DY8T-card.webp"
+    },
+
+    {
+        id:"VIDEO-CAR-005",
+        type:"sale",
+        mode:"AVTOMOBİL",
+        title:"2023 Tesla Model X",
+        price:"80,000 ₼",
+        image:"https://ilex.az/storage/37893/conversions/WhatsApp-Image-2026-09-20-at-01.03.30-card.webp"
+    },
+
+    {
+        id:"VIDEO-CAR-006",
+        type:"sale",
+        mode:"AVTOMOBİL",
+        title:"2016 Mercedes-Benz E 300 4MATIC",
+        price:"42,000 ₼",
+        image:"https://ilex.az/storage/39301/conversions/scaled_1000181664-card.webp"
+    },
+
+
+    /* RENT VIEWER DEMO
+       Bunlar sonradan real Rent elanlarından gələcək.
+    */
+
+    {
+        id:"VIDEO-RENT-001",
+        type:"rent",
+        mode:"RENT A CAR",
+        title:"Rent a Car — Bakı",
+        price:"40 ₼ / gün",
+        image:"https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=82"
+    },
+
+    {
+        id:"VIDEO-RENT-002",
+        type:"rent",
+        mode:"RENT A CAR",
+        title:"Rent a Car — Premium",
+        price:"60 ₼ / gün",
+        image:"https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1000&q=82"
+    },
+
+    {
+        id:"VIDEO-RENT-003",
+        type:"rent",
+        mode:"RENT A CAR",
+        title:"Rent a Car — Ailələr üçün",
+        price:"50 ₼ / gün",
+        image:"https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1000&q=82"
+    }
+
+];
+
+
+let current = 0;
+
+
+function render(){
+
+    const item = items[current];
+
+    if(!item) return;
+
+    stage.style.backgroundImage =
+        'url("' + item.image + '")';
+
+    title.textContent =
+        item.title;
+
+    price.textContent =
+        item.price;
+
+    mode.textContent =
+        item.mode;
+
+    counter.textContent =
+        (current + 1) + " / " + items.length;
+
+    viewer.dataset.currentId =
+        item.id;
+
+}
+
+
+function openViewer(index){
+
+    current =
+        Math.max(
+            0,
+            Math.min(index, items.length - 1)
+        );
+
+    render();
+
+    viewer.classList.add("open");
+
+    document.documentElement.style.overflow =
+        "hidden";
+
+}
+
+
+function closeViewer(){
+
+    viewer.classList.remove("open");
+
+    document.documentElement.style.overflow =
+        "";
+
+}
+
+
+function goNext(){
+
+    current =
+        (current + 1) % items.length;
+
+    render();
+
+}
+
+
+function goPrev(){
+
+    current =
+        (current - 1 + items.length) %
+        items.length;
+
+    render();
+
+}
+
+
+next?.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+        goNext();
+
+    }
+);
+
+
+prev?.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+        goPrev();
+
+    }
+);
+
+
+close?.addEventListener(
+    "click",
+    closeViewer
+);
+
+
+viewer?.addEventListener(
+    "click",
+    function(e){
+
+        if(e.target === viewer){
+            closeViewer();
+        }
+
+    }
+);
+
+
+/*
+ * Mouse wheel:
+ * aşağı fırlat = növbəti
+ * yuxarı fırlat = əvvəlki
+ */
+
+let wheelLock = false;
+
+viewer?.addEventListener(
+    "wheel",
+    function(e){
+
+        e.preventDefault();
+
+        if(wheelLock) return;
+
+        wheelLock = true;
+
+        if(e.deltaY > 0){
+            goNext();
+        }else{
+            goPrev();
+        }
+
+        setTimeout(
+            function(){
+                wheelLock = false;
+            },
+            300
+        );
+
+    },
+    {
+        passive:false
+    }
+);
+
+
+/*
+ * Mobil swipe
+ */
+
+let touchStartY = null;
+
+viewer?.addEventListener(
+    "touchstart",
+    function(e){
+
+        touchStartY =
+            e.touches?.[0]?.clientY ?? null;
+
+    },
+    {
+        passive:true
+    }
+);
+
+
+viewer?.addEventListener(
+    "touchend",
+    function(e){
+
+        if(touchStartY === null) return;
+
+        const endY =
+            e.changedTouches?.[0]?.clientY;
+
+        if(typeof endY !== "number") return;
+
+        const diff =
+            touchStartY - endY;
+
+        touchStartY = null;
+
+        if(Math.abs(diff) < 45) return;
+
+        if(diff > 0){
+            goNext();
+        }else{
+            goPrev();
+        }
+
+    },
+    {
+        passive:true
+    }
+);
+
+
+/*
+ * Klaviatura
+ */
+
+document.addEventListener(
+    "keydown",
+    function(e){
+
+        if(!viewer.classList.contains("open")){
+            return;
+        }
+
+        if(e.key === "Escape"){
+            closeViewer();
+        }
+
+        if(
+            e.key === "ArrowDown" ||
+            e.key === "ArrowRight"
+        ){
+            goNext();
+        }
+
+        if(
+            e.key === "ArrowUp" ||
+            e.key === "ArrowLeft"
+        ){
+            goPrev();
+        }
+
+    }
+);
+
+
+/*
+ * HOME kartları.
+ *
+ * V136-da görünən:
+ * 3 avtomobil + 3 Rent.
+ *
+ * Klik zamanı köhnə video modalını saxlayıb
+ * onun yerinə V137 viewer açılır.
+ */
+
+document.addEventListener(
+    "click",
+    function(e){
+
+        const card =
+            e.target.closest(
+                "#austaV22VideoGrid .austa-v22-video-card"
+            );
+
+        if(!card) return;
+
+        e.preventDefault();
+
+        e.stopImmediatePropagation();
+
+
+        if(
+            card.classList.contains(
+                "austa-v44-rent-video"
+            )
+        ){
+
+            const rentCards = [
+                ...document.querySelectorAll(
+                    "#austaV22VideoGrid .austa-v44-rent-video"
+                )
+            ];
+
+            const rentIndex =
+                rentCards.indexOf(card);
+
+            openViewer(
+                6 + Math.max(0, rentIndex)
+            );
+
+            return;
+
+        }
+
+
+        const carIndex =
+            Number(
+                card.dataset.v22Video || 0
+            );
+
+        openViewer(carIndex);
+
+    },
+    true
+);
+
+
+/*
+ * ELANA BAX
+ *
+ * Hazırda real listing ID DB-də olmadığı üçün
+ * saxta URL yaratmırıq.
+ *
+ * Mövcud A-USTA elan axınına aparır.
+ * Real Supabase listing ID gələndə burada
+ * birbaşa həmin elanın detail səhifəsi açılacaq.
+ */
+
+listing?.addEventListener(
+    "click",
+    function(){
+
+        const item =
+            items[current];
+
+        closeViewer();
+
+        if(
+            window.AUSTA_UNIFIED_FLOW?.open
+        ){
+
+            window.AUSTA_UNIFIED_FLOW.open(
+                "listing",
+                item.type === "rent"
+                    ? "Avtomobil icarəsi"
+                    : "Avtomobil satışı"
+            );
+
+            return;
+
+        }
+
+        document.getElementById("cars")
+            ?.scrollIntoView({
+                behavior:"smooth"
+            });
+
+    }
+);
+
+
+window.AUSTA_V137_VIDEO_VIEWER = {
+
+    open:openViewer,
+
+    next:goNext,
+
+    prev:goPrev,
+
+    close:closeViewer,
+
+    items:items
+
+};
+
+
+console.log(
+    "A-USTA V137 VIDEO VIEWER READY:",
+    items.length,
+    "videos"
+);
+
+})();
+
+</script>
