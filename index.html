@@ -27056,7 +27056,136 @@ async function signedUrl(path){
     return '';
   }
 }
+  
+async function hydrateSupabaseListingMedia(item){
 
+  if(
+    !item ||
+    !item._austaSupabase ||
+    !item.id
+  ){
+    return item;
+  }
+
+  const sb=
+    window.AUSTA_SUPABASE;
+
+  if(!sb){
+
+    console.warn(
+      'A-USTA Supabase client tapılmadı'
+    );
+
+    return item;
+  }
+
+  try{
+
+    const {
+      data,
+      error
+    }=await sb
+      .from('listing_media')
+      .select(
+        'id, listing_id, media_type, storage_path, sort_order, is_cover'
+      )
+      .eq(
+        'listing_id',
+        item.id
+      )
+      .order(
+        'sort_order',
+        {
+          ascending:true
+        }
+      );
+
+
+    if(error){
+
+      console.error(
+        'A-USTA listing media error:',
+        error
+      );
+
+      return item;
+    }
+
+
+    const media=
+      Array.isArray(data)
+        ? data
+        : [];
+
+
+    const images=
+      media
+        .filter(
+          row=>
+            row.media_type==='image' &&
+            row.storage_path
+        )
+        .sort(
+          (a,b)=>
+            Number(b.is_cover)-
+            Number(a.is_cover)
+        );
+
+
+    const videos=
+      media.filter(
+        row=>
+          row.media_type==='video' &&
+          row.storage_path
+      );
+
+
+    item.image_paths=
+      images.map(
+        row=>row.storage_path
+      );
+
+
+    const cover=
+      images.find(
+        row=>row.is_cover
+      ) || images[0];
+
+
+    item.cover_image_path=
+      cover?.storage_path || '';
+
+
+    item.video_path=
+      videos[0]?.storage_path || '';
+
+
+    item._austaListingMedia=
+      media;
+
+
+    console.log(
+      'A-USTA FULL LISTING MEDIA:',
+      item.id,
+      {
+        images:item.image_paths.length,
+        videos:videos.length
+      }
+    );
+
+
+    return item;
+
+  }catch(error){
+
+    console.error(
+      'A-USTA listing media hydrate error:',
+      error
+    );
+
+    return item;
+  }
+}
 
 function imagePaths(item){
 
@@ -27619,14 +27748,29 @@ async function ownerControls(
 
 async function openFullListing(id){
 
-  const item=findListing(id);
+  let item=findListing(id);
 
   if(!item){
     return false;
   }
 
-  removeOldListingOverlays();
 
+  /*
+   * Real Supabase elanıdırsa,
+   * onun şəkil və videosunu listing_media-dan gətir.
+   */
+
+  if(item._austaSupabase){
+
+    item=
+      await hydrateSupabaseListingMedia(
+        item
+      );
+  }
+
+
+  removeOldListingOverlays();
+  
   const category=
     categoryOf(item);
 
