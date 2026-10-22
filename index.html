@@ -39564,3 +39564,781 @@ align-self:center !important;
 }
 
 </style>
+
+<!-- =========================================================
+     A-USTA V136
+     HOME VIDEO FINAL LAYOUT
+     3 AVTOMOBİL + 3 RENT A CAR
+     ========================================================= -->
+
+<style id="austa-v136-home-video-final">
+
+/* =========================================================
+   VIDEO BÖLMƏSİ — AĞ FON
+   ========================================================= */
+
+#austaSectorShowcases .austa-v22-video-wrap{
+    background:#fff !important;
+    color:#172033 !important;
+    border:0 !important;
+    box-shadow:none !important;
+    padding:10px 0 14px !important;
+}
+
+#austaSectorShowcases .austa-v22-video-head{
+    background:#fff !important;
+    margin:0 !important;
+    padding:0 0 10px !important;
+}
+
+#austaSectorShowcases .austa-v22-video-head > :not(h3){
+    display:none !important;
+}
+
+
+/* =========================================================
+   6 KART — BİR SƏTR
+   ========================================================= */
+
+#austaV22VideoGrid{
+    display:grid !important;
+    grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+    gap:12px !important;
+
+    width:100% !important;
+
+    overflow:visible !important;
+
+    padding:2px 0 10px !important;
+}
+
+
+/* =========================================================
+   KART
+   ========================================================= */
+
+#austaV22VideoGrid .austa-v22-video-card{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    height:220px !important;
+    min-height:220px !important;
+
+    aspect-ratio:auto !important;
+
+    flex-direction:column !important;
+
+    background:#fff !important;
+    color:#172033 !important;
+
+    border:1px solid #e2e6ea !important;
+    border-radius:12px !important;
+
+    overflow:hidden !important;
+
+    cursor:pointer !important;
+}
+
+
+/* =========================================================
+   BÖYÜK MAŞIN ŞƏKLİ
+   ========================================================= */
+
+#austaV22VideoGrid .austa-v22-video-thumb{
+    width:100% !important;
+
+    height:155px !important;
+    min-height:155px !important;
+    flex:0 0 155px !important;
+
+    background-size:cover !important;
+    background-position:center !important;
+    background-repeat:no-repeat !important;
+    background-color:#fff !important;
+
+    font-size:0 !important;
+}
+
+
+/* AVTOMOBİL / RENT A CAR / PLAY yazıları HOME-da görünməsin */
+
+#austaV22VideoGrid .austa-v22-video-thumb > *{
+    display:none !important;
+}
+
+
+/* =========================================================
+   İL + MARKA/MODEL + QİYMƏT
+   ========================================================= */
+
+#austaV22VideoGrid .austa-v22-video-body{
+    display:block !important;
+
+    height:65px !important;
+
+    padding:7px 9px !important;
+
+    background:#fff !important;
+    color:#172033 !important;
+
+    overflow:hidden !important;
+}
+
+#austaV22VideoGrid .austa-v22-video-body b{
+    display:block !important;
+
+    color:#172033 !important;
+
+    font-size:12px !important;
+    line-height:16px !important;
+    font-weight:800 !important;
+
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+}
+
+#austaV22VideoGrid .austa-v22-video-body strong{
+    display:block !important;
+
+    margin-top:3px !important;
+
+    color:#e6002d !important;
+
+    font-size:13px !important;
+    line-height:17px !important;
+    font-weight:900 !important;
+
+    white-space:nowrap !important;
+}
+
+
+/* 3-cü artıq mətn:
+   "Video elan • A-USTA"
+   "Gündəlik / həftəlik..."
+   və s.
+*/
+
+#austaV22VideoGrid .austa-v22-video-body span{
+    display:none !important;
+}
+
+
+/* =========================================================
+   HOME KARTLARINDA ACTION DÜYMƏLƏRİ YOX
+   ========================================================= */
+
+#austaV22VideoGrid .austa-v-final-video-actions,
+#austaV22VideoGrid .austa-v34-video-actions{
+    display:none !important;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media(max-width:900px){
+
+    #austaV22VideoGrid{
+        grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    }
+
+}
+
+@media(max-width:600px){
+
+    #austaV22VideoGrid{
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+
+}
+
+</style>
+
+
+<script id="austa-v136-home-video-final-js">
+(function(){
+
+    'use strict';
+
+    /* =====================================================
+       A-USTA V136
+       HOME VIDEO FINAL
+       ===================================================== */
+
+
+    function removeOldPromotedHeading(){
+
+        /*
+         FIRE 0:
+         köhnə "Yeni və irəli çəkilmiş elanlar" bloku.
+
+         austaUnifiedHomeListings daxilindəki əsas elan
+         sisteminə toxunmuruq.
+        */
+
+        document.querySelectorAll('h2').forEach(function(h){
+
+            var text = String(
+                h.textContent || ''
+            ).trim();
+
+            if(
+                /Yeni və irəli çəkilmiş elanlar/i.test(text) &&
+                !h.closest('#austaUnifiedHomeListings')
+            ){
+
+                var parent = h.parentElement;
+
+                if(parent){
+
+                    parent.style.setProperty(
+                        'display',
+                        'none',
+                        'important'
+                    );
+
+                    parent.style.setProperty(
+                        'height',
+                        '0',
+                        'important'
+                    );
+
+                    parent.style.setProperty(
+                        'min-height',
+                        '0',
+                        'important'
+                    );
+
+                    parent.style.setProperty(
+                        'margin',
+                        '0',
+                        'important'
+                    );
+
+                    parent.style.setProperty(
+                        'padding',
+                        '0',
+                        'important'
+                    );
+                }
+            }
+        });
+
+
+        /*
+         FIRE 1:
+         #austaUnifiedHomeListings daxilindəki başlıq.
+
+         Elanların özünü SİLMİRİK.
+         Yalnız həmin başlıq yazısını gizlədirik.
+        */
+
+        document.querySelectorAll(
+            '#austaUnifiedHomeListings .austa-home-listings-head h3'
+        ).forEach(function(h){
+
+            if(
+                /Yeni və irəli çəkilmiş elanlar/i.test(
+                    h.textContent || ''
+                )
+            ){
+                h.style.setProperty(
+                    'display',
+                    'none',
+                    'important'
+                );
+            }
+
+        });
+
+    }
+
+
+
+    /* =====================================================
+       RENT A CAR MƏLUMATLARI
+
+       Hazırkı V44-də real qiymət yoxdur.
+       Ona görə burada HOME kartı üçün qiymət sahəsini
+       yaradırıq.
+
+       Sonradan real Rent elan bazasına bağlananda
+       bu array silinəcək və qiymət DB-dən gələcək.
+       ===================================================== */
+
+    var rentHomeData = [
+
+        {
+            title:'Rent a Car — Bakı',
+            price:'40.00 ₼ / gün'
+        },
+
+        {
+            title:'Rent a Car — Premium',
+            price:'40.00 ₼ / gün'
+        },
+
+        {
+            title:'Rent a Car — Ailələr üçün',
+            price:'40.00 ₼ / gün'
+        }
+
+    ];
+
+
+
+    function prepareHomeVideos(){
+
+        var grid = document.getElementById(
+            'austaV22VideoGrid'
+        );
+
+        if(!grid){
+            return;
+        }
+
+
+        var allCards = Array.from(
+            grid.querySelectorAll(
+                '.austa-v22-video-card'
+            )
+        );
+
+
+        if(!allCards.length){
+            return;
+        }
+
+
+        /* =================================================
+           AVTOMOBİL VƏ RENT KARTLARINI AYIR
+           ================================================= */
+
+        var rentCards = allCards.filter(function(card){
+
+            return card.classList.contains(
+                'austa-v44-rent-video'
+            );
+
+        });
+
+
+        var carCards = allCards.filter(function(card){
+
+            return !card.classList.contains(
+                'austa-v44-rent-video'
+            );
+
+        });
+
+
+        /* =================================================
+           YALNIZ 3 AVTOMOBİL + 3 RENT
+           ================================================= */
+
+        var selectedCars = carCards.slice(0,3);
+        var selectedRents = rentCards.slice(0,3);
+
+        var visibleCards = selectedCars.concat(
+            selectedRents
+        );
+
+
+        allCards.forEach(function(card){
+
+            card.style.setProperty(
+                'display',
+                'none',
+                'important'
+            );
+
+        });
+
+
+        visibleCards.forEach(function(card){
+
+            card.style.setProperty(
+                'display',
+                'flex',
+                'important'
+            );
+
+        });
+
+
+
+        /* =================================================
+           AVTOMOBİL KARTLARI
+           ================================================= */
+
+        selectedCars.forEach(function(card){
+
+            var body = card.querySelector(
+                '.austa-v22-video-body'
+            );
+
+            if(body){
+
+                var title = body.querySelector('b');
+                var price = body.querySelector('strong');
+
+                if(title){
+
+                    title.style.setProperty(
+                        'color',
+                        '#172033',
+                        'important'
+                    );
+
+                }
+
+                if(price){
+
+                    price.style.setProperty(
+                        'color',
+                        '#e6002d',
+                        'important'
+                    );
+
+                }
+
+            }
+
+
+            /*
+             Mövcud V22 video indeksini saxlayırıq.
+
+             Kart klikində V22-nin öz modalına getməsini
+             V136 aşağıda dayandıracaq.
+            */
+
+            card.dataset.austaV136Type = 'car';
+
+        });
+
+
+
+        /* =================================================
+           RENT A CAR — QİYMƏT
+           ================================================= */
+
+        selectedRents.forEach(function(card,index){
+
+            var data = rentHomeData[index];
+
+            if(!data){
+                return;
+            }
+
+
+            var body = card.querySelector(
+                '.austa-v22-video-body'
+            );
+
+            if(body){
+
+                var title = body.querySelector('b');
+                var price = body.querySelector('strong');
+
+                if(title){
+
+                    title.textContent = data.title;
+
+                    title.style.setProperty(
+                        'color',
+                        '#172033',
+                        'important'
+                    );
+
+                }
+
+
+                if(price){
+
+                    price.textContent = data.price;
+
+                    price.style.setProperty(
+                        'color',
+                        '#e6002d',
+                        'important'
+                    );
+
+                }
+
+            }
+
+
+            card.dataset.austaV136Type = 'rent';
+
+            card.dataset.austaV136RentIndex =
+                String(index);
+
+        });
+
+    }
+
+
+
+    /* =====================================================
+       KART → ELAN BÖLMƏSİ
+
+       Mövcud sistemdə kartlarda URL və listing ID yoxdur.
+
+       Ona görə saxta URL yaratmırıq.
+
+       Mövcud AUSTA_UNIFIED_FLOW varsa ondan istifadə
+       edirik. Yoxdursa uyğun mövcud bölməyə scroll edir.
+       ===================================================== */
+
+    function bindListingNavigation(){
+
+        var grid = document.getElementById(
+            'austaV22VideoGrid'
+        );
+
+        if(!grid){
+            return;
+        }
+
+
+        /*
+         CAPTURE mərhələsində işləyir.
+
+         Bunun səbəbi köhnə V22 listener-in kartı
+         austaVideoDetailModal-a açmasının qarşısını almaqdır.
+        */
+
+        grid.addEventListener(
+            'click',
+            function(event){
+
+                var card = event.target.closest(
+                    '.austa-v22-video-card'
+                );
+
+                if(!card){
+                    return;
+                }
+
+
+                /*
+                 HOME-da action düymələri gizlidir,
+                 amma gələcəkdə yenidən göstərilsə
+                 action klikini listing klikindən ayırırıq.
+                */
+
+                if(
+                    event.target.closest(
+                        '.austa-v-final-video-actions'
+                    ) ||
+                    event.target.closest(
+                        '.austa-v34-video-actions'
+                    )
+                ){
+                    return;
+                }
+
+
+                var type =
+                    card.dataset.austaV136Type;
+
+
+                if(!type){
+                    return;
+                }
+
+
+                event.preventDefault();
+
+                event.stopPropagation();
+
+                event.stopImmediatePropagation();
+
+
+                /* =========================================
+                   AVTOMOBİL
+                   ========================================= */
+
+                if(type === 'car'){
+
+                    var titleEl = card.querySelector(
+                        '.austa-v22-video-body b'
+                    );
+
+                    var title = titleEl
+                        ? titleEl.textContent.trim()
+                        : 'Avtomobillər';
+
+
+                    if(
+                        window.AUSTA_UNIFIED_FLOW &&
+                        typeof window.AUSTA_UNIFIED_FLOW.open
+                            === 'function'
+                    ){
+
+                        window.AUSTA_UNIFIED_FLOW.open(
+                            'listing',
+                            title
+                        );
+
+                        return;
+                    }
+
+
+                    var carsModule =
+                        document.getElementById(
+                            'carsModule'
+                        );
+
+
+                    if(carsModule){
+
+                        carsModule.scrollIntoView({
+                            behavior:'smooth',
+                            block:'start'
+                        });
+
+                    }
+
+                    return;
+                }
+
+
+
+                /* =========================================
+                   RENT A CAR
+                   ========================================= */
+
+                if(type === 'rent'){
+
+                    if(
+                        window.AUSTA_UNIFIED_FLOW &&
+                        typeof window.AUSTA_UNIFIED_FLOW.open
+                            === 'function'
+                    ){
+
+                        window.AUSTA_UNIFIED_FLOW.open(
+                            'listing',
+                            'Rent a Car'
+                        );
+
+                        return;
+                    }
+
+
+                    /*
+                     Mövcud səhifədə Rent a Car flow düyməsini
+                     tapmağa çalışırıq.
+                    */
+
+                    var rentButton = Array.from(
+                        document.querySelectorAll(
+                            '[data-top-flow="listing"]'
+                        )
+                    ).find(function(button){
+
+                        return /Rent a Car|İcarə/i.test(
+                            String(
+                                button.dataset.topTitle ||
+                                button.textContent ||
+                                ''
+                            )
+                        );
+
+                    });
+
+
+                    if(rentButton){
+
+                        rentButton.click();
+
+                        return;
+                    }
+
+
+                    var carsModule =
+                        document.getElementById(
+                            'carsModule'
+                        );
+
+
+                    if(carsModule){
+
+                        carsModule.scrollIntoView({
+                            behavior:'smooth',
+                            block:'start'
+                        });
+
+                    }
+
+                }
+
+            },
+
+            true
+        );
+
+    }
+
+
+
+    /* =====================================================
+       START
+       ===================================================== */
+
+    function startV136(){
+
+        removeOldPromotedHeading();
+
+        prepareHomeVideos();
+
+        bindListingNavigation();
+
+    }
+
+
+    if(document.readyState === 'loading'){
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            function(){
+
+                setTimeout(startV136,350);
+
+            }
+        );
+
+    }else{
+
+        setTimeout(startV136,350);
+
+    }
+
+
+    /*
+     V44 Rent kartları gec əlavə oluna bildiyi üçün
+     görünüşü yenidən tətbiq edirik.
+
+     Click listener yalnız bir dəfə startV136-da bağlanır.
+    */
+
+    [800,1600,3200].forEach(function(delay){
+
+        setTimeout(function(){
+
+            removeOldPromotedHeading();
+
+            prepareHomeVideos();
+
+        },delay);
+
+    });
+
+
+})();
+</script>
+
+<!-- ================= END V136 ================= -->
