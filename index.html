@@ -49515,3 +49515,1781 @@ console.log(
 
 })();
 </script>
+
+<!-- =========================================================
+     A-USTA V153-C
+     REAL 13-CATEGORY LISTING FORM
+     Requires: window.AUSTA_V153
+     ========================================================= -->
+
+<style id="austa-v153c-real-listing-form-css">
+
+#austaV153COverlay{
+    position:fixed;
+    inset:0;
+    z-index:2147483000;
+    background:rgba(0,0,0,.72);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:30px 14px;
+    overflow:auto;
+}
+
+#austaV153CModal{
+    width:min(920px,100%);
+    background:#fff;
+    color:#151515;
+    border-radius:20px;
+    box-shadow:0 25px 80px rgba(0,0,0,.35);
+    overflow:hidden;
+}
+
+.austa-v153c-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    padding:20px 22px;
+    border-bottom:1px solid #e7e7e7;
+}
+
+.austa-v153c-head h2{
+    margin:0;
+    font-size:22px;
+    font-weight:900;
+}
+
+#austaV153CClose{
+    width:38px;
+    height:38px;
+    border:0;
+    border-radius:10px;
+    background:#ef233c;
+    color:#fff;
+    font-size:24px;
+    cursor:pointer;
+}
+
+.austa-v153c-body{
+    padding:22px;
+}
+
+.austa-v153c-category-label{
+    display:block;
+    margin-bottom:7px;
+    font-size:13px;
+    font-weight:900;
+}
+
+#austaV153CCategory{
+    width:100%;
+    height:48px;
+    padding:0 13px;
+    border:1px solid #d7d7d7;
+    border-radius:11px;
+    background:#fff;
+    color:#111;
+    font-size:14px;
+    font-weight:800;
+}
+
+#austaV153CFields{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+    margin-top:20px;
+}
+
+.austa-v153c-field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.austa-v153c-field.full{
+    grid-column:1/-1;
+}
+
+.austa-v153c-field label{
+    font-size:12px;
+    font-weight:900;
+}
+
+.austa-v153c-field input,
+.austa-v153c-field select,
+.austa-v153c-field textarea{
+    width:100%;
+    box-sizing:border-box;
+    border:1px solid #d7d7d7;
+    border-radius:10px;
+    background:#fff;
+    color:#111;
+    padding:11px 12px;
+    font:inherit;
+    outline:none;
+}
+
+.austa-v153c-field input:focus,
+.austa-v153c-field select:focus,
+.austa-v153c-field textarea:focus{
+    border-color:#ef233c;
+}
+
+.austa-v153c-field textarea{
+    min-height:100px;
+    resize:vertical;
+}
+
+.austa-v153c-note{
+    margin-top:18px;
+    padding:12px 14px;
+    border-radius:11px;
+    background:#f7f7f7;
+    font-size:12px;
+    line-height:1.5;
+}
+
+.austa-v153c-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:20px;
+}
+
+.austa-v153c-actions button{
+    min-height:44px;
+    padding:0 18px;
+    border-radius:10px;
+    font-weight:900;
+    cursor:pointer;
+}
+
+#austaV153CCancel{
+    background:#fff;
+    color:#222;
+    border:1px solid #ccc;
+}
+
+#austaV153CSave{
+    background:#16a34a;
+    color:#fff;
+    border:1px solid #16a34a;
+}
+
+#austaV153CSave:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+}
+
+#austaV153CStatus{
+    margin-top:12px;
+    min-height:20px;
+    font-size:12px;
+    font-weight:800;
+}
+
+@media(max-width:700px){
+
+    #austaV153COverlay{
+        padding:10px;
+    }
+
+    #austaV153CFields{
+        grid-template-columns:1fr;
+    }
+
+    .austa-v153c-field.full{
+        grid-column:auto;
+    }
+
+    .austa-v153c-actions{
+        flex-direction:column;
+    }
+
+    .austa-v153c-actions button{
+        width:100%;
+    }
+}
+
+</style>
+
+
+<script id="austa-v153c-real-listing-form-js">
+(function(){
+
+'use strict';
+
+
+/* =========================================================
+   CATEGORY DEFINITIONS
+   ========================================================= */
+
+const CATEGORIES = {
+
+    cars:{
+        label:'🚗 Avtomobil',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['brand','Marka','text'],
+            ['model','Model','text'],
+            ['year','Buraxılış ili','number'],
+            ['mileage','Yürüş (km)','number'],
+            ['body_type','Ban növü','text'],
+            ['engine','Mühərrik həcmi','text'],
+
+            [
+                'fuel_type',
+                'Yanacaq',
+                'select',
+                [
+                    'Benzin',
+                    'Dizel',
+                    'Hibrid',
+                    'Elektrik',
+                    'Qaz',
+                    'Digər'
+                ]
+            ],
+
+            [
+                'transmission',
+                'Sürətlər qutusu',
+                'select',
+                [
+                    'Avtomat',
+                    'Mexaniki',
+                    'Robot',
+                    'Variator'
+                ]
+            ],
+
+            ['color','Rəng','text'],
+
+            [
+                'condition',
+                'Vəziyyət',
+                'select',
+                [
+                    'Yeni',
+                    'Sürülmüş'
+                ]
+            ],
+
+            ['price','Qiymət (AZN)','number'],
+            ['region_address','Region / ünvan','text'],
+            ['description','Avtomobil haqqında əlavə məlumat','textarea']
+        ]
+    },
+
+
+    rent:{
+        label:'🔑 Rent a Car',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['brand_model','Avtomobil marka / model','text'],
+            ['year','İl','number'],
+
+            [
+                'rental_type',
+                'İcarə növü',
+                'select',
+                [
+                    'Günlük',
+                    'Həftəlik',
+                    'Aylıq',
+                    'Uzunmüddətli'
+                ]
+            ],
+
+            ['daily_price','Qiymət (AZN)','number'],
+            ['deposit','Depozit (AZN)','number'],
+            ['region_address','Region / ünvan','text'],
+            ['description','Avtomobil haqqında məlumat','textarea']
+        ]
+    },
+
+
+    parts:{
+        label:'⚙ Ehtiyat hissələri',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['part_name','Hissənin adı','text'],
+            ['oem','OEM / kod','text'],
+            ['brand_model','Marka / model','text'],
+
+            [
+                'condition',
+                'Vəziyyət',
+                'select',
+                [
+                    'Yeni',
+                    'İşlənmiş',
+                    'Original',
+                    'Universal'
+                ]
+            ],
+
+            ['compatibility','Uyğunluq','textarea'],
+            ['price','Qiymət (AZN)','number'],
+            ['stock','Stok sayı','number'],
+            ['region_address','Çatdırılma / ünvan','text'],
+            ['description','Əlavə məlumat','textarea']
+        ]
+    },
+
+
+    accessories:{
+        label:'🧰 Aksesuarlar',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['accessory_name','Aksesuarın adı','text'],
+            ['brand_model','Marka / model uyğunluğu','text'],
+
+            [
+                'condition',
+                'Vəziyyət',
+                'select',
+                [
+                    'Yeni',
+                    'İşlənmiş'
+                ]
+            ],
+
+            ['price','Qiymət (AZN)','number'],
+            ['stock','Stok sayı','number'],
+            ['region_address','Çatdırılma / ünvan','text'],
+            ['description','Ətraflı məlumat','textarea']
+        ]
+    },
+
+
+    moto:{
+        label:'🏍️ Moto / Moped / Skuter',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+
+            [
+                'moto_type',
+                'Növ',
+                'select',
+                [
+                    'Motosiklet',
+                    'Moped',
+                    'Skuter'
+                ]
+            ],
+
+            ['brand_model','Marka / model','text'],
+            ['year','İl','number'],
+            ['mileage','Yürüş (km)','number'],
+
+            [
+                'condition',
+                'Vəziyyət',
+                'select',
+                [
+                    'Yeni',
+                    'İşlənmiş'
+                ]
+            ],
+
+            ['price','Qiymət (AZN)','number'],
+            ['region_address','Region / ünvan','text'],
+            ['description','Əlavə məlumat','textarea']
+        ]
+    },
+
+
+    special:{
+        label:'🏗️ Xüsusi texnika',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['special_type','Texnikanın növü','text'],
+            ['brand_model','Marka / model','text'],
+            ['year','İl','number'],
+            ['work_hours','İş saatı / yürüş','text'],
+
+            [
+                'condition',
+                'Vəziyyət',
+                'select',
+                [
+                    'Yeni',
+                    'İşlənmiş'
+                ]
+            ],
+
+            [
+                'sale_rent',
+                'Satış / icarə',
+                'select',
+                [
+                    'Satış',
+                    'İcarə',
+                    'Hər ikisi'
+                ]
+            ],
+
+            ['price','Qiymət (AZN)','number'],
+            ['region_address','Region / ünvan','text'],
+            ['description','Əlavə məlumat','textarea']
+        ]
+    },
+
+
+    bus:{
+        label:'🚌 Avtobus',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['brand_model','Avtobus marka / model','text'],
+            ['year','İl','number'],
+            ['capacity','Tutum (nəfər)','number'],
+
+            [
+                'sale_rent',
+                'Satış / icarə',
+                'select',
+                [
+                    'Satış',
+                    'İcarə',
+                    'Hər ikisi'
+                ]
+            ],
+
+            ['price','Qiymət (AZN)','number'],
+            ['region_address','Region / ünvan','text'],
+            ['description','Əlavə məlumat','textarea']
+        ]
+    },
+
+
+    water:{
+        label:'🛥 Su nəqliyyatı',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+
+            [
+                'water_type',
+                'Su nəqliyyatı növü',
+                'select',
+                [
+                    'Qayıq',
+                    'Yaxta',
+                    'Kater',
+                    'Jet-ski',
+                    'Digər'
+                ]
+            ],
+
+            ['brand_model','Marka / model','text'],
+            ['year','İl','number'],
+            ['engine','Mühərrik','text'],
+
+            [
+                'condition',
+                'Vəziyyət',
+                'select',
+                [
+                    'Yeni',
+                    'İşlənmiş'
+                ]
+            ],
+
+            ['price','Qiymət (AZN)','number'],
+            ['region_address','Yerləşmə / marina','text'],
+            ['description','Əlavə məlumat','textarea']
+        ]
+    },
+
+
+    caravan:{
+        label:'🚐 Karavanlar',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['brand_model','Karavan marka / model','text'],
+            ['year','İl','number'],
+
+            [
+                'caravan_type',
+                'Karavan növü',
+                'select',
+                [
+                    'Motorlu karavan',
+                    'Qoşqu karavan',
+                    'Kampervan',
+                    'Digər'
+                ]
+            ],
+
+            ['beds','Yataq sayı','number'],
+
+            [
+                'condition',
+                'Vəziyyət',
+                'select',
+                [
+                    'Yeni',
+                    'İşlənmiş'
+                ]
+            ],
+
+            [
+                'sale_rent',
+                'Satış / icarə',
+                'select',
+                [
+                    'Satış',
+                    'İcarə',
+                    'Hər ikisi'
+                ]
+            ],
+
+            ['price','Qiymət (AZN)','number'],
+            ['region_address','Region / ünvan','text'],
+            ['description','Karavan haqqında məlumat','textarea']
+        ]
+    },
+
+
+    trailer:{
+        label:'🚛 Qoşqu / Treyler',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['trailer_type','Qoşqu / treyler növü','text'],
+            ['brand_model','Marka / model','text'],
+            ['year','İl','number'],
+            ['load_capacity','Yük tutumu (kq)','number'],
+
+            [
+                'condition',
+                'Vəziyyət',
+                'select',
+                [
+                    'Yeni',
+                    'İşlənmiş'
+                ]
+            ],
+
+            ['price','Qiymət (AZN)','number'],
+            ['region_address','Region / ünvan','text'],
+            ['description','Əlavə məlumat','textarea']
+        ]
+    },
+
+
+    plate:{
+        label:'🔢 Qeydiyyat nömrələri',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['plate_number','Qeydiyyat nömrəsi','text'],
+            ['plate_series','Seriya / region','text'],
+            ['price','Qiymət (AZN)','number'],
+
+            [
+                'document_status',
+                'Sənəd vəziyyəti',
+                'select',
+                [
+                    'Tam sənədlidir',
+                    'Yoxlanılmalıdır'
+                ]
+            ],
+
+            ['region_address','Region / ünvan','text'],
+            ['description','Əlavə məlumat','textarea']
+        ]
+    },
+
+
+    service:{
+        label:'🛠 Avtoservislər',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['service_name','Servis adı','text'],
+            ['specialty','İxtisas / xidmətlər','textarea'],
+            ['brands','Markalar','text'],
+            ['region_address','Region / iş ünvanı','text'],
+            ['working_hours','İş saatları','text'],
+            ['price_policy','Qiymət siyasəti','textarea'],
+            ['about','Haqqımızda','textarea']
+        ]
+    },
+
+
+    usta:{
+        label:'🧑‍🔧 Usta profilləri',
+        fields:[
+            ['name','Ad / soyad','text'],
+            ['phone','Telefon','tel'],
+            ['specialty','İxtisas','text'],
+            ['region_address','Region / iş ünvanı','text'],
+            ['experience','İş təcrübəsi','text'],
+            ['working_hours','İş saatları','text'],
+            ['services','Xidmət sahələri','textarea'],
+            ['about','Özünüz haqqında','textarea'],
+            ['message_contact','WhatsApp / mesaj əlaqəsi','text']
+        ]
+    }
+
+};
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function esc(value){
+
+    return String(value ?? '')
+        .replace(
+            /[&<>"']/g,
+            char=>({
+                '&':'&amp;',
+                '<':'&lt;',
+                '>':'&gt;',
+                '"':'&quot;',
+                "'":'&#39;'
+            }[char])
+        );
+
+}
+
+
+function numeric(value){
+
+    if(
+        value === '' ||
+        value === null ||
+        value === undefined
+    ){
+        return null;
+    }
+
+    const n=Number(value);
+
+    return Number.isFinite(n)
+        ? n
+        : null;
+
+}
+
+
+function splitBrandModel(value){
+
+    const text=String(value||'').trim();
+
+    if(!text){
+        return {
+            brand:'',
+            model:''
+        };
+    }
+
+    const parts=text.split(/\s+/);
+
+    return {
+        brand:parts.shift() || '',
+        model:parts.join(' ')
+    };
+
+}
+
+
+function splitLocation(value){
+
+    const text=String(value||'').trim();
+
+    if(!text){
+        return {
+            region:'',
+            district:'',
+            address:''
+        };
+    }
+
+    const parts=text
+        .split(/[,/]/)
+        .map(x=>x.trim())
+        .filter(Boolean);
+
+    return {
+        region:parts[0] || text,
+        district:parts[1] || '',
+        address:text
+    };
+
+}
+
+
+/* =========================================================
+   BUILD MODAL
+   ========================================================= */
+
+function buildModal(){
+
+    document
+        .getElementById('austaV153COverlay')
+        ?.remove();
+
+    const overlay=
+        document.createElement('div');
+
+    overlay.id='austaV153COverlay';
+
+    overlay.innerHTML=`
+
+        <div
+            id="austaV153CModal"
+            role="dialog"
+            aria-modal="true"
+        >
+
+            <div class="austa-v153c-head">
+
+                <h2>
+                    + Elan yerləşdir
+                </h2>
+
+                <button
+                    type="button"
+                    id="austaV153CClose"
+                    aria-label="Bağla"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="austa-v153c-body">
+
+                <label
+                    class="austa-v153c-category-label"
+                    for="austaV153CCategory"
+                >
+                    Elan kateqoriyası
+                </label>
+
+                <select id="austaV153CCategory">
+
+                    ${
+                        Object.entries(CATEGORIES)
+                            .map(
+                                ([id,cat])=>
+                                `<option value="${esc(id)}">
+                                    ${esc(cat.label)}
+                                </option>`
+                            )
+                            .join('')
+                    }
+
+                </select>
+
+
+                <div id="austaV153CFields"></div>
+
+
+                <div class="austa-v153c-note">
+                    Yeni elan standart olaraq yerləşdirilir.
+                    İrəli çək, VIP və Premium yalnız
+                    ödəniş təsdiqləndikdən sonra aktivləşdiriləcək.
+                </div>
+
+
+                <div id="austaV153CStatus"></div>
+
+
+                <div class="austa-v153c-actions">
+
+                    <button
+                        type="button"
+                        id="austaV153CCancel"
+                    >
+                        Bağla
+                    </button>
+
+                    <button
+                        type="button"
+                        id="austaV153CSave"
+                    >
+                        ✓ Elanı yerləşdir
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+
+    const category=
+        document.getElementById(
+            'austaV153CCategory'
+        );
+
+    category.addEventListener(
+        'change',
+        renderFields
+    );
+
+
+    document
+        .getElementById('austaV153CClose')
+        .addEventListener(
+            'click',
+            closeModal
+        );
+
+
+    document
+        .getElementById('austaV153CCancel')
+        .addEventListener(
+            'click',
+            closeModal
+        );
+
+
+    document
+        .getElementById('austaV153CSave')
+        .addEventListener(
+            'click',
+            saveCurrentListing
+        );
+
+
+    overlay.addEventListener(
+        'click',
+        event=>{
+
+            if(event.target===overlay){
+                closeModal();
+            }
+
+        }
+    );
+
+
+    renderFields();
+
+}
+
+
+/* =========================================================
+   RENDER CATEGORY FIELDS
+   ========================================================= */
+
+function renderFields(){
+
+    const type=
+        document.getElementById(
+            'austaV153CCategory'
+        )?.value;
+
+    const category=
+        CATEGORIES[type];
+
+    const container=
+        document.getElementById(
+            'austaV153CFields'
+        );
+
+    if(
+        !category ||
+        !container
+    ){
+        return;
+    }
+
+
+    container.innerHTML=
+        category.fields
+            .map(field=>{
+
+                const [
+                    key,
+                    label,
+                    fieldType,
+                    options=[]
+                ]=field;
+
+
+                const full=
+                    fieldType==='textarea'
+                        ? ' full'
+                        : '';
+
+
+                if(fieldType==='textarea'){
+
+                    return `
+                        <div class="austa-v153c-field${full}">
+
+                            <label>
+                                ${esc(label)}
+                            </label>
+
+                            <textarea
+                                data-v153c-key="${esc(key)}"
+                                data-v153c-label="${esc(label)}"
+                            ></textarea>
+
+                        </div>
+                    `;
+
+                }
+
+
+                if(fieldType==='select'){
+
+                    return `
+                        <div class="austa-v153c-field">
+
+                            <label>
+                                ${esc(label)}
+                            </label>
+
+                            <select
+                                data-v153c-key="${esc(key)}"
+                                data-v153c-label="${esc(label)}"
+                            >
+
+                                <option value="">
+                                    Seçin
+                                </option>
+
+                                ${
+                                    options.map(
+                                        option=>
+                                        `<option value="${esc(option)}">
+                                            ${esc(option)}
+                                        </option>`
+                                    ).join('')
+                                }
+
+                            </select>
+
+                        </div>
+                    `;
+
+                }
+
+
+                return `
+                    <div class="austa-v153c-field">
+
+                        <label>
+                            ${esc(label)}
+                        </label>
+
+                        <input
+                            type="${esc(fieldType)}"
+                            data-v153c-key="${esc(key)}"
+                            data-v153c-label="${esc(label)}"
+                            ${
+                                fieldType==='number'
+                                    ? 'min="0"'
+                                    : ''
+                            }
+                        >
+
+                    </div>
+                `;
+
+            })
+            .join('');
+
+}
+
+
+/* =========================================================
+   READ FORM
+   ========================================================= */
+
+function readFields(){
+
+    const values={};
+    const details={};
+
+
+    document
+        .querySelectorAll(
+            '#austaV153CFields [data-v153c-key]'
+        )
+        .forEach(element=>{
+
+            const key=
+                element.dataset.v153cKey;
+
+            const label=
+                element.dataset.v153cLabel;
+
+            const value=
+                String(element.value||'').trim();
+
+            values[key]=value;
+
+            if(value){
+                details[label]=value;
+            }
+
+        });
+
+
+    values.details=details;
+
+    return values;
+
+}
+
+
+/* =========================================================
+   REQUIRED VALIDATION
+   ========================================================= */
+
+function validate(type,data){
+
+    const required={
+        cars:[
+            'phone',
+            'brand',
+            'model',
+            'year',
+            'price'
+        ],
+
+        rent:[
+            'phone',
+            'brand_model',
+            'year',
+            'daily_price'
+        ],
+
+        parts:[
+            'phone',
+            'part_name',
+            'price'
+        ],
+
+        accessories:[
+            'phone',
+            'accessory_name',
+            'price'
+        ],
+
+        moto:[
+            'phone',
+            'brand_model',
+            'price'
+        ],
+
+        special:[
+            'phone',
+            'special_type',
+            'price'
+        ],
+
+        bus:[
+            'phone',
+            'brand_model',
+            'price'
+        ],
+
+        water:[
+            'phone',
+            'water_type',
+            'price'
+        ],
+
+        caravan:[
+            'phone',
+            'brand_model',
+            'price'
+        ],
+
+        trailer:[
+            'phone',
+            'trailer_type',
+            'price'
+        ],
+
+        plate:[
+            'phone',
+            'plate_number',
+            'price'
+        ],
+
+        service:[
+            'phone',
+            'service_name',
+            'specialty'
+        ],
+
+        usta:[
+            'phone',
+            'name',
+            'specialty'
+        ]
+    };
+
+
+    const missing=
+        (required[type] || [])
+            .filter(key=>!data[key]);
+
+
+    if(missing.length){
+
+        throw new Error(
+            'Mütləq sahələri doldurun.'
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   BUILD INPUT FOR V153-B
+   ========================================================= */
+
+function buildRouterInput(type,data){
+
+    const location=
+        splitLocation(
+            data.region_address
+        );
+
+
+    /* ---------------- VEHICLES ---------------- */
+
+    if(type==='cars'){
+
+        return {
+
+            phone:data.phone,
+
+            brand:data.brand,
+
+            model:data.model,
+
+            year:numeric(data.year),
+
+            mileage:numeric(data.mileage),
+
+            body_type:data.body_type,
+
+            fuel_type:data.fuel_type,
+
+            transmission:data.transmission,
+
+            engine:data.engine,
+
+            color:data.color,
+
+            price:numeric(data.price),
+
+            region:location.region,
+
+            district:location.district,
+
+            address:location.address,
+
+            description:data.description,
+
+            details:data.details
+
+        };
+
+    }
+
+
+    if(type==='rent'){
+
+        const bm=
+            splitBrandModel(
+                data.brand_model
+            );
+
+        return {
+
+            phone:data.phone,
+
+            brand:bm.brand,
+
+            model:bm.model,
+
+            year:numeric(data.year),
+
+            daily_price:
+                numeric(data.daily_price),
+
+            deposit:
+                numeric(data.deposit),
+
+            region:location.region,
+
+            district:location.district,
+
+            address:location.address,
+
+            description:data.description,
+
+            details:{
+                ...data.details,
+                rental_type:data.rental_type
+            }
+
+        };
+
+    }
+
+
+    /* ---------------- PROVIDERS ---------------- */
+
+    if(type==='service'){
+
+        return {
+
+            provider_type:'service',
+
+            phone:data.phone,
+
+            name:data.service_name,
+
+            title:
+                data.service_name ||
+                'Avtoservis',
+
+            specialty:data.specialty,
+
+            services:data.specialty,
+
+            working_hours:
+                data.working_hours,
+
+            region:location.region,
+
+            district:location.district,
+
+            address:location.address,
+
+            about:data.about,
+
+            details:{
+                ...data.details,
+
+                owner_name:data.name,
+
+                brands:data.brands,
+
+                price_policy:
+                    data.price_policy
+            }
+
+        };
+
+    }
+
+
+    if(type==='usta'){
+
+        return {
+
+            provider_type:'usta',
+
+            phone:data.phone,
+
+            name:data.name,
+
+            title:
+                [
+                    data.name,
+                    data.specialty
+                ]
+                .filter(Boolean)
+                .join(' — '),
+
+            specialty:data.specialty,
+
+            services:data.services,
+
+            experience:data.experience,
+
+            working_hours:
+                data.working_hours,
+
+            message_contact:
+                data.message_contact,
+
+            region:location.region,
+
+            district:location.district,
+
+            address:location.address,
+
+            about:data.about,
+
+            details:data.details
+
+        };
+
+    }
+
+
+    /* ---------------- MARKETPLACE ---------------- */
+
+    let title='';
+
+    let brand='';
+    let model='';
+
+
+    if(data.brand_model){
+
+        const bm=
+            splitBrandModel(
+                data.brand_model
+            );
+
+        brand=bm.brand;
+        model=bm.model;
+
+    }
+
+
+    switch(type){
+
+        case 'parts':
+            title=data.part_name;
+            break;
+
+        case 'accessories':
+            title=data.accessory_name;
+            break;
+
+        case 'moto':
+            title=
+                data.brand_model ||
+                data.moto_type;
+            break;
+
+        case 'special':
+            title=
+                data.special_type ||
+                data.brand_model;
+            break;
+
+        case 'bus':
+            title=
+                data.brand_model ||
+                'Avtobus';
+            break;
+
+        case 'water':
+            title=
+                data.brand_model ||
+                data.water_type;
+            break;
+
+        case 'caravan':
+            title=
+                data.brand_model ||
+                'Karavan';
+            break;
+
+        case 'trailer':
+            title=
+                data.brand_model ||
+                data.trailer_type;
+            break;
+
+        case 'plate':
+            title=
+                data.plate_number;
+            break;
+    }
+
+
+    return {
+
+        title:
+            title ||
+            CATEGORIES[type]?.label ||
+            'Elan',
+
+        description:
+            data.description || '',
+
+        price:
+            numeric(data.price),
+
+        brand,
+
+        model,
+
+        year:
+            numeric(data.year),
+
+        condition:
+            data.condition || '',
+
+        phone:
+            data.phone || '',
+
+        region:
+            location.region,
+
+        district:
+            location.district,
+
+        address:
+            location.address,
+
+        details:
+            data.details
+
+    };
+
+}
+
+
+/* =========================================================
+   SAVE
+   ========================================================= */
+
+async function saveCurrentListing(){
+
+    const status=
+        document.getElementById(
+            'austaV153CStatus'
+        );
+
+    const button=
+        document.getElementById(
+            'austaV153CSave'
+        );
+
+
+    try{
+
+        if(
+            !window.AUSTA_V153 ||
+            typeof window.AUSTA_V153.saveListing
+                !== 'function'
+        ){
+
+            throw new Error(
+                'V153-B router tapılmadı.'
+            );
+
+        }
+
+
+        const type=
+            document.getElementById(
+                'austaV153CCategory'
+            )?.value;
+
+
+        const data=
+            readFields();
+
+
+        validate(
+            type,
+            data
+        );
+
+
+        button.disabled=true;
+
+        button.textContent=
+            'Yadda saxlanılır...';
+
+
+        status.style.color='#555';
+
+        status.textContent=
+            'Elan Supabase-a göndərilir...';
+
+
+        const input=
+            buildRouterInput(
+                type,
+                data
+            );
+
+
+        const result=
+            await window.AUSTA_V153.saveListing(
+                type,
+                input
+            );
+
+
+        console.log(
+            'A-USTA V153-C SAVED:',
+            {
+                type,
+                input,
+                result
+            }
+        );
+
+
+        status.style.color='#15803d';
+
+        status.textContent=
+            '✓ Elan uğurla yerləşdirildi.';
+
+
+        setTimeout(
+            ()=>{
+
+                closeModal();
+
+                try{
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            'austa:v153-listing-created',
+                            {
+                                detail:{
+                                    type,
+                                    listing:
+                                        result
+                                }
+                            }
+                        )
+                    );
+
+                }catch(error){}
+
+
+                if(
+                    window.AUSTA_V153
+                        ?.fetchCategory
+                ){
+
+                    window.AUSTA_V153
+                        .fetchCategory(
+                            type,
+                            1
+                        )
+                        .then(result=>{
+
+                            console.log(
+                                'A-USTA V153 CATEGORY REFRESH:',
+                                result
+                            );
+
+                        })
+                        .catch(()=>{});
+
+                }
+
+            },
+            800
+        );
+
+
+    }catch(error){
+
+        console.error(
+            'A-USTA V153-C SAVE ERROR:',
+            error
+        );
+
+
+        status.style.color='#dc2626';
+
+        status.textContent=
+            '✕ '+
+            (
+                error?.message ||
+                'Elan yerləşdirilmədi.'
+            );
+
+
+        alert(
+            error?.message ||
+            'Elan yerləşdirilmədi.'
+        );
+
+    }finally{
+
+        button.disabled=false;
+
+        button.textContent=
+            '✓ Elanı yerləşdir';
+
+    }
+
+}
+
+
+/* =========================================================
+   OPEN / CLOSE
+   ========================================================= */
+
+function openModal(type){
+
+    buildModal();
+
+
+    const normalized=
+        window.AUSTA_V153
+            ?.normalizeCategory
+            ? window.AUSTA_V153
+                .normalizeCategory(type)
+            : type;
+
+
+    if(
+        normalized &&
+        CATEGORIES[normalized]
+    ){
+
+        const select=
+            document.getElementById(
+                'austaV153CCategory'
+            );
+
+        select.value=
+            normalized;
+
+        renderFields();
+
+    }
+
+}
+
+
+function closeModal(){
+
+    document
+        .getElementById(
+            'austaV153COverlay'
+        )
+        ?.remove();
+
+}
+
+
+/* =========================================================
+   CONNECT HEADER "+ ELAN YERLƏŞDİR"
+   ========================================================= */
+
+function bindHeaderButton(){
+
+    const button=
+        document.getElementById(
+            'austaHeaderAddListing'
+        );
+
+    if(!button){
+        return;
+    }
+
+
+    /*
+     * Capture phase:
+     * köhnə V33/V53 click handler-inin
+     * eyni anda ikinci modal açmasının
+     * qarşısını alır.
+     */
+
+    button.addEventListener(
+        'click',
+        event=>{
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+            event.stopImmediatePropagation();
+
+            openModal();
+
+        },
+        true
+    );
+
+}
+
+
+/* =========================================================
+   PUBLIC API
+   ========================================================= */
+
+window.AUSTA_V153C={
+
+    version:
+        'V153-C-REAL-LISTING-FORM',
+
+    open:
+        openModal,
+
+    close:
+        closeModal,
+
+    categories:
+        CATEGORIES,
+
+    buildRouterInput:
+        buildRouterInput
+
+};
+
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+
+function boot(){
+
+    bindHeaderButton();
+
+    console.log(
+        'A-USTA V153-C REAL LISTING FORM READY'
+    );
+
+}
+
+
+if(
+    document.readyState==='loading'
+){
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        boot,
+        {
+            once:true
+        }
+    );
+
+}else{
+
+    boot();
+
+}
+
+})();
+</script>
