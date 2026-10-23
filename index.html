@@ -51293,3 +51293,1833 @@ if(
 
 })();
 </script>
+
+<!-- =========================================================
+     A-USTA V153-D
+     14 CATEGORIES + AUTO DEALERS + REAL MEDIA
+     ========================================================= -->
+
+<style id="austa-v153d-14-category-media-css">
+
+#austaV153CMediaBox{
+    grid-column:1/-1;
+    padding:16px;
+    margin-top:4px;
+    border:1px solid #dedede;
+    border-radius:14px;
+    background:#fafafa;
+}
+
+.austa-v153d-media-title{
+    margin:0 0 6px;
+    font-size:14px;
+    font-weight:900;
+    color:#111;
+}
+
+.austa-v153d-media-help{
+    margin:0 0 14px;
+    color:#666;
+    font-size:12px;
+    line-height:1.5;
+}
+
+.austa-v153d-media-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.austa-v153d-media-field{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.austa-v153d-media-field label{
+    font-size:12px;
+    font-weight:900;
+}
+
+.austa-v153d-media-field input{
+    width:100%;
+    box-sizing:border-box;
+    padding:11px;
+    border:1px dashed #bbb;
+    border-radius:10px;
+    background:#fff;
+}
+
+#austaV153DPreview{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:8px;
+    margin-top:12px;
+}
+
+.austa-v153d-preview-item{
+    position:relative;
+    aspect-ratio:4/3;
+    overflow:hidden;
+    border:1px solid #ddd;
+    border-radius:9px;
+    background:#eee;
+}
+
+.austa-v153d-preview-item img,
+.austa-v153d-preview-item video{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.austa-v153d-preview-badge{
+    position:absolute;
+    left:5px;
+    bottom:5px;
+    padding:3px 6px;
+    border-radius:5px;
+    background:rgba(0,0,0,.75);
+    color:#fff;
+    font-size:9px;
+    font-weight:900;
+}
+
+#austaV153DUploadProgress{
+    display:none;
+    margin-top:11px;
+    font-size:12px;
+    font-weight:900;
+}
+
+@media(max-width:700px){
+
+    .austa-v153d-media-row{
+        grid-template-columns:1fr;
+    }
+
+    #austaV153DPreview{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+}
+
+</style>
+
+
+<script id="austa-v153d-14-category-media-js">
+(function(){
+
+'use strict';
+
+
+/* =========================================================
+   TYPES
+   ========================================================= */
+
+const VEHICLE_TYPES =
+    new Set([
+        'cars',
+        'rent'
+    ]);
+
+const MARKETPLACE_TYPES =
+    new Set([
+        'parts',
+        'accessories',
+        'moto',
+        'special',
+        'bus',
+        'water',
+        'caravan',
+        'trailer',
+        'plate'
+    ]);
+
+const PROVIDER_TYPES =
+    new Set([
+        'service',
+        'usta'
+    ]);
+
+const DEALER_TYPE = 'dealer';
+
+
+/* =========================================================
+   SUPABASE
+   ========================================================= */
+
+function sb(){
+
+    if(!window.AUSTA_SUPABASE){
+
+        throw new Error(
+            'Supabase client tapılmadı.'
+        );
+
+    }
+
+    return window.AUSTA_SUPABASE;
+}
+
+
+async function currentUser(){
+
+    const {
+        data,
+        error
+    } = await sb().auth.getUser();
+
+    if(error){
+        throw error;
+    }
+
+    if(!data?.user){
+
+        throw new Error(
+            'Elan yerləşdirmək üçün hesabınıza daxil olun.'
+        );
+    }
+
+    return data.user;
+}
+
+
+/* =========================================================
+   ADD AUTO DEALER AS CATEGORY 14
+   ========================================================= */
+
+function installDealerCategory(){
+
+    if(
+        !window.AUSTA_V153C ||
+        !window.AUSTA_V153C.categories
+    ){
+        return false;
+    }
+
+    const categories =
+        window.AUSTA_V153C.categories;
+
+
+    categories.dealer = {
+
+        label:'🏢 Avtosalonlar',
+
+        fields:[
+
+            [
+                'dealer_name',
+                'Salonun adı',
+                'text'
+            ],
+
+            [
+                'contact_name',
+                'Əlaqədar şəxsin adı',
+                'text'
+            ],
+
+            [
+                'phone',
+                'Telefon',
+                'tel'
+            ],
+
+            [
+                'message_contact',
+                'WhatsApp / mesaj nömrəsi',
+                'text'
+            ],
+
+            [
+                'region',
+                'Region',
+                'text'
+            ],
+
+            [
+                'district',
+                'Rayon',
+                'text'
+            ],
+
+            [
+                'address',
+                'Tam ünvan',
+                'text'
+            ],
+
+            [
+                'working_hours',
+                'İş saatları',
+                'text'
+            ],
+
+            [
+                'brands',
+                'Satdığı avtomobil markaları',
+                'text'
+            ],
+
+            [
+                'vehicle_condition',
+                'Avtomobillərin vəziyyəti',
+                'select',
+                [
+                    'Yeni',
+                    'Sürülmüş',
+                    'Yeni və sürülmüş'
+                ]
+            ],
+
+            [
+                'credit_available',
+                'Kredit mövcuddur?',
+                'select',
+                [
+                    'Bəli',
+                    'Xeyr'
+                ]
+            ],
+
+            [
+                'leasing_available',
+                'Lizinq mövcuddur?',
+                'select',
+                [
+                    'Bəli',
+                    'Xeyr'
+                ]
+            ],
+
+            [
+                'barter_available',
+                'Barter mümkündür?',
+                'select',
+                [
+                    'Bəli',
+                    'Xeyr'
+                ]
+            ],
+
+            [
+                'delivery_available',
+                'Çatdırılma xidməti var?',
+                'select',
+                [
+                    'Bəli',
+                    'Xeyr'
+                ]
+            ],
+
+            [
+                'about',
+                'Avtosalon haqqında məlumat',
+                'textarea'
+            ]
+
+        ]
+    };
+
+
+    /*
+     * V153-B normalizer-in ayrıca dealer
+     * tanımaması problem yaratmasın.
+     */
+
+    return true;
+}
+
+
+/* =========================================================
+   ADD DEALER OPTION TO CURRENT MODAL
+   ========================================================= */
+
+function ensureDealerOption(){
+
+    const select =
+        document.getElementById(
+            'austaV153CCategory'
+        );
+
+    if(!select){
+        return;
+    }
+
+    if(
+        select.querySelector(
+            'option[value="dealer"]'
+        )
+    ){
+        return;
+    }
+
+    const option =
+        document.createElement('option');
+
+    option.value = 'dealer';
+
+    option.textContent =
+        '🏢 Avtosalonlar';
+
+    select.appendChild(option);
+}
+
+
+/* =========================================================
+   BOOL
+   ========================================================= */
+
+function yesNo(value){
+
+    return String(value || '')
+        .trim()
+        .toLocaleLowerCase('az-AZ') ===
+        'bəli';
+}
+
+
+/* =========================================================
+   READ CURRENT V153-C FIELDS
+   ========================================================= */
+
+function readCurrentFields(){
+
+    const result = {};
+
+    document
+        .querySelectorAll(
+            '#austaV153CFields [data-v153c-key]'
+        )
+        .forEach(element=>{
+
+            result[
+                element.dataset.v153cKey
+            ] =
+                String(
+                    element.value || ''
+                ).trim();
+
+        });
+
+    return result;
+}
+
+
+/* =========================================================
+   DEALER SAVE
+   ========================================================= */
+
+async function saveDealer(){
+
+    const user =
+        await currentUser();
+
+    const values =
+        readCurrentFields();
+
+
+    if(
+        !values.dealer_name ||
+        !values.phone ||
+        !values.region ||
+        !values.address
+    ){
+
+        throw new Error(
+            'Salonun adı, telefon, region və tam ünvan mütləqdir.'
+        );
+    }
+
+
+    const details = {
+
+        contact_name:
+            values.contact_name || '',
+
+        message_contact:
+            values.message_contact || '',
+
+        working_hours:
+            values.working_hours || '',
+
+        brands:
+            values.brands || '',
+
+        vehicle_condition:
+            values.vehicle_condition || '',
+
+        credit_available:
+            yesNo(values.credit_available),
+
+        leasing_available:
+            yesNo(values.leasing_available),
+
+        barter_available:
+            yesNo(values.barter_available),
+
+        delivery_available:
+            yesNo(values.delivery_available)
+
+    };
+
+
+    const payload = {
+
+        owner_id:
+            user.id,
+
+        status:
+            'active',
+
+        dealer_name:
+            values.dealer_name,
+
+        contact_name:
+            values.contact_name || null,
+
+        phone:
+            values.phone,
+
+        message_contact:
+            values.message_contact || null,
+
+        region:
+            values.region,
+
+        district:
+            values.district || null,
+
+        address:
+            values.address,
+
+        working_hours:
+            values.working_hours || null,
+
+        brands:
+            values.brands || null,
+
+        vehicle_condition:
+            values.vehicle_condition || null,
+
+        credit_available:
+            yesNo(
+                values.credit_available
+            ),
+
+        leasing_available:
+            yesNo(
+                values.leasing_available
+            ),
+
+        barter_available:
+            yesNo(
+                values.barter_available
+            ),
+
+        delivery_available:
+            yesNo(
+                values.delivery_available
+            ),
+
+        about:
+            values.about || null,
+
+        details,
+
+        promotion_type:
+            'standard',
+
+        published_at:
+            new Date().toISOString()
+
+    };
+
+
+    const {
+        data,
+        error
+    } =
+        await sb()
+            .from(
+                'auto_dealer_listings'
+            )
+            .insert(payload)
+            .select()
+            .single();
+
+
+    if(error){
+        throw error;
+    }
+
+
+    return data;
+}
+
+
+/* =========================================================
+   MEDIA CONFIG
+   ========================================================= */
+
+function mediaConfig(type){
+
+    if(
+        VEHICLE_TYPES.has(type)
+    ){
+
+        return {
+
+            bucket:
+                'listing-media',
+
+            table:
+                'listing_media',
+
+            parentTable:
+                'vehicle_listings',
+
+            hasVideoColumn:
+                true
+
+        };
+    }
+
+
+    if(
+        MARKETPLACE_TYPES.has(type)
+    ){
+
+        return {
+
+            bucket:
+                'marketplace-media',
+
+            table:
+                'marketplace_listing_media',
+
+            parentTable:
+                'marketplace_listings',
+
+            hasVideoColumn:
+                true
+
+        };
+    }
+
+
+    if(
+        PROVIDER_TYPES.has(type)
+    ){
+
+        return {
+
+            bucket:
+                'provider-media',
+
+            table:
+                'service_provider_media',
+
+            parentTable:
+                'service_provider_listings',
+
+            hasVideoColumn:
+                false
+
+        };
+    }
+
+
+    if(type === DEALER_TYPE){
+
+        return {
+
+            bucket:
+                'auto-dealer-media',
+
+            table:
+                'auto_dealer_media',
+
+            parentTable:
+                'auto_dealer_listings',
+
+            hasVideoColumn:
+                false
+
+        };
+    }
+
+
+    throw new Error(
+        'Media konfiqurasiyası tapılmadı.'
+    );
+}
+
+
+/* =========================================================
+   MEDIA UI
+   ========================================================= */
+
+function currentType(){
+
+    return document
+        .getElementById(
+            'austaV153CCategory'
+        )
+        ?.value || '';
+}
+
+
+function videoAllowed(type){
+
+    return type !== 'plate';
+}
+
+
+function buildMediaBox(){
+
+    const fields =
+        document.getElementById(
+            'austaV153CFields'
+        );
+
+    if(!fields){
+        return;
+    }
+
+
+    document
+        .getElementById(
+            'austaV153CMediaBox'
+        )
+        ?.remove();
+
+
+    const type =
+        currentType();
+
+    if(!type){
+        return;
+    }
+
+
+    const allowVideo =
+        videoAllowed(type);
+
+
+    const box =
+        document.createElement('div');
+
+    box.id =
+        'austaV153CMediaBox';
+
+
+    box.innerHTML = `
+
+        <div class="austa-v153d-media-title">
+            📷 Elanın şəkil və videosu
+        </div>
+
+        <div class="austa-v153d-media-help">
+
+            Bir neçə real şəkil əlavə edə bilərsiniz.
+
+            ${
+                allowVideo
+                    ? 'Video da əlavə edə bilərsiniz.'
+                    : 'Bu kateqoriyada video sahəsi göstərilmir.'
+            }
+
+            İlk şəkil əsas şəkil olacaq.
+
+        </div>
+
+
+        <div class="austa-v153d-media-row">
+
+            <div class="austa-v153d-media-field">
+
+                <label>
+                    Şəkillər
+                </label>
+
+                <input
+                    id="austaV153DImages"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                >
+
+            </div>
+
+
+            ${
+                allowVideo
+                    ? `
+                        <div class="austa-v153d-media-field">
+
+                            <label>
+                                Video
+                            </label>
+
+                            <input
+                                id="austaV153DVideo"
+                                type="file"
+                                accept="video/*"
+                            >
+
+                        </div>
+                    `
+                    : ''
+            }
+
+        </div>
+
+
+        <div id="austaV153DPreview"></div>
+
+        <div id="austaV153DUploadProgress"></div>
+    `;
+
+
+    fields.appendChild(box);
+
+
+    document
+        .getElementById(
+            'austaV153DImages'
+        )
+        ?.addEventListener(
+            'change',
+            renderPreview
+        );
+
+
+    document
+        .getElementById(
+            'austaV153DVideo'
+        )
+        ?.addEventListener(
+            'change',
+            renderPreview
+        );
+}
+
+
+/* =========================================================
+   SELECTED FILES
+   ========================================================= */
+
+function selectedFiles(){
+
+    const images =
+        [
+            ...(
+                document
+                    .getElementById(
+                        'austaV153DImages'
+                    )
+                    ?.files || []
+            )
+        ]
+        .filter(
+            file =>
+                String(
+                    file.type || ''
+                )
+                .startsWith('image/')
+        );
+
+
+    const videos =
+        [
+            ...(
+                document
+                    .getElementById(
+                        'austaV153DVideo'
+                    )
+                    ?.files || []
+            )
+        ]
+        .filter(
+            file =>
+                String(
+                    file.type || ''
+                )
+                .startsWith('video/')
+        );
+
+
+    return {
+        images,
+        videos
+    };
+}
+
+
+/* =========================================================
+   PREVIEW
+   ========================================================= */
+
+function renderPreview(){
+
+    const preview =
+        document.getElementById(
+            'austaV153DPreview'
+        );
+
+    if(!preview){
+        return;
+    }
+
+
+    preview.innerHTML = '';
+
+
+    const {
+        images,
+        videos
+    } = selectedFiles();
+
+
+    images.forEach(file=>{
+
+        const url =
+            URL.createObjectURL(file);
+
+        const item =
+            document.createElement('div');
+
+        item.className =
+            'austa-v153d-preview-item';
+
+        const img =
+            document.createElement('img');
+
+        img.src = url;
+
+        img.alt = '';
+
+        img.onload = ()=>{
+            URL.revokeObjectURL(url);
+        };
+
+
+        const badge =
+            document.createElement('span');
+
+        badge.className =
+            'austa-v153d-preview-badge';
+
+        badge.textContent =
+            'ŞƏKİL';
+
+
+        item.append(
+            img,
+            badge
+        );
+
+        preview.appendChild(item);
+
+    });
+
+
+    videos.forEach(file=>{
+
+        const url =
+            URL.createObjectURL(file);
+
+        const item =
+            document.createElement('div');
+
+        item.className =
+            'austa-v153d-preview-item';
+
+
+        const video =
+            document.createElement('video');
+
+        video.src = url;
+
+        video.muted = true;
+
+        video.playsInline = true;
+
+        video.preload =
+            'metadata';
+
+
+        video.onloadedmetadata =
+            ()=>{
+
+                URL.revokeObjectURL(url);
+
+            };
+
+
+        const badge =
+            document.createElement('span');
+
+        badge.className =
+            'austa-v153d-preview-badge';
+
+        badge.textContent =
+            'VIDEO';
+
+
+        item.append(
+            video,
+            badge
+        );
+
+        preview.appendChild(item);
+
+    });
+}
+
+
+/* =========================================================
+   SAFE FILE NAME
+   ========================================================= */
+
+function safeFileName(name){
+
+    const value =
+        String(
+            name || 'media'
+        );
+
+
+    const dot =
+        value.lastIndexOf('.');
+
+
+    const base =
+        (
+            dot >= 0
+                ? value.slice(0,dot)
+                : value
+        )
+        .normalize('NFD')
+        .replace(
+            /[\u0300-\u036f]/g,
+            ''
+        )
+        .replace(
+            /[^a-zA-Z0-9_-]+/g,
+            '-'
+        )
+        .replace(
+            /^[-_]+|[-_]+$/g,
+            ''
+        )
+        .slice(0,60) ||
+        'media';
+
+
+    const extension =
+        dot >= 0
+            ? value
+                .slice(dot+1)
+                .toLowerCase()
+                .replace(
+                    /[^a-z0-9]/g,
+                    ''
+                )
+                .slice(0,10)
+            : '';
+
+
+    return extension
+        ? `${base}.${extension}`
+        : base;
+}
+
+
+/* =========================================================
+   UPLOAD SINGLE FILE
+   ========================================================= */
+
+async function uploadOne(
+    config,
+    user,
+    listingId,
+    file,
+    mediaType,
+    sortOrder,
+    isCover
+){
+
+    const randomId =
+        window.crypto
+            ?.randomUUID
+            ?.() ||
+        (
+            Date.now() +
+            '-' +
+            Math.random()
+                .toString(36)
+                .slice(2)
+        );
+
+
+    const path =
+        `${user.id}/${listingId}/${randomId}-${safeFileName(file.name)}`;
+
+
+    const {
+        error:uploadError
+    } =
+        await sb()
+            .storage
+            .from(
+                config.bucket
+            )
+            .upload(
+                path,
+                file,
+                {
+                    upsert:false,
+                    cacheControl:'3600',
+                    contentType:
+                        file.type ||
+                        undefined
+                }
+            );
+
+
+    if(uploadError){
+        throw uploadError;
+    }
+
+
+    const {
+        error:mediaError
+    } =
+        await sb()
+            .from(
+                config.table
+            )
+            .insert({
+
+                listing_id:
+                    listingId,
+
+                owner_id:
+                    user.id,
+
+                media_type:
+                    mediaType,
+
+                storage_path:
+                    path,
+
+                sort_order:
+                    sortOrder,
+
+                is_cover:
+                    Boolean(isCover)
+
+            });
+
+
+    if(mediaError){
+
+        try{
+
+            await sb()
+                .storage
+                .from(
+                    config.bucket
+                )
+                .remove([path]);
+
+        }catch(error){}
+
+        throw mediaError;
+    }
+
+
+    return {
+
+        storage_path:path,
+
+        media_type:
+            mediaType,
+
+        sort_order:
+            sortOrder,
+
+        is_cover:
+            Boolean(isCover)
+
+    };
+}
+
+
+/* =========================================================
+   UPLOAD ALL MEDIA
+   ========================================================= */
+
+async function uploadMedia(
+    type,
+    listingId
+){
+
+    const files =
+        selectedFiles();
+
+
+    if(
+        !files.images.length &&
+        !files.videos.length
+    ){
+        return [];
+    }
+
+
+    const user =
+        await currentUser();
+
+    const config =
+        mediaConfig(type);
+
+    const progress =
+        document.getElementById(
+            'austaV153DUploadProgress'
+        );
+
+
+    if(progress){
+
+        progress.style.display =
+            'block';
+
+        progress.textContent =
+            'Media yüklənir...';
+    }
+
+
+    const result = [];
+
+    let order = 0;
+
+
+    for(
+        let i=0;
+        i<files.images.length;
+        i++
+    ){
+
+        if(progress){
+
+            progress.textContent =
+                `Şəkil yüklənir ${i+1}/${files.images.length}`;
+
+        }
+
+
+        result.push(
+
+            await uploadOne(
+
+                config,
+
+                user,
+
+                listingId,
+
+                files.images[i],
+
+                'image',
+
+                order++,
+
+                i === 0
+
+            )
+
+        );
+    }
+
+
+    for(
+        let i=0;
+        i<files.videos.length;
+        i++
+    ){
+
+        if(progress){
+
+            progress.textContent =
+                `Video yüklənir ${i+1}/${files.videos.length}`;
+
+        }
+
+
+        result.push(
+
+            await uploadOne(
+
+                config,
+
+                user,
+
+                listingId,
+
+                files.videos[i],
+
+                'video',
+
+                order++,
+
+                false
+
+            )
+
+        );
+    }
+
+
+    if(
+        files.videos.length &&
+        config.hasVideoColumn
+    ){
+
+        const {
+            error
+        } =
+            await sb()
+                .from(
+                    config.parentTable
+                )
+                .update({
+                    has_video:true
+                })
+                .eq(
+                    'id',
+                    listingId
+                );
+
+
+        if(error){
+            throw error;
+        }
+    }
+
+
+    if(progress){
+
+        progress.textContent =
+            '✓ Şəkil/video yükləndi.';
+    }
+
+
+    return result;
+}
+
+
+/* =========================================================
+   EXTRACT LISTING
+   ========================================================= */
+
+function extractListing(result){
+
+    if(!result){
+        return null;
+    }
+
+    if(result.id){
+        return result;
+    }
+
+    if(result.data?.id){
+        return result.data;
+    }
+
+    if(
+        Array.isArray(result.data) &&
+        result.data[0]?.id
+    ){
+        return result.data[0];
+    }
+
+    if(
+        Array.isArray(result) &&
+        result[0]?.id
+    ){
+        return result[0];
+    }
+
+    if(result.listing?.id){
+        return result.listing;
+    }
+
+    return null;
+}
+
+
+/* =========================================================
+   PATCH V153 SAVE
+   ========================================================= */
+
+function patchSave(){
+
+    if(
+        !window.AUSTA_V153 ||
+        typeof window.AUSTA_V153.saveListing
+            !== 'function'
+    ){
+        return false;
+    }
+
+
+    if(
+        window.AUSTA_V153
+            .__v153d14Wrapped
+    ){
+        return true;
+    }
+
+
+    const original =
+        window.AUSTA_V153
+            .saveListing
+            .bind(
+                window.AUSTA_V153
+            );
+
+
+    window.AUSTA_V153.saveListing =
+        async function(
+            type,
+            input
+        ){
+
+            let result;
+
+
+            /*
+             * AUTO DEALER
+             */
+
+            if(type === DEALER_TYPE){
+
+                result =
+                    await saveDealer();
+
+            }else{
+
+                result =
+                    await original(
+                        type,
+                        input
+                    );
+
+            }
+
+
+            const listing =
+                extractListing(
+                    result
+                );
+
+
+            const files =
+                selectedFiles();
+
+
+            if(
+                !files.images.length &&
+                !files.videos.length
+            ){
+                return result;
+            }
+
+
+            if(!listing?.id){
+
+                throw new Error(
+                    'Elan yaradıldı, amma media üçün listing ID alınmadı.'
+                );
+            }
+
+
+            const media =
+                await uploadMedia(
+                    type,
+                    listing.id
+                );
+
+
+            console.log(
+                'A-USTA V153-D MEDIA SAVED',
+                {
+                    type,
+                    listingId:
+                        listing.id,
+                    media
+                }
+            );
+
+
+            return result;
+        };
+
+
+    window.AUSTA_V153
+        .__v153d14Wrapped =
+        true;
+
+
+    return true;
+}
+
+
+/* =========================================================
+   PATCH BUILD ROUTER INPUT FOR DEALER
+   ========================================================= */
+
+function patchBuildRouterInput(){
+
+    if(
+        !window.AUSTA_V153C ||
+        typeof window.AUSTA_V153C
+            .buildRouterInput !==
+            'function'
+    ){
+        return false;
+    }
+
+
+    if(
+        window.AUSTA_V153C
+            .__v153dDealerInputWrapped
+    ){
+        return true;
+    }
+
+
+    const original =
+        window.AUSTA_V153C
+            .buildRouterInput
+            .bind(
+                window.AUSTA_V153C
+            );
+
+
+    window.AUSTA_V153C
+        .buildRouterInput =
+        function(
+            type,
+            data
+        ){
+
+            if(type === DEALER_TYPE){
+
+                /*
+                 * saveDealer() formu DOM-dan
+                 * oxuyur. V153-C save axınına
+                 * keçmək üçün təhlükəsiz input.
+                 */
+
+                return {
+                    details:
+                        data?.details || {}
+                };
+            }
+
+
+            return original(
+                type,
+                data
+            );
+        };
+
+
+    window.AUSTA_V153C
+        .__v153dDealerInputWrapped =
+        true;
+
+
+    return true;
+}
+
+
+/* =========================================================
+   PATCH V153-C OPEN
+   ========================================================= */
+
+function patchOpen(){
+
+    if(
+        !window.AUSTA_V153C ||
+        typeof window.AUSTA_V153C.open
+            !== 'function'
+    ){
+        return false;
+    }
+
+
+    if(
+        window.AUSTA_V153C
+            .__v153d14OpenWrapped
+    ){
+        return true;
+    }
+
+
+    const original =
+        window.AUSTA_V153C
+            .open
+            .bind(
+                window.AUSTA_V153C
+            );
+
+
+    window.AUSTA_V153C.open =
+        function(type){
+
+            const result =
+                original(
+                    type === DEALER_TYPE
+                        ? undefined
+                        : type
+                );
+
+
+            setTimeout(
+                ()=>{
+
+                    ensureDealerOption();
+
+
+                    const select =
+                        document
+                            .getElementById(
+                                'austaV153CCategory'
+                            );
+
+
+                    if(
+                        type === DEALER_TYPE &&
+                        select
+                    ){
+
+                        select.value =
+                            DEALER_TYPE;
+
+                        select.dispatchEvent(
+                            new Event(
+                                'change',
+                                {
+                                    bubbles:true
+                                }
+                            )
+                        );
+
+                    }
+
+
+                    buildMediaBox();
+
+                },
+                0
+            );
+
+
+            return result;
+        };
+
+
+    window.AUSTA_V153C
+        .__v153d14OpenWrapped =
+        true;
+
+
+    return true;
+}
+
+
+/* =========================================================
+   CATEGORY CHANGE
+   ========================================================= */
+
+function categoryChangeHandler(event){
+
+    if(
+        event.target?.id !==
+        'austaV153CCategory'
+    ){
+        return;
+    }
+
+
+    setTimeout(
+        buildMediaBox,
+        0
+    );
+}
+
+
+/* =========================================================
+   ALL 3 ADD LISTING BUTTONS
+   ========================================================= */
+
+function isAddListingButton(element){
+
+    if(!element){
+        return false;
+    }
+
+
+    if(
+        element.id ===
+        'austaHeaderAddListing'
+    ){
+        return true;
+    }
+
+
+    if(
+        element.id ===
+        'austaHomeAddListing'
+    ){
+        return true;
+    }
+
+
+    if(
+        element.matches?.(
+            '.austa-v39-btn.primary'
+        )
+    ){
+
+        const text =
+            String(
+                element.innerText ||
+                element.textContent ||
+                ''
+            );
+
+        return /elan\s*yerləşdir/i
+            .test(text);
+    }
+
+
+    return false;
+}
+
+
+function addListingClick(event){
+
+    const button =
+        event.target
+            ?.closest?.(
+                'button,a'
+            );
+
+
+    if(
+        !isAddListingButton(
+            button
+        )
+    ){
+        return;
+    }
+
+
+    event.preventDefault();
+
+    event.stopPropagation();
+
+    event.stopImmediatePropagation();
+
+
+    if(
+        !window.AUSTA_V153C?.open
+    ){
+        console.error(
+            'V153-C form tapılmadı.'
+        );
+
+        return;
+    }
+
+
+    window.AUSTA_V153C.open();
+}
+
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+
+function boot(){
+
+    const dealerReady =
+        installDealerCategory();
+
+    const inputReady =
+        patchBuildRouterInput();
+
+    const saveReady =
+        patchSave();
+
+    const openReady =
+        patchOpen();
+
+
+    document.addEventListener(
+        'click',
+        addListingClick,
+        true
+    );
+
+
+    document.addEventListener(
+        'change',
+        categoryChangeHandler,
+        true
+    );
+
+
+    console.log(
+        'A-USTA V153-D 14 CATEGORY READY',
+        {
+            dealerReady,
+            inputReady,
+            saveReady,
+            openReady,
+            categories:
+                Object.keys(
+                    window.AUSTA_V153C
+                        ?.categories || {}
+                ).length
+        }
+    );
+}
+
+
+if(
+    document.readyState ===
+    'loading'
+){
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        boot,
+        {
+            once:true
+        }
+    );
+
+}else{
+
+    boot();
+}
+
+})();
+</script>
