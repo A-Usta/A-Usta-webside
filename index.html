@@ -27414,73 +27414,238 @@ async function mediaGallery(item,page){
     return;
   }
 
-  const paths=imagePaths(item);
 
-  const images=[];
+  /* =========================
+     MEDIA HAZIRLA
+     ========================= */
 
-  for(const path of paths){
+  const media=[];
 
-    const url=await signedUrl(path);
+  const video=
+    videoPath(item);
 
-    if(url){
-      images.push(url);
+  if(video){
+
+    const videoUrl=
+      await signedUrl(video);
+
+    if(videoUrl){
+
+      media.push({
+        type:'video',
+        url:videoUrl
+      });
     }
   }
 
-  if(!images.length){
 
-    main.innerHTML=
-      '<div class="austa-final-no-media">'+
-        'Bu elan üçün şəkil yoxdur.'+
-      '</div>';
+  const paths=
+    imagePaths(item);
+
+  for(const path of paths){
+
+    const url=
+      await signedUrl(path);
+
+    if(url){
+
+      media.push({
+        type:'image',
+        url:url
+      });
+    }
+  }
+
+
+  if(!media.length){
+
+    main.innerHTML=`
+      <div class="austa-final-no-media">
+        Bu elan üçün media yoxdur.
+      </div>
+    `;
 
     thumbs.remove();
 
     return;
   }
 
+
+  let currentIndex=0;
+
+
+  /* =========================
+     ƏSAS MEDIA
+     ========================= */
+
   function select(index){
 
-    const url=images[index];
+    if(index<0){
+      index=media.length-1;
+    }
 
-    main.innerHTML=
-      '<img src="'+
-        escapeHtml(url)+
-        '" alt="'+
-        escapeHtml(titleOf(item))+
-      '">';
+    if(index>=media.length){
+      index=0;
+    }
+
+    currentIndex=index;
+
+    const selected=
+      media[currentIndex];
+
+
+    if(selected.type==='video'){
+
+      main.innerHTML=`
+        <div class="austa-v147-main-stage">
+
+          <video
+            class="austa-v147-main-video"
+            controls
+            playsinline
+            preload="metadata"
+          >
+            <source
+              src="${escapeHtml(selected.url)}"
+            >
+          </video>
+
+          ${
+            media.length>1
+              ? `
+                <button
+                  type="button"
+                  class="austa-v147-arrow austa-v147-prev"
+                  data-austa-media-prev
+                  aria-label="Əvvəlki media"
+                >
+                  ‹
+                </button>
+
+                <button
+                  type="button"
+                  class="austa-v147-arrow austa-v147-next"
+                  data-austa-media-next
+                  aria-label="Növbəti media"
+                >
+                  ›
+                </button>
+              `
+              : ''
+          }
+
+        </div>
+      `;
+
+    }else{
+
+      main.innerHTML=`
+        <div class="austa-v147-main-stage">
+
+          <img
+            class="austa-v147-main-image"
+            src="${escapeHtml(selected.url)}"
+            alt="${escapeHtml(titleOf(item))}"
+          >
+
+          ${
+            media.length>1
+              ? `
+                <button
+                  type="button"
+                  class="austa-v147-arrow austa-v147-prev"
+                  data-austa-media-prev
+                  aria-label="Əvvəlki media"
+                >
+                  ‹
+                </button>
+
+                <button
+                  type="button"
+                  class="austa-v147-arrow austa-v147-next"
+                  data-austa-media-next
+                  aria-label="Növbəti media"
+                >
+                  ›
+                </button>
+              `
+              : ''
+          }
+
+        </div>
+      `;
+    }
+
 
     [
       ...thumbs.querySelectorAll(
-        '.austa-final-thumb'
+        '[data-gallery-index]'
       )
     ].forEach(
       (button,i)=>
         button.classList.toggle(
           'active',
-          i===index
+          i===currentIndex
         )
     );
   }
 
+
+  /* =========================
+     THUMBNAILS
+     ========================= */
+
   thumbs.innerHTML=
-    images.map(
-      (url,index)=>`
-        <button
-          type="button"
-          class="austa-final-thumb ${
-            index===0 ? 'active' : ''
-          }"
-          data-gallery-index="${index}"
-        >
-          <img
-            src="${escapeHtml(url)}"
-            alt="Şəkil ${index+1}"
-            loading="lazy"
+    media.map(
+      (entry,index)=>{
+
+        if(entry.type==='video'){
+
+          return `
+            <button
+              type="button"
+              class="austa-final-thumb austa-v147-video-thumb ${
+                index===0 ? 'active' : ''
+              }"
+              data-gallery-index="${index}"
+              aria-label="Video"
+            >
+              <video
+                src="${escapeHtml(entry.url)}"
+                muted
+                preload="metadata"
+                playsinline
+              ></video>
+
+              <span class="austa-v147-play">
+                ▶
+              </span>
+            </button>
+          `;
+        }
+
+        return `
+          <button
+            type="button"
+            class="austa-final-thumb ${
+              index===0 ? 'active' : ''
+            }"
+            data-gallery-index="${index}"
           >
-        </button>
-      `
+            <img
+              src="${escapeHtml(entry.url)}"
+              alt="Şəkil ${index+1}"
+              loading="lazy"
+            >
+          </button>
+        `;
+      }
     ).join('');
+
+
+  /* =========================
+     THUMB CLICK
+     ========================= */
 
   thumbs.addEventListener(
     'click',
@@ -27505,6 +27670,154 @@ async function mediaGallery(item,page){
       );
     }
   );
+
+
+  /* =========================
+     ARROWS
+     ========================= */
+
+  main.addEventListener(
+    'click',
+    event=>{
+
+      const prev=
+        event.target.closest(
+          '[data-austa-media-prev]'
+        );
+
+      const next=
+        event.target.closest(
+          '[data-austa-media-next]'
+        );
+
+      if(prev){
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        select(
+          currentIndex-1
+        );
+
+        return;
+      }
+
+      if(next){
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        select(
+          currentIndex+1
+        );
+      }
+    }
+  );
+
+
+  /* =========================
+     MOBILE SWIPE
+     ========================= */
+
+  let touchStartX=null;
+  let touchStartY=null;
+
+  main.addEventListener(
+    'touchstart',
+    event=>{
+
+      const touch=
+        event.touches?.[0];
+
+      if(!touch){
+        return;
+      }
+
+      touchStartX=
+        touch.clientX;
+
+      touchStartY=
+        touch.clientY;
+
+    },
+    {
+      passive:true
+    }
+  );
+
+
+  main.addEventListener(
+    'touchend',
+    event=>{
+
+      if(
+        touchStartX===null ||
+        touchStartY===null
+      ){
+        return;
+      }
+
+      const touch=
+        event.changedTouches?.[0];
+
+      if(!touch){
+        return;
+      }
+
+      const diffX=
+        touch.clientX-
+        touchStartX;
+
+      const diffY=
+        touch.clientY-
+        touchStartY;
+
+      touchStartX=null;
+      touchStartY=null;
+
+
+      /*
+       * Şaquli scroll-u media swipe
+       * kimi qəbul etmə.
+       */
+
+      if(
+        Math.abs(diffX) <
+        Math.abs(diffY)
+      ){
+        return;
+      }
+
+      if(
+        Math.abs(diffX)<45
+      ){
+        return;
+      }
+
+      if(diffX<0){
+
+        select(
+          currentIndex+1
+        );
+
+      }else{
+
+        select(
+          currentIndex-1
+        );
+      }
+
+    },
+    {
+      passive:true
+    }
+  );
+
+
+  /*
+   * Video varsa media[0] videodur.
+   * Ona görə elan açılanda video görünür.
+   */
 
   select(0);
 }
@@ -27844,39 +28157,7 @@ async function openFullListing(id){
 
           </section>
 
-          ${
-            video
-              ? `
-                <section
-                  class="austa-final-video-section"
-                  data-austa-final-video
-                >
-                  <h3 class="austa-final-section-title">
-                    Video
-                  </h3>
-
-                  <div style="
-                    aspect-ratio:16/9;
-                    background:#02080e;
-                    border-radius:12px;
-                    overflow:hidden;
-                  ">
-                    <div
-                      data-austa-video-loader
-                      style="
-                        height:100%;
-                        display:grid;
-                        place-items:center;
-                        color:#91a7ba;
-                      "
-                    >
-                      Video yüklənir...
-                    </div>
-                  </div>
-                </section>
-              `
-              : ''
-          }
+         
 
           <section class="austa-final-info-section">
 
@@ -28270,46 +28551,7 @@ async function openFullListing(id){
   );
 
 
-  if(video){
-
-    const url=
-      await signedUrl(video);
-
-    const loader=
-      page.querySelector(
-        '[data-austa-video-loader]'
-      );
-
-    if(loader){
-
-      if(url){
-
-        loader.parentElement.innerHTML=`
-          <video
-            controls
-            playsinline
-            preload="metadata"
-            style="
-              width:100%;
-              height:100%;
-              display:block;
-              object-fit:contain;
-              background:#02080e;
-            "
-          >
-            <source
-              src="${escapeHtml(url)}"
-            >
-          </video>
-        `;
-
-      }else{
-
-        loader.textContent=
-          'Video açıla bilmədi.';
-      }
-    }
-  }
+ 
 
 
   await hydrateSimilarImages(
@@ -43741,3 +43983,153 @@ window.AUSTA_V146_HOME_FEED = {
 
 })();
 </script>
+
+<style id="austa-v147-unified-media-gallery-css">
+
+#austaFinalListingPage .austa-final-gallery{
+  width:100%;
+}
+
+#austaFinalListingPage .austa-final-main-media{
+  position:relative;
+  width:100%;
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+}
+
+#austaFinalListingPage .austa-v147-main-stage{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:#fff;
+}
+
+#austaFinalListingPage .austa-v147-main-image,
+#austaFinalListingPage .austa-v147-main-video{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  background:#fff;
+}
+
+#austaFinalListingPage .austa-v147-arrow{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:10;
+
+  width:46px;
+  height:46px;
+
+  border:0;
+  border-radius:50%;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:rgba(17,24,39,.72);
+  color:#fff;
+
+  font-size:34px;
+  line-height:1;
+
+  cursor:pointer;
+}
+
+#austaFinalListingPage .austa-v147-prev{
+  left:14px;
+}
+
+#austaFinalListingPage .austa-v147-next{
+  right:14px;
+}
+
+#austaFinalListingPage .austa-final-thumbs{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding:10px 2px 4px;
+
+  scrollbar-width:thin;
+}
+
+#austaFinalListingPage .austa-final-thumb{
+  position:relative;
+  flex:0 0 92px;
+
+  width:92px;
+  height:66px;
+
+  padding:0;
+  overflow:hidden;
+
+  border:2px solid transparent;
+  border-radius:9px;
+
+  background:#f3f4f6;
+  cursor:pointer;
+}
+
+#austaFinalListingPage .austa-final-thumb.active{
+  border-color:#dc2626;
+}
+
+#austaFinalListingPage .austa-final-thumb img,
+#austaFinalListingPage .austa-final-thumb video{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+
+#austaFinalListingPage .austa-v147-play{
+  position:absolute;
+  inset:0;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  color:#fff;
+  font-size:24px;
+
+  background:rgba(0,0,0,.22);
+  pointer-events:none;
+}
+
+@media(max-width:700px){
+
+  #austaFinalListingPage .austa-v147-main-stage{
+    aspect-ratio:4/3;
+    touch-action:pan-y;
+  }
+
+  #austaFinalListingPage .austa-v147-arrow{
+    width:38px;
+    height:38px;
+    font-size:28px;
+  }
+
+  #austaFinalListingPage .austa-v147-prev{
+    left:7px;
+  }
+
+  #austaFinalListingPage .austa-v147-next{
+    right:7px;
+  }
+
+  #austaFinalListingPage .austa-final-thumb{
+    flex-basis:76px;
+    width:76px;
+    height:56px;
+  }
+}
+
+</style>
