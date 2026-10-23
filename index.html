@@ -28274,9 +28274,8 @@ async function openFullListing(id){
                         escapeHtml(phone)
                       }"
                     >
-                      ☎ ${escapeHtml(
-                        maskedPhone(phone)
-                      )}
+                      ☎ Telefon nömrəsini göstər
+                      
                     </button>
                   `
                   : ''
@@ -28405,36 +28404,66 @@ async function openFullListing(id){
           '[data-austa-phone]'
         );
 
-      if(phoneButton){
+   if(phoneButton){
 
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
 
-        const realPhone=
-          phoneButton.dataset.phone || '';
+  const realPhone=
+    phoneButton.dataset.phone || '';
 
-        if(
-          phoneButton.dataset.revealed!=='1'
-        ){
+  if(!realPhone){
+    return;
+  }
 
-          phoneButton.dataset.revealed='1';
+  if(
+    phoneButton.dataset.revealed!=='1'
+  ){
 
-          phoneButton.textContent=
-            '☎ '+realPhone;
+    phoneButton.dataset.revealed='1';
 
-          return;
-        }
+    phoneButton.textContent=
+      '☎ '+realPhone;
 
-        window.location.href=
-          'tel:'+
-          realPhone.replace(
-            /[^\d+]/g,
-            ''
-          );
 
-        return;
-      }
+    const cleanPhone=
+      realPhone.replace(
+        /[^\d+]/g,
+        ''
+      );
+
+
+    if(
+      !phoneButton.parentElement
+        .querySelector(
+          '.austa-v149-call'
+        )
+    ){
+
+      const call=
+        document.createElement('a');
+
+      call.className=
+        'austa-v149-call';
+
+      call.href=
+        'tel:'+cleanPhone;
+
+      call.textContent=
+        '📞 Zəng et';
+
+      phoneButton.insertAdjacentElement(
+        'afterend',
+        call
+      );
+    }
+
+    return;
+  }
+
+  return;
+}
 
 
       const message=
@@ -44176,6 +44205,277 @@ window.AUSTA_V146_HOME_FEED = {
     flex-basis:76px;
     width:76px;
     height:56px;
+  }
+}
+
+</style>
+
+<style id="austa-v149-white-listing-page-css">
+
+/* =========================================================
+   A-USTA V149
+   WHITE FULL LISTING PAGE
+   ========================================================= */
+
+#austaFinalListingPage,
+#austaFinalListingPage .austa-final-page{
+  background:#fff !important;
+  color:#111827 !important;
+}
+
+#austaFinalListingPage{
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  overflow-y:auto;
+}
+
+/* TOP */
+
+#austaFinalListingPage .austa-final-top{
+  background:#fff !important;
+  border-bottom:1px solid #e5e7eb !important;
+  color:#111827 !important;
+}
+
+#austaFinalListingPage .austa-final-back{
+  background:#fff !important;
+  color:#111827 !important;
+  border:1px solid #d1d5db !important;
+}
+
+#austaFinalListingPage .austa-final-back:hover{
+  border-color:#dc2626 !important;
+  color:#dc2626 !important;
+}
+
+#austaFinalListingPage .austa-final-id{
+  color:#6b7280 !important;
+}
+
+
+/* MAIN */
+
+#austaFinalListingPage .austa-final-wrap,
+#austaFinalListingPage .austa-final-main,
+#austaFinalListingPage .austa-final-sidebar{
+  background:#fff !important;
+}
+
+#austaFinalListingPage .austa-final-category{
+  color:#dc2626 !important;
+}
+
+#austaFinalListingPage .austa-final-title{
+  color:#111827 !important;
+}
+
+
+/* GALLERY */
+
+#austaFinalListingPage .austa-final-gallery{
+  background:#fff !important;
+}
+
+#austaFinalListingPage .austa-final-main-media,
+#austaFinalListingPage .austa-v147-main-stage{
+  background:#f8fafc !important;
+  border:1px solid #e5e7eb !important;
+}
+
+#austaFinalListingPage .austa-v147-main-image,
+#austaFinalListingPage .austa-v147-main-video{
+  background:#f8fafc !important;
+}
+
+
+/* THUMBNAILS */
+
+#austaFinalListingPage .austa-final-thumbs{
+  background:#fff !important;
+}
+
+#austaFinalListingPage .austa-final-thumb{
+  background:#f3f4f6 !important;
+  border-color:#e5e7eb !important;
+}
+
+#austaFinalListingPage .austa-final-thumb.active{
+  border-color:#dc2626 !important;
+}
+
+
+/* INFORMATION SECTIONS */
+
+#austaFinalListingPage .austa-final-info-section,
+#austaFinalListingPage .austa-final-description,
+#austaFinalListingPage .austa-final-similar{
+  background:#fff !important;
+  color:#111827 !important;
+  border:1px solid #e5e7eb !important;
+  box-shadow:none !important;
+}
+
+#austaFinalListingPage .austa-final-section-title{
+  color:#111827 !important;
+}
+
+
+/* SPECS */
+
+#austaFinalListingPage .austa-final-spec{
+  background:#f8fafc !important;
+  border:1px solid #e5e7eb !important;
+  color:#111827 !important;
+}
+
+#austaFinalListingPage .austa-final-spec small{
+  color:#6b7280 !important;
+}
+
+#austaFinalListingPage .austa-final-spec strong{
+  color:#111827 !important;
+}
+
+#austaFinalListingPage .austa-final-description-text{
+  color:#374151 !important;
+}
+
+
+/* RIGHT SIDEBAR */
+
+#austaFinalListingPage .austa-final-side-sticky{
+  background:transparent !important;
+}
+
+#austaFinalListingPage .austa-final-side-card{
+  background:#fff !important;
+  color:#111827 !important;
+  border:1px solid #e5e7eb !important;
+  box-shadow:0 8px 30px rgba(15,23,42,.08) !important;
+}
+
+#austaFinalListingPage .austa-final-price{
+  color:#111827 !important;
+}
+
+#austaFinalListingPage .austa-final-seller{
+  color:#111827 !important;
+}
+
+#austaFinalListingPage .austa-final-location,
+#austaFinalListingPage .austa-final-time{
+  color:#6b7280 !important;
+}
+
+
+/* PHONE */
+
+#austaFinalListingPage .austa-final-phone{
+  width:100% !important;
+  min-height:48px !important;
+  margin-top:14px !important;
+
+  border:0 !important;
+  border-radius:10px !important;
+
+  background:#16a34a !important;
+  color:#fff !important;
+
+  font-size:15px !important;
+  font-weight:900 !important;
+
+  cursor:pointer !important;
+}
+
+
+/* CALL BUTTON */
+
+#austaFinalListingPage .austa-v149-call{
+  width:100%;
+  min-height:48px;
+  margin-top:8px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border:0;
+  border-radius:10px;
+
+  background:#15803d;
+  color:#fff;
+
+  text-decoration:none;
+  font-size:15px;
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+
+/* MESSAGE */
+
+#austaFinalListingPage .austa-final-message{
+  width:100% !important;
+  min-height:48px !important;
+  margin-top:8px !important;
+
+  border:1px solid #dc2626 !important;
+  border-radius:10px !important;
+
+  background:#fff !important;
+  color:#dc2626 !important;
+
+  font-size:15px !important;
+  font-weight:900 !important;
+
+  cursor:pointer !important;
+}
+
+
+/* OWNER PANEL */
+
+#austaFinalListingPage .austa-final-owner-actions button{
+  background:#fff !important;
+  color:#111827 !important;
+  border:1px solid #d1d5db !important;
+}
+
+
+/* SIMILAR LISTINGS */
+
+#austaFinalListingPage .austa-final-similar-card{
+  background:#fff !important;
+  color:#111827 !important;
+  border:1px solid #e5e7eb !important;
+}
+
+#austaFinalListingPage .austa-final-similar-body,
+#austaFinalListingPage .austa-final-similar-body b,
+#austaFinalListingPage .austa-final-similar-body strong{
+  color:#111827 !important;
+}
+
+#austaFinalListingPage .austa-final-similar-body small{
+  color:#6b7280 !important;
+}
+
+
+/* MOBILE */
+
+@media(max-width:800px){
+
+  #austaFinalListingPage .austa-final-wrap{
+    background:#fff !important;
+  }
+
+  #austaFinalListingPage .austa-final-sidebar{
+    background:#fff !important;
+  }
+
+  #austaFinalListingPage .austa-final-side-card{
+    box-shadow:none !important;
   }
 }
 
