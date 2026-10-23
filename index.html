@@ -48111,6 +48111,22 @@ if(
 
     function hideLegacyCategoryResult(){
 
+      const legacyCarPanel =
+    document.getElementById("austaV22Panel-cars");
+
+if (legacyCarPanel) {
+    legacyCarPanel.style.setProperty(
+        "display",
+        "none",
+        "important"
+    );
+
+    legacyCarPanel.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+}
+
         document
             .querySelectorAll('[id^="austaV53List-"]')
             .forEach(function(list){
