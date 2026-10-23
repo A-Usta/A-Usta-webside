@@ -41692,11 +41692,431 @@ async function loadSupabaseV137Items(){
 
         window.AUSTA_V137_VIDEO_VIEWER.items =
             items;
+      
+      renderRealVideosOnHome();
     }
 }
 
 loadSupabaseV137Items();
 
+/* =========================================================
+   V150 — REAL SUPABASE VIDEOS → HOME CARDS
+   ========================================================= */
+
+function renderRealVideosOnHome(){
+
+    const grid =
+        document.getElementById(
+            "austaV22VideoGrid"
+        );
+
+    if(!grid){
+        return;
+    }
+
+
+    /*
+     * V136 HOME quruluşunu saxlayırıq:
+     * ilk 3 = Avtomobil
+     * son 3 = Rent a Car
+     */
+
+    const carCards = [
+        ...grid.querySelectorAll(
+            '.austa-v22-video-card[data-austa-v136-type="car"]'
+        )
+    ].slice(0,3);
+
+
+    const rentCards = [
+        ...grid.querySelectorAll(
+            '.austa-v22-video-card[data-austa-v136-type="rent"]'
+        )
+    ].slice(0,3);
+
+
+    const realCars =
+        realItems.filter(
+            item =>
+                item.real &&
+                item.type === "sale"
+        );
+
+
+    const realRents =
+        realItems.filter(
+            item =>
+                item.real &&
+                item.type === "rent"
+        );
+
+
+    function applyItem(
+        card,
+        item,
+        viewerIndex
+    ){
+
+        if(
+            !card ||
+            !item
+        ){
+            return;
+        }
+
+
+        const thumb =
+            card.querySelector(
+                ".austa-v22-video-thumb"
+            );
+
+
+        const body =
+            card.querySelector(
+                ".austa-v22-video-body"
+            );
+
+
+        if(
+            !thumb ||
+            !body
+        ){
+            return;
+        }
+
+
+        /*
+         * REAL LISTING məlumatını karta bağla.
+         */
+
+        card.dataset.austaRealVideo =
+            "1";
+
+        card.dataset.austaListingId =
+            item.listingId;
+
+        card.dataset.austaViewerIndex =
+            String(viewerIndex);
+
+
+        /*
+         * Köhnə demo background şəklini sil.
+         */
+
+        thumb.style.backgroundImage =
+            "none";
+
+
+        /*
+         * Köhnə real preview varsa sil.
+         */
+
+        thumb
+            .querySelectorAll(
+                ".austa-v150-home-real-video"
+            )
+            .forEach(
+                element =>
+                    element.remove()
+            );
+
+
+        /*
+         * REAL VIDEO
+         */
+
+        const video =
+            document.createElement(
+                "video"
+            );
+
+
+        video.className =
+            "austa-v150-home-real-video";
+
+
+        video.src =
+            item.video;
+
+
+        video.muted =
+            true;
+
+
+        video.playsInline =
+            true;
+
+
+        video.preload =
+            "metadata";
+
+
+        video.setAttribute(
+            "muted",
+            ""
+        );
+
+
+        video.setAttribute(
+            "playsinline",
+            ""
+        );
+
+
+        video.setAttribute(
+            "preload",
+            "metadata"
+        );
+
+
+        video.style.cssText =
+            "position:absolute;" +
+            "inset:0;" +
+            "width:100%;" +
+            "height:100%;" +
+            "object-fit:cover;" +
+            "display:block;" +
+            "pointer-events:none;" +
+            "z-index:1;";
+
+
+        thumb.style.position =
+            "relative";
+
+
+        thumb.style.overflow =
+            "hidden";
+
+
+        thumb.prepend(
+            video
+        );
+
+
+        /*
+         * İlk video frame-i göstər.
+         */
+
+        video.addEventListener(
+            "loadedmetadata",
+            function(){
+
+                try{
+
+                    if(
+                        Number.isFinite(
+                            video.duration
+                        ) &&
+                        video.duration > 0
+                    ){
+
+                        video.currentTime =
+                            Math.min(
+                                0.2,
+                                Math.max(
+                                    0,
+                                    video.duration / 20
+                                )
+                            );
+
+                    }
+
+                }catch(error){
+
+                    /* preview davam edir */
+
+                }
+
+            },
+            {
+                once:true
+            }
+        );
+
+
+        /*
+         * Badge / play düyməsi videonun üstündə qalsın.
+         */
+
+        const tag =
+            thumb.querySelector(
+                ".austa-v22-video-tag"
+            );
+
+
+        const play =
+            thumb.querySelector(
+                ".austa-v22-video-play"
+            );
+
+
+        if(tag){
+            tag.style.zIndex="3";
+        }
+
+
+        if(play){
+            play.style.zIndex="3";
+        }
+
+
+        /*
+         * REAL title + price.
+         */
+
+        const title =
+            body.querySelector(
+                "b"
+            );
+
+
+        const price =
+            body.querySelector(
+                "strong"
+            );
+
+
+        const description =
+            body.querySelector(
+                "span"
+            );
+
+
+        if(title){
+
+            title.textContent =
+                item.title || "";
+
+        }
+
+
+        if(price){
+
+            price.textContent =
+                item.price || "";
+
+        }
+
+
+        /*
+         * HOME-da köhnə
+         * "Video elan • A-USTA"
+         * yazısını göstərmirik.
+         */
+
+        if(description){
+
+            description.style.display =
+                "none";
+
+        }
+
+
+        /*
+         * HOME social düymələri göstərilmir.
+         * Viewer daxilində qalır.
+         */
+
+        card
+            .querySelectorAll(
+                ".austa-v34-video-actions," +
+                ".austa-v-final-video-actions"
+            )
+            .forEach(
+                actions => {
+
+                    actions.style.display =
+                        "none";
+
+                }
+            );
+
+
+        /*
+         * Kart görünən qalsın.
+         */
+
+        card.style.setProperty(
+            "display",
+            "flex",
+            "important"
+        );
+
+
+        console.log(
+            "A-USTA V150 HOME REAL VIDEO:",
+            item.listingId,
+            item.title
+        );
+
+    }
+
+
+
+    /*
+     * 3 AVTOMOBİL
+     */
+
+    carCards.forEach(
+        (card,index)=>{
+
+            const item =
+                realCars[index];
+
+            if(!item){
+                return;
+            }
+
+
+            const viewerIndex =
+                realItems.indexOf(
+                    item
+                );
+
+
+            applyItem(
+                card,
+                item,
+                viewerIndex
+            );
+
+        }
+    );
+
+
+
+    /*
+     * 3 RENT A CAR
+     */
+
+    rentCards.forEach(
+        (card,index)=>{
+
+            const item =
+                realRents[index];
+
+            if(!item){
+                return;
+            }
+
+
+            const viewerIndex =
+                realItems.indexOf(
+                    item
+                );
+
+
+            applyItem(
+                card,
+                item,
+                viewerIndex
+            );
+
+        }
+    );
+
+}
+  
 function render(){
 
     const item = items[current];
@@ -42050,6 +42470,36 @@ document.addEventListener(
 
         e.stopImmediatePropagation();
 
+        /*
+ * V150 REAL SUPABASE HOME CARD
+ */
+
+if(
+    card.dataset.austaRealVideo ===
+    "1"
+){
+
+    const realIndex =
+        Number(
+            card.dataset.austaViewerIndex
+        );
+
+
+    if(
+        Number.isInteger(
+            realIndex
+        ) &&
+        realIndex >= 0
+    ){
+
+        openViewer(
+            realIndex
+        );
+
+        return;
+    }
+
+}
 
         if(
             card.classList.contains(
