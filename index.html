@@ -48076,3 +48076,106 @@ if(
 })();
 
 </script>
+
+<!-- =========================================================
+     A-USTA V152
+     HIDE LEGACY TEST CATEGORY RESULT PAGE
+     ========================================================= -->
+
+<style id="austa-v152-hide-legacy-category-page">
+
+/*
+ * Köhnə V52/V53 test kateqoriya elan siyahıları.
+ * Elan məlumatları və Hesab sistemi silinmir.
+ * Sadəcə köhnə test nəticə ekranı HOME-da göstərilmir.
+ */
+
+[id^="austaV53List-"] {
+    display: none !important;
+}
+
+/*
+ * Köhnə test listing kartları da HOME görünüşündən çıxarılır.
+ */
+
+.austa-v52-listing-card {
+    display: none !important;
+}
+
+</style>
+
+<script id="austa-v152-hide-legacy-category-page-js">
+(function(){
+
+    "use strict";
+
+    function hideLegacyCategoryResult(){
+
+        document
+            .querySelectorAll('[id^="austaV53List-"]')
+            .forEach(function(list){
+
+                list.style.setProperty(
+                    "display",
+                    "none",
+                    "important"
+                );
+
+                /*
+                 * Köhnə nəticə siyahısının parent blokunda
+                 * "Bu kateqoriyanın elanları..." başlığı varsa,
+                 * yalnız həmin köhnə nəticə panelini gizlədirik.
+                 */
+
+                const parent =
+                    list.parentElement;
+
+                if(!parent){
+                    return;
+                }
+
+                const text =
+                    String(
+                        parent.textContent || ""
+                    );
+
+                if(
+                    text.includes(
+                        "Bu kateqoriyanın elanları və əlavə etmə sualları"
+                    )
+                ){
+
+                    parent.style.setProperty(
+                        "display",
+                        "none",
+                        "important"
+                    );
+
+                }
+
+            });
+
+    }
+
+
+    if(
+        document.readyState ===
+        "loading"
+    ){
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            hideLegacyCategoryResult,
+            {
+                once:true
+            }
+        );
+
+    }else{
+
+        hideLegacyCategoryResult();
+
+    }
+
+})();
+</script>
