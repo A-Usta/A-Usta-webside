@@ -43655,29 +43655,76 @@ function cardHtml(item){
 
 async function openListing(id){
 
-  if(
-    typeof
-      window.AUSTA_OPEN_FULL_LISTING ===
-      'function'
-  ){
+  const supabase =
+    window.AUSTA_SUPABASE;
 
-    const opened =
-      await window
-        .AUSTA_OPEN_FULL_LISTING(
-          id
-        );
-
-    if(opened){
-      return;
-    }
+  if(!id || !supabase){
+    return;
   }
 
-  console.log(
-    'A-USTA V146 listing:',
-    id
-  );
-}
+  try{
 
+    /*
+     * Real elanı birbaşa Supabase-dan götür.
+     * Beləliklə video viewer-ə əvvəl girmək
+     * tələb olunmur.
+     */
+
+    const {
+      data:realListing,
+      error
+    } =
+      await supabase
+        .from('vehicle_listings')
+        .select('*')
+        .eq('id',id)
+        .single();
+
+    if(error || !realListing){
+
+      console.error(
+        'A-USTA V148 LISTING OPEN:',
+        error
+      );
+
+      return;
+    }
+
+    /*
+     * V144 full-listing sistemi real Supabase
+     * elan olduğunu bu məlumatla tanıyır.
+     */
+
+    realListing._austaSupabase = true;
+
+    window.AUSTA_CURRENT_SUPABASE_LISTING =
+      realListing;
+
+
+    /*
+     * V143/V144-də artıq işləyən real listing
+     * event-indən istifadə edirik.
+     */
+
+    window.dispatchEvent(
+      new CustomEvent(
+        'austa:supabase-listing-open',
+        {
+          detail:{
+            listing:realListing
+          }
+        }
+      )
+    );
+
+  }catch(error){
+
+    console.error(
+      'A-USTA V148 DIRECT LISTING:',
+      error
+    );
+  }
+}
 
 function bindCards(grid){
 
