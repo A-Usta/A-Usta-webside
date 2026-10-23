@@ -44930,3 +44930,42 @@ window.AUSTA_V146_HOME_FEED = {
 }
 
 </style>
+
+<style id="austa-v150-home-real-video-fix">
+#austaV22VideoGrid
+.austa-v22-video-card
+.austa-v22-video-thumb
+video.austa-v150-home-real-video {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+    background: #111 !important;
+}
+
+#austaV22VideoGrid
+.austa-v22-video-card
+.austa-v22-video-thumb {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+#austaV22VideoGrid
+.austa-v22-video-card
+.austa-v22-video-play,
+#austaV22VideoGrid
+.austa-v22-video-card
+.austa-v45-rent-badge,
+#austaV22VideoGrid
+.austa-v22-video-card
+.austa-v22-video-tag {
+    position: relative !important;
+    z-index: 3 !important;
+}
+</style>
