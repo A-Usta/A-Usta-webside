@@ -48195,3 +48195,1323 @@ if (legacyCarPanel) {
 
 })();
 </script>
+
+<script id="austa-v153b-all-real-listing-router">
+(function () {
+"use strict";
+
+/* ============================================================
+   A-USTA V153-B
+   13 CATEGORY REAL SUPABASE LISTING ROUTER
+   ============================================================ */
+
+const VEHICLE_TYPES = new Set([
+    "cars",
+    "rent"
+]);
+
+const MARKETPLACE_TYPES = new Set([
+    "parts",
+    "accessories",
+    "special",
+    "moto",
+    "plate",
+    "bus",
+    "trailer",
+    "water",
+    "caravan"
+]);
+
+const PROVIDER_TYPES = new Set([
+    "service",
+    "usta"
+]);
+
+const ALL_TYPES = new Set([
+    ...VEHICLE_TYPES,
+    ...MARKETPLACE_TYPES,
+    ...PROVIDER_TYPES
+]);
+
+/* ============================================================
+   CATEGORY NAMES
+   ============================================================ */
+
+const CATEGORY_NAMES = {
+    cars: "Avtomobillər",
+    rent: "Rent a Car",
+    parts: "Ehtiyat hissələri",
+    accessories: "Aksesuarlar",
+    moto: "Moto / Moped / Skuter",
+    special: "Xüsusi texnika",
+    bus: "Avtobuslar",
+    water: "Su nəqliyyatı",
+    caravan: "Karavanlar",
+    trailer: "Qoşqu / Treyler",
+    plate: "Qeydiyyat nömrələri",
+    service: "Avtoservislər",
+    usta: "Usta profilləri"
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+
+function sb() {
+    const client = window.AUSTA_SUPABASE;
+
+    if (!client) {
+        throw new Error(
+            "AUSTA_SUPABASE tapılmadı."
+        );
+    }
+
+    return client;
+}
+
+function str(value) {
+    return String(value ?? "").trim();
+}
+
+function nullable(value) {
+    const value2 = str(value);
+    return value2 || null;
+}
+
+function num(value) {
+    if (
+        value === "" ||
+        value === null ||
+        value === undefined
+    ) {
+        return null;
+    }
+
+    const result = Number(value);
+
+    return Number.isFinite(result)
+        ? result
+        : null;
+}
+
+function integer(value) {
+    const value2 = num(value);
+
+    return value2 === null
+        ? null
+        : Math.trunc(value2);
+}
+
+function bool(value) {
+    return (
+        value === true ||
+        value === 1 ||
+        value === "1" ||
+        value === "true"
+    );
+}
+
+function norm(value) {
+    return str(value)
+        .toLocaleLowerCase("az-AZ")
+        .replace(/ə/g, "e")
+        .replace(/ı/g, "i")
+        .replace(/ö/g, "o")
+        .replace(/ü/g, "u")
+        .replace(/ş/g, "s")
+        .replace(/ç/g, "c")
+        .replace(/ğ/g, "g");
+}
+
+/* ============================================================
+   CATEGORY NORMALIZER
+   ============================================================ */
+
+function category(value) {
+
+    const raw = norm(value);
+
+    if (!raw) return "";
+
+    if (
+        raw === "cars" ||
+        raw === "car" ||
+        raw.includes("avtomobil satis") ||
+        raw === "avtomobil" ||
+        raw === "avtomobiller"
+    ) {
+        return "cars";
+    }
+
+    if (
+        raw === "rent" ||
+        raw.includes("rent a car") ||
+        raw.includes("icare")
+    ) {
+        return "rent";
+    }
+
+    if (
+        raw === "parts" ||
+        raw.includes("ehtiyat hisse")
+    ) {
+        return "parts";
+    }
+
+    if (
+        raw === "accessories" ||
+        raw.includes("aksesuar")
+    ) {
+        return "accessories";
+    }
+
+    if (
+        raw === "special" ||
+        raw.includes("xususi texnika")
+    ) {
+        return "special";
+    }
+
+    if (
+        raw === "moto" ||
+        raw.includes("moped") ||
+        raw.includes("skuter") ||
+        raw.includes("moto")
+    ) {
+        return "moto";
+    }
+
+    if (
+        raw === "plate" ||
+        raw.includes("qeydiyyat nomre")
+    ) {
+        return "plate";
+    }
+
+    if (
+        raw === "bus" ||
+        raw.includes("avtobus")
+    ) {
+        return "bus";
+    }
+
+    if (
+        raw === "trailer" ||
+        raw.includes("qosqu") ||
+        raw.includes("treyler")
+    ) {
+        return "trailer";
+    }
+
+    if (
+        raw === "water" ||
+        raw.includes("su neqliyyati")
+    ) {
+        return "water";
+    }
+
+    if (
+        raw === "caravan" ||
+        raw.includes("karavan")
+    ) {
+        return "caravan";
+    }
+
+    if (
+        raw === "service" ||
+        raw.includes("avtoservis") ||
+        raw.includes("servis merkezi")
+    ) {
+        return "service";
+    }
+
+    if (
+        raw === "usta" ||
+        raw.includes("usta profili")
+    ) {
+        return "usta";
+    }
+
+    return raw;
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+
+async function currentUser() {
+
+    const {
+        data,
+        error
+    } = await sb().auth.getSession();
+
+    if (error) {
+        throw error;
+    }
+
+    const user = data?.session?.user;
+
+    if (!user) {
+        throw new Error(
+            "Elan yerləşdirmək üçün Hesaba daxil olun."
+        );
+    }
+
+    return user;
+}
+
+/* ============================================================
+   TITLE BUILDER
+   ============================================================ */
+
+function buildTitle(type, input) {
+
+    if (str(input.title)) {
+        return str(input.title);
+    }
+
+    if (type === "cars" || type === "rent") {
+
+        return [
+            input.brand,
+            input.model,
+            input.year
+        ]
+        .filter(Boolean)
+        .join(" ");
+    }
+
+    if (type === "usta") {
+
+        return [
+            input.name,
+            input.specialty
+        ]
+        .filter(Boolean)
+        .join(" — ");
+    }
+
+    if (type === "service") {
+
+        return (
+            str(input.name) ||
+            str(input.service_name)
+        );
+    }
+
+    return (
+        str(input.name) ||
+        str(input.brand) ||
+        CATEGORY_NAMES[type] ||
+        "A-USTA elanı"
+    );
+}
+
+/* ============================================================
+   VEHICLE LISTINGS
+   cars + rent
+   ============================================================ */
+
+async function saveVehicle(type, input, user) {
+
+    const isRent = type === "rent";
+
+    const row = {
+        owner_id: user.id,
+
+        listing_type:
+            isRent ? "rent" : "sale",
+
+        status: "active",
+
+        brand:
+            nullable(input.brand),
+
+        model:
+            nullable(input.model),
+
+        year:
+            integer(input.year),
+
+        mileage:
+            integer(input.mileage),
+
+        body_type:
+            nullable(
+                input.body_type ??
+                input.bodyType
+            ),
+
+        fuel_type:
+            nullable(
+                input.fuel_type ??
+                input.fuelType
+            ),
+
+        transmission:
+            nullable(input.transmission),
+
+        engine:
+            nullable(input.engine),
+
+        color:
+            nullable(input.color),
+
+        price:
+            isRent
+                ? null
+                : num(input.price),
+
+        daily_price:
+            isRent
+                ? num(
+                    input.daily_price ??
+                    input.dailyPrice ??
+                    input.price
+                )
+                : null,
+
+        deposit:
+            isRent
+                ? num(input.deposit)
+                : null,
+
+        region:
+            nullable(input.region),
+
+        district:
+            nullable(input.district),
+
+        address:
+            nullable(input.address),
+
+        latitude:
+            num(input.latitude),
+
+        longitude:
+            num(input.longitude),
+
+        description:
+            nullable(input.description),
+
+        phone:
+            nullable(input.phone),
+
+        has_video:
+            bool(
+                input.has_video ??
+                input.hasVideo
+            ),
+
+        promotion_type: "standard",
+
+        promotion_started_at: null,
+        promotion_until: null,
+        last_boosted_at: null,
+
+        published_at:
+            new Date().toISOString()
+    };
+
+    const {
+        data,
+        error
+    } = await sb()
+        .from("vehicle_listings")
+        .insert(row)
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    return data;
+}
+
+/* ============================================================
+   MARKETPLACE
+   9 CATEGORIES
+   ============================================================ */
+
+async function saveMarketplace(type, input, user) {
+
+    const title =
+        buildTitle(type, input);
+
+    if (!title) {
+        throw new Error(
+            "Elanın başlığını daxil edin."
+        );
+    }
+
+    const row = {
+        owner_id: user.id,
+
+        category: type,
+
+        status: "active",
+
+        title: title,
+
+        description:
+            nullable(input.description),
+
+        price:
+            num(input.price),
+
+        currency:
+            str(input.currency) || "AZN",
+
+        brand:
+            nullable(input.brand),
+
+        model:
+            nullable(input.model),
+
+        year:
+            integer(input.year),
+
+        condition:
+            nullable(input.condition),
+
+        region:
+            nullable(input.region),
+
+        district:
+            nullable(input.district),
+
+        address:
+            nullable(input.address),
+
+        phone:
+            nullable(input.phone),
+
+        latitude:
+            num(input.latitude),
+
+        longitude:
+            num(input.longitude),
+
+        promotion_type: "standard",
+
+        promotion_started_at: null,
+        promotion_until: null,
+        last_boosted_at: null,
+
+        has_video:
+            bool(
+                input.has_video ??
+                input.hasVideo
+            ),
+
+        published_at:
+            new Date().toISOString()
+    };
+
+    const {
+        data,
+        error
+    } = await sb()
+        .from("marketplace_listings")
+        .insert(row)
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    return data;
+}
+
+/* ============================================================
+   PROVIDERS
+   USTA + AVTOSERVIS
+   ============================================================ */
+
+async function saveProvider(type, input, user) {
+
+    const title =
+        buildTitle(type, input);
+
+    if (!title) {
+
+        throw new Error(
+            type === "usta"
+                ? "Ustanın adı və ixtisasını daxil edin."
+                : "Avtoservisin adını daxil edin."
+        );
+    }
+
+    let rating =
+        num(input.rating);
+
+    if (
+        rating !== null &&
+        (rating < 0 || rating > 5)
+    ) {
+        rating = null;
+    }
+
+    let reviews =
+        integer(
+            input.reviews_count ??
+            input.reviews
+        );
+
+    if (
+        reviews === null ||
+        reviews < 0
+    ) {
+        reviews = 0;
+    }
+
+    const row = {
+        owner_id: user.id,
+
+        provider_type: type,
+
+        status: "active",
+
+        title: title,
+
+        name:
+            nullable(input.name),
+
+        phone:
+            nullable(input.phone),
+
+        message_contact:
+            nullable(
+                input.message_contact ??
+                input.message
+            ),
+
+        specialty:
+            nullable(input.specialty),
+
+        services:
+            nullable(input.services),
+
+        about:
+            nullable(input.about),
+
+        experience:
+            nullable(input.experience),
+
+        working_hours:
+            nullable(
+                input.working_hours ??
+                input.hours
+            ),
+
+        region:
+            nullable(input.region),
+
+        district:
+            nullable(input.district),
+
+        address:
+            nullable(input.address),
+
+        latitude:
+            num(input.latitude),
+
+        longitude:
+            num(input.longitude),
+
+        rating: rating,
+
+        reviews_count: reviews,
+
+        promotion_type: "standard",
+
+        promotion_started_at: null,
+        promotion_until: null,
+        last_boosted_at: null,
+
+        published_at:
+            new Date().toISOString()
+    };
+
+    const {
+        data,
+        error
+    } = await sb()
+        .from("service_provider_listings")
+        .insert(row)
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    return data;
+}
+
+/* ============================================================
+   MASTER SAVE ROUTER
+   ============================================================ */
+
+async function saveListing(typeValue, input = {}) {
+
+    const type =
+        category(typeValue);
+
+    if (!ALL_TYPES.has(type)) {
+
+        throw new Error(
+            "Naməlum elan kateqoriyası: " +
+            typeValue
+        );
+    }
+
+    const user =
+        await currentUser();
+
+    let listing = null;
+
+    let source = "";
+
+    if (VEHICLE_TYPES.has(type)) {
+
+        listing =
+            await saveVehicle(
+                type,
+                input,
+                user
+            );
+
+        source =
+            "vehicle_listings";
+
+    } else if (
+        MARKETPLACE_TYPES.has(type)
+    ) {
+
+        listing =
+            await saveMarketplace(
+                type,
+                input,
+                user
+            );
+
+        source =
+            "marketplace_listings";
+
+    } else if (
+        PROVIDER_TYPES.has(type)
+    ) {
+
+        listing =
+            await saveProvider(
+                type,
+                input,
+                user
+            );
+
+        source =
+            "service_provider_listings";
+    }
+
+    const detail = {
+        category: type,
+        source: source,
+        listing: listing
+    };
+
+    window.dispatchEvent(
+        new CustomEvent(
+            "austa:real-listing-created",
+            {
+                detail: detail
+            }
+        )
+    );
+
+    console.log(
+        "A-USTA V153 REAL LISTING CREATED:",
+        detail
+    );
+
+    return detail;
+}
+
+/* ============================================================
+   MEDIA TABLE ROUTER
+   ============================================================ */
+
+function mediaConfig(typeValue) {
+
+    const type =
+        category(typeValue);
+
+    if (VEHICLE_TYPES.has(type)) {
+
+        return {
+            table: "listing_media",
+            bucket: "listing-media"
+        };
+    }
+
+    if (MARKETPLACE_TYPES.has(type)) {
+
+        return {
+            table:
+                "marketplace_listing_media",
+
+            bucket:
+                "marketplace-media"
+        };
+    }
+
+    if (PROVIDER_TYPES.has(type)) {
+
+        return {
+            table:
+                "service_provider_media",
+
+            bucket:
+                "provider-media"
+        };
+    }
+
+    throw new Error(
+        "Media kateqoriyası tapılmadı."
+    );
+}
+
+/* ============================================================
+   PROMOTION RANK
+   Premium → VIP → Boost → Standard
+   ============================================================ */
+
+function promotionRank(value) {
+
+    const type =
+        norm(value);
+
+    if (type === "premium") return 4;
+    if (type === "vip") return 3;
+    if (type === "boost") return 2;
+
+    return 1;
+}
+
+function promotionIsActive(item) {
+
+    const type =
+        norm(item?.promotion_type);
+
+    if (
+        !type ||
+        type === "standard"
+    ) {
+        return false;
+    }
+
+    if (!item?.promotion_until) {
+        return true;
+    }
+
+    const until =
+        Date.parse(item.promotion_until);
+
+    return (
+        Number.isFinite(until) &&
+        until > Date.now()
+    );
+}
+
+function effectivePromotion(item) {
+
+    if (!promotionIsActive(item)) {
+        return "standard";
+    }
+
+    return (
+        norm(item.promotion_type) ||
+        "standard"
+    );
+}
+
+/* ============================================================
+   SORT
+   ============================================================ */
+
+function sortListings(list = []) {
+
+    return [...list].sort((a, b) => {
+
+        const aPromotion =
+            promotionRank(
+                effectivePromotion(a)
+            );
+
+        const bPromotion =
+            promotionRank(
+                effectivePromotion(b)
+            );
+
+        if (
+            aPromotion !== bPromotion
+        ) {
+            return (
+                bPromotion -
+                aPromotion
+            );
+        }
+
+        const aTime =
+            Date.parse(
+                a.last_boosted_at ||
+                a.published_at ||
+                a.created_at ||
+                0
+            ) || 0;
+
+        const bTime =
+            Date.parse(
+                b.last_boosted_at ||
+                b.published_at ||
+                b.created_at ||
+                0
+            ) || 0;
+
+        return bTime - aTime;
+    });
+}
+
+/* ============================================================
+   FETCH CATEGORY
+   40 / PAGE
+   ============================================================ */
+
+async function fetchCategory(
+    typeValue,
+    page = 1
+) {
+
+    const type =
+        category(typeValue);
+
+    if (!ALL_TYPES.has(type)) {
+
+        throw new Error(
+            "Kateqoriya tapılmadı."
+        );
+    }
+
+    const PAGE_SIZE = 40;
+
+    const safePage =
+        Math.max(
+            1,
+            Number(page) || 1
+        );
+
+    const from =
+        (safePage - 1) *
+        PAGE_SIZE;
+
+    const to =
+        from +
+        PAGE_SIZE -
+        1;
+
+    let query;
+
+    if (type === "cars") {
+
+        query = sb()
+            .from("vehicle_listings")
+            .select("*", {
+                count: "exact"
+            })
+            .eq("status", "active")
+            .eq(
+                "listing_type",
+                "sale"
+            );
+
+    } else if (type === "rent") {
+
+        query = sb()
+            .from("vehicle_listings")
+            .select("*", {
+                count: "exact"
+            })
+            .eq("status", "active")
+            .eq(
+                "listing_type",
+                "rent"
+            );
+
+    } else if (
+        MARKETPLACE_TYPES.has(type)
+    ) {
+
+        query = sb()
+            .from("marketplace_listings")
+            .select("*", {
+                count: "exact"
+            })
+            .eq("status", "active")
+            .eq("category", type);
+
+    } else {
+
+        query = sb()
+            .from(
+                "service_provider_listings"
+            )
+            .select("*", {
+                count: "exact"
+            })
+            .eq("status", "active")
+            .eq(
+                "provider_type",
+                type
+            );
+    }
+
+    /*
+     * Supabase-dən daha böyük promotion
+     * əvvəl gəlir.
+     *
+     * Son sıralama JS-də də qorunur.
+     */
+
+    query = query
+        .order(
+            "promotion_type",
+            {
+                ascending: false
+            }
+        )
+        .order(
+            "last_boosted_at",
+            {
+                ascending: false,
+                nullsFirst: false
+            }
+        )
+        .order(
+            "published_at",
+            {
+                ascending: false,
+                nullsFirst: false
+            }
+        )
+        .range(from, to);
+
+    const {
+        data,
+        error,
+        count
+    } = await query;
+
+    if (error) throw error;
+
+    const items =
+        sortListings(data || []);
+
+    return {
+        category: type,
+
+        categoryName:
+            CATEGORY_NAMES[type],
+
+        page: safePage,
+
+        pageSize:
+            PAGE_SIZE,
+
+        total:
+            count || 0,
+
+        totalPages:
+            Math.max(
+                1,
+                Math.ceil(
+                    (count || 0) /
+                    PAGE_SIZE
+                )
+            ),
+
+        items: items
+    };
+}
+
+/* ============================================================
+   FIND EXACT REAL LISTING
+   searches all 3 listing systems
+   ============================================================ */
+
+async function findListingById(id) {
+
+    if (!id) return null;
+
+    const tables = [
+        {
+            table:
+                "vehicle_listings",
+
+            source:
+                "vehicle_listings"
+        },
+        {
+            table:
+                "marketplace_listings",
+
+            source:
+                "marketplace_listings"
+        },
+        {
+            table:
+                "service_provider_listings",
+
+            source:
+                "service_provider_listings"
+        }
+    ];
+
+    for (
+        const config of tables
+    ) {
+
+        const {
+            data,
+            error
+        } = await sb()
+            .from(config.table)
+            .select("*")
+            .eq("id", id)
+            .maybeSingle();
+
+        if (error) {
+
+            console.warn(
+                "A-USTA lookup:",
+                config.table,
+                error
+            );
+
+            continue;
+        }
+
+        if (data) {
+
+            return {
+                source:
+                    config.source,
+
+                listing:
+                    data
+            };
+        }
+    }
+
+    return null;
+}
+
+/* ============================================================
+   EXISTING V52 USTA FORM
+   REAL SUPABASE BIND
+   ============================================================ */
+
+async function saveV52Usta() {
+
+    const get = id =>
+        document
+            .getElementById(id)
+            ?.value
+            ?.trim() || "";
+
+    const name =
+        get("v52n");
+
+    const phone =
+        get("v52p");
+
+    const specialty =
+        get("v52s");
+
+    if (
+        !name ||
+        !phone ||
+        !specialty
+    ) {
+
+        alert(
+            "Ad, telefon və ixtisas mütləqdir."
+        );
+
+        return;
+    }
+
+    const button =
+        document.getElementById(
+            "v52Save"
+        );
+
+    const oldText =
+        button?.textContent || "";
+
+    try {
+
+        if (button) {
+            button.disabled = true;
+            button.textContent =
+                "Yerləşdirilir...";
+        }
+
+        await saveListing(
+            "usta",
+            {
+                name: name,
+
+                title:
+                    name +
+                    " — " +
+                    specialty,
+
+                phone: phone,
+
+                specialty:
+                    specialty,
+
+                region:
+                    get("v52r"),
+
+                experience:
+                    get("v52e"),
+
+                working_hours:
+                    get("v52h"),
+
+                services:
+                    get("v52a"),
+
+                about:
+                    get("v52about"),
+
+                message_contact:
+                    get("v52msg"),
+
+                rating:
+                    get("v52rating"),
+
+                reviews_count:
+                    get("v52reviews")
+            }
+        );
+
+        document
+            .getElementById(
+                "austaV52Overlay"
+            )
+            ?.remove();
+
+        alert(
+            "✓ Usta profili real elan kimi yerləşdirildi."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "A-USTA V153 USTA:",
+            error
+        );
+
+        alert(
+            "Elan yerləşdirilmədi: " +
+            (
+                error?.message ||
+                "Naməlum xəta"
+            )
+        );
+
+    } finally {
+
+        if (
+            button &&
+            button.isConnected
+        ) {
+            button.disabled = false;
+            button.textContent =
+                oldText;
+        }
+    }
+}
+
+/* ============================================================
+   INTERCEPT ONLY V52 USTA SAVE
+   Other existing forms are NOT touched yet.
+   ============================================================ */
+
+document.addEventListener(
+    "click",
+    function (event) {
+
+        const button =
+            event.target.closest(
+                "#v52Save"
+            );
+
+        if (!button) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        saveV52Usta();
+
+    },
+    true
+);
+
+/* ============================================================
+   GLOBAL API
+   ============================================================ */
+
+window.AUSTA_V153 = {
+
+    version:
+        "V153-B-ALL-CATEGORIES",
+
+    categories:
+        CATEGORY_NAMES,
+
+    normalizeCategory:
+        category,
+
+    saveListing:
+        saveListing,
+
+    fetchCategory:
+        fetchCategory,
+
+    findListingById:
+        findListingById,
+
+    mediaConfig:
+        mediaConfig,
+
+    sortListings:
+        sortListings,
+
+    effectivePromotion:
+        effectivePromotion
+};
+
+/* ============================================================
+   READY
+   ============================================================ */
+
+console.log(
+    "A-USTA V153-B ALL 13 CATEGORY ROUTER READY",
+    Object.keys(CATEGORY_NAMES)
+);
+
+})();
+</script>
