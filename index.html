@@ -44480,3 +44480,819 @@ window.AUSTA_V146_HOME_FEED = {
 }
 
 </style>
+
+<style id="austa-v150-real-home-video-css">
+
+/* =========================================================
+   A-USTA V150
+   REAL SUPABASE VIDEO PREVIEW ON HOME
+   ========================================================= */
+
+#austaV22VideoGrid .austa-v22-video-card
+.austa-v150-real-video-box{
+  position:relative !important;
+  overflow:hidden !important;
+}
+
+#austaV22VideoGrid .austa-v22-video-card
+.austa-v150-real-video-preview{
+  position:absolute !important;
+  inset:0 !important;
+
+  width:100% !important;
+  height:100% !important;
+
+  display:block !important;
+
+  object-fit:cover !important;
+
+  background:#111 !important;
+
+  pointer-events:none !important;
+
+  z-index:2 !important;
+}
+
+</style>
+
+
+<script id="austa-v150-real-home-video-js">
+
+(function(){
+
+'use strict';
+
+
+/* =========================================================
+   A-USTA V150
+   REAL HOME VIDEO PREVIEW
+
+   Məqsəd:
+   - HOME demo şəklini real video ilə əvəz etmək
+   - Viewer-ə toxunmamaq
+   - Full listing-ə toxunmamaq
+   - Telefon sisteminə toxunmamaq
+   - Usta / provider / order flow-a toxunmamaq
+   ========================================================= */
+
+
+const supabase =
+  window.AUSTA_SUPABASE;
+
+
+if(!supabase){
+
+  console.warn(
+    'A-USTA V150: Supabase tapılmadı'
+  );
+
+  return;
+}
+
+
+
+/* =========================================================
+   SIGNED VIDEO URL
+   ========================================================= */
+
+async function getSignedVideoUrl(
+  storagePath
+){
+
+  if(!storagePath){
+    return '';
+  }
+
+
+  try{
+
+    const {
+      data,
+      error
+    } =
+      await supabase
+        .storage
+        .from(
+          'listing-media'
+        )
+        .createSignedUrl(
+          storagePath,
+          3600
+        );
+
+
+    if(error){
+
+      console.error(
+        'A-USTA V150 SIGNED VIDEO:',
+        error
+      );
+
+      return '';
+    }
+
+
+    return (
+      data?.signedUrl ||
+      ''
+    );
+
+
+  }catch(error){
+
+    console.error(
+      'A-USTA V150 SIGNED VIDEO:',
+      error
+    );
+
+    return '';
+  }
+
+}
+
+
+
+/* =========================================================
+   REAL VIDEO TAP
+   ========================================================= */
+
+async function findRealVideo(
+  listingId
+){
+
+  if(!listingId){
+    return null;
+  }
+
+
+  try{
+
+    const {
+      data,
+      error
+    } =
+      await supabase
+        .from(
+          'listing_media'
+        )
+        .select(
+          'id, listing_id, media_type, storage_path, sort_order'
+        )
+        .eq(
+          'listing_id',
+          listingId
+        )
+        .eq(
+          'media_type',
+          'video'
+        )
+        .order(
+          'sort_order',
+          {
+            ascending:true
+          }
+        )
+        .limit(1);
+
+
+    if(error){
+
+      console.error(
+        'A-USTA V150 MEDIA:',
+        error
+      );
+
+      return null;
+    }
+
+
+    if(
+      !Array.isArray(data) ||
+      !data.length
+    ){
+
+      return null;
+    }
+
+
+    return data[0];
+
+
+  }catch(error){
+
+    console.error(
+      'A-USTA V150 MEDIA:',
+      error
+    );
+
+    return null;
+  }
+
+}
+
+
+
+/* =========================================================
+   LISTING ID TAP
+   ========================================================= */
+
+function getListingId(card){
+
+  if(!card){
+    return '';
+  }
+
+
+  const direct =
+    card.dataset.austaListingId ||
+    card.dataset.listingId ||
+    card.dataset.id ||
+    '';
+
+
+  if(direct){
+    return direct;
+  }
+
+
+  /*
+   * Kartın daxilində ID olan element varsa.
+   */
+
+  const child =
+    card.querySelector(
+      '[data-austa-listing-id],'+
+      '[data-listing-id]'
+    );
+
+
+  if(child){
+
+    return (
+      child.dataset.austaListingId ||
+      child.dataset.listingId ||
+      ''
+    );
+
+  }
+
+
+  return '';
+}
+
+
+
+/* =========================================================
+   MEDIA BOX TAP
+   ========================================================= */
+
+function getMediaBox(card){
+
+  if(!card){
+    return null;
+  }
+
+
+  /*
+   * Əvvəl mövcud şəkli tapırıq.
+   */
+
+  const image =
+    card.querySelector('img');
+
+
+  if(
+    image &&
+    image.parentElement
+  ){
+
+    return {
+      box:image.parentElement,
+      image
+    };
+
+  }
+
+
+  /*
+   * Şəkil yoxdursa mümkün mövcud
+   * video/thumb konteynerlərini yoxlayırıq.
+   */
+
+  const box =
+    card.querySelector(
+      '.austa-v22-video-thumb,'+
+      '.austa-v22-video-media,'+
+      '.austa-video-thumb,'+
+      '[data-video-thumb]'
+    );
+
+
+  if(box){
+
+    return {
+      box,
+      image:null
+    };
+
+  }
+
+
+  return null;
+}
+
+
+
+/* =========================================================
+   BİR KARTI REAL VİDEO ET
+   ========================================================= */
+
+async function hydrateCard(card){
+
+  if(!card){
+    return;
+  }
+
+
+  /*
+   * Artıq düzəldilmiş kartı təkrar etmirik.
+   */
+
+  if(
+    card.dataset.austaV150RealVideo ===
+    '1'
+  ){
+
+    return;
+  }
+
+
+  /*
+   * Eyni kart üçün paralel sorğunun
+   * qarşısını alırıq.
+   */
+
+  if(
+    card.dataset.austaV150Loading ===
+    '1'
+  ){
+
+    return;
+  }
+
+
+  const listingId =
+    getListingId(card);
+
+
+  if(!listingId){
+
+    return;
+  }
+
+
+  card.dataset.austaV150Loading =
+    '1';
+
+
+  try{
+
+    /*
+     * Real elan olub-olmadığını yoxla.
+     */
+
+    const {
+      data:listing,
+      error:listingError
+    } =
+      await supabase
+        .from(
+          'vehicle_listings'
+        )
+        .select(
+          'id, status, has_video'
+        )
+        .eq(
+          'id',
+          listingId
+        )
+        .eq(
+          'status',
+          'active'
+        )
+        .maybeSingle();
+
+
+    if(
+      listingError ||
+      !listing ||
+      !listing.has_video
+    ){
+
+      return;
+    }
+
+
+    /*
+     * Həmin elanın real videosunu tap.
+     */
+
+    const media =
+      await findRealVideo(
+        listingId
+      );
+
+
+    if(
+      !media ||
+      !media.storage_path
+    ){
+
+      return;
+    }
+
+
+    /*
+     * Private Storage üçün signed URL.
+     */
+
+    const videoUrl =
+      await getSignedVideoUrl(
+        media.storage_path
+      );
+
+
+    if(!videoUrl){
+
+      return;
+    }
+
+
+    /*
+     * Kartdakı hazırkı demo şəkil/media
+     * sahəsini tap.
+     */
+
+    const mediaTarget =
+      getMediaBox(card);
+
+
+    if(
+      !mediaTarget ||
+      !mediaTarget.box
+    ){
+
+      console.warn(
+        'A-USTA V150: Kart media sahəsi tapılmadı',
+        listingId
+      );
+
+      return;
+    }
+
+
+    const box =
+      mediaTarget.box;
+
+
+    box.classList.add(
+      'austa-v150-real-video-box'
+    );
+
+
+    /*
+     * Əvvəlki V150 preview varsa sil.
+     */
+
+    box
+      .querySelectorAll(
+        '.austa-v150-real-video-preview'
+      )
+      .forEach(
+        element=>element.remove()
+      );
+
+
+    /*
+     * Real video preview yaradılır.
+     */
+
+    const video =
+      document.createElement(
+        'video'
+      );
+
+
+    video.className =
+      'austa-v150-real-video-preview';
+
+
+    video.src =
+      videoUrl;
+
+
+    video.muted =
+      true;
+
+
+    video.playsInline =
+      true;
+
+
+    video.preload =
+      'metadata';
+
+
+    video.setAttribute(
+      'muted',
+      ''
+    );
+
+
+    video.setAttribute(
+      'playsinline',
+      ''
+    );
+
+
+    video.setAttribute(
+      'preload',
+      'metadata'
+    );
+
+
+    video.setAttribute(
+      'aria-hidden',
+      'true'
+    );
+
+
+    /*
+     * Video kartın klikini tutmasın.
+     * Klik əvvəlki viewer sisteminə gedir.
+     */
+
+    video.style.pointerEvents =
+      'none';
+
+
+    /*
+     * Real video demo şəklin üstünə gəlir.
+     */
+
+    box.appendChild(
+      video
+    );
+
+
+    /*
+     * İlk real frame-i göstərmək üçün
+     * videonu çox qısa yükləyirik.
+     */
+
+    video.addEventListener(
+      'loadedmetadata',
+      function(){
+
+        try{
+
+          if(
+            Number.isFinite(
+              video.duration
+            ) &&
+            video.duration > 0.15
+          ){
+
+            video.currentTime =
+              Math.min(
+                0.15,
+                video.duration / 10
+              );
+
+          }
+
+        }catch(error){
+
+          /* preview davam edir */
+
+        }
+
+      },
+      {
+        once:true
+      }
+    );
+
+
+    /*
+     * Video frame hazır olanda
+     * demo şəkli gizlət.
+     *
+     * Video açılmasa demo şəkil qalır.
+     */
+
+    const hideOldImage =
+      function(){
+
+        if(
+          mediaTarget.image
+        ){
+
+          mediaTarget.image.style.display =
+            'none';
+
+        }
+
+      };
+
+
+    video.addEventListener(
+      'loadeddata',
+      hideOldImage,
+      {
+        once:true
+      }
+    );
+
+
+    video.addEventListener(
+      'seeked',
+      hideOldImage,
+      {
+        once:true
+      }
+    );
+
+
+    /*
+     * Preview yüklənməsə demo şəkli
+     * silmirik.
+     */
+
+    video.addEventListener(
+      'error',
+      function(){
+
+        video.remove();
+
+        if(
+          mediaTarget.image
+        ){
+
+          mediaTarget.image.style.display =
+            '';
+
+        }
+
+        delete card.dataset
+          .austaV150RealVideo;
+
+      },
+      {
+        once:true
+      }
+    );
+
+
+    card.dataset.austaV150RealVideo =
+      '1';
+
+
+    console.log(
+      'A-USTA V150 REAL HOME VIDEO:',
+      listingId
+    );
+
+
+  }catch(error){
+
+    console.error(
+      'A-USTA V150 CARD:',
+      error
+    );
+
+
+  }finally{
+
+    delete card.dataset
+      .austaV150Loading;
+
+  }
+
+}
+
+
+
+/* =========================================================
+   HOME VIDEO KARTLARINI TAP
+   ========================================================= */
+
+async function hydrateHomeVideos(){
+
+  const grid =
+    document.getElementById(
+      'austaV22VideoGrid'
+    );
+
+
+  if(!grid){
+    return;
+  }
+
+
+  const cards =
+    [
+      ...grid.querySelectorAll(
+        '.austa-v22-video-card'
+      )
+    ];
+
+
+  if(!cards.length){
+    return;
+  }
+
+
+  for(
+    const card of cards
+  ){
+
+    await hydrateCard(
+      card
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+
+function boot(){
+
+  hydrateHomeVideos();
+
+
+  /*
+   * Mövcud video sistemi Supabase-dən
+   * kartları sonradan render edə bilər.
+   * Buna görə bir neçə dəfə yenidən yoxlayırıq.
+   */
+
+  setTimeout(
+    hydrateHomeVideos,
+    500
+  );
+
+
+  setTimeout(
+    hydrateHomeVideos,
+    1200
+  );
+
+
+  setTimeout(
+    hydrateHomeVideos,
+    2500
+  );
+
+
+  setTimeout(
+    hydrateHomeVideos,
+    5000
+  );
+
+}
+
+
+if(
+  document.readyState ===
+  'loading'
+){
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    boot,
+    {
+      once:true
+    }
+  );
+
+}else{
+
+  boot();
+
+}
+
+
+console.log(
+  'A-USTA V150 REAL HOME VIDEO READY'
+);
+
+
+})();
+
+</script>
