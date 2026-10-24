@@ -47413,6 +47413,226 @@ async function openRealListing(
 
 }
 
+  /*
+ * ============================================================
+ * A-USTA V154-C
+ * UNIVERSAL REAL CATEGORY MEDIA
+ * ============================================================
+ */
+
+async function attachV154CategoryImages(
+    supabase,
+    type,
+    listings
+){
+
+    if(
+        !supabase ||
+        !Array.isArray(listings) ||
+        !listings.length
+    ){
+        return listings || [];
+    }
+
+
+    const api =
+        window.AUSTA_V153;
+
+
+    if(
+        !api ||
+        typeof api.mediaConfig !== "function"
+    ){
+        return listings;
+    }
+
+
+    const realType =
+        type === "mechanic"
+            ? "usta"
+            : type;
+
+
+    let config;
+
+    try{
+
+        config =
+            api.mediaConfig(
+                realType
+            );
+
+    }catch(error){
+
+        console.warn(
+            "A-USTA V154-C MEDIA CONFIG:",
+            error
+        );
+
+        return listings;
+    }
+
+
+    if(
+        !config?.table ||
+        !config?.bucket
+    ){
+        return listings;
+    }
+
+
+    const ids =
+        listings
+            .map(item => item?.id)
+            .filter(Boolean);
+
+
+    if(!ids.length){
+        return listings;
+    }
+
+
+    const {
+        data: mediaRows,
+        error: mediaError
+    } =
+        await supabase
+            .from(config.table)
+            .select(
+                "listing_id,storage_path,media_type,is_cover,sort_order"
+            )
+            .in(
+                "listing_id",
+                ids
+            )
+            .eq(
+                "media_type",
+                "image"
+            )
+            .order(
+                "is_cover",
+                {
+                    ascending:false
+                }
+            )
+            .order(
+                "sort_order",
+                {
+                    ascending:true
+                }
+            );
+
+
+    if(mediaError){
+
+        console.warn(
+            "A-USTA V154-C MEDIA QUERY:",
+            realType,
+            mediaError
+        );
+
+        return listings;
+    }
+
+
+    const firstImageByListing =
+        new Map();
+
+
+    for(
+        const media of
+        mediaRows || []
+    ){
+
+        if(
+            !media?.listing_id ||
+            !media?.storage_path ||
+            firstImageByListing.has(
+                media.listing_id
+            )
+        ){
+            continue;
+        }
+
+
+        firstImageByListing.set(
+            media.listing_id,
+            media.storage_path
+        );
+    }
+
+
+    for(const item of listings){
+
+        const path =
+            firstImageByListing.get(
+                item.id
+            );
+
+
+        if(!path){
+            continue;
+        }
+
+
+        const {
+            data: signedData,
+            error: signedError
+        } =
+            await supabase
+                .storage
+                .from(config.bucket)
+                .createSignedUrl(
+                    path,
+                    3600
+                );
+
+
+        if(
+            signedError ||
+            !signedData?.signedUrl
+        ){
+
+            console.warn(
+                "A-USTA V154-C SIGNED IMAGE:",
+                item.id,
+                signedError
+            );
+
+            continue;
+        }
+
+
+        /*
+         * Mövcud V151 cardHtml()
+         * bu property-ni oxuyur.
+         */
+
+        item._austaV151Image =
+            signedData.signedUrl;
+    }
+
+
+    console.log(
+        "A-USTA V154-C MEDIA READY:",
+        {
+            type:realType,
+            table:config.table,
+            bucket:config.bucket,
+            listings:listings.length,
+            images:listings.filter(
+                item =>
+                    Boolean(
+                        item._austaV151Image
+                    )
+            ).length
+        }
+    );
+
+
+    return listings;
+}
+
 
 /* =========================================================
    CATEGORY QUERY
@@ -47545,27 +47765,27 @@ async function loadCategoryPage(
             window.AUSTA_SUPABASE;
 
 
-        if(
-            supabase &&
-            rows.length
-        ){
+      if(
+    supabase &&
+    rows.length
+){
 
-            try{
+    try{
 
-                await attachImages(
-                    supabase,
-                    rows
-                );
+        await attachV154CategoryImages(
+            supabase,
+            realType,
+            rows
+        );
 
-            }catch(mediaError){
+    }catch(mediaError){
 
-                console.warn(
-                    "A-USTA V154 MEDIA:",
-                    mediaError
-                );
-            }
-        }
-
+        console.warn(
+            "A-USTA V154-C MEDIA:",
+            mediaError
+        );
+    }
+}
 
         const sorted =
             typeof api.sortListings === "function"
