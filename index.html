@@ -53133,6 +53133,279 @@ if(
 })();
 </script>
 
+/* =========================================================
+   A-USTA V153-G
+   AUTO DEALER PUBLIC ROUTES
+   ========================================================= */
+
+(function () {
+
+    if (!window.AUSTA_V153) {
+        console.error(
+            "A-USTA V153-G: AUSTA_V153 tapılmadı."
+        );
+        return;
+    }
+
+    const api =
+        window.AUSTA_V153;
+
+    const supabase =
+        window.AUSTA_SUPABASE;
+
+
+    if (!supabase) {
+        console.error(
+            "A-USTA V153-G: Supabase tapılmadı."
+        );
+        return;
+    }
+
+
+    /*
+     * =====================================================
+     * 1. DEALER MEDIA CONFIG
+     * =====================================================
+     */
+
+    const originalMediaConfig =
+        api.mediaConfig;
+
+    api.mediaConfig =
+        function (typeValue) {
+
+            const type =
+                api.normalizeCategory(
+                    typeValue
+                );
+
+            if (type === "dealer") {
+
+                return {
+                    table:
+                        "auto_dealer_media",
+
+                    bucket:
+                        "auto-dealer-media"
+                };
+            }
+
+            return originalMediaConfig(
+                typeValue
+            );
+        };
+
+
+    /*
+     * =====================================================
+     * 2. DEALER FIND BY ID
+     * =====================================================
+     */
+
+    const originalFindListingById =
+        api.findListingById;
+
+    api.findListingById =
+        async function (id) {
+
+            if (!id) {
+                return null;
+            }
+
+            const existing =
+                await originalFindListingById(
+                    id
+                );
+
+            if (existing) {
+                return existing;
+            }
+
+            const {
+                data,
+                error
+            } = await supabase
+                .from(
+                    "auto_dealer_listings"
+                )
+                .select("*")
+                .eq("id", id)
+                .maybeSingle();
+
+            if (error) {
+
+                console.warn(
+                    "A-USTA dealer lookup:",
+                    error
+                );
+
+                return null;
+            }
+
+            if (!data) {
+                return null;
+            }
+
+            return {
+                source:
+                    "auto_dealer_listings",
+
+                listing:
+                    data
+            };
+        };
+
+
+    /*
+     * =====================================================
+     * 3. DEALER CATEGORY FETCH
+     * =====================================================
+     */
+
+    const originalFetchCategory =
+        api.fetchCategory;
+
+    api.fetchCategory =
+        async function (
+            typeValue,
+            page = 1
+        ) {
+
+            const type =
+                api.normalizeCategory(
+                    typeValue
+                );
+
+            if (type !== "dealer") {
+
+                return originalFetchCategory(
+                    typeValue,
+                    page
+                );
+            }
+
+
+            const PAGE_SIZE = 40;
+
+            const safePage =
+                Math.max(
+                    1,
+                    Number(page) || 1
+                );
+
+            const from =
+                (safePage - 1) *
+                PAGE_SIZE;
+
+            const to =
+                from +
+                PAGE_SIZE -
+                1;
+
+
+            let query =
+                supabase
+                    .from(
+                        "auto_dealer_listings"
+                    )
+                    .select(
+                        "*",
+                        {
+                            count: "exact"
+                        }
+                    )
+                    .eq(
+                        "status",
+                        "active"
+                    )
+                    .order(
+                        "promotion_type",
+                        {
+                            ascending: false
+                        }
+                    )
+                    .order(
+                        "last_boosted_at",
+                        {
+                            ascending: false,
+                            nullsFirst: false
+                        }
+                    )
+                    .order(
+                        "published_at",
+                        {
+                            ascending: false,
+                            nullsFirst: false
+                        }
+                    )
+                    .range(
+                        from,
+                        to
+                    );
+
+
+            const {
+                data,
+                error,
+                count
+            } = await query;
+
+
+            if (error) {
+                throw error;
+            }
+
+
+            const items =
+                typeof api.sortListings ===
+                "function"
+                    ? api.sortListings(
+                        data || []
+                    )
+                    : (data || []);
+
+
+            return {
+                category:
+                    "dealer",
+
+                categoryName:
+                    "Avtosalonlar",
+
+                page:
+                    safePage,
+
+                pageSize:
+                    PAGE_SIZE,
+
+                total:
+                    count || 0,
+
+                totalPages:
+                    Math.max(
+                        1,
+                        Math.ceil(
+                            (count || 0) /
+                            PAGE_SIZE
+                        )
+                    ),
+
+                items:
+                    items
+            };
+        };
+
+
+    api.__v153gDealerRoutes =
+        true;
+
+
+    console.log(
+        "A-USTA V153-G DEALER ROUTES READY"
+    );
+
+})();
+
 <!-- =========================================================
      A-USTA V153-E
      ELAN YERLƏŞDİR -> REAL 14 CATEGORY FORM ROUTER
