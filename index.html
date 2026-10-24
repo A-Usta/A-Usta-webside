@@ -15088,15 +15088,14 @@ window.AUSTA_V32={directTransport,openListingV32};
    const b=document.getElementById('austaHeaderAddListing');
    if(!b||b.dataset.v33CleanBound==='1')return;
    b.dataset.v33CleanBound='1';
-   b.addEventListener('click',e=>{
-     e.preventDefault();
-     e.stopPropagation();
-     if(window.AUSTA_V53?.openListing){
-       window.AUSTA_V53.openListing();
-       return;
-     }
-     openListing();
-   });
+  b.addEventListener('click',e=>{
+  e.preventDefault();
+  e.stopPropagation();
+
+  if(window.AUSTA_V153C?.open){
+    window.AUSTA_V153C.open();
+  }
+});
  }
  function setupAccount(){
    const a=$('#headerAccountLink'); if(!a||a.dataset.v33Account)return;
@@ -39740,12 +39739,14 @@ align-self:center !important;
     openHeaderPanel("❔ Kömək","A-USTA yardım bölməsi hazırlanır.");
   });
 
-  $("austaHeaderAddListing")?.addEventListener("click",function(event){
+$("austaHeaderAddListing")?.addEventListener("click",function(event){
     event.preventDefault();
-    if(window.AUSTA_V53?.openListing){window.AUSTA_V53.openListing();return;}
-    const existing=document.querySelector('[data-top-flow="listing"][data-top-title="Elan yerləşdir"]');
-    existing?.click();
-  });
+    event.stopPropagation();
+
+    if(window.AUSTA_V153C?.open){
+        window.AUSTA_V153C.open();
+    }
+});
 
   applyHeaderLanguage(localStorage.getItem("austa_language")||"az");
   console.log("A-USTA CLEAN HEADER READY");
