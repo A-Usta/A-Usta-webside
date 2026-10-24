@@ -47424,13 +47424,31 @@ async function loadCategoryPage(
     pageNumber = 1
 ){
 
-    const supabase =
-        window.AUSTA_SUPABASE;
+    const api =
+        window.AUSTA_V153;
 
+    if(
+        !api ||
+        typeof api.fetchCategory !== "function"
+    ){
 
-    if(!supabase){
+        console.error(
+            "A-USTA V154: V153 API hazır deyil"
+        );
+
         return;
     }
+
+
+    /*
+     * HOME-da "mechanic",
+     * real provider DB-də isə "usta".
+     */
+
+    const realType =
+        type === "mechanic"
+            ? "usta"
+            : type;
 
 
     const page =
@@ -47441,8 +47459,7 @@ async function loadCategoryPage(
 
 
     categoryState.type =
-        type;
-
+        realType;
 
     categoryState.page =
         page;
@@ -47466,157 +47483,115 @@ async function loadCategoryPage(
 
     if(grid){
 
-        grid.innerHTML =
-            '<div style="'+
-            'grid-column:1/-1;'+
-            'padding:30px;'+
-            'text-align:center;'+
-            'font-weight:800;'+
-            'color:#697386;'+
-            '">'+
-            'Elanlar yüklənir...'+
-            '</div>';
-
+        grid.innerHTML = `
+            <div style="
+                grid-column:1/-1;
+                padding:30px;
+                text-align:center;
+                font-weight:800;
+                color:#697386;
+            ">
+                Elanlar yüklənir...
+            </div>
+        `;
     }
-
-
-    if(title){
-
-        title.textContent =
-            type === "rent"
-                ?
-                "Rent a Car"
-                :
-                "Avtomobillər";
-
-    }
-
-
-    const from =
-        (page - 1) *
-        PAGE_SIZE;
-
-
-    const to =
-        from +
-        PAGE_SIZE -
-        1;
 
 
     try{
 
-        const {
-            data,
-            error,
-            count
-        } =
-            await supabase
-                .from(
-                    "vehicle_listings"
-                )
-                .select(
-                    `
-                    id,
-                    listing_type,
-                    status,
-                    brand,
-                    model,
-                    year,
-                    mileage,
-                    body_type,
-                    fuel_type,
-                    transmission,
-                    engine,
-                    color,
-                    price,
-                    daily_price,
-                    region,
-                    district,
-                    has_video,
-                    promotion_type,
-                    promotion_started_at,
-                    promotion_until,
-                    last_boosted_at,
-                    published_at,
-                    created_at
-                    `,
-                    {
-                        count:"exact"
-                    }
-                )
-                .eq(
-                    "status",
-                    "active"
-                )
-                .eq(
-                    "listing_type",
-                    type
-                )
-                .order(
-                    "created_at",
-                    {
-                        ascending:false
-                    }
-                )
-                .range(
-                    from,
-                    to
-                );
-
-
-        if(error){
-
-            console.error(
-                "A-USTA V151 CATEGORY:",
-                error
+        const result =
+            await api.fetchCategory(
+                realType,
+                page
             );
-
-            return;
-        }
 
 
         const rows =
-            Array.isArray(data)
-                ? data
+            Array.isArray(
+                result?.items
+            )
+                ? result.items
                 : [];
 
 
-        await attachImages(
-            supabase,
-            rows
-        );
+        categoryState.total =
+            Number(
+                result?.total
+            ) || 0;
+
+
+        /*
+         * Kateqoriya başlığı.
+         */
+
+        if(title){
+
+            title.textContent =
+                type === "mechanic"
+                    ? "Usta profilləri"
+                    : (
+                        result?.categoryName ||
+                        realType
+                    );
+        }
+
+
+        /*
+         * Hələlik real DB nəticəsini
+         * V151 kart sisteminə veririk.
+         */
+
+        const supabase =
+            window.AUSTA_SUPABASE;
+
+
+        if(
+            supabase &&
+            rows.length
+        ){
+
+            try{
+
+                await attachImages(
+                    supabase,
+                    rows
+                );
+
+            }catch(mediaError){
+
+                console.warn(
+                    "A-USTA V154 MEDIA:",
+                    mediaError
+                );
+            }
+        }
 
 
         const sorted =
-            sortListings(
-                rows
-            );
+            typeof api.sortListings === "function"
+                ? api.sortListings(rows)
+                : rows;
 
 
         if(grid){
 
             grid.innerHTML =
                 sorted.length
-                    ?
-                    sorted
+                    ? sorted
                         .map(cardHtml)
                         .join("")
-                    :
-                    '<div style="'+
-                    'grid-column:1/-1;'+
-                    'padding:35px;'+
-                    'text-align:center;'+
-                    'font-weight:800;'+
-                    'color:#8992a0;'+
-                    '">'+
-                    'Elan tapılmadı.'+
-                    '</div>';
-
+                    : `
+                        <div style="
+                            grid-column:1/-1;
+                            padding:35px;
+                            text-align:center;
+                            font-weight:800;
+                            color:#8992a0;
+                        ">
+                            Bu kateqoriyada hələ elan yoxdur.
+                        </div>
+                    `;
         }
-
-
-        categoryState.total =
-            Number(count) || 0;
 
 
         renderPagination(
@@ -47640,7 +47615,6 @@ async function loadCategoryPage(
 
             home.style.display =
                 "none";
-
         }
 
 
@@ -47650,17 +47624,41 @@ async function loadCategoryPage(
         });
 
 
+        console.log(
+            "A-USTA V154 REAL CATEGORY:",
+            {
+                requested:type,
+                realType,
+                total:categoryState.total,
+                items:rows.length
+            }
+        );
+
+
     }catch(error){
 
         console.error(
-            "A-USTA V151 CATEGORY ERROR:",
+            "A-USTA V154 CATEGORY ERROR:",
             error
         );
 
+
+        if(grid){
+
+            grid.innerHTML = `
+                <div style="
+                    grid-column:1/-1;
+                    padding:35px;
+                    text-align:center;
+                    font-weight:800;
+                    color:#dc2626;
+                ">
+                    Elanları yükləmək mümkün olmadı.
+                </div>
+            `;
+        }
     }
-
 }
-
 
 /* =========================================================
    PAGINATION
