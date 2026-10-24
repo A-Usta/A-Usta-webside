@@ -53123,3 +53123,193 @@ if(
 
 })();
 </script>
+
+<!-- =========================================================
+     A-USTA V153-E
+     ELAN YERLƏŞDİR -> REAL 14 CATEGORY FORM ROUTER
+     ========================================================= -->
+<script id="austa-v153e-listing-form-router">
+(function () {
+    "use strict";
+
+    const OLD_OVERLAY_ID = "austaV53ListingOverlay";
+    const NEW_OVERLAY_ID = "austaV153COverlay";
+
+    let switching = false;
+
+    function hideOldListingForm() {
+        const oldOverlay = document.getElementById(OLD_OVERLAY_ID);
+
+        if (!oldOverlay) return;
+
+        oldOverlay.style.setProperty(
+            "display",
+            "none",
+            "important"
+        );
+
+        oldOverlay.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+    }
+
+    function openRealListingForm() {
+        if (switching) return;
+
+        if (
+            !window.AUSTA_V153C ||
+            typeof window.AUSTA_V153C.open !== "function"
+        ) {
+            console.error(
+                "A-USTA V153-E: V153-C listing form is not ready."
+            );
+            return;
+        }
+
+        switching = true;
+
+        try {
+            hideOldListingForm();
+
+            window.AUSTA_V153C.open();
+
+            requestAnimationFrame(function () {
+                hideOldListingForm();
+
+                const newOverlay =
+                    document.getElementById(NEW_OVERLAY_ID);
+
+                if (newOverlay) {
+                    newOverlay.style.display = "flex";
+                    newOverlay.removeAttribute("aria-hidden");
+                }
+            });
+
+        } finally {
+            setTimeout(function () {
+                switching = false;
+            }, 100);
+        }
+    }
+
+    /*
+     * Exact V53 overlay guard.
+     *
+     * V53 may open its old overlay from an older click handler
+     * before V153-E gets control. We watch ONLY that exact
+     * overlay's style attribute. No document-wide observer.
+     */
+    function installOldOverlayGuard() {
+        const oldOverlay =
+            document.getElementById(OLD_OVERLAY_ID);
+
+        if (!oldOverlay) return false;
+
+        if (oldOverlay.dataset.austaV153eGuard === "1") {
+            return true;
+        }
+
+        oldOverlay.dataset.austaV153eGuard = "1";
+
+        const observer = new MutationObserver(function () {
+            if (switching) return;
+
+            const style =
+                window.getComputedStyle(oldOverlay);
+
+            if (style.display !== "none") {
+                hideOldListingForm();
+                openRealListingForm();
+            }
+        });
+
+        observer.observe(oldOverlay, {
+            attributes: true,
+            attributeFilter: ["style"]
+        });
+
+        return true;
+    }
+
+    /*
+     * Known listing buttons.
+     * Exact selectors only.
+     */
+    function bindKnownButton(selector) {
+        const button = document.querySelector(selector);
+
+        if (!button) return;
+
+        if (button.dataset.austaV153eBound === "1") {
+            return;
+        }
+
+        button.dataset.austaV153eBound = "1";
+
+        button.addEventListener(
+            "click",
+            function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+
+                hideOldListingForm();
+                openRealListingForm();
+            },
+            true
+        );
+    }
+
+    function bindButtons() {
+        bindKnownButton("#austaHeaderAddListing");
+        bindKnownButton("#austaHomeAddListing");
+    }
+
+    function boot() {
+        bindButtons();
+
+        if (!installOldOverlayGuard()) {
+            /*
+             * V53 overlay may be created later.
+             * Short temporary check only during startup.
+             */
+            let attempts = 0;
+
+            const timer = setInterval(function () {
+                attempts += 1;
+
+                bindButtons();
+
+                if (
+                    installOldOverlayGuard() ||
+                    attempts >= 20
+                ) {
+                    clearInterval(timer);
+                }
+            }, 250);
+        }
+
+        console.log(
+            "A-USTA V153-E LISTING ROUTER READY"
+        );
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            boot,
+            { once: true }
+        );
+    } else {
+        boot();
+    }
+
+    window.AUSTA_V153E = {
+        version: "V153-E-LISTING-ROUTER",
+        open: openRealListingForm,
+        hideOld: hideOldListingForm
+    };
+
+})();
+</script>
