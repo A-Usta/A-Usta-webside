@@ -36280,15 +36280,48 @@ header,
     }
 
 
-    function setupListingCategories(){
+  function setupListingCategories(){
 
-        if(
-            byId(
-                "austaV107ListingCategories"
-            )
-        ){
+    const existingSection =
+        byId("austaV107ListingCategories");
+
+    if(existingSection){
+
+        const existingGrid =
+            existingSection.querySelector(
+                ".austa-v107-category-grid"
+            );
+
+        if(existingGrid){
+
+            existingGrid.innerHTML =
+                categories
+                .map(
+                    item=>`
+                        <button
+                            class="austa-v107-category"
+                            type="button"
+                            data-austa-v107-category="${item.key}"
+                        >
+                            <span
+                                class="austa-v107-category-icon"
+                            >
+                                ${item.icon}
+                            </span>
+
+                            <span
+                                class="austa-v107-category-name"
+                            >
+                                ${item.title}
+                            </span>
+                        </button>
+                    `
+                )
+                .join("");
+
             return;
         }
+    }
 
 
         const section =
