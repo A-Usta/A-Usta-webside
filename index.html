@@ -206,6 +206,131 @@
   }
 }
  </style> 
+  <style id="austa-v154d-category-card-style">
+
+.austa-v154-card{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    overflow:hidden;
+    cursor:pointer;
+    min-width:0;
+    box-shadow:0 4px 16px rgba(0,0,0,.06);
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease;
+}
+
+.austa-v154-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 10px 28px rgba(0,0,0,.10);
+}
+
+.austa-v154-media{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+    background:#f3f4f6;
+    overflow:hidden;
+}
+
+.austa-v154-media img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+}
+
+.austa-v154-no-image{
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    color:#9ca3af;
+    background:#f3f4f6;
+}
+
+.austa-v154-body{
+    padding:13px;
+}
+
+.austa-v154-body h3{
+    margin:0 0 8px;
+    color:#111827;
+    font-size:16px;
+    line-height:1.3;
+}
+
+.austa-v154-price{
+    margin-bottom:9px;
+    color:#dc2626;
+    font-size:18px;
+    font-weight:900;
+}
+
+.austa-v154-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:9px;
+}
+
+.austa-v154-meta span{
+    padding:5px 8px;
+    border-radius:8px;
+    background:#f3f4f6;
+    color:#4b5563;
+    font-size:12px;
+    font-weight:700;
+}
+
+.austa-v154-location{
+    color:#6b7280;
+    font-size:13px;
+}
+
+.austa-v154-promo{
+    position:absolute;
+    top:10px;
+    left:10px;
+    z-index:2;
+    padding:6px 9px;
+    border-radius:8px;
+    color:#fff;
+    font-size:11px;
+    font-weight:900;
+}
+
+.austa-v154-promo.premium{
+    background:#111827;
+}
+
+.austa-v154-promo.vip{
+    background:#dc2626;
+}
+
+.austa-v154-promo.boost{
+    background:#16a34a;
+}
+
+@media (max-width:700px){
+
+    .austa-v154-body{
+        padding:10px;
+    }
+
+    .austa-v154-body h3{
+        font-size:14px;
+    }
+
+    .austa-v154-price{
+        font-size:16px;
+    }
+}
+
+</style>
 </head>
 <body>
 <header class="site-header" id="austaMainHeader">
@@ -47633,6 +47758,409 @@ async function attachV154CategoryImages(
     return listings;
 }
 
+  /*
+ * ============================================================
+ * A-USTA V154-D
+ * UNIVERSAL REAL CATEGORY CARDS
+ * ============================================================
+ */
+
+function escapeV154(value){
+
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+
+function v154Promotion(item){
+
+    const type =
+        String(
+            item?.promotion_type ||
+            "standard"
+        ).toLowerCase();
+
+    const until =
+        item?.promotion_until
+            ? new Date(item.promotion_until)
+            : null;
+
+    if(
+        until &&
+        !Number.isNaN(until.getTime()) &&
+        until.getTime() <= Date.now()
+    ){
+        return "standard";
+    }
+
+    return [
+        "premium",
+        "vip",
+        "boost"
+    ].includes(type)
+        ? type
+        : "standard";
+}
+
+
+function v154Badge(item){
+
+    const type =
+        v154Promotion(item);
+
+    if(type === "premium"){
+        return `<span class="austa-v154-promo premium">PREMIUM</span>`;
+    }
+
+    if(type === "vip"){
+        return `<span class="austa-v154-promo vip">VIP</span>`;
+    }
+
+    if(type === "boost"){
+        return `<span class="austa-v154-promo boost">İRƏLİ ÇƏK</span>`;
+    }
+
+    return "";
+}
+
+
+function v154Money(value){
+
+    const number =
+        Number(value);
+
+    if(
+        !Number.isFinite(number) ||
+        number <= 0
+    ){
+        return "";
+    }
+
+    return (
+        new Intl.NumberFormat("az-AZ")
+            .format(number) +
+        " ₼"
+    );
+}
+
+
+function v154Title(type,item){
+
+    if(type === "dealer"){
+        return (
+            item?.dealer_name ||
+            item?.title ||
+            "Avtosalon"
+        );
+    }
+
+    if(type === "service"){
+        return (
+            item?.name ||
+            item?.title ||
+            "Avtoservis"
+        );
+    }
+
+    if(type === "usta"){
+        return (
+            item?.name ||
+            item?.title ||
+            item?.specialty ||
+            "Usta profili"
+        );
+    }
+
+    if(
+        type === "cars" ||
+        type === "rent"
+    ){
+
+        return [
+            item?.brand,
+            item?.model
+        ]
+        .filter(Boolean)
+        .join(" ") ||
+        "Avtomobil";
+    }
+
+    return (
+        item?.title ||
+        [
+            item?.brand,
+            item?.model
+        ]
+        .filter(Boolean)
+        .join(" ") ||
+        "A-USTA elanı"
+    );
+}
+
+
+function v154Price(type,item){
+
+    if(type === "rent"){
+
+        const daily =
+            v154Money(
+                item?.daily_price
+            );
+
+        return daily
+            ? daily + " / gün"
+            : "";
+    }
+
+    if(
+        type === "dealer" ||
+        type === "service" ||
+        type === "usta"
+    ){
+        return "";
+    }
+
+    return v154Money(
+        item?.price
+    );
+}
+
+
+function v154Location(item){
+
+    return [
+        item?.region,
+        item?.district
+    ]
+    .filter(Boolean)
+    .join(" • ");
+}
+
+
+function v154Meta(type,item){
+
+    const meta = [];
+
+
+    if(
+        type === "cars" ||
+        type === "rent"
+    ){
+
+        if(item?.year){
+            meta.push(item.year);
+        }
+
+        if(
+            item?.mileage !== null &&
+            item?.mileage !== undefined
+        ){
+            meta.push(
+                Number(item.mileage)
+                    .toLocaleString("az-AZ") +
+                " km"
+            );
+        }
+
+        if(item?.fuel_type){
+            meta.push(item.fuel_type);
+        }
+
+        return meta;
+    }
+
+
+    if(type === "dealer"){
+
+        if(item?.brands){
+
+            const brands =
+                Array.isArray(item.brands)
+                    ? item.brands.join(", ")
+                    : String(item.brands);
+
+            if(brands){
+                meta.push(brands);
+            }
+        }
+
+        if(item?.vehicle_condition){
+            meta.push(
+                item.vehicle_condition
+            );
+        }
+
+        if(item?.credit_available){
+            meta.push("Kredit");
+        }
+
+        if(item?.leasing_available){
+            meta.push("Lizinq");
+        }
+
+        if(item?.barter_available){
+            meta.push("Barter");
+        }
+
+        return meta;
+    }
+
+
+    if(
+        type === "service" ||
+        type === "usta"
+    ){
+
+        if(item?.specialty){
+            meta.push(item.specialty);
+        }
+
+        if(item?.experience){
+            meta.push(
+                String(item.experience)
+            );
+        }
+
+        if(
+            Number(item?.rating) > 0
+        ){
+            meta.push(
+                "★ " +
+                Number(item.rating)
+                    .toFixed(1)
+            );
+        }
+
+        return meta;
+    }
+
+
+    if(item?.brand){
+        meta.push(item.brand);
+    }
+
+    if(item?.model){
+        meta.push(item.model);
+    }
+
+    if(item?.year){
+        meta.push(item.year);
+    }
+
+    if(item?.condition){
+        meta.push(item.condition);
+    }
+
+    return meta;
+}
+
+
+function v154CardHtml(
+    type,
+    item
+){
+
+    const title =
+        v154Title(type,item);
+
+    const price =
+        v154Price(type,item);
+
+    const location =
+        v154Location(item);
+
+    const meta =
+        v154Meta(type,item)
+            .filter(Boolean)
+            .slice(0,4);
+
+    const image =
+        item?._austaV151Image || "";
+
+    const id =
+        String(item?.id || "");
+
+
+    return `
+        <article
+            class="austa-v154-card"
+            data-austa-v154-id="${escapeV154(id)}"
+            data-austa-v154-type="${escapeV154(type)}"
+        >
+
+            <div class="austa-v154-media">
+
+                ${
+                    image
+                        ? `
+                            <img
+                                src="${escapeV154(image)}"
+                                alt="${escapeV154(title)}"
+                                loading="lazy"
+                            >
+                        `
+                        : `
+                            <div class="austa-v154-no-image">
+                                A-USTA
+                            </div>
+                        `
+                }
+
+                ${v154Badge(item)}
+
+            </div>
+
+            <div class="austa-v154-body">
+
+                <h3>
+                    ${escapeV154(title)}
+                </h3>
+
+                ${
+                    price
+                        ? `
+                            <div class="austa-v154-price">
+                                ${escapeV154(price)}
+                            </div>
+                        `
+                        : ""
+                }
+
+                ${
+                    meta.length
+                        ? `
+                            <div class="austa-v154-meta">
+                                ${meta
+                                    .map(
+                                        value =>
+                                            `<span>${escapeV154(value)}</span>`
+                                    )
+                                    .join("")
+                                }
+                            </div>
+                        `
+                        : ""
+                }
+
+                ${
+                    location
+                        ? `
+                            <div class="austa-v154-location">
+                                📍 ${escapeV154(location)}
+                            </div>
+                        `
+                        : ""
+                }
+
+            </div>
+
+        </article>
+    `;
+}
 
 /* =========================================================
    CATEGORY QUERY
@@ -47798,7 +48326,13 @@ async function loadCategoryPage(
             grid.innerHTML =
                 sorted.length
                     ? sorted
-                        .map(cardHtml)
+                        .map(
+    item =>
+        v154CardHtml(
+            realType,
+            item
+        )
+)
                         .join("")
                     : `
                         <div style="
