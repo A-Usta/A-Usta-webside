@@ -36649,6 +36649,61 @@ header,
 
         setupListingCategories();
 
+        /* =========================================================
+   A-USTA V153-J — ENSURE AVTOSALONLAR HOME CARD
+   Existing 13 categories are preserved.
+   ========================================================= */
+
+(function ensureHomeDealerCategory(){
+
+    const section =
+        document.getElementById("austaV107ListingCategories");
+
+    const grid =
+        section?.querySelector(".austa-v107-category-grid");
+
+    if(!grid){
+        return;
+    }
+
+    if(
+        grid.querySelector(
+            '[data-austa-v107-category="dealer"]'
+        )
+    ){
+        return;
+    }
+
+    const dealer =
+        document.createElement("button");
+
+    dealer.className = "austa-v107-category";
+    dealer.type = "button";
+
+    dealer.dataset.austaV107Category =
+        "dealer";
+
+    dealer.innerHTML = `
+        <span class="austa-v107-category-icon">🏢</span>
+        <span class="austa-v107-category-name">Avtosalonlar</span>
+    `;
+
+    const mechanic =
+        grid.querySelector(
+            '[data-austa-v107-category="mechanic"]'
+        );
+
+    if(mechanic){
+        mechanic.insertAdjacentElement(
+            "afterend",
+            dealer
+        );
+    }else{
+        grid.appendChild(dealer);
+    }
+
+})();
+
         setupRealV106Search();
 
 
