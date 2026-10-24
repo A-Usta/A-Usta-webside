@@ -36158,44 +36158,63 @@ header,
         }
 
 
-        /*
-         * Mövcud V22 tab varsa
-         * onu da istifadə edirik.
-         */
+      /*
+ * V154
+ * HOME elan kateqoriyalarını
+ * real V153/V151 sisteminə yönəlt.
+ *
+ * "mechanic" HOME/UI açarıdır.
+ * DB provider_type isə "usta"-dır.
+ */
 
-        const tab =
-            document.querySelector(
-                '#austaV22Tabs ' +
-                '[data-v22-cat="' +
-                key +
-                '"]'
-            );
+const realMarketType =
+    key === "mechanic"
+        ? "usta"
+        : key;
 
 
-        if(tab){
+const realMarketCategories =
+    new Set([
+        "cars",
+        "rent",
+        "parts",
+        "accessories",
+        "moto",
+        "special",
+        "bus",
+        "water",
+        "caravan",
+        "trailer",
+        "plate",
+        "service",
+        "usta",
+        "dealer"
+    ]);
 
-            tab.click();
 
-            setTimeout(
-                ()=>{
+if(
+    realMarketCategories.has(
+        realMarketType
+    ) &&
+    window.AUSTA_V151_MARKETPLACE &&
+    typeof window
+        .AUSTA_V151_MARKETPLACE
+        .openCategory === "function"
+){
 
-                    const panel =
-                        byId(
-                            "austaV22Panel-" +
-                            key
-                        );
+    /*
+     * Köhnə V22 kateqoriya panelini
+     * bu kliklə açmırıq.
+     */
 
-                    panel?.scrollIntoView({
-                        behavior:"smooth",
-                        block:"start"
-                    });
+    window
+        .AUSTA_V151_MARKETPLACE
+        .openCategory(
+            realMarketType
+        );
 
-                },
-                80
-            );
-
-            return;
-        }
+    return;
+}
 
 
         /*
