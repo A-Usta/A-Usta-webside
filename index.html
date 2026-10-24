@@ -19736,6 +19736,14 @@ if(document.readyState==='loading'){
   
 function renderUsta(){const box=$('#austaV53UstaList');if(!box)return;const arr=JSON.parse(localStorage.getItem('austa-user-listings')||'[]').filter(x=>norm(x.type).includes('usta'));box.innerHTML=arr.length?arr.map(x=>'<article class="austa-v52-listing-card"><b>🧑‍🔧 '+esc(x.name||x.title||'Usta')+'</b><small>🔧 '+esc(x.specialty||x.ixTisas||'')+' • ⭐ '+esc(x.rating||'0')+' ('+esc(x.reviews||'0')+' rəy)</small><small>📍 '+esc(x.region||x.address||'')+' • ☎ '+esc(x.phone||'')+'</small><small>'+esc(x.services||x.about||'')+'</small><div class="austa-v52-listing-actions"><button type="button" data-v53-forward="'+esc(x.id||'')+'">↑ İrəli çək</button><button type="button" data-v53-edit="'+esc(x.id||'')+'">✎ Redaktə et</button></div></article>').join(''):'<small>Hələ Usta profili elanı yoxdur.</small>';}
 function openListing(){
+
+ if(window.AUSTA_V153C?.open){
+   document.getElementById('austaV53ListingOverlay')?.remove();
+   document.getElementById('austaV48Overlay')?.remove();
+   window.AUSTA_V153C.open();
+   return;
+ }
+  
  const old=$('#austaV53ListingOverlay');if(old)old.remove();
 
  const o=document.createElement('div');
