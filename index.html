@@ -10678,6 +10678,585 @@ document.addEventListener('click',e=>{const el=e.target.closest('.premium-chip,.
   })();
 </script>
 
+<script id="austa-v154e-global-promotion-pagination">
+(() => {
+
+    /*
+     * ============================================================
+     * A-USTA V154-E
+     * GLOBAL PROMOTION SORT + PAGINATION
+     *
+     * Əvvəl:
+     * bütün kateqoriya elanları alınır
+     *
+     * Sonra:
+     * Premium → VIP → Boost → Standard
+     *
+     * Sonra:
+     * 40 elan / səhifə
+     * ============================================================
+     */
+
+    const api =
+        window.AUSTA_V153;
+
+    if(
+        !api ||
+        typeof api.fetchCategory !== "function"
+    ){
+        console.error(
+            "A-USTA V154-E: V153 API tapılmadı."
+        );
+
+        return;
+    }
+
+
+    const PAGE_SIZE = 40;
+
+
+    const MARKETPLACE_TYPES =
+        new Set([
+            "parts",
+            "accessories",
+            "moto",
+            "special",
+            "bus",
+            "water",
+            "caravan",
+            "trailer",
+            "plate"
+        ]);
+
+
+    const CATEGORY_NAMES = {
+        cars:
+            "Avtomobillər",
+
+        rent:
+            "Rent a Car",
+
+        parts:
+            "Ehtiyat hissələri",
+
+        accessories:
+            "Aksesuarlar",
+
+        moto:
+            "Moto / Moped",
+
+        special:
+            "Xüsusi texnika",
+
+        bus:
+            "Avtobuslar",
+
+        water:
+            "Su nəqliyyatı",
+
+        caravan:
+            "Karavanlar",
+
+        trailer:
+            "Qoşqu / Treyler",
+
+        plate:
+            "Qeydiyyat nömrələri",
+
+        service:
+            "Avtoservislər",
+
+        usta:
+            "Usta profilləri",
+
+        dealer:
+            "Avtosalonlar"
+    };
+
+
+    function normalizeType(value){
+
+        const type =
+            String(value || "")
+                .trim()
+                .toLowerCase();
+
+        return type === "mechanic"
+            ? "usta"
+            : type;
+    }
+
+
+    function dateValue(value){
+
+        if(!value){
+            return 0;
+        }
+
+        const time =
+            new Date(value)
+                .getTime();
+
+        return Number.isFinite(time)
+            ? time
+            : 0;
+    }
+
+
+    function effectivePromotion(item){
+
+        const promotion =
+            String(
+                item?.promotion_type ||
+                "standard"
+            )
+            .trim()
+            .toLowerCase();
+
+
+        if(
+            ![
+                "premium",
+                "vip",
+                "boost"
+            ].includes(promotion)
+        ){
+            return "standard";
+        }
+
+
+        /*
+         * promotion_until varsa və
+         * vaxt bitibsə artıq ödənişli
+         * promotion sayılmır.
+         */
+
+        if(item?.promotion_until){
+
+            const until =
+                dateValue(
+                    item.promotion_until
+                );
+
+            if(
+                until > 0 &&
+                until <= Date.now()
+            ){
+                return "standard";
+            }
+        }
+
+
+        return promotion;
+    }
+
+
+    const PROMOTION_RANK = {
+        premium: 4,
+        vip: 3,
+        boost: 2,
+        standard: 1
+    };
+
+
+    function listingTime(
+        item,
+        promotion
+    ){
+
+        /*
+         * Boost daxilində son irəli
+         * çəkilən elan əvvəl gəlir.
+         */
+
+        if(promotion === "boost"){
+
+            return (
+                dateValue(
+                    item?.last_boosted_at
+                ) ||
+                dateValue(
+                    item?.published_at
+                ) ||
+                dateValue(
+                    item?.created_at
+                )
+            );
+        }
+
+
+        /*
+         * Premium / VIP / Standard:
+         * ən yeni elan əvvəl.
+         */
+
+        return (
+            dateValue(
+                item?.published_at
+            ) ||
+            dateValue(
+                item?.created_at
+            ) ||
+            dateValue(
+                item?.updated_at
+            )
+        );
+    }
+
+
+    function sortAllListings(items){
+
+        return [
+            ...(items || [])
+        ].sort(
+            (a,b) => {
+
+                const promoA =
+                    effectivePromotion(a);
+
+                const promoB =
+                    effectivePromotion(b);
+
+
+                const rankDifference =
+                    (
+                        PROMOTION_RANK[promoB] ||
+                        1
+                    ) -
+                    (
+                        PROMOTION_RANK[promoA] ||
+                        1
+                    );
+
+
+                if(rankDifference !== 0){
+                    return rankDifference;
+                }
+
+
+                return (
+                    listingTime(
+                        b,
+                        promoB
+                    ) -
+                    listingTime(
+                        a,
+                        promoA
+                    )
+                );
+            }
+        );
+    }
+
+
+    async function queryAll(type){
+
+        const supabase =
+            window.AUSTA_SUPABASE;
+
+        if(!supabase){
+
+            throw new Error(
+                "Supabase client tapılmadı."
+            );
+        }
+
+
+        let query;
+
+
+        if(type === "cars"){
+
+            query =
+                supabase
+                    .from(
+                        "vehicle_listings"
+                    )
+                    .select("*")
+                    .eq(
+                        "status",
+                        "active"
+                    )
+                    .eq(
+                        "listing_type",
+                        "sale"
+                    );
+
+
+        }else if(type === "rent"){
+
+            query =
+                supabase
+                    .from(
+                        "vehicle_listings"
+                    )
+                    .select("*")
+                    .eq(
+                        "status",
+                        "active"
+                    )
+                    .eq(
+                        "listing_type",
+                        "rent"
+                    );
+
+
+        }else if(
+            MARKETPLACE_TYPES.has(type)
+        ){
+
+            query =
+                supabase
+                    .from(
+                        "marketplace_listings"
+                    )
+                    .select("*")
+                    .eq(
+                        "status",
+                        "active"
+                    )
+                    .eq(
+                        "category",
+                        type
+                    );
+
+
+        }else if(
+            type === "service" ||
+            type === "usta"
+        ){
+
+            query =
+                supabase
+                    .from(
+                        "service_provider_listings"
+                    )
+                    .select("*")
+                    .eq(
+                        "status",
+                        "active"
+                    )
+                    .eq(
+                        "provider_type",
+                        type
+                    );
+
+
+        }else if(type === "dealer"){
+
+            query =
+                supabase
+                    .from(
+                        "auto_dealer_listings"
+                    )
+                    .select("*")
+                    .eq(
+                        "status",
+                        "active"
+                    );
+
+
+        }else{
+
+            throw new Error(
+                "Kateqoriya tapılmadı."
+            );
+        }
+
+
+        /*
+         * Burada .range() YOXDUR.
+         *
+         * Əvvəl uyğun elanların hamısı
+         * alınır.
+         */
+
+        const {
+            data,
+            error
+        } =
+            await query;
+
+
+        if(error){
+            throw error;
+        }
+
+
+        return data || [];
+    }
+
+
+    async function fetchCategoryV154E(
+        typeValue,
+        page = 1
+    ){
+
+        const type =
+            normalizeType(
+                typeValue
+            );
+
+
+        if(
+            !Object.prototype
+                .hasOwnProperty
+                .call(
+                    CATEGORY_NAMES,
+                    type
+                )
+        ){
+
+            throw new Error(
+                "Kateqoriya tapılmadı."
+            );
+        }
+
+
+        const safePage =
+            Math.max(
+                1,
+                Number(page) || 1
+            );
+
+
+        /*
+         * 1. Bütün uyğun elanlar.
+         */
+
+        const allItems =
+            await queryAll(type);
+
+
+        /*
+         * 2. Bütün nəticələr üzrə
+         * promotion + vaxt sıralaması.
+         */
+
+        const sorted =
+            sortAllListings(
+                allItems
+            );
+
+
+        const total =
+            sorted.length;
+
+
+        const totalPages =
+            Math.max(
+                1,
+                Math.ceil(
+                    total /
+                    PAGE_SIZE
+                )
+            );
+
+
+        /*
+         * İstifadəçi mövcud olmayan
+         * səhifə nömrəsi göndərərsə
+         * son səhifədə saxla.
+         */
+
+        const finalPage =
+            Math.min(
+                safePage,
+                totalPages
+            );
+
+
+        const start =
+            (
+                finalPage - 1
+            ) *
+            PAGE_SIZE;
+
+
+        const end =
+            start +
+            PAGE_SIZE;
+
+
+        /*
+         * 3. YALNIZ İNDİ 40-lıq
+         * səhifəyə bölünür.
+         */
+
+        const items =
+            sorted.slice(
+                start,
+                end
+            );
+
+
+        return {
+
+            category:
+                type,
+
+            categoryName:
+                CATEGORY_NAMES[type],
+
+            page:
+                finalPage,
+
+            pageSize:
+                PAGE_SIZE,
+
+            total:
+                total,
+
+            totalPages:
+                totalPages,
+
+            items:
+                items
+        };
+    }
+
+
+    /*
+     * V153 public API-ni yalnız
+     * category fetch üçün override edirik.
+     */
+
+    api.fetchCategory =
+        fetchCategoryV154E;
+
+
+    /*
+     * Mövcud digər kodların da eyni
+     * promotion qaydasını istifadə
+     * edə bilməsi üçün export.
+     */
+
+    api.sortListings =
+        sortAllListings;
+
+    api.effectivePromotion =
+        effectivePromotion;
+
+    api.__v154eGlobalPagination =
+        true;
+
+
+    console.log(
+        "A-USTA V154-E READY",
+        {
+            pageSize:
+                PAGE_SIZE,
+
+            categories:
+                Object.keys(
+                    CATEGORY_NAMES
+                ).length
+        }
+    );
+
+})();
+</script>
+  
 </body>
 
 <style id="austa-v38-account-css">
