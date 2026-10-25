@@ -10677,6 +10677,451 @@ document.addEventListener('click',e=>{const el=e.target.closest('.premium-chip,.
 
   })();
 </script>
+
+<!-- =========================================================
+     A-USTA V155
+     SIZIN UCUN VIDEOLAR — REAL ONLY + FINAL PORTRAIT SIZE
+     215 x 380
+     ========================================================= -->
+
+<style id="austa-v155-real-home-video-final-css">
+
+/* =========================================================
+   VIDEO LENTI
+   ========================================================= */
+
+#austaV22VideoGrid{
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    align-items:flex-start !important;
+    justify-content:flex-start !important;
+
+    gap:14px !important;
+
+    width:100% !important;
+    max-width:100% !important;
+
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+
+    padding:2px 0 10px !important;
+
+    scroll-behavior:smooth;
+    -webkit-overflow-scrolling:touch;
+
+    scrollbar-width:thin;
+}
+
+
+/* =========================================================
+   REAL VIDEO KARTI — FINAL 215 x 380
+   ========================================================= */
+
+#austaV22VideoGrid
+.austa-v22-video-card[data-austa-real-video="1"]{
+
+    position:relative !important;
+
+    display:block !important;
+
+    flex:0 0 215px !important;
+
+    width:215px !important;
+    min-width:215px !important;
+    max-width:215px !important;
+
+    height:380px !important;
+    min-height:380px !important;
+    max-height:380px !important;
+
+    padding:0 !important;
+    margin:0 !important;
+
+    overflow:hidden !important;
+
+    border-radius:16px !important;
+
+    background:#000 !important;
+
+    box-sizing:border-box !important;
+}
+
+
+/* =========================================================
+   VIDEO / SEKIL SAHESI
+   ========================================================= */
+
+#austaV22VideoGrid
+.austa-v22-video-card[data-austa-real-video="1"]
+.austa-v22-video-thumb{
+
+    position:absolute !important;
+
+    top:1px !important;
+    right:1px !important;
+    bottom:1px !important;
+    left:1px !important;
+
+    width:213px !important;
+
+    height:378px !important;
+    min-height:378px !important;
+    max-height:378px !important;
+
+    margin:0 !important;
+
+    border-radius:15px !important;
+
+    background-size:cover !important;
+    background-position:center !important;
+    background-repeat:no-repeat !important;
+
+    overflow:hidden !important;
+}
+
+
+/* Video elementi varsa */
+#austaV22VideoGrid
+.austa-v22-video-card[data-austa-real-video="1"]
+video{
+
+    width:100% !important;
+    height:100% !important;
+
+    object-fit:cover !important;
+
+    display:block !important;
+}
+
+
+/* =========================================================
+   MELUMAT — SEKLIN UZERINDE
+   ========================================================= */
+
+#austaV22VideoGrid
+.austa-v22-video-card[data-austa-real-video="1"]
+.austa-v22-video-body{
+
+    position:absolute !important;
+
+    left:0 !important;
+    right:0 !important;
+    bottom:0 !important;
+
+    z-index:5 !important;
+
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:flex-end !important;
+
+    gap:3px !important;
+
+    min-height:92px !important;
+
+    padding:34px 11px 11px !important;
+    margin:0 !important;
+
+    box-sizing:border-box !important;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0,0,0,0),
+            rgba(0,0,0,.20) 22%,
+            rgba(0,0,0,.88) 100%
+        ) !important;
+
+    color:#fff !important;
+}
+
+
+/* Marka / model */
+#austaV22VideoGrid
+.austa-v22-video-card[data-austa-real-video="1"]
+.austa-v22-video-body b{
+
+    color:#fff !important;
+
+    font-size:13px !important;
+    line-height:1.25 !important;
+
+    font-weight:700 !important;
+
+    margin:0 !important;
+
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+}
+
+
+/* Qiymet */
+#austaV22VideoGrid
+.austa-v22-video-card[data-austa-real-video="1"]
+.austa-v22-video-body strong{
+
+    color:#fff !important;
+
+    font-size:15px !important;
+    line-height:1.2 !important;
+
+    font-weight:800 !important;
+
+    margin:1px 0 0 !important;
+}
+
+
+/* Köhnə əlavə yazıları HOME kartından gizlət */
+#austaV22VideoGrid
+.austa-v22-video-card[data-austa-real-video="1"]
+.austa-v22-video-body > span{
+
+    display:none !important;
+}
+
+
+/* =========================================================
+   MOBIL — bu mərhələdə desktop sistemi dəyişmirik.
+   Sadəcə daşmanın qarşısını alır.
+   ========================================================= */
+
+@media(max-width:700px){
+
+    #austaV22VideoGrid{
+        gap:10px !important;
+    }
+
+}
+
+</style>
+
+
+<script id="austa-v155-real-home-video-final-js">
+
+(function(){
+
+    "use strict";
+
+
+    const GRID_ID = "austaV22VideoGrid";
+
+    let cleanTimer = null;
+
+
+    /* =====================================================
+       REAL KARTI TANIMA
+       ===================================================== */
+
+    function getListingId(card){
+
+        if(!card){
+            return "";
+        }
+
+        return String(
+            card.dataset.austaListingId ||
+            card.dataset.listingId ||
+            ""
+        ).trim();
+
+    }
+
+
+    /* =====================================================
+       DEMO KARTLARI SIL
+       REAL KARTLARI ISARELE
+       ===================================================== */
+
+    function cleanHomeVideos(){
+
+        const grid =
+            document.getElementById(GRID_ID);
+
+        if(!grid){
+            return;
+        }
+
+
+        const cards = Array.from(
+            grid.querySelectorAll(
+                ".austa-v22-video-card"
+            )
+        );
+
+
+        cards.forEach(function(card){
+
+            const listingId =
+                getListingId(card);
+
+
+            /*
+             * Real Supabase video kartında listing ID var.
+             *
+             * Köhnə V22 / V44 demo kartlarında yoxdur.
+             */
+
+            if(!listingId){
+
+                card.remove();
+
+                return;
+            }
+
+
+            card.dataset.austaRealVideo = "1";
+
+
+            /*
+             * Köhnə V136 display:none qoymuş ola bilər.
+             * Real kartı yenidən görünən edirik.
+             */
+
+            card.style.removeProperty("display");
+
+        });
+
+
+        const realCards = Array.from(
+            grid.querySelectorAll(
+                '.austa-v22-video-card[data-austa-real-video="1"]'
+            )
+        );
+
+
+        /*
+         * Real video yoxdursa boş demo göstərmirik.
+         */
+
+        if(!realCards.length){
+
+            console.log(
+                "A-USTA V155: real HOME video yoxdur"
+            );
+
+            return;
+        }
+
+
+        console.log(
+            "A-USTA V155 REAL HOME VIDEOS:",
+            realCards.length
+        );
+
+    }
+
+
+    /* =====================================================
+       KOHNE SCRIPTLER GEC ISLEYIRSE
+       SONRADAN GELEN DEMOLARI DA TEMIZLE
+       ===================================================== */
+
+    function scheduleClean(){
+
+        clearTimeout(cleanTimer);
+
+        cleanTimer = setTimeout(
+            cleanHomeVideos,
+            40
+        );
+
+    }
+
+
+    function start(){
+
+        const grid =
+            document.getElementById(GRID_ID);
+
+        if(!grid){
+            return;
+        }
+
+
+        cleanHomeVideos();
+
+
+        /*
+         * V22 / V44 / V136 sonradan karta toxunsa,
+         * yalnız bu grid daxilində dəyişiklik izlənir.
+         *
+         * Bütün document izlənmir.
+         */
+
+        const observer =
+            new MutationObserver(function(mutations){
+
+                const relevant =
+                    mutations.some(function(mutation){
+
+                        return (
+                            mutation.type === "childList" &&
+                            (
+                                mutation.addedNodes.length ||
+                                mutation.removedNodes.length
+                            )
+                        );
+
+                    });
+
+
+                if(relevant){
+                    scheduleClean();
+                }
+
+            });
+
+
+        observer.observe(
+            grid,
+            {
+                childList:true
+            }
+        );
+
+
+        /*
+         * Köhnə V44 500 / 1500 / 3000 ms-də yenidən
+         * işləyə bildiyi üçün təhlükəsizlik yoxlamaları.
+         */
+
+        [
+            100,
+            600,
+            1600,
+            3100,
+            4500
+        ].forEach(function(delay){
+
+            setTimeout(
+                cleanHomeVideos,
+                delay
+            );
+
+        });
+
+    }
+
+
+    if(document.readyState === "loading"){
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            start,
+            {
+                once:true
+            }
+        );
+
+    }else{
+
+        start();
+
+    }
+
+
+})();
+
+</script>
   
 </body>
 
