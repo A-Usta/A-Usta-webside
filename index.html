@@ -18535,12 +18535,36 @@ window.addEventListener('click',function(e){if(window.__AUSTA_V51_OVERRIDE)retur
 window.AUSTA_OPEN_SERVICE_V44=openService;window.AUSTA_OPEN_WASH_V44=openWash;window.AUSTA_V44_SERVICE_QUESTIONS=SERVICE;
 
 /* Add Rent a Car entries to the existing automotive video strip once, without removing current videos. */
-function addRentVideos(){const g=document.getElementById('austaV22VideoGrid');if(!g||g.querySelector('[data-v44-rent]'))return;const items=[
-['🚘 Rent a Car — Bakı','https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85','Gündəlik / həftəlik icarə'],
-['🚘 Rent a Car — Premium','https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85','Premium avtomobillər'],
-['🚘 Rent a Car — Ailələr üçün','https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1200&q=85','Ailə və uzunmüddətli icarə']
-];items.forEach((x,i)=>{const c=document.createElement('article');c.className='austa-v22-video-card austa-v44-rent-video';c.dataset.v44Rent='1';c.innerHTML='<div class="austa-v22-video-thumb" style="background-image:url(\''+x[1]+'\')"><span class="austa-v22-video-play">▶</span></div><div class="austa-v22-video-body"><b>'+x[0]+'</b><strong>🚘 Rent a Car</strong><span>'+x[2]+'</span></div>';g.appendChild(c)});}
-function fix(){addRentVideos();const g=document.getElementById('austaV22VideoGrid');if(!g)return;g.classList.add('austa-v43-video-grid');g.style.setProperty('grid-template-columns','repeat(9,minmax(0,1fr))','important');g.querySelectorAll('.austa-v22-video-thumb').forEach(t=>{t.style.setProperty('background-size','contain','important');t.style.setProperty('background-position','center','important');t.style.setProperty('background-repeat','no-repeat','important');t.style.setProperty('height','175px','important');t.style.setProperty('min-height','175px','important')})}
+/* =========================================================
+   V44 LEGACY RENT DEMO DISABLED
+   Real Supabase HOME videos are rendered by V150/V155.
+   ========================================================= */
+
+function addRentVideos(){
+
+    /*
+     * Köhnə internet / demo Rent a Car kartları
+     * artıq yaradılmır.
+     */
+
+    return;
+}
+
+
+function fix(){
+
+    /*
+     * V44 artıq HOME video gridinin:
+     * - sütun sayını
+     * - kart ölçüsünü
+     * - thumbnail hündürlüyünü
+     * dəyişmir.
+     *
+     * Real Supabase render öz ölçüsünü idarə edir.
+     */
+
+    return;
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(fix,100));else setTimeout(fix,100);window.addEventListener('load',fix);[500,1500,3000].forEach(x=>setTimeout(fix,x));
 })();
 </script>
