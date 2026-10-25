@@ -41978,119 +41978,212 @@ function renderRealVideosOnHome(){
 
 
     /*
-     * V136 HOME quruluşunu saxlayırıq:
-     * ilk 3 = Avtomobil
-     * son 3 = Rent a Car
+     * =====================================================
+     * V155 — REAL SUPABASE HOME VIDEO RENDER
+     * =====================================================
+     *
+     * Artıq V22 / V44 demo kartlarından istifadə etmirik.
+     *
+     * HOME-a yalnız realItems daxilindəki
+     * real Supabase videoları render olunur.
+     *
+     * Yalnız:
+     * - Avtomobil satışı
+     * - Rent a Car
      */
 
-    const carCards = [
-        ...grid.querySelectorAll(
-            '.austa-v22-video-card[data-austa-v136-type="car"]'
-        )
-    ].slice(0,3);
 
-
-    const rentCards = [
-        ...grid.querySelectorAll(
-            '.austa-v22-video-card[data-austa-v136-type="rent"]'
-        )
-    ].slice(0,3);
-
-
-    const realCars =
+    const homeItems =
         realItems.filter(
             item =>
+                item &&
                 item.real &&
-                item.type === "sale"
+                item.video &&
+                (
+                    item.type === "sale" ||
+                    item.type === "rent"
+                )
         );
 
 
-    const realRents =
-        realItems.filter(
-            item =>
-                item.real &&
-                item.type === "rent"
+    /*
+     * Köhnə V22 / V44 / V136 demo kartlarını
+     * tam təmizlə.
+     */
+
+    grid.innerHTML = "";
+
+
+    if(!homeItems.length){
+
+        console.log(
+            "A-USTA V155: real video elanı yoxdur"
         );
 
-
-    function applyItem(
-        card,
-        item,
-        viewerIndex
-    ){
-
-        if(
-            !card ||
-            !item
-        ){
-            return;
-        }
+        return;
+    }
 
 
-        const thumb =
-            card.querySelector(
-                ".austa-v22-video-thumb"
-            );
+    /*
+     * HOME video lentinin özü.
+     */
+
+    grid.style.setProperty(
+        "display",
+        "flex",
+        "important"
+    );
+
+    grid.style.setProperty(
+        "grid-template-columns",
+        "none",
+        "important"
+    );
+
+    grid.style.setProperty(
+        "flex-wrap",
+        "nowrap",
+        "important"
+    );
+
+    grid.style.setProperty(
+        "align-items",
+        "flex-start",
+        "important"
+    );
+
+    grid.style.setProperty(
+        "justify-content",
+        "flex-start",
+        "important"
+    );
+
+    grid.style.setProperty(
+        "gap",
+        "14px",
+        "important"
+    );
+
+    grid.style.setProperty(
+        "overflow-x",
+        "auto",
+        "important"
+    );
+
+    grid.style.setProperty(
+        "overflow-y",
+        "hidden",
+        "important"
+    );
+
+    grid.style.setProperty(
+        "width",
+        "100%",
+        "important"
+    );
+
+    grid.style.setProperty(
+        "padding",
+        "2px 0 10px",
+        "important"
+    );
 
 
-        const body =
-            card.querySelector(
-                ".austa-v22-video-body"
-            );
+    /*
+     * Hər REAL Supabase videosu üçün
+     * sıfırdan HOME kartı yarat.
+     */
+
+    homeItems.forEach(function(item){
+
+        const viewerIndex =
+            realItems.indexOf(item);
 
 
-        if(
-            !thumb ||
-            !body
-        ){
-            return;
-        }
+        const card =
+            document.createElement("article");
 
 
-        /*
-         * REAL LISTING məlumatını karta bağla.
-         */
+        card.className =
+            "austa-v22-video-card austa-v155-real-video-card";
+
 
         card.dataset.austaRealVideo =
             "1";
 
         card.dataset.austaListingId =
-            item.listingId;
+            item.listingId || "";
+
+        card.dataset.listingId =
+            item.listingId || "";
 
         card.dataset.austaViewerIndex =
             String(viewerIndex);
 
+        card.dataset.austaV136Type =
+            item.type === "rent"
+                ? "rent"
+                : "car";
+
 
         /*
-         * Köhnə demo background şəklini sil.
+         * FINAL RAZMER
+         * 215 × 380
          */
 
-        thumb.style.backgroundImage =
-            "none";
+        card.style.cssText =
+            "position:relative !important;" +
+            "display:block !important;" +
+            "flex:0 0 215px !important;" +
+            "width:215px !important;" +
+            "min-width:215px !important;" +
+            "max-width:215px !important;" +
+            "height:380px !important;" +
+            "min-height:380px !important;" +
+            "max-height:380px !important;" +
+            "padding:0 !important;" +
+            "margin:0 !important;" +
+            "overflow:hidden !important;" +
+            "border-radius:16px !important;" +
+            "background:#000 !important;" +
+            "box-sizing:border-box !important;" +
+            "cursor:pointer !important;";
 
 
         /*
-         * Köhnə real preview varsa sil.
+         * MEDIA SAHƏSİ
          */
 
-        thumb
-            .querySelectorAll(
-                ".austa-v150-home-real-video"
-            )
-            .forEach(
-                element =>
-                    element.remove()
-            );
+        const thumb =
+            document.createElement("div");
+
+
+        thumb.className =
+            "austa-v22-video-thumb";
+
+
+        thumb.style.cssText =
+            "position:absolute !important;" +
+            "top:1px !important;" +
+            "right:1px !important;" +
+            "bottom:1px !important;" +
+            "left:1px !important;" +
+            "width:213px !important;" +
+            "height:378px !important;" +
+            "min-height:378px !important;" +
+            "max-height:378px !important;" +
+            "margin:0 !important;" +
+            "overflow:hidden !important;" +
+            "border-radius:15px !important;" +
+            "background:#000 !important;";
 
 
         /*
-         * REAL VIDEO
+         * REAL SUPABASE VIDEO
          */
 
         const video =
-            document.createElement(
-                "video"
-            );
+            document.createElement("video");
 
 
         video.className =
@@ -42137,26 +42230,14 @@ function renderRealVideosOnHome(){
             "width:100%;" +
             "height:100%;" +
             "object-fit:cover;" +
+            "object-position:center;" +
             "display:block;" +
             "pointer-events:none;" +
             "z-index:1;";
 
 
-        thumb.style.position =
-            "relative";
-
-
-        thumb.style.overflow =
-            "hidden";
-
-
-        thumb.prepend(
-            video
-        );
-
-
         /*
-         * İlk video frame-i göstər.
+         * İlk frame preview kimi görünsün.
          */
 
         video.addEventListener(
@@ -42196,185 +42277,178 @@ function renderRealVideosOnHome(){
         );
 
 
+        thumb.appendChild(video);
+
+
         /*
-         * Badge / play düyməsi videonun üstündə qalsın.
+         * VIDEO BADGE
          */
 
         const tag =
-            thumb.querySelector(
-                ".austa-v22-video-tag"
-            );
+            document.createElement("span");
 
 
-        const play =
-            thumb.querySelector(
-                ".austa-v22-video-play"
-            );
+        tag.className =
+            "austa-v22-video-tag";
 
 
-        if(tag){
-            tag.style.zIndex="3";
-        }
+        tag.textContent =
+            item.type === "rent"
+                ? "RENT A CAR"
+                : "AVTOMOBİL";
 
 
-        if(play){
-            play.style.zIndex="3";
-        }
+        tag.style.cssText =
+            "position:absolute;" +
+            "top:10px;" +
+            "left:10px;" +
+            "z-index:4;" +
+            "padding:5px 8px;" +
+            "border-radius:8px;" +
+            "background:rgba(0,0,0,.65);" +
+            "color:#fff;" +
+            "font-size:10px;" +
+            "font-weight:800;" +
+            "line-height:1;";
+
+
+        thumb.appendChild(tag);
 
 
         /*
-         * REAL title + price.
+         * PLAY İŞARƏSİ
          */
 
+        const play =
+            document.createElement("span");
+
+
+        play.className =
+            "austa-v22-video-play";
+
+
+        play.textContent =
+            "▶";
+
+
+        play.style.cssText =
+            "position:absolute;" +
+            "top:50%;" +
+            "left:50%;" +
+            "transform:translate(-50%,-50%);" +
+            "z-index:4;" +
+            "display:flex;" +
+            "align-items:center;" +
+            "justify-content:center;" +
+            "width:48px;" +
+            "height:48px;" +
+            "border-radius:50%;" +
+            "background:rgba(0,0,0,.55);" +
+            "color:#fff;" +
+            "font-size:20px;" +
+            "pointer-events:none;";
+
+
+        thumb.appendChild(play);
+
+
+        /*
+         * ALT GRADIENT + TITLE + PRICE
+         */
+
+        const body =
+            document.createElement("div");
+
+
+        body.className =
+            "austa-v22-video-body";
+
+
+        body.style.cssText =
+            "position:absolute !important;" +
+            "left:0 !important;" +
+            "right:0 !important;" +
+            "bottom:0 !important;" +
+            "z-index:5 !important;" +
+            "display:flex !important;" +
+            "flex-direction:column !important;" +
+            "justify-content:flex-end !important;" +
+            "gap:4px !important;" +
+            "min-height:105px !important;" +
+            "padding:38px 12px 12px !important;" +
+            "margin:0 !important;" +
+            "box-sizing:border-box !important;" +
+            "background:linear-gradient(" +
+                "to bottom," +
+                "rgba(0,0,0,0) 0%," +
+                "rgba(0,0,0,.18) 25%," +
+                "rgba(0,0,0,.88) 100%" +
+            ") !important;" +
+            "color:#fff !important;" +
+            "pointer-events:none !important;";
+
+
         const title =
-            body.querySelector(
-                "b"
-            );
+            document.createElement("b");
+
+
+        title.textContent =
+            item.title || "";
+
+
+        title.style.cssText =
+            "display:block;" +
+            "margin:0;" +
+            "color:#fff;" +
+            "font-size:14px;" +
+            "font-weight:700;" +
+            "line-height:1.25;" +
+            "white-space:nowrap;" +
+            "overflow:hidden;" +
+            "text-overflow:ellipsis;";
 
 
         const price =
-            body.querySelector(
-                "strong"
-            );
+            document.createElement("strong");
 
 
-        const description =
-            body.querySelector(
-                "span"
-            );
+        price.textContent =
+            item.price || "";
 
 
-        if(title){
-
-            title.textContent =
-                item.title || "";
-
-        }
-
-
-        if(price){
-
-            price.textContent =
-                item.price || "";
-
-        }
+        price.style.cssText =
+            "display:block;" +
+            "margin:0;" +
+            "color:#fff;" +
+            "font-size:16px;" +
+            "font-weight:800;" +
+            "line-height:1.2;";
 
 
-        /*
-         * HOME-da köhnə
-         * "Video elan • A-USTA"
-         * yazısını göstərmirik.
-         */
+        body.appendChild(title);
 
-        if(description){
-
-            description.style.display =
-                "none";
-
-        }
+        body.appendChild(price);
 
 
-        /*
-         * HOME social düymələri göstərilmir.
-         * Viewer daxilində qalır.
-         */
+        card.appendChild(thumb);
 
-        card
-            .querySelectorAll(
-                ".austa-v34-video-actions," +
-                ".austa-v-final-video-actions"
-            )
-            .forEach(
-                actions => {
+        card.appendChild(body);
 
-                    actions.style.display =
-                        "none";
-
-                }
-            );
-
-
-        /*
-         * Kart görünən qalsın.
-         */
-
-        card.style.setProperty(
-            "display",
-            "flex",
-            "important"
-        );
+        grid.appendChild(card);
 
 
         console.log(
-            "A-USTA V150 HOME REAL VIDEO:",
+            "A-USTA V155 REAL HOME VIDEO:",
             item.listingId,
             item.title
         );
 
-    }
+    });
 
 
-
-    /*
-     * 3 AVTOMOBİL
-     */
-
-    carCards.forEach(
-        (card,index)=>{
-
-            const item =
-                realCars[index];
-
-            if(!item){
-                return;
-            }
-
-
-            const viewerIndex =
-                realItems.indexOf(
-                    item
-                );
-
-
-            applyItem(
-                card,
-                item,
-                viewerIndex
-            );
-
-        }
-    );
-
-
-
-    /*
-     * 3 RENT A CAR
-     */
-
-    rentCards.forEach(
-        (card,index)=>{
-
-            const item =
-                realRents[index];
-
-            if(!item){
-                return;
-            }
-
-
-            const viewerIndex =
-                realItems.indexOf(
-                    item
-                );
-
-
-            applyItem(
-                card,
-                item,
-                viewerIndex
-            );
-
-        }
+    console.log(
+        "A-USTA V155 REAL VIDEO COUNT:",
+        homeItems.length
     );
 
 }
