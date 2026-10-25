@@ -10758,19 +10758,968 @@ function initAccount(){
  /* Remove account section from normal page flow and hide all role panels until selected. */
  account.querySelectorAll('.austa-tool-panel').forEach(p=>{if(p.id!=='austaAccountVehicleSection'&&p.id!=='austaAccountProviderSection') p.dataset.v38='1';});
  setRole(localStorage.getItem('austa-account-role')||'customer');
- function renderListings(){
-  const box=$('#austaMyListings'); if(!box)return; let arr=[];try{arr=JSON.parse(localStorage.getItem('austa-user-listings')||'[]')}catch(e){}
-  if(!arr.length){box.innerHTML='<div class="austa-mini-note">Hələ elan yoxdur.</div>';return;}
-  box.innerHTML=arr.map((x,i)=>'<div class="austa-listing-card"><div><b>'+esc(x.title||x.type||'Elan')+'</b><small>'+esc(x.type||'')+' • '+esc(x.location||'')+'<br>VIP: '+(x.vip?'Aktiv':'Xeyr')+'</small></div><div class="austa-listing-actions"><button type="button" data-vip-index="'+i+'" class="vip">↑ İrəli çək</button><button type="button" data-remove-index="'+i+'">Sil</button></div></div>').join('');
- }
- renderListings();
- $('#austaAccountAddListing')?.addEventListener('click',()=>{const o=document.createElement('div');o.className='austa-account-overlay';o.style.cssText='position:fixed;inset:0;z-index:2000010;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px';o.innerHTML='<div style="width:min(560px,96vw);background:#071725;border:1px solid #1b628e;border-radius:15px;padding:18px;color:#fff"><h3>＋ Elan yerləşdir</h3><div class="austa-store-grid"><input id="v38ListTitle" placeholder="Elanın adı"><select id="v38ListType"><option>Avtomobil satışı</option><option>Avtomobil icarəsi</option><option>Ehtiyat hissələri elanı</option><option>Aksesuar elanı</option><option>Xüsusi texnika elanı</option><option>Moto / Moped / Skuter elanı</option><option>Qeydiyyat nömrəsi elanı</option><option>Avtobus elanı</option><option>Qoşqu / Treyler elanı</option><option>Su nəqliyyatı elanı</option><option>Avtoservis / Servis mərkəzi elanı</option></select><input id="v38ListLocation" placeholder="Şəhər / rayon"><textarea id="v38ListNote" class="full" placeholder="Qısa məlumat"></textarea></div><button class="btn btn-primary" id="v38ListSave">Elanı yadda saxla</button> <button class="btn" id="v38ListClose">Bağla</button></div>';document.body.appendChild(o);o.querySelector('#v38ListClose').onclick=()=>o.remove();o.querySelector('#v38ListSave').onclick=()=>{const x={id:'LIST-'+Date.now(),title:$('#v38ListTitle').value.trim(),type:$('#v38ListType').value,location:$('#v38ListLocation').value.trim(),note:$('#v38ListNote').value.trim(),createdAt:new Date().toISOString(),vip:false};if(!x.title){alert('Elanın adını daxil edin.');return;}let arr=JSON.parse(localStorage.getItem('austa-user-listings')||'[]');arr.unshift(x);localStorage.setItem('austa-user-listings',JSON.stringify(arr));o.remove();renderListings();};});
- $('#austaMyListings')?.addEventListener('click',e=>{const vip=e.target.closest('[data-vip-index]'),rm=e.target.closest('[data-remove-index]');let arr=JSON.parse(localStorage.getItem('austa-user-listings')||'[]');if(vip){const i=+vip.dataset.vipIndex;openVip(arr[i],i,arr);}if(rm){arr.splice(+rm.dataset.removeIndex,1);localStorage.setItem('austa-user-listings',JSON.stringify(arr));renderListings();}});
- function openVip(item,index,arr){const o=document.createElement('div');o.className='austa-account-overlay';o.style.cssText='position:fixed;inset:0;z-index:2000010;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px';o.innerHTML='<div style="width:min(500px,96vw);background:#071725;border:1px solid #1b628e;border-radius:15px;padding:18px;color:#fff"><h3>📈 Elanı irəli çək</h3><p style="color:#9eb3c5">'+esc(item.title)+'</p><div class="austa-vip-form"><label>Başlama tarixi<input id="v38VipDate" type="date"></label><label>Başlama saatı<input id="v38VipTime" type="time" step="1"></label><label class="full">Müddət<select id="v38VipDuration"><option>3 saat</option><option>8 saat</option><option>15 saat</option><option>30 saat</option></select></label><button class="btn btn-primary" id="v38VipSave">↑ İrəli çək</button></div><button class="btn" id="v38VipClose" style="margin-top:8px">Bağla</button></div>';document.body.appendChild(o);const now=new Date();o.querySelector('#v38VipDate').value=now.toISOString().slice(0,10);o.querySelector('#v38VipTime').value=now.toTimeString().slice(0,8);o.querySelector('#v38VipClose').onclick=()=>o.remove();o.querySelector('#v38VipSave').onclick=()=>{const start=new Date(o.querySelector('#v38VipDate').value+'T'+o.querySelector('#v38VipTime').value);const dur=parseInt(o.querySelector('#v38VipDuration').value)||3;item.vip=true;item.vipStart=start.toISOString();item.vipDurationHours=dur;item.vipEnd=new Date(start.getTime()+dur*3600000).toISOString();item.vipOrder=Date.now();arr[index]=item;localStorage.setItem('austa-user-listings',JSON.stringify(arr));o.remove();renderListings();};}
- /* Precise video ratio */
- function fixVideos(){const g=$('#austaV22VideoGrid');if(!g)return;g.style.setProperty('grid-template-columns','repeat(3,minmax(0,1fr))','important');$$('#austaV22VideoGrid .austa-v22-video-card').forEach(c=>{c.style.setProperty('aspect-ratio','16/2','important');c.style.setProperty('height','auto','important')});$$('#austaV22VideoGrid .austa-v22-video-thumb').forEach(c=>{c.style.setProperty('aspect-ratio','16/2','important');c.style.setProperty('height','auto','important')});}
- fixVideos();setTimeout(fixVideos,300);setTimeout(fixVideos,1000);
+/* ============================================================
+   A-USTA V156-B
+   REAL "MƏNİM ELANLARIM" + LISTING MANAGEMENT
+   Supabase source of truth
+   ============================================================ */
+
+const AUSTA_MY_LISTING_TABLES = [
+  {
+    table: 'vehicle_listings',
+    source: 'vehicle',
+    label: 'Avtomobil',
+    title: x => [
+      x.brand,
+      x.model,
+      x.year
+    ].filter(Boolean).join(' ') || 'Avtomobil elanı',
+    price: x => {
+      if (x.listing_type === 'rent' && x.daily_price != null) {
+        return x.daily_price + ' AZN / gün';
+      }
+      if (x.price != null) {
+        return x.price + ' AZN';
+      }
+      return '';
+    }
+  },
+
+  {
+    table: 'marketplace_listings',
+    source: 'marketplace',
+    label: 'Elan',
+    title: x =>
+      x.title ||
+      [x.brand, x.model].filter(Boolean).join(' ') ||
+      'Elan',
+    price: x =>
+      x.price != null
+        ? x.price + ' ' + (x.currency || 'AZN')
+        : ''
+  },
+
+  {
+    table: 'service_provider_listings',
+    source: 'provider',
+    label: 'Xidmət',
+    title: x =>
+      x.title ||
+      x.name ||
+      x.specialty ||
+      'Xidmət elanı',
+    price: () => ''
+  },
+
+  {
+    table: 'auto_dealer_listings',
+    source: 'dealer',
+    label: 'Avtosalon',
+    title: x =>
+      x.dealer_name ||
+      'Avtosalon',
+    price: () => ''
+  }
+];
+
+
+/* ------------------------------------------------------------
+   Helpers
+   ------------------------------------------------------------ */
+
+function austaMyEsc(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
+
+
+function austaMyStatusLabel(status) {
+  const s = String(status || '').toLowerCase();
+
+  if (s === 'active') return 'Aktiv';
+  if (s === 'inactive') return 'Deaktiv';
+  if (s === 'draft') return 'Qaralama';
+  if (s === 'pending') return 'Yoxlanılır';
+  if (s === 'rejected') return 'Rədd edilib';
+  if (s === 'sold') return 'Satılıb';
+  if (s === 'rented') return 'İcarədədir';
+
+  return status || 'Naməlum';
+}
+
+
+function austaMyPromotionLabel(item) {
+  const type = String(
+    item?.promotion_type || 'standard'
+  ).toLowerCase();
+
+  const until = item?.promotion_until
+    ? new Date(item.promotion_until)
+    : null;
+
+  const expired =
+    until &&
+    !Number.isNaN(until.getTime()) &&
+    until.getTime() <= Date.now();
+
+  if (expired) {
+    return 'Standart';
+  }
+
+  if (type === 'premium') return 'Premium';
+  if (type === 'vip') return 'VIP';
+  if (type === 'boost') return 'İrəli çək';
+
+  return 'Standart';
+}
+
+
+function austaMyLocation(item) {
+  return [
+    item?.region,
+    item?.district
+  ].filter(Boolean).join(' / ');
+}
+
+
+function austaMyFindConfig(table) {
+  return AUSTA_MY_LISTING_TABLES.find(
+    x => x.table === table
+  ) || null;
+}
+
+
+/* ------------------------------------------------------------
+   Real authenticated user
+   ------------------------------------------------------------ */
+
+async function austaMyGetUser() {
+  const sb = window.AUSTA_SUPABASE;
+
+  if (!sb?.auth) {
+    throw new Error(
+      'Supabase bağlantısı tapılmadı.'
+    );
+  }
+
+  const {
+    data,
+    error
+  } = await sb.auth.getUser();
+
+  if (error) throw error;
+
+  return data?.user || null;
+}
+
+
+/* ------------------------------------------------------------
+   Read all 4 listing tables
+   ------------------------------------------------------------ */
+
+async function austaMyLoadListings() {
+  const box = $('#austaMyListings');
+
+  if (!box) return;
+
+  box.innerHTML =
+    '<div class="austa-mini-note">' +
+    'Elanlar yüklənir...' +
+    '</div>';
+
+  try {
+    const user = await austaMyGetUser();
+
+    if (!user) {
+      box.innerHTML =
+        '<div class="austa-mini-note">' +
+        'Elanlarınızı görmək üçün hesabınıza daxil olun.' +
+        '</div>';
+
+      return;
+    }
+
+    const sb = window.AUSTA_SUPABASE;
+
+    const results = await Promise.all(
+      AUSTA_MY_LISTING_TABLES.map(
+        async config => {
+          const {
+            data,
+            error
+          } = await sb
+            .from(config.table)
+            .select('*')
+            .eq('owner_id', user.id)
+            .order('created_at', {
+              ascending: false
+            });
+
+          if (error) {
+            console.error(
+              '[A-USTA V156-B]',
+              config.table,
+              error
+            );
+
+            return [];
+          }
+
+          return (data || []).map(item => ({
+            ...item,
+
+            __austa_table: config.table,
+            __austa_source: config.source,
+            __austa_label: config.label,
+            __austa_title: config.title(item),
+            __austa_price: config.price(item)
+          }));
+        }
+      )
+    );
+
+    const listings = results
+      .flat()
+      .sort((a, b) => {
+        const ad = new Date(
+          a.created_at || 0
+        ).getTime();
+
+        const bd = new Date(
+          b.created_at || 0
+        ).getTime();
+
+        return bd - ad;
+      });
+
+    window.AUSTA_MY_REAL_LISTINGS =
+      listings;
+
+    austaMyRenderListings(listings);
+
+  } catch (error) {
+    console.error(
+      '[A-USTA V156-B] Mənim elanlarım:',
+      error
+    );
+
+    box.innerHTML =
+      '<div class="austa-mini-note">' +
+      'Elanları yükləmək mümkün olmadı.' +
+      '</div>';
+  }
+}
+
+
+/* ------------------------------------------------------------
+   Render
+   ------------------------------------------------------------ */
+
+function austaMyRenderListings(listings) {
+  const box = $('#austaMyListings');
+
+  if (!box) return;
+
+  if (!Array.isArray(listings) ||
+      !listings.length) {
+
+    box.innerHTML =
+      '<div class="austa-mini-note">' +
+      'Hələ real elanınız yoxdur.' +
+      '</div>';
+
+    return;
+  }
+
+  box.innerHTML = listings.map(item => {
+
+    const title =
+      item.__austa_title ||
+      'Elan';
+
+    const location =
+      austaMyLocation(item);
+
+    const price =
+      item.__austa_price || '';
+
+    const status =
+      austaMyStatusLabel(item.status);
+
+    const promotion =
+      austaMyPromotionLabel(item);
+
+    const isActive =
+      String(item.status || '')
+        .toLowerCase() === 'active';
+
+    return `
+      <div
+        class="austa-listing-card austa-v156-my-listing"
+        data-austa-my-id="${austaMyEsc(item.id)}"
+        data-austa-my-table="${austaMyEsc(item.__austa_table)}"
+      >
+
+        <div class="austa-v156-my-info">
+
+          <b>
+            ${austaMyEsc(title)}
+          </b>
+
+          <small>
+            ${austaMyEsc(item.__austa_label)}
+
+            ${location
+              ? ' • ' + austaMyEsc(location)
+              : ''
+            }
+
+            ${price
+              ? '<br><strong>' +
+                austaMyEsc(price) +
+                '</strong>'
+              : ''
+            }
+
+            <br>
+
+            Status:
+            <strong>
+              ${austaMyEsc(status)}
+            </strong>
+
+            &nbsp;•&nbsp;
+
+            Paket:
+            <strong>
+              ${austaMyEsc(promotion)}
+            </strong>
+
+          </small>
+
+        </div>
+
+
+        <div class="austa-listing-actions">
+
+          <button
+            type="button"
+            data-austa-my-view
+          >
+            Bax
+          </button>
+
+          <button
+            type="button"
+            data-austa-my-edit
+          >
+            Düzəlt
+          </button>
+
+          <button
+            type="button"
+            data-austa-my-toggle
+          >
+            ${isActive
+              ? 'Deaktiv et'
+              : 'Aktiv et'
+            }
+          </button>
+
+          <button
+            type="button"
+            class="vip"
+            data-austa-my-boost
+          >
+            ↑ İrəli çək
+          </button>
+
+          <button
+            type="button"
+            class="vip"
+            data-austa-my-vip
+          >
+            VIP
+          </button>
+
+          <button
+            type="button"
+            class="vip"
+            data-austa-my-premium
+          >
+            Premium
+          </button>
+
+          <button
+            type="button"
+            data-austa-my-delete
+          >
+            Sil
+          </button>
+
+        </div>
+
+      </div>
+    `;
+  }).join('');
+}
+
+
+/* ------------------------------------------------------------
+   Find current listing from loaded cache
+   ------------------------------------------------------------ */
+
+function austaMyGetItem(card) {
+  if (!card) return null;
+
+  const id =
+    card.dataset.austaMyId;
+
+  const table =
+    card.dataset.austaMyTable;
+
+  return (
+    window.AUSTA_MY_REAL_LISTINGS || []
+  ).find(item =>
+    String(item.id) === String(id) &&
+    item.__austa_table === table
+  ) || null;
+}
+
+
+/* ------------------------------------------------------------
+   VIEW
+   Reuse existing A-USTA real listing/detail system
+   ------------------------------------------------------------ */
+
+async function austaMyView(item) {
+  if (!item) return;
+
+  /*
+   * Prefer the existing unified listing APIs.
+   * We do not create a second listing detail system.
+   */
+
+  if (
+    window.AUSTA_LISTING_V153?.open
+  ) {
+    try {
+      await window.AUSTA_LISTING_V153.open(
+        item.id,
+        item.__austa_source
+      );
+
+      return;
+    } catch (e) {
+      console.warn(
+        '[A-USTA V156-B] V153 open:',
+        e
+      );
+    }
+  }
+
+  if (
+    window.AUSTA_UNIFIED_FLOW?.open
+  ) {
+    try {
+      window.AUSTA_UNIFIED_FLOW.open(
+        'listing',
+        item.__austa_title || item.id
+      );
+
+      return;
+    } catch (e) {
+      console.warn(
+        '[A-USTA V156-B] unified open:',
+        e
+      );
+    }
+  }
+
+  /*
+   * Existing cards/details can also react
+   * to this event without coupling this
+   * account module to their implementation.
+   */
+
+  window.dispatchEvent(
+    new CustomEvent(
+      'austa:v156:view-listing',
+      {
+        detail: {
+          id: item.id,
+          table: item.__austa_table,
+          source: item.__austa_source
+        }
+      }
+    )
+  );
+}
+
+
+/* ------------------------------------------------------------
+   EDIT
+   Use existing owner edit system when available.
+   ------------------------------------------------------------ */
+
+async function austaMyEdit(item) {
+  if (!item) return;
+
+  const existing = document.querySelector(
+    '[data-austa-owner-edit]' +
+    '[data-listing-id="' +
+    CSS.escape(String(item.id)) +
+    '"]'
+  );
+
+  if (existing) {
+    existing.click();
+    return;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent(
+      'austa:v156:edit-listing',
+      {
+        detail: {
+          id: item.id,
+          table: item.__austa_table,
+          source: item.__austa_source,
+          item
+        }
+      }
+    )
+  );
+
+  /*
+   * If V153 exposes an edit API,
+   * use it without duplicating the form.
+   */
+
+  if (
+    window.AUSTA_LISTING_V153?.edit
+  ) {
+    try {
+      await window.AUSTA_LISTING_V153.edit(
+        item.id,
+        item.__austa_source
+      );
+
+      return;
+    } catch (e) {
+      console.warn(
+        '[A-USTA V156-B] edit:',
+        e
+      );
+    }
+  }
+
+  alert(
+    'Elanın redaktə forması elan səhifəsindən açılır. ' +
+    'Əvvəlcə "Bax" düyməsi ilə elanı açın.'
+  );
+}
+
+
+/* ------------------------------------------------------------
+   ACTIVE / INACTIVE
+   ------------------------------------------------------------ */
+
+async function austaMyToggle(item) {
+  if (!item) return;
+
+  try {
+    const user =
+      await austaMyGetUser();
+
+    if (!user) {
+      alert(
+        'Əvvəlcə hesabınıza daxil olun.'
+      );
+      return;
+    }
+
+    const current =
+      String(item.status || '')
+        .toLowerCase();
+
+    const next =
+      current === 'active'
+        ? 'inactive'
+        : 'active';
+
+    const actionText =
+      next === 'active'
+        ? 'aktiv etmək'
+        : 'deaktiv etmək';
+
+    if (
+      !confirm(
+        '"' +
+        (item.__austa_title || 'Elan') +
+        '" elanını ' +
+        actionText +
+        ' istəyirsiniz?'
+      )
+    ) {
+      return;
+    }
+
+    const {
+      error
+    } = await window.AUSTA_SUPABASE
+      .from(item.__austa_table)
+      .update({
+        status: next,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', item.id)
+      .eq('owner_id', user.id);
+
+    if (error) throw error;
+
+    await austaMyLoadListings();
+
+  } catch (error) {
+    console.error(
+      '[A-USTA V156-B] status:',
+      error
+    );
+
+    alert(
+      'Elanın statusunu dəyişmək mümkün olmadı.'
+    );
+  }
+}
+
+
+/* ------------------------------------------------------------
+   DELETE
+   ------------------------------------------------------------ */
+
+async function austaMyDelete(item) {
+  if (!item) return;
+
+  const ok = confirm(
+    '"' +
+    (item.__austa_title || 'Elan') +
+    '" elanını silmək istəyirsiniz?\n\n' +
+    'Bu əməliyyatı geri qaytarmaq mümkün olmaya bilər.'
+  );
+
+  if (!ok) return;
+
+  try {
+    const user =
+      await austaMyGetUser();
+
+    if (!user) {
+      alert(
+        'Əvvəlcə hesabınıza daxil olun.'
+      );
+      return;
+    }
+
+    const {
+      error
+    } = await window.AUSTA_SUPABASE
+      .from(item.__austa_table)
+      .delete()
+      .eq('id', item.id)
+      .eq('owner_id', user.id);
+
+    if (error) throw error;
+
+    await austaMyLoadListings();
+
+  } catch (error) {
+    console.error(
+      '[A-USTA V156-B] delete:',
+      error
+    );
+
+    alert(
+      'Elanı silmək mümkün olmadı.'
+    );
+  }
+}
+
+
+/* ------------------------------------------------------------
+   PROMOTION ENTRY POINT
+   IMPORTANT:
+   NO DIRECT DB PROMOTION UPDATE.
+   V156 SQL protects these fields.
+   ------------------------------------------------------------ */
+
+function austaMyOpenPackage(item, packageType) {
+  if (!item) return;
+
+  const packageName =
+    packageType === 'premium'
+      ? 'Premium'
+      : packageType === 'vip'
+        ? 'VIP'
+        : 'İrəli çək';
+
+  window.dispatchEvent(
+    new CustomEvent(
+      'austa:v156:promotion',
+      {
+        detail: {
+          id: item.id,
+          table: item.__austa_table,
+          source: item.__austa_source,
+          packageType,
+          item
+        }
+      }
+    )
+  );
+
+  /*
+   * V156-C will replace this temporary
+   * message with the real package UI.
+   *
+   * We deliberately DO NOT run:
+   * update({ promotion_type: ... })
+   *
+   * Promotion activation must happen
+   * only after verified payment/backend.
+   */
+
+  alert(
+    packageName +
+    ' paketi seçildi.\n\n' +
+    'Növbəti mərhələdə paket və ödəniş pəncərəsi açılacaq. ' +
+    'Paket ödəniş təsdiqi olmadan aktivləşdirilmir.'
+  );
+}
+
+
+/* ------------------------------------------------------------
+   ACCOUNT LIST EVENT DELEGATION
+   ------------------------------------------------------------ */
+
+$('#austaMyListings')?.addEventListener(
+  'click',
+  async event => {
+
+    const card =
+      event.target.closest(
+        '[data-austa-my-id]'
+      );
+
+    if (!card) return;
+
+    const item =
+      austaMyGetItem(card);
+
+    if (!item) return;
+
+
+    if (
+      event.target.closest(
+        '[data-austa-my-view]'
+      )
+    ) {
+      await austaMyView(item);
+      return;
+    }
+
+
+    if (
+      event.target.closest(
+        '[data-austa-my-edit]'
+      )
+    ) {
+      await austaMyEdit(item);
+      return;
+    }
+
+
+    if (
+      event.target.closest(
+        '[data-austa-my-toggle]'
+      )
+    ) {
+      await austaMyToggle(item);
+      return;
+    }
+
+
+    if (
+      event.target.closest(
+        '[data-austa-my-delete]'
+      )
+    ) {
+      await austaMyDelete(item);
+      return;
+    }
+
+
+    if (
+      event.target.closest(
+        '[data-austa-my-boost]'
+      )
+    ) {
+      austaMyOpenPackage(
+        item,
+        'boost'
+      );
+
+      return;
+    }
+
+
+    if (
+      event.target.closest(
+        '[data-austa-my-vip]'
+      )
+    ) {
+      austaMyOpenPackage(
+        item,
+        'vip'
+      );
+
+      return;
+    }
+
+
+    if (
+      event.target.closest(
+        '[data-austa-my-premium]'
+      )
+    ) {
+      austaMyOpenPackage(
+        item,
+        'premium'
+      );
+
+      return;
+    }
+  }
+);
+
+
+/* ------------------------------------------------------------
+   + ELAN
+   Do NOT create fake localStorage listings.
+   Route to existing REAL listing flow.
+   ------------------------------------------------------------ */
+
+$('#austaAccountAddListing')?.addEventListener(
+  'click',
+  event => {
+
+    event.preventDefault();
+
+    /*
+     * Try existing real add-listing buttons first.
+     */
+
+    const selectors = [
+      '[data-austa-add-listing]',
+      '[data-open-listing-create]',
+      '#austaAddListingBtn',
+      '#addListingBtn',
+      '[data-v153-add-listing]'
+    ];
+
+    for (const selector of selectors) {
+      const button =
+        document.querySelector(selector);
+
+      if (
+        button &&
+        button !== event.currentTarget
+      ) {
+        button.click();
+        return;
+      }
+    }
+
+    /*
+     * Existing global APIs, if exposed.
+     */
+
+    if (
+      window.AUSTA_LISTING_V153?.create
+    ) {
+      window.AUSTA_LISTING_V153.create();
+      return;
+    }
+
+    if (
+      window.AUSTA_UNIFIED_FLOW?.open
+    ) {
+      window.AUSTA_UNIFIED_FLOW.open(
+        'listing-create',
+        'Elan yerləşdir'
+      );
+
+      return;
+    }
+
+    /*
+     * Last safe fallback:
+     * notify existing application modules.
+     */
+
+    window.dispatchEvent(
+      new CustomEvent(
+        'austa:v156:add-listing'
+      )
+    );
+
+    alert(
+      'Real elan yerləşdirmə bölməsini açmaq üçün ' +
+      'əsas səhifədəki "+ Elan" düyməsindən istifadə edin.'
+    );
+  }
+);
+
+
+/* ------------------------------------------------------------
+   AUTH STATE
+   Refresh "Mənim elanlarım" after login/logout.
+   ------------------------------------------------------------ */
+
+if (
+  window.AUSTA_SUPABASE?.auth
+) {
+  window.AUSTA_SUPABASE.auth.onAuthStateChange(
+    () => {
+      setTimeout(
+        austaMyLoadListings,
+        0
+      );
+    }
+  );
+}
+
+
+/* Initial real load */
+
+austaMyLoadListings();
+
+
+/* Public refresh API */
+
+window.AUSTA_MY_LISTINGS_V156 = {
+  refresh: austaMyLoadListings,
+
+  getAll() {
+    return [
+      ...(window.AUSTA_MY_REAL_LISTINGS || [])
+    ];
+  }
+};
+
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initAccount);else initAccount();
 })();
 </script>
