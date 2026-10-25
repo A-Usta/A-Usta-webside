@@ -14980,6 +14980,74 @@ window.addEventListener('resize',()=>{const g=document.getElementById('austaV22V
 @media(max-width:800px){#austaV22VideoGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 @media(max-width:520px){#austaV22VideoGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 
+/* =========================================================
+   V155 REAL SUPABASE HOME VIDEO — FINAL SIZE OVERRIDE
+   ========================================================= */
+
+#austaV22VideoGrid:has(.austa-v155-real-video-card){
+    display:flex!important;
+    grid-template-columns:none!important;
+    grid-auto-columns:unset!important;
+    flex-wrap:nowrap!important;
+    justify-content:flex-start!important;
+    align-items:flex-start!important;
+    gap:14px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+}
+
+#austaV22VideoGrid>.austa-v155-real-video-card{
+    display:block!important;
+    position:relative!important;
+
+    flex:0 0 215px!important;
+    flex-grow:0!important;
+    flex-shrink:0!important;
+    flex-basis:215px!important;
+
+    width:215px!important;
+    min-width:215px!important;
+    max-width:215px!important;
+
+    height:380px!important;
+    min-height:380px!important;
+    max-height:380px!important;
+
+    aspect-ratio:auto!important;
+    grid-column:auto!important;
+
+    padding:0!important;
+    margin:0!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+}
+
+#austaV22VideoGrid>.austa-v155-real-video-card>.austa-v22-video-thumb{
+    position:absolute!important;
+    inset:1px!important;
+
+    width:213px!important;
+    min-width:213px!important;
+    max-width:213px!important;
+
+    height:378px!important;
+    min-height:378px!important;
+    max-height:378px!important;
+
+    aspect-ratio:auto!important;
+    margin:0!important;
+    overflow:hidden!important;
+}
+
+#austaV22VideoGrid>.austa-v155-real-video-card>.austa-v22-video-thumb>video{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    object-fit:cover!important;
+    object-position:center!important;
+}
+  
 /* V30: direct working Damas/Doblo cargo order */
 #austaCargoDirectOverlay{position:fixed;inset:0;z-index:100001;background:rgba(0,5,10,.82);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px}
 #austaCargoDirectOverlay.open{display:flex}
