@@ -17520,7 +17520,44 @@ async function loadAdminKyc() {
  function providerRegister(){return `<article class="austa-v39-card full"><h4>🛠 Usta qeydiyyatı</h4><div class="austa-v39-form"><label>Ad, soyad<input id="v39pName" placeholder="Ad Soyad"></label><label>Telefon<input id="v39pPhone" placeholder="Telefon"></label><label>Gmail<input id="v39pMail" type="email" placeholder="Gmail"></label><label>Şəxsiyyət vəsiqəsi seriyası<input id="v39pId" placeholder="Seriya"></label><label>FIN<input id="v39pFin" placeholder="FIN"></label><label class="full">Şəxsiyyət vəsiqəsinin şəkli<input id="v39pIdPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small style="color:#7f98a9">Vəsiqənin ön tərəfinin aydın fotosu. Demo versiyada fayl serverə göndərilmir.</small></label><label>İş təcrübəsi<input id="v39pExp" placeholder="Məsələn: 8 il"></label><label>Sektor / xidmət sahəsi<input id="v39pSector" placeholder="Mühərrik, elektrik, kuzov..." ></label><label>Region / şəhər<input id="v39pRegion" placeholder="Bakı, Gəncə və s."></label><label class="full">İş ünvanı<input id="v39pAddr" placeholder="Servis / iş məkanı"></label></div><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="provider-save">Usta qeydiyyatını göndər</button></div><div class="austa-v39-note">KYC məlumatları demo frontend-də localStorage-a yazılmır. İstehsalatda təhlükəsiz server/KYC xidməti tələb olunur.</div></article>`}
  function storeRegister(){return `<article class="austa-v39-card full"><h4>🏪 Mağaza qeydiyyatı</h4><div class="austa-v39-form"><label>Mağaza adı<input id="v39sName" placeholder="Mağaza adı"></label><label>Telefon<input id="v39sPhone" placeholder="Telefon"></label><label>Gmail<input id="v39sMail" type="email" placeholder="Gmail"></label><label>Region<input id="v39sRegion" placeholder="Şəhər / rayon"></label><label class="full">Ünvan<input id="v39sAddr" placeholder="Tam ünvan"></label><label class="full">Kateqoriyalar<input id="v39sCats" placeholder="Ehtiyat hissələri, aksesuarlar..."></label></div><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="store-save">Mağazanı qeydiyyatdan keçir</button></div></article>`}
  function partnerRegister(){return `<article class="austa-v39-card full"><h4>🤝 Tərəfdaş qeydiyyatı</h4><div class="austa-v39-form"><label>Şirkət / tərəfdaş adı<input id="v39tName" placeholder="Ad"></label><label>Telefon<input id="v39tPhone" placeholder="Telefon"></label><label>Gmail<input id="v39tMail" type="email" placeholder="Gmail"></label><label>Region<input id="v39tRegion" placeholder="Şəhər / rayon"></label><label>Sektor<input id="v39tSector" placeholder="Logistika, servis, hissə və s."></label><label class="full">Ünvan<input id="v39tAddr" placeholder="Tam ünvan"></label></div><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="partner-save">Tərəfdaş qeydiyyatını göndər</button></div></article>`}
- function listingsPage(role){let arr=read('austa-user-listings',[]);return `<section class="austa-v39-page active"><button class="austa-v39-btn austa-v39-back" data-page-open="home">← Hesabın ana səhifəsi</button><h3>📋 Elanlarım</h3><p>Elanlar burada idarə olunur. <span class="austa-v39-free">Hər yeni elan üçün 1 ay ödənişsiz.</span> VIP / İrəli çək funksiyası bu səhifədə yoxdur; ayrıca təkrar blok yaradılmır.</p><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="new-listing">＋ Yeni elan yerləşdir</button></div><div class="austa-v39-list">${arr.length?arr.map((x,i)=>`<article class="austa-v39-listing"><div><h4>${esc(x.title||'Adsız elan')}</h4><p>${esc(x.type||'')} • ${esc(x.location||'')} • ${x.freeUntil&&new Date(x.freeUntil)>new Date()?'<span class="austa-v39-free">1 ay pulsuz aktivdir</span>':'Pulsuz müddət bitib'}</p><p class="austa-v39-small">Elan № ${esc(x.id||'')} • Reytinq: <span class="austa-v39-rating">${Number(x.rating||0).toFixed(1)} ★</span></p></div><button class="austa-v39-btn" data-remove-listing="${i}">Sil</button></article>`).join(''):'<div class="austa-v39-empty">Hələ elan yoxdur.</div>'}</div></section>`}
+function listingsPage(role) {
+  return `
+    <section class="austa-v39-page active">
+
+      <button
+        class="austa-v39-btn austa-v39-back"
+        data-page-open="home"
+      >
+        ← Hesabın ana səhifəsi
+      </button>
+
+      <h3>📋 Mənim elanlarım</h3>
+
+      <p>
+        Yerləşdirdiyiniz real elanları buradan idarə edə bilərsiniz.
+      </p>
+
+      <div class="austa-v39-actions">
+        <button
+          class="austa-v39-btn primary"
+          data-action="new-listing"
+        >
+          ＋ Yeni elan yerləşdir
+        </button>
+      </div>
+
+      <div
+        id="austaV39RealListingsHost"
+        class="austa-v39-list"
+      >
+        <div class="austa-v39-empty">
+          Elanlar yüklənir...
+        </div>
+      </div>
+
+    </section>
+  `;
+}
 function ordersPage(role) {
   const isProvider =
     role === 'provider' ||
@@ -17563,6 +17600,162 @@ function ordersPage(role) {
    const o=document.createElement('div');o.className='austa-account-overlay';o.style.cssText='position:fixed;inset:0;z-index:2100000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px';o.innerHTML=`<div style="width:min(650px,96vw);max-height:92vh;overflow:auto;background:#071725;border:1px solid #1b628e;border-radius:16px;padding:18px;color:#fff"><h3>＋ Yeni elan yerləşdir</h3><div class="austa-v39-form"><label>Elan növü<select id="v39lt">${types.map(x=>'<option>'+esc(x)+'</option>').join('')}</select></label><label>Elanın adı<input id="v39ln" placeholder="Məsələn: BMW X5 2022"></label><label>Şəhər / rayon<input id="v39ll" placeholder="Bakı"></label><label>Telefon<input id="v39lp" placeholder="Telefon"></label><label class="full">Təsvir<textarea id="v39ld" placeholder="Əsas məlumatlar"></textarea></label></div><div class="austa-v39-note"><span class="austa-v39-free">1 ay ödənişsiz elan.</span> Elan aktivləşdiyi andan 1 ay ərzində yerləşdirmə haqqı tutulmur. Sonrakı ödəniş qaydaları ayrıca göstərilməlidir.</div><div class="austa-v39-actions"><button class="austa-v39-btn primary" id="v39ls">Elanı yerləşdir</button><button class="austa-v39-btn" id="v39lc">Bağla</button></div><div id="v39lr" class="austa-v39-note" hidden></div></div>`;document.body.appendChild(o);$('#v39lc',o).onclick=()=>o.remove();$('#v39ls',o).onclick=()=>{const x={id:'AU-LIST-'+Date.now(),type:$('#v39lt',o).value,title:$('#v39ln',o).value.trim(),location:$('#v39ll',o).value.trim(),phone:$('#v39lp',o).value.trim(),description:$('#v39ld',o).value.trim(),createdAt:new Date().toISOString(),freeUntil:monthFree(),rating:0,reviewCount:0};if(!x.title||!x.location||!x.phone){$('#v39lr',o).hidden=false;$('#v39lr',o).textContent='⚠ Elan adı, şəhər/rayon və telefon doldurulmalıdır.';return}const arr=read('austa-user-listings',[]);arr.unshift(x);save('austa-user-listings',arr);o.remove();showPage('listings',currentRole)};
  }
 function bindPage(page, role) {
+   if (page === 'listings') {
+    setTimeout(() => {
+      const host =
+        document.getElementById(
+          'austaV39RealListingsHost'
+        );
+
+      if (!host) return;
+
+      const listings =
+        window.AUSTA_MY_LISTINGS_V156?.getAll?.() || [];
+
+      if (!listings.length) {
+        host.innerHTML =
+          '<div class="austa-v39-empty">' +
+          'Hələ elan yoxdur.' +
+          '</div>';
+
+        window.AUSTA_MY_LISTINGS_V156
+          ?.refresh?.()
+          ?.then(() => {
+            showPage(
+              'listings',
+              currentRole
+            );
+          });
+
+        return;
+      }
+
+      host.innerHTML = listings.map(item => {
+
+        const title =
+          item.__austa_title ||
+          item.title ||
+          item.dealer_name ||
+          [item.brand, item.model, item.year]
+            .filter(Boolean)
+            .join(' ') ||
+          'Elan';
+
+        const location =
+          [item.region, item.district]
+            .filter(Boolean)
+            .join(' / ');
+
+        const status =
+          String(item.status || '')
+            .toLowerCase() === 'active'
+              ? 'Aktiv'
+              : 'Deaktiv';
+
+        const promotion =
+          String(
+            item.promotion_type ||
+            'standard'
+          ).toLowerCase();
+
+        const promotionLabel =
+          promotion === 'premium'
+            ? 'Premium'
+            : promotion === 'vip'
+              ? 'VIP'
+              : promotion === 'boost'
+                ? 'İrəli çək'
+                : 'Standart';
+
+        return `
+          <article
+            class="austa-v39-listing"
+            data-v156-id="${esc(item.id)}"
+            data-v156-table="${esc(item.__austa_table)}"
+          >
+
+            <div>
+              <h4>
+                ${esc(title)}
+              </h4>
+
+              <p>
+                ${esc(item.__austa_label || 'Elan')}
+                ${location ? ' • ' + esc(location) : ''}
+              </p>
+
+              <p class="austa-v39-small">
+                Status:
+                <b>${esc(status)}</b>
+                • Paket:
+                <b>${esc(promotionLabel)}</b>
+              </p>
+
+              <div class="austa-v39-actions">
+
+                <button
+                  class="austa-v39-btn"
+                  data-v156-view
+                >
+                  Bax
+                </button>
+
+                <button
+                  class="austa-v39-btn"
+                  data-v156-edit
+                >
+                  Düzəlt
+                </button>
+
+                <button
+                  class="austa-v39-btn"
+                  data-v156-toggle
+                >
+                  ${
+                    String(item.status || '')
+                      .toLowerCase() === 'active'
+                        ? 'Deaktiv et'
+                        : 'Aktiv et'
+                  }
+                </button>
+
+                <button
+                  class="austa-v39-btn"
+                  data-v156-boost
+                >
+                  ↑ İrəli çək
+                </button>
+
+                <button
+                  class="austa-v39-btn"
+                  data-v156-vip
+                >
+                  VIP
+                </button>
+
+                <button
+                  class="austa-v39-btn primary"
+                  data-v156-premium
+                >
+                  Premium
+                </button>
+
+                <button
+                  class="austa-v39-btn"
+                  data-v156-delete
+                >
+                  Sil
+                </button>
+
+              </div>
+            </div>
+
+          </article>
+        `;
+      }).join('');
+
+    }, 0);
+  }
  if (page === 'orders') {
   setTimeout(() => {
     const host =
