@@ -18351,17 +18351,65 @@ try{window.AUSTA_V42_SERVICE_QUESTIONS=V42;}catch(_){ }
 
 /* Full, uncropped video image presentation. Move the existing video cards into a clean 9-card grid. */
 function fixVideoGrid(){
- const grids=[...document.querySelectorAll('#austaV22VideoGrid,.austa-video-grid,.austa-video-list')];
+
+ const grids=[
+   ...document.querySelectorAll(
+     '#austaV22VideoGrid,.austa-video-grid,.austa-video-list'
+   )
+ ];
+
  grids.forEach(g=>{
+
+   /*
+    * V155 REAL SUPABASE HOME VIDEO GRID
+    * V42 bu gridə və real kartlara toxunmamalıdır.
+    */
+   if(
+     g.id === 'austaV22VideoGrid' &&
+     g.querySelector('[data-austa-real-video="1"]')
+   ){
+     g.classList.remove('austa-v42-video-grid');
+
+     g.querySelectorAll(
+       '[data-austa-real-video="1"]'
+     ).forEach(c=>{
+       c.classList.remove('austa-v42-video-card');
+     });
+
+     return;
+   }
+
+
+   /*
+    * Digər köhnə video gridlərində
+    * V42 əvvəlki kimi işləsin.
+    */
    g.classList.add('austa-v42-video-grid');
+
    [...g.children].forEach((c,i)=>{
+
      c.classList.add('austa-v42-video-card');
+
      let img=c.querySelector('img');
+
      if(img){
-       img.removeAttribute('width');img.removeAttribute('height');
-       img.style.objectFit='contain';img.style.width='100%';img.style.height='100%';
-       let media=img.closest('a,figure,.video-thumb,.austa-video-thumb,.video-media');
-       if(media)media.classList.add('austa-v42-video-media');
+
+       img.removeAttribute('width');
+       img.removeAttribute('height');
+
+       img.style.objectFit='contain';
+       img.style.width='100%';
+       img.style.height='100%';
+
+       let media=img.closest(
+         'a,figure,.video-thumb,.austa-video-thumb,.video-media'
+       );
+
+       if(media){
+         media.classList.add(
+           'austa-v42-video-media'
+         );
+       }
      }
    });
  });
