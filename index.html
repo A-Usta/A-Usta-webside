@@ -42065,6 +42065,12 @@ function renderRealVideosOnHome(){
     );
 
     grid.style.setProperty(
+    "grid-auto-columns",
+    "unset",
+    "important"
+    );
+  
+    grid.style.setProperty(
         "flex-wrap",
         "nowrap",
         "important"
@@ -42155,23 +42161,31 @@ function renderRealVideosOnHome(){
          * 215 × 380
          */
 
-        card.style.cssText =
-            "position:relative !important;" +
-            "display:block !important;" +
-            "flex:0 0 215px !important;" +
-            "width:215px !important;" +
-            "min-width:215px !important;" +
-            "max-width:215px !important;" +
-            "height:380px !important;" +
-            "min-height:380px !important;" +
-            "max-height:380px !important;" +
-            "padding:0 !important;" +
-            "margin:0 !important;" +
-            "overflow:hidden !important;" +
-            "border-radius:16px !important;" +
-            "background:#000 !important;" +
-            "box-sizing:border-box !important;" +
-            "cursor:pointer !important;";
+    card.style.cssText =
+    "position:relative !important;" +
+    "display:block !important;" +
+
+    "flex:0 0 215px !important;" +
+    "flex-grow:0 !important;" +
+    "flex-shrink:0 !important;" +
+    "flex-basis:215px !important;" +
+
+    "width:215px !important;" +
+    "min-width:215px !important;" +
+    "max-width:215px !important;" +
+
+    "height:380px !important;" +
+    "min-height:380px !important;" +
+    "max-height:380px !important;" +
+
+    "aspect-ratio:auto !important;" +
+    "padding:0 !important;" +
+    "margin:0 !important;" +
+    "overflow:hidden !important;" +
+    "border-radius:16px !important;" +
+    "background:#000 !important;" +
+    "box-sizing:border-box !important;" +
+    "cursor:pointer !important;";
 
 
         /*
