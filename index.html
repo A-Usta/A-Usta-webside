@@ -11720,7 +11720,15 @@ window.AUSTA_MY_LISTINGS_V156 = {
   }
 };
 
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initAccount);else initAccount();
+/* Close initAccount() */
+}
+
+if(document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAccount);
+} else {
+  initAccount();
+}
+
 })();
 </script>
 
