@@ -18609,7 +18609,75 @@ document.addEventListener('click',function(e){
  if(typeof window.AUSTA_OPEN_WASH==='function')window.AUSTA_OPEN_WASH();
 },true);
 /* Restore the full photograph presentation after any old renderer runs. */
-function fixV43Videos(){const g=document.getElementById('austaV22VideoGrid');if(!g)return;g.classList.add('austa-v43-video-grid');g.querySelectorAll('.austa-v22-video-thumb').forEach(t=>{t.style.setProperty('background-size','contain','important');t.style.setProperty('background-repeat','no-repeat','important');t.style.setProperty('background-position','center','important');t.style.setProperty('height','175px','important');t.style.setProperty('min-height','175px','important');});}
+function fixV43Videos(){
+
+    const g =
+        document.getElementById('austaV22VideoGrid');
+
+    if(!g) return;
+
+
+    /*
+     * V155 real Supabase HOME videosu mövcuddursa
+     * V43 bu gridə və thumbnail ölçüsünə toxunmur.
+     */
+    if(
+        g.querySelector(
+            '[data-austa-real-video="1"]'
+        )
+    ){
+        g.classList.remove(
+            'austa-v43-video-grid'
+        );
+
+        return;
+    }
+
+
+    /*
+     * Köhnə video sistemi üçün
+     * V43 əvvəlki kimi işləyir.
+     */
+    g.classList.add(
+        'austa-v43-video-grid'
+    );
+
+    g.querySelectorAll(
+        '.austa-v22-video-thumb'
+    ).forEach(t=>{
+
+        t.style.setProperty(
+            'background-size',
+            'contain',
+            'important'
+        );
+
+        t.style.setProperty(
+            'background-repeat',
+            'no-repeat',
+            'important'
+        );
+
+        t.style.setProperty(
+            'background-position',
+            'center',
+            'important'
+        );
+
+        t.style.setProperty(
+            'height',
+            '175px',
+            'important'
+        );
+
+        t.style.setProperty(
+            'min-height',
+            '175px',
+            'important'
+        );
+
+    });
+}
 fixV43Videos();window.addEventListener('load',fixV43Videos);[200,700,1500,3000].forEach(ms=>setTimeout(fixV43Videos,ms));
 window.AUSTA_V43_SERVICE_QUESTIONS=V43;window.AUSTA_OPEN_SERVICE_V43=openV43;
 })();
