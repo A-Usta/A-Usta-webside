@@ -51125,11 +51125,17 @@ async function saveMarketplace(type, input, user) {
 
         title: title,
 
-        description:
-            nullable(input.description),
+       description:
+    nullable(input.description),
 
-        price:
-            num(input.price),
+details:
+    input.details &&
+    typeof input.details === "object"
+        ? input.details
+        : {},
+
+price:
+    num(input.price),
 
         currency:
             str(input.currency) || "AZN",
