@@ -54075,12 +54075,123 @@ function buildRouterInput(type,data){
     }
 
 
-    /* ---------------- MARKETPLACE ---------------- */
+   /* ---------------- MARKETPLACE ---------------- */
 
-    let title='';
+const marketplaceDetails = {
+    ...(data.details || {})
+};
 
-    let brand='';
-    let model='';
+switch(type){
+
+    case 'parts':
+        Object.assign(
+            marketplaceDetails,
+            {
+                name:data.name || '',
+                part_name:data.part_name || '',
+                oem:data.oem || '',
+                compatibility:data.compatibility || '',
+                stock:data.stock || ''
+            }
+        );
+        break;
+
+    case 'accessories':
+        Object.assign(
+            marketplaceDetails,
+            {
+                name:data.name || '',
+                accessory_name:data.accessory_name || '',
+                stock:data.stock || ''
+            }
+        );
+        break;
+
+    case 'moto':
+        Object.assign(
+            marketplaceDetails,
+            {
+                name:data.name || '',
+                moto_type:data.moto_type || '',
+                mileage:data.mileage || ''
+            }
+        );
+        break;
+
+    case 'special':
+        Object.assign(
+            marketplaceDetails,
+            {
+                name:data.name || '',
+                special_type:data.special_type || '',
+                work_hours:data.work_hours || '',
+                sale_rent:data.sale_rent || ''
+            }
+        );
+        break;
+
+    case 'bus':
+        Object.assign(
+            marketplaceDetails,
+            {
+                name:data.name || '',
+                capacity:data.capacity || '',
+                sale_rent:data.sale_rent || ''
+            }
+        );
+        break;
+
+    case 'water':
+        Object.assign(
+            marketplaceDetails,
+            {
+                name:data.name || '',
+                water_type:data.water_type || '',
+                engine:data.engine || ''
+            }
+        );
+        break;
+
+    case 'caravan':
+        Object.assign(
+            marketplaceDetails,
+            {
+                name:data.name || '',
+                caravan_type:data.caravan_type || '',
+                beds:data.beds || '',
+                sale_rent:data.sale_rent || ''
+            }
+        );
+        break;
+
+    case 'trailer':
+        Object.assign(
+            marketplaceDetails,
+            {
+                name:data.name || '',
+                trailer_type:data.trailer_type || '',
+                load_capacity:data.load_capacity || ''
+            }
+        );
+        break;
+
+    case 'plate':
+        Object.assign(
+            marketplaceDetails,
+            {
+                name:data.name || '',
+                plate_number:data.plate_number || '',
+                plate_series:data.plate_series || '',
+                document_status:data.document_status || ''
+            }
+        );
+        break;
+}
+
+let title='';
+
+let brand='';
+let model='';
 
 
     if(data.brand_model){
@@ -54184,8 +54295,8 @@ function buildRouterInput(type,data){
         address:
             location.address,
 
-        details:
-            data.details
+       details:
+    marketplaceDetails
 
     };
 
