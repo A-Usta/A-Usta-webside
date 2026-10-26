@@ -51334,6 +51334,415 @@ async function saveProvider(type, input, user) {
     return data;
 }
 
+
+  /* ============================================================
+   UPDATE EXISTING LISTING
+   V156-E REAL EDIT ROUTER
+   ============================================================ */
+
+async function updateListing(
+    typeValue,
+    listingId,
+    input = {}
+) {
+
+    const type =
+        category(typeValue);
+
+    if (!ALL_TYPES.has(type)) {
+        throw new Error(
+            "Naməlum elan kateqoriyası: " +
+            typeValue
+        );
+    }
+
+    if (!listingId) {
+        throw new Error(
+            "Redaktə ediləcək elan ID-si tapılmadı."
+        );
+    }
+
+    const user =
+        await currentUser();
+
+    let table = "";
+
+    let row = {};
+
+
+    /* =====================================================
+       VEHICLE
+       cars + rent
+       ===================================================== */
+
+    if (VEHICLE_TYPES.has(type)) {
+
+        const isRent =
+            type === "rent";
+
+        table =
+            "vehicle_listings";
+
+        row = {
+
+            listing_type:
+                isRent
+                    ? "rent"
+                    : "sale",
+
+            brand:
+                nullable(input.brand),
+
+            model:
+                nullable(input.model),
+
+            year:
+                integer(input.year),
+
+            mileage:
+                integer(input.mileage),
+
+            body_type:
+                nullable(
+                    input.body_type ??
+                    input.bodyType
+                ),
+
+            fuel_type:
+                nullable(
+                    input.fuel_type ??
+                    input.fuelType
+                ),
+
+            transmission:
+                nullable(
+                    input.transmission
+                ),
+
+            engine:
+                nullable(input.engine),
+
+            color:
+                nullable(input.color),
+
+            price:
+                isRent
+                    ? null
+                    : num(input.price),
+
+            daily_price:
+                isRent
+                    ? num(
+                        input.daily_price ??
+                        input.dailyPrice ??
+                        input.price
+                    )
+                    : null,
+
+            deposit:
+                isRent
+                    ? num(input.deposit)
+                    : null,
+
+            region:
+                nullable(input.region),
+
+            district:
+                nullable(input.district),
+
+            address:
+                nullable(input.address),
+
+            latitude:
+                num(input.latitude),
+
+            longitude:
+                num(input.longitude),
+
+            description:
+                nullable(
+                    input.description
+                ),
+
+            phone:
+                nullable(input.phone),
+
+            has_video:
+                bool(
+                    input.has_video ??
+                    input.hasVideo
+                )
+        };
+
+
+    /* =====================================================
+       MARKETPLACE
+       ===================================================== */
+
+    } else if (
+        MARKETPLACE_TYPES.has(type)
+    ) {
+
+        const title =
+            buildTitle(type, input);
+
+        if (!title) {
+            throw new Error(
+                "Elanın başlığını daxil edin."
+            );
+        }
+
+        table =
+            "marketplace_listings";
+
+        row = {
+
+            category:
+                type,
+
+            title:
+                title,
+
+            description:
+                nullable(
+                    input.description
+                ),
+
+            price:
+                num(input.price),
+
+            currency:
+                str(input.currency) ||
+                "AZN",
+
+            brand:
+                nullable(input.brand),
+
+            model:
+                nullable(input.model),
+
+            year:
+                integer(input.year),
+
+            condition:
+                nullable(
+                    input.condition
+                ),
+
+            region:
+                nullable(input.region),
+
+            district:
+                nullable(input.district),
+
+            address:
+                nullable(input.address),
+
+            phone:
+                nullable(input.phone),
+
+            latitude:
+                num(input.latitude),
+
+            longitude:
+                num(input.longitude),
+
+            has_video:
+                bool(
+                    input.has_video ??
+                    input.hasVideo
+                )
+        };
+
+
+    /* =====================================================
+       PROVIDER
+       usta + service
+       ===================================================== */
+
+    } else if (
+        PROVIDER_TYPES.has(type)
+    ) {
+
+        const title =
+            buildTitle(type, input);
+
+        if (!title) {
+            throw new Error(
+                type === "usta"
+                    ? "Ustanın adı və ixtisasını daxil edin."
+                    : "Avtoservisin adını daxil edin."
+            );
+        }
+
+        let rating =
+            num(input.rating);
+
+        if (
+            rating !== null &&
+            (
+                rating < 0 ||
+                rating > 5
+            )
+        ) {
+            rating = null;
+        }
+
+        let reviews =
+            integer(
+                input.reviews_count ??
+                input.reviews
+            );
+
+        if (
+            reviews === null ||
+            reviews < 0
+        ) {
+            reviews = 0;
+        }
+
+        table =
+            "service_provider_listings";
+
+        row = {
+
+            provider_type:
+                type,
+
+            title:
+                title,
+
+            name:
+                nullable(input.name),
+
+            phone:
+                nullable(input.phone),
+
+            message_contact:
+                nullable(
+                    input.message_contact ??
+                    input.message
+                ),
+
+            specialty:
+                nullable(
+                    input.specialty
+                ),
+
+            services:
+                nullable(input.services),
+
+            about:
+                nullable(input.about),
+
+            experience:
+                nullable(
+                    input.experience
+                ),
+
+            working_hours:
+                nullable(
+                    input.working_hours ??
+                    input.hours
+                ),
+
+            region:
+                nullable(input.region),
+
+            district:
+                nullable(input.district),
+
+            address:
+                nullable(input.address),
+
+            latitude:
+                num(input.latitude),
+
+            longitude:
+                num(input.longitude),
+
+            rating:
+                rating,
+
+            reviews_count:
+                reviews
+        };
+
+    } else {
+
+        throw new Error(
+            "Bu kateqoriya üçün redaktə router-i tapılmadı."
+        );
+    }
+
+
+    /* =====================================================
+       REAL SUPABASE UPDATE
+
+       SECURITY:
+       - owner_id dəyişmir
+       - status dəyişmir
+       - promotion dəyişmir
+       - published_at dəyişmir
+       ===================================================== */
+
+    const {
+        data,
+        error
+    } =
+        await sb()
+            .from(table)
+            .update(row)
+            .eq(
+                "id",
+                listingId
+            )
+            .eq(
+                "owner_id",
+                user.id
+            )
+            .select()
+            .single();
+
+
+    if (error) {
+        throw error;
+    }
+
+
+    const detail = {
+
+        category:
+            type,
+
+        source:
+            table,
+
+        listing:
+            data
+    };
+
+
+    window.dispatchEvent(
+        new CustomEvent(
+            "austa:real-listing-updated",
+            {
+                detail
+            }
+        )
+    );
+
+
+    console.log(
+        "A-USTA V156-E REAL LISTING UPDATED:",
+        detail
+    );
+
+
+    return detail;
+}
+  
+
 /* ============================================================
    MASTER SAVE ROUTER
    ============================================================ */
@@ -51975,6 +52384,9 @@ window.AUSTA_V153 = {
 
     saveListing:
         saveListing,
+
+     updateListing:
+        updateListing,
 
     fetchCategory:
         fetchCategory,
