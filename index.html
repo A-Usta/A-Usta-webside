@@ -11260,61 +11260,45 @@ if (publicCard) {
    ------------------------------------------------------------ */
 
 async function austaMyEdit(item) {
-  if (!item) return;
 
-  const existing = document.querySelector(
-    '[data-austa-owner-edit]' +
-    '[data-listing-id="' +
-    CSS.escape(String(item.id)) +
-    '"]'
-  );
+    if (!item) return;
 
-  if (existing) {
-    existing.click();
-    return;
-  }
 
-  window.dispatchEvent(
-    new CustomEvent(
-      'austa:v156:edit-listing',
-      {
-        detail: {
-          id: item.id,
-          table: item.__austa_table,
-          source: item.__austa_source,
-          item
+    if (
+        window.AUSTA_V153C &&
+        typeof window.AUSTA_V153C.edit ===
+            'function'
+    ) {
+
+        try {
+
+            await window.AUSTA_V153C.edit(
+                item
+            );
+
+            return;
+
+        } catch (e) {
+
+            console.error(
+                '[A-USTA V156] edit:',
+                e
+            );
+
+            alert(
+                e?.message ||
+                'Elan redaktə üçün açıla bilmədi.'
+            );
+
+            return;
         }
-      }
-    )
-  );
 
-  /*
-   * If V153 exposes an edit API,
-   * use it without duplicating the form.
-   */
-
-  if (
-    window.AUSTA_LISTING_V153?.edit
-  ) {
-    try {
-      await window.AUSTA_LISTING_V153.edit(
-        item.id,
-        item.__austa_source
-      );
-
-      return;
-    } catch (e) {
-      console.warn(
-        '[A-USTA V156-B] edit:',
-        e
-      );
     }
-  }
 
-  alert(
-    'Elanın redaktə forması elan səhifəsindən açılır. ' +
-    'Əvvəlcə "Bax" düyməsi ilə elanı açın.'
-  );
+
+    alert(
+        'Redaktə sistemi tapılmadı.'
+    );
 }
 
 
@@ -53562,7 +53546,114 @@ function validate(type,data){
     }
 
 }
+  
+/* =========================================================
+   V156-F EDIT STATE
+   ========================================================= */
 
+let currentEdit = null;
+
+
+function editLocation(item){
+
+    return [
+        item?.region,
+        item?.district,
+        item?.address
+    ]
+    .filter(Boolean)
+    .join(' / ');
+}
+
+
+function fillEditFields(item,type){
+
+    if(!item){
+        return;
+    }
+
+    const values={};
+
+
+    if(type==='cars'){
+
+        Object.assign(values,{
+            phone:item.phone,
+            brand:item.brand,
+            model:item.model,
+            year:item.year,
+            mileage:item.mileage,
+            body_type:item.body_type,
+            fuel_type:item.fuel_type,
+            transmission:item.transmission,
+            engine:item.engine,
+            color:item.color,
+            price:item.price,
+            region_address:
+                editLocation(item),
+            description:item.description
+        });
+
+    }
+
+
+    if(type==='rent'){
+
+        Object.assign(values,{
+            phone:item.phone,
+
+            brand_model:
+                [
+                    item.brand,
+                    item.model
+                ]
+                .filter(Boolean)
+                .join(' '),
+
+            year:item.year,
+
+            daily_price:
+                item.daily_price,
+
+            deposit:
+                item.deposit,
+
+            rental_type:
+                item.details?.rental_type || '',
+
+            region_address:
+                editLocation(item),
+
+            description:
+                item.description
+        });
+
+    }
+
+
+    document
+        .querySelectorAll(
+            '#austaV153CFields [data-v153c-key]'
+        )
+        .forEach(element=>{
+
+            const key=
+                element.dataset.v153cKey;
+
+            if(
+                !Object.prototype
+                    .hasOwnProperty
+                    .call(values,key)
+            ){
+                return;
+            }
+
+            element.value=
+                values[key] ?? '';
+
+        });
+
+}
 
 /* =========================================================
    BUILD INPUT FOR V153-B
@@ -53936,11 +54027,29 @@ async function saveCurrentListing(){
             );
 
 
-        const result=
-            await window.AUSTA_V153.saveListing(
+      let result;
+
+
+if(currentEdit){
+
+    result=
+        await window.AUSTA_V153
+            .updateListing(
+                type,
+                currentEdit.id,
+                input
+            );
+
+}else{
+
+    result=
+        await window.AUSTA_V153
+            .saveListing(
                 type,
                 input
             );
+
+}
 
 
         console.log(
@@ -53955,8 +54064,10 @@ async function saveCurrentListing(){
 
         status.style.color='#15803d';
 
-        status.textContent=
-            '✓ Elan uğurla yerləşdirildi.';
+       status.textContent=
+    currentEdit
+        ? '✓ Dəyişikliklər yadda saxlanıldı.'
+        : '✓ Elan uğurla yerləşdirildi.';
 
 
         setTimeout(
@@ -54036,9 +54147,10 @@ async function saveCurrentListing(){
 
         button.disabled=false;
 
-        button.textContent=
-            '✓ Elanı yerləşdir';
-
+       button.textContent=
+    currentEdit
+        ? '✓ Dəyişiklikləri yadda saxla'
+        : '✓ Elanı yerləşdir';
     }
 
 }
@@ -54047,8 +54159,9 @@ async function saveCurrentListing(){
 /* =========================================================
    OPEN / CLOSE
    ========================================================= */
-
 function openModal(type){
+
+    currentEdit=null;
 
     buildModal();
 
@@ -54080,16 +54193,106 @@ function openModal(type){
 
 }
 
+async function openEdit(item){
 
-function closeModal(){
+    if(!item?.id){
+        throw new Error(
+            'Redaktə ediləcək elan tapılmadı.'
+        );
+    }
 
-    document
-        .getElementById(
-            'austaV153COverlay'
-        )
-        ?.remove();
+
+    let type='';
+
+
+    if(
+        item.__austa_table ===
+        'vehicle_listings'
+    ){
+
+        type=
+            item.listing_type === 'rent'
+                ? 'rent'
+                : 'cars';
+
+    }else{
+
+        throw new Error(
+            'Bu mərhələdə avtomobil və Rent a Car redaktəsi aktivdir.'
+        );
+
+    }
+
+
+    currentEdit={
+        id:item.id,
+        table:item.__austa_table,
+        type
+    };
+
+
+    buildModal();
+
+
+    const select=
+        document.getElementById(
+            'austaV153CCategory'
+        );
+
+
+    if(!select){
+        throw new Error(
+            'Elan forması açılmadı.'
+        );
+    }
+
+
+    select.value=type;
+
+    select.disabled=true;
+
+
+    renderFields();
+
+
+    fillEditFields(
+        item,
+        type
+    );
+
+
+    const button=
+        document.getElementById(
+            'austaV153CSave'
+        );
+
+
+    if(button){
+
+        button.textContent=
+            '✓ Dəyişiklikləri yadda saxla';
+
+    }
+
+
+    const status=
+        document.getElementById(
+            'austaV153CStatus'
+        );
+
+
+    if(status){
+
+        status.style.color='#555';
+
+        status.textContent=
+            'Elanı redaktə edirsiniz.';
+
+    }
 
 }
+
+
 
 
 /* =========================================================
@@ -54145,6 +54348,9 @@ window.AUSTA_V153C={
 
     open:
         openModal,
+
+     edit:
+        openEdit,
 
     close:
         closeModal,
