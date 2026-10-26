@@ -53134,9 +53134,9 @@ function splitLocation(value){
         .filter(Boolean);
 
     return {
-        region:parts[0] || text,
+        region:parts[0] || '',
         district:parts[1] || '',
-        address:text
+        address:parts.slice(2).join(' / ')
     };
 
 }
