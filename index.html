@@ -11717,6 +11717,38 @@ window.AUSTA_MY_LISTINGS_V156 = {
     return [
       ...(window.AUSTA_MY_REAL_LISTINGS || [])
     ];
+  },
+
+  getItem(id, table) {
+    return (
+      window.AUSTA_MY_REAL_LISTINGS || []
+    ).find(item =>
+      String(item.id) === String(id) &&
+      item.__austa_table === table
+    ) || null;
+  },
+
+  view(item) {
+    return austaMyView(item);
+  },
+
+  edit(item) {
+    return austaMyEdit(item);
+  },
+
+  toggle(item) {
+    return austaMyToggle(item);
+  },
+
+  delete(item) {
+    return austaMyDelete(item);
+  },
+
+  openPackage(item, packageType) {
+    return austaMyOpenPackage(
+      item,
+      packageType
+    );
   }
 };
 
@@ -17670,9 +17702,9 @@ function bindPage(page, role) {
         return `
           <article
             class="austa-v39-listing"
-            data-v156-id="${esc(item.id)}"
-            data-v156-table="${esc(item.__austa_table)}"
-          >
+            data-austa-my-id="${esc(item.id)}"
+            data-austa-my-table="${esc(item.__austa_table)}"
+           >
 
             <div>
               <h4>
@@ -17754,6 +17786,134 @@ function bindPage(page, role) {
         `;
       }).join('');
 
+      /* --------------------------------------------------
+         V156 REAL LISTING MANAGEMENT — V39 BUTTONS
+         -------------------------------------------------- */
+
+      host.onclick = async event => {
+
+        const card = event.target.closest(
+          '[data-austa-my-id]'
+        );
+
+        if (!card || !host.contains(card)) {
+          return;
+        }
+
+        const api =
+          window.AUSTA_MY_LISTINGS_V156;
+
+        if (!api) {
+          console.error(
+            'AUSTA_MY_LISTINGS_V156 API tapılmadı.'
+          );
+          return;
+        }
+
+        const item = api.getItem(
+          card.dataset.austaMyId,
+          card.dataset.austaMyTable
+        );
+
+        if (!item) {
+          console.error(
+            'V156 elan cache-də tapılmadı.',
+            card.dataset.austaMyId,
+            card.dataset.austaMyTable
+          );
+          return;
+        }
+
+        if (
+          event.target.closest(
+            '[data-austa-my-view]'
+          )
+        ) {
+          await api.view(item);
+          return;
+        }
+
+        if (
+          event.target.closest(
+            '[data-austa-my-edit]'
+          )
+        ) {
+          await api.edit(item);
+          return;
+        }
+
+        if (
+          event.target.closest(
+            '[data-austa-my-toggle]'
+          )
+        ) {
+          await api.toggle(item);
+
+          await api.refresh();
+
+          showPage(
+            'listings',
+            currentRole
+          );
+
+          return;
+        }
+
+        if (
+          event.target.closest(
+            '[data-austa-my-boost]'
+          )
+        ) {
+          api.openPackage(
+            item,
+            'boost'
+          );
+          return;
+        }
+
+        if (
+          event.target.closest(
+            '[data-austa-my-vip]'
+          )
+        ) {
+          api.openPackage(
+            item,
+            'vip'
+          );
+          return;
+        }
+
+        if (
+          event.target.closest(
+            '[data-austa-my-premium]'
+          )
+        ) {
+          api.openPackage(
+            item,
+            'premium'
+          );
+          return;
+        }
+
+        if (
+          event.target.closest(
+            '[data-austa-my-delete]'
+          )
+        ) {
+          await api.delete(item);
+
+          await api.refresh();
+
+          showPage(
+            'listings',
+            currentRole
+          );
+
+          return;
+        }
+      };
+
+  
     }, 0);
   }
  if (page === 'orders') {
