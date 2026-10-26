@@ -11222,23 +11222,16 @@ async function austaMyView(item) {
     }
   }
 
-  if (
-    window.AUSTA_UNIFIED_FLOW?.open
-  ) {
-    try {
-      window.AUSTA_UNIFIED_FLOW.open(
-        'listing',
-        item.__austa_title || item.id
-      );
+ const publicCard = document.querySelector(
+  '[data-v146-listing-id="' +
+  CSS.escape(String(item.id)) +
+  '"]'
+);
 
-      return;
-    } catch (e) {
-      console.warn(
-        '[A-USTA V156-B] unified open:',
-        e
-      );
-    }
-  }
+if (publicCard) {
+  publicCard.click();
+  return;
+}
 
   /*
    * Existing cards/details can also react
