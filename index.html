@@ -51266,6 +51266,12 @@ async function saveProvider(type, input, user) {
         about:
             nullable(input.about),
 
+        details:
+    input.details &&
+    typeof input.details === "object"
+        ? input.details
+        : {},
+
         experience:
             nullable(input.experience),
 
@@ -51492,6 +51498,12 @@ async function updateListing(
                     input.description
                 ),
 
+            details:
+    input.details &&
+    typeof input.details === "object"
+        ? input.details
+        : {},
+          
             price:
                 num(input.price),
 
@@ -51618,6 +51630,12 @@ async function updateListing(
 
             about:
                 nullable(input.about),
+
+            details:
+    input.details &&
+    typeof input.details === "object"
+        ? input.details
+        : {},
 
             experience:
                 nullable(
@@ -53273,6 +53291,17 @@ function buildModal(){
 
 }
 
+  if(
+    window.AUSTA_MY_LISTINGS_V156
+        ?.refresh
+){
+
+    Promise.resolve(
+        window.AUSTA_MY_LISTINGS_V156
+            .refresh()
+    ).catch(()=>{});
+
+}
 
 /* =========================================================
    RENDER CATEGORY FIELDS
@@ -53572,13 +53601,42 @@ function fillEditFields(item,type){
         return;
     }
 
-    const values={};
 
+    const details=
+        item.details &&
+        typeof item.details==='object'
+            ? item.details
+            : {};
+
+
+    const values={
+        ...details
+    };
+
+
+    /* =====================================================
+       COMMON
+       ===================================================== */
+
+    values.phone=
+        item.phone ?? values.phone ?? '';
+
+    values.description=
+        item.description ??
+        values.description ??
+        '';
+
+    values.region_address=
+        editLocation(item);
+
+
+    /* =====================================================
+       CARS
+       ===================================================== */
 
     if(type==='cars'){
 
         Object.assign(values,{
-            phone:item.phone,
             brand:item.brand,
             model:item.model,
             year:item.year,
@@ -53588,19 +53646,19 @@ function fillEditFields(item,type){
             transmission:item.transmission,
             engine:item.engine,
             color:item.color,
-            price:item.price,
-            region_address:
-                editLocation(item),
-            description:item.description
+            price:item.price
         });
 
     }
 
 
-    if(type==='rent'){
+    /* =====================================================
+       RENT
+       ===================================================== */
+
+    else if(type==='rent'){
 
         Object.assign(values,{
-            phone:item.phone,
 
             brand_model:
                 [
@@ -53619,17 +53677,191 @@ function fillEditFields(item,type){
                 item.deposit,
 
             rental_type:
-                item.details?.rental_type || '',
-
-            region_address:
-                editLocation(item),
-
-            description:
-                item.description
+                details.rental_type || ''
         });
 
     }
 
+
+    /* =====================================================
+       MARKETPLACE
+       ===================================================== */
+
+    else if(
+        [
+            'parts',
+            'accessories',
+            'moto',
+            'special',
+            'bus',
+            'water',
+            'caravan',
+            'trailer',
+            'plate'
+        ].includes(type)
+    ){
+
+        values.price=
+            item.price ?? '';
+
+        values.year=
+            item.year ?? '';
+
+        values.condition=
+            item.condition ?? '';
+
+        values.brand_model=
+            [
+                item.brand,
+                item.model
+            ]
+            .filter(Boolean)
+            .join(' ');
+
+
+        /*
+         * Old listings may have been created
+         * before details persistence existed.
+         * Recover the main title field.
+         */
+
+        if(type==='parts'){
+
+            values.part_name=
+                details.part_name ||
+                item.title ||
+                '';
+
+        }else if(type==='accessories'){
+
+            values.accessory_name=
+                details.accessory_name ||
+                item.title ||
+                '';
+
+        }else if(type==='moto'){
+
+            values.moto_type=
+                details.moto_type || '';
+
+        }else if(type==='special'){
+
+            values.special_type=
+                details.special_type ||
+                item.title ||
+                '';
+
+        }else if(type==='bus'){
+
+            if(!values.brand_model){
+                values.brand_model=
+                    item.title || '';
+            }
+
+        }else if(type==='water'){
+
+            values.water_type=
+                details.water_type || '';
+
+        }else if(type==='caravan'){
+
+            if(!values.brand_model){
+                values.brand_model=
+                    item.title || '';
+            }
+
+        }else if(type==='trailer'){
+
+            values.trailer_type=
+                details.trailer_type ||
+                item.title ||
+                '';
+
+        }else if(type==='plate'){
+
+            values.plate_number=
+                details.plate_number ||
+                item.title ||
+                '';
+
+        }
+
+    }
+
+
+    /* =====================================================
+       AVTOSERVIS
+       ===================================================== */
+
+    else if(type==='service'){
+
+        Object.assign(values,{
+
+            name:
+                details.owner_name || '',
+
+            service_name:
+                item.name ||
+                item.title ||
+                '',
+
+            specialty:
+                item.specialty ||
+                item.services ||
+                '',
+
+            brands:
+                details.brands || '',
+
+            working_hours:
+                item.working_hours || '',
+
+            price_policy:
+                details.price_policy || '',
+
+            about:
+                item.about || ''
+        });
+
+    }
+
+
+    /* =====================================================
+       USTA
+       ===================================================== */
+
+    else if(type==='usta'){
+
+        Object.assign(values,{
+
+            name:
+                item.name || '',
+
+            specialty:
+                item.specialty || '',
+
+            experience:
+                item.experience || '',
+
+            working_hours:
+                item.working_hours || '',
+
+            services:
+                item.services || '',
+
+            about:
+                item.about || '',
+
+            message_contact:
+                item.message_contact || ''
+        });
+
+    }
+
+
+    /* =====================================================
+       APPLY VALUES
+       ===================================================== */
 
     document
         .querySelectorAll(
@@ -54205,24 +54437,71 @@ async function openEdit(item){
     let type='';
 
 
-    if(
-        item.__austa_table ===
-        'vehicle_listings'
-    ){
+   if(
+    item.__austa_table ===
+    'vehicle_listings'
+){
 
-        type=
-            item.listing_type === 'rent'
-                ? 'rent'
-                : 'cars';
+    type=
+        item.listing_type === 'rent'
+            ? 'rent'
+            : 'cars';
 
-    }else{
+}else if(
+    item.__austa_table ===
+    'marketplace_listings'
+){
 
-        throw new Error(
-            'Bu mərhələdə avtomobil və Rent a Car redaktəsi aktivdir.'
-        );
+    type=
+        item.category;
 
-    }
+}else if(
+    item.__austa_table ===
+    'service_provider_listings'
+){
 
+    type=
+        item.provider_type;
+
+}else if(
+    item.__austa_table ===
+    'auto_dealer_listings'
+){
+
+  if(
+    typeof window.AUSTA_EDIT_DEALER_V156 ===
+        'function'
+){
+
+    return window.AUSTA_EDIT_DEALER_V156(
+        item
+    );
+
+}
+
+    throw new Error(
+        'Avtosalon redaktə modulu tapılmadı.'
+    );
+
+}else{
+
+    throw new Error(
+        'Elan kateqoriyası müəyyən edilmədi.'
+    );
+
+}
+
+
+if(
+    !type ||
+    !CATEGORIES[type]
+){
+
+    throw new Error(
+        'Elanın redaktə kateqoriyası tapılmadı.'
+    );
+
+}
 
     currentEdit={
         id:item.id,
@@ -54745,7 +55024,310 @@ function installDealerCategory(){
     return true;
 }
 
+async function editDealer(item){
 
+    if(!item?.id){
+
+        throw new Error(
+            'Avtosalon elanı tapılmadı.'
+        );
+
+    }
+
+
+    dealerEditItem=item;
+
+
+    if(
+        !window.AUSTA_V153C?.open
+    ){
+
+        throw new Error(
+            'Elan forması tapılmadı.'
+        );
+
+    }
+
+
+    window.AUSTA_V153C.open(
+        DEALER_TYPE
+    );
+
+
+    setTimeout(()=>{
+
+        const values={
+
+            dealer_name:
+                item.dealer_name,
+
+            contact_name:
+                item.contact_name,
+
+            phone:
+                item.phone,
+
+            message_contact:
+                item.message_contact,
+
+            region:
+                item.region,
+
+            district:
+                item.district,
+
+            address:
+                item.address,
+
+            working_hours:
+                item.working_hours,
+
+            brands:
+                item.brands,
+
+            vehicle_condition:
+                item.vehicle_condition,
+
+            credit_available:
+                item.credit_available
+                    ? 'Bəli'
+                    : 'Xeyr',
+
+            leasing_available:
+                item.leasing_available
+                    ? 'Bəli'
+                    : 'Xeyr',
+
+            barter_available:
+                item.barter_available
+                    ? 'Bəli'
+                    : 'Xeyr',
+
+            delivery_available:
+                item.delivery_available
+                    ? 'Bəli'
+                    : 'Xeyr',
+
+            about:
+                item.about
+        };
+
+
+        document
+            .querySelectorAll(
+                '[data-v153c-key]'
+            )
+            .forEach(element=>{
+
+                const key=
+                    element.dataset.v153cKey;
+
+                if(
+                    Object.prototype
+                        .hasOwnProperty
+                        .call(values,key)
+                ){
+
+                    element.value=
+                        values[key] ?? '';
+
+                }
+
+            });
+
+
+        const button=
+            document.getElementById(
+                'austaV153CSave'
+            );
+
+
+        if(button){
+
+            button.textContent=
+                '✓ Dəyişiklikləri yadda saxla';
+
+        }
+
+    },50);
+
+}
+  
+/* =========================================================
+   V156-G DEALER REAL UPDATE
+   ========================================================= */
+
+let dealerEditItem=null;
+
+
+async function updateDealer(item){
+
+    if(!item?.id){
+
+        throw new Error(
+            'Redaktə ediləcək avtosalon tapılmadı.'
+        );
+
+    }
+
+
+    const user=
+        await currentUser();
+
+    const values=
+        readCurrentFields();
+
+
+    if(
+        !values.dealer_name ||
+        !values.phone ||
+        !values.region ||
+        !values.address
+    ){
+
+        throw new Error(
+            'Salonun adı, telefon, region və tam ünvan mütləqdir.'
+        );
+
+    }
+
+
+    const details={
+
+        contact_name:
+            values.contact_name || '',
+
+        message_contact:
+            values.message_contact || '',
+
+        working_hours:
+            values.working_hours || '',
+
+        brands:
+            values.brands || '',
+
+        vehicle_condition:
+            values.vehicle_condition || '',
+
+        credit_available:
+            yesNo(values.credit_available),
+
+        leasing_available:
+            yesNo(values.leasing_available),
+
+        barter_available:
+            yesNo(values.barter_available),
+
+        delivery_available:
+            yesNo(values.delivery_available)
+    };
+
+
+    const payload={
+
+        dealer_name:
+            values.dealer_name,
+
+        contact_name:
+            values.contact_name || null,
+
+        phone:
+            values.phone,
+
+        message_contact:
+            values.message_contact || null,
+
+        region:
+            values.region,
+
+        district:
+            values.district || null,
+
+        address:
+            values.address,
+
+        working_hours:
+            values.working_hours || null,
+
+        brands:
+            values.brands || null,
+
+        vehicle_condition:
+            values.vehicle_condition || null,
+
+        credit_available:
+            yesNo(
+                values.credit_available
+            ),
+
+        leasing_available:
+            yesNo(
+                values.leasing_available
+            ),
+
+        barter_available:
+            yesNo(
+                values.barter_available
+            ),
+
+        delivery_available:
+            yesNo(
+                values.delivery_available
+            ),
+
+        about:
+            values.about || null,
+
+        details
+    };
+
+
+    const {
+        data,
+        error
+    }=
+        await sb()
+            .from(
+                'auto_dealer_listings'
+            )
+            .update(payload)
+            .eq(
+                'id',
+                item.id
+            )
+            .eq(
+                'owner_id',
+                user.id
+            )
+            .select()
+            .single();
+
+
+    if(error){
+        throw error;
+    }
+
+
+    window.dispatchEvent(
+        new CustomEvent(
+            'austa:real-listing-updated',
+            {
+                detail:{
+                    category:
+                        'dealer',
+                    source:
+                        'auto_dealer_listings',
+                    listing:
+                        data
+                }
+            }
+        )
+    );
+
+
+    return data;
+}
+  
 /* =========================================================
    ADD DEALER OPTION TO CURRENT MODAL
    ========================================================= */
@@ -55819,10 +56401,25 @@ function patchSave(){
              * AUTO DEALER
              */
 
-            if(type === DEALER_TYPE){
+           if(type === DEALER_TYPE){
 
-                result =
-                    await saveDealer();
+    if(dealerEditItem){
+
+        result=
+            await updateDealer(
+                dealerEditItem
+            );
+
+        dealerEditItem=null;
+
+    }else{
+
+        result=
+            await saveDealer();
+
+    }
+
+}
 
             }else{
 
