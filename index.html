@@ -10959,10 +10959,60 @@ showCat('cars');
     });
     document.querySelectorAll('[data-v22-cat="vip"],#austaV22Panel-vip').forEach(el=>el.remove());
   }
-  function forceLongVideos(){
-    const g=document.getElementById('austaV22VideoGrid'); if(!g)return;
-    const cols=innerWidth<=600?2:innerWidth<=900?4:innerWidth<=1200?7:9; g.style.setProperty('grid-template-columns',`repeat(${cols},minmax(0,1fr))`,'important');
-    [...g.querySelectorAll('.austa-v22-video-card')].forEach(c=>{c.style.setProperty('aspect-ratio','16/7','important');c.style.setProperty('height','auto','important');});
+ function forceLongVideos(){
+    const g=document.getElementById('austaV22VideoGrid');
+    if(!g)return;
+
+    /* V159 real Home video feed öz 215x380 ölçüsünü idarə edir */
+    const hasV159RealVideos =
+      !!g.querySelector('.austa-v159-real-video-card');
+
+    if(hasV159RealVideos){
+      g.style.setProperty('display','flex','important');
+      g.style.setProperty('flex-wrap','wrap','important');
+      g.style.setProperty('grid-template-columns','none','important');
+      g.style.setProperty('gap','12px','important');
+
+      [...g.querySelectorAll('.austa-v159-real-video-card')].forEach(c=>{
+        c.style.setProperty('display','block','important');
+        c.style.setProperty('flex','0 0 215px','important');
+        c.style.setProperty('width','215px','important');
+        c.style.setProperty('min-width','215px','important');
+        c.style.setProperty('max-width','215px','important');
+        c.style.setProperty('height','380px','important');
+        c.style.setProperty('min-height','380px','important');
+        c.style.setProperty('max-height','380px','important');
+        c.style.setProperty('aspect-ratio','auto','important');
+      });
+
+      return;
+    }
+
+    const cols=
+      innerWidth<=600 ? 2 :
+      innerWidth<=900 ? 4 :
+      innerWidth<=1200 ? 7 : 9;
+
+    g.style.setProperty(
+      'grid-template-columns',
+      `repeat(${cols},minmax(0,1fr))`,
+      'important'
+    );
+
+    [...g.querySelectorAll(
+      '.austa-v22-video-card:not(.austa-v159-real-video-card)'
+    )].forEach(c=>{
+      c.style.setProperty(
+        'aspect-ratio',
+        '16/7',
+        'important'
+      );
+      c.style.setProperty(
+        'height',
+        'auto',
+        'important'
+      );
+    });
   }
   document.addEventListener('DOMContentLoaded',()=>{
     wireUrgent(); removeDuplicateMarketTitles(); forceLongVideos();
