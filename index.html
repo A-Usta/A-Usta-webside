@@ -21829,9 +21829,55 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script id="austa-v41-final-js">
 (function(){
 'use strict';
-function fix(){
+ function fix(){
  const g=document.getElementById('austaV22VideoGrid');
- if(g){g.style.setProperty('display','grid','important');g.style.setProperty('grid-template-columns',innerWidth<=600?'repeat(2,minmax(0,1fr))':innerWidth<=850?'repeat(4,minmax(0,1fr))':innerWidth<=1200?'repeat(6,minmax(0,1fr))':'repeat(9,minmax(0,1fr))','important');}
+
+ if(g){
+   const realCards=[
+     ...g.querySelectorAll('.austa-v159-real-video-card')
+   ];
+
+   if(realCards.length){
+     g.style.setProperty('display','flex','important');
+     g.style.setProperty('flex-wrap','wrap','important');
+     g.style.setProperty('grid-template-columns','none','important');
+     g.style.setProperty('grid-auto-columns','unset','important');
+     g.style.setProperty('gap','12px','important');
+     g.style.setProperty('align-items','flex-start','important');
+     g.style.setProperty('justify-content','flex-start','important');
+
+     realCards.forEach(c=>{
+       c.style.setProperty('display','block','important');
+       c.style.setProperty('flex','0 0 215px','important');
+
+       c.style.setProperty('width','215px','important');
+       c.style.setProperty('min-width','215px','important');
+       c.style.setProperty('max-width','215px','important');
+
+       c.style.setProperty('height','380px','important');
+       c.style.setProperty('min-height','380px','important');
+       c.style.setProperty('max-height','380px','important');
+
+       c.style.setProperty('aspect-ratio','auto','important');
+       c.style.removeProperty('flex-direction');
+     });
+
+   }else{
+     g.style.setProperty('display','grid','important');
+
+     g.style.setProperty(
+       'grid-template-columns',
+       innerWidth<=600
+         ? 'repeat(2,minmax(0,1fr))'
+         : innerWidth<=850
+           ? 'repeat(4,minmax(0,1fr))'
+           : innerWidth<=1200
+             ? 'repeat(6,minmax(0,1fr))'
+             : 'repeat(9,minmax(0,1fr))',
+       'important'
+     );
+   }
+ }
  const nav=document.getElementById('austaV39Nav');
  nav?.querySelector('[data-page="videos"]')?.remove();
  // Make the Usta role button deterministic even if an older handler is present.
