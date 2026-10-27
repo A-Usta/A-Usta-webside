@@ -17995,7 +17995,54 @@ window.addEventListener('resize',()=>{const g=document.getElementById('austaV22V
   }
   function openCargo(){ensureCargoModal();document.getElementById('austaCargoDirectOverlay').classList.add('open');}
   function wire(){ensureCargoModal();[...document.querySelectorAll('button,a,.service-card,.logistics-card,[data-top-title]')].forEach(el=>{const t=(el.innerText||el.textContent||el.getAttribute('data-top-title')||'').replace(/\s+/g,' ').trim().toLowerCase();if(t.includes('yük daşıma')&&t.includes('damas')&&!el.dataset.v30cargo){el.dataset.v30cargo='1';el.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openCargo()},true);}});}
-  function fixVideos(){const g=document.getElementById('austaV22VideoGrid');if(!g)return;g.style.setProperty('display','grid','important');g.style.setProperty('grid-template-columns','repeat(9,minmax(0,1fr))','important');g.style.setProperty('overflow','visible','important');[...g.children].forEach(c=>{c.style.setProperty('width','auto','important');c.style.setProperty('min-width','0','important');c.style.setProperty('flex','none','important');});}
+  function fixVideos(){
+  const g=document.getElementById('austaV22VideoGrid');
+  if(!g)return;
+
+  const realCards=[
+    ...g.querySelectorAll('.austa-v159-real-video-card')
+  ];
+
+  /* V159 real videolarına köhnə V30 ölçüsü tətbiq olunmur */
+  if(realCards.length){
+    g.style.setProperty('display','flex','important');
+    g.style.setProperty('flex-wrap','wrap','important');
+    g.style.setProperty('grid-template-columns','none','important');
+    g.style.setProperty('overflow','visible','important');
+    g.style.setProperty('gap','12px','important');
+
+    realCards.forEach(c=>{
+      c.style.setProperty('display','block','important');
+      c.style.setProperty('flex','0 0 215px','important');
+      c.style.setProperty('width','215px','important');
+      c.style.setProperty('min-width','215px','important');
+      c.style.setProperty('max-width','215px','important');
+      c.style.setProperty('height','380px','important');
+      c.style.setProperty('min-height','380px','important');
+      c.style.setProperty('max-height','380px','important');
+      c.style.setProperty('aspect-ratio','auto','important');
+    });
+
+    return;
+  }
+
+  /* Köhnə kartlar üçün V30 davranışı qalır */
+  g.style.setProperty('display','grid','important');
+  g.style.setProperty(
+    'grid-template-columns',
+    'repeat(9,minmax(0,1fr))',
+    'important'
+  );
+  g.style.setProperty('overflow','visible','important');
+
+  [...g.children]
+    .filter(c=>!c.classList.contains('austa-v159-real-video-card'))
+    .forEach(c=>{
+      c.style.setProperty('width','auto','important');
+      c.style.setProperty('min-width','0','important');
+      c.style.setProperty('flex','none','important');
+    });
+}
   function init(){wire();fixVideos();setTimeout(wire,250);setTimeout(fixVideos,250);setTimeout(wire,1000);setTimeout(fixVideos,1000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
   window.AUSTA_V30_FIX={openCargo,fixVideos};
