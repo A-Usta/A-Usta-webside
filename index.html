@@ -525,6 +525,272 @@
 }
 
 </style>
+
+<style id="austa-v158-final-owner-ui">
+
+/* =========================================================
+   A-USTA V158
+   REAL LISTING DETAIL OWNER / PROMOTION UI
+   ========================================================= */
+
+.austa-final-side-card[data-austa-final-owner]{
+    background:#fff !important;
+    border:1px solid #e5e7eb !important;
+    border-radius:18px !important;
+    padding:18px !important;
+    box-shadow:
+        0 8px 28px rgba(15,23,42,.07) !important;
+}
+
+
+/* TITLE */
+
+.austa-final-side-card[data-austa-final-owner] > div:first-child{
+    color:#111827 !important;
+    font-size:15px !important;
+    font-weight:900 !important;
+    margin-bottom:14px !important;
+}
+
+
+/* ACTION LIST */
+
+.austa-final-owner-actions.austa-v158-promotion-actions{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:9px !important;
+}
+
+
+/* ALL BUTTONS */
+
+.austa-v158-promotion-actions button{
+    width:100% !important;
+    min-height:64px !important;
+
+    display:flex !important;
+    align-items:center !important;
+
+    gap:12px !important;
+
+    position:relative !important;
+
+    padding:11px 13px !important;
+
+    border:1px solid #e5e7eb !important;
+    border-radius:14px !important;
+
+    background:#fff !important;
+    color:#111827 !important;
+
+    text-align:left !important;
+    cursor:pointer !important;
+
+    box-shadow:
+        0 3px 12px rgba(15,23,42,.04) !important;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease !important;
+}
+
+
+.austa-v158-promotion-actions button:hover{
+    transform:translateY(-2px) !important;
+
+    border-color:#d1d5db !important;
+
+    box-shadow:
+        0 8px 22px rgba(15,23,42,.09) !important;
+}
+
+
+/* ICON */
+
+.austa-v158-action-icon,
+.austa-v158-promo-icon{
+    width:40px !important;
+    height:40px !important;
+
+    flex:0 0 40px !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+
+    border-radius:12px !important;
+
+    background:#f3f4f6 !important;
+
+    font-size:19px !important;
+}
+
+
+/* TEXT */
+
+.austa-v158-action-content{
+    min-width:0 !important;
+    flex:1 !important;
+
+    display:flex !important;
+    flex-direction:column !important;
+
+    gap:3px !important;
+}
+
+
+.austa-v158-action-content strong{
+    color:#111827 !important;
+
+    font-size:14px !important;
+    font-weight:900 !important;
+
+    line-height:1.2 !important;
+}
+
+
+.austa-v158-action-content small{
+    color:#6b7280 !important;
+
+    font-size:11px !important;
+    font-weight:600 !important;
+
+    line-height:1.35 !important;
+}
+
+
+/* ARROW */
+
+.austa-v158-action-arrow{
+    color:#9ca3af !important;
+
+    font-size:25px !important;
+    font-weight:400 !important;
+
+    line-height:1 !important;
+}
+
+
+/* =========================================================
+   BOOST
+   ========================================================= */
+
+.austa-v158-boost .austa-v158-promo-icon{
+    background:#ecfdf5 !important;
+    color:#059669 !important;
+}
+
+
+.austa-v158-boost:hover{
+    border-color:#a7f3d0 !important;
+}
+
+
+/* =========================================================
+   VIP
+   ========================================================= */
+
+.austa-v158-vip .austa-v158-promo-icon{
+    background:#fff7ed !important;
+    color:#ea580c !important;
+}
+
+
+.austa-v158-vip:hover{
+    border-color:#fed7aa !important;
+}
+
+
+/* =========================================================
+   PREMIUM
+   ========================================================= */
+
+.austa-v158-premium{
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #fffbeb 100%
+        ) !important;
+
+    border-color:#fde68a !important;
+}
+
+
+.austa-v158-premium .austa-v158-promo-icon{
+    background:
+        linear-gradient(
+            135deg,
+            #fef3c7,
+            #fde68a
+        ) !important;
+
+    color:#92400e !important;
+}
+
+
+.austa-v158-premium:hover{
+    border-color:#f59e0b !important;
+
+    box-shadow:
+        0 9px 24px rgba(245,158,11,.13) !important;
+}
+
+
+/* TOP BADGE */
+
+.austa-v158-premium-badge{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+
+    padding:4px 7px !important;
+
+    border-radius:999px !important;
+
+    background:#111827 !important;
+    color:#fbbf24 !important;
+
+    font-size:9px !important;
+    font-weight:900 !important;
+
+    letter-spacing:.4px !important;
+}
+
+
+/* EDIT IS QUIETER */
+
+.austa-v158-edit{
+    min-height:52px !important;
+    background:#f9fafb !important;
+}
+
+
+.austa-v158-edit .austa-v158-action-icon{
+    width:34px !important;
+    height:34px !important;
+    flex-basis:34px !important;
+
+    font-size:15px !important;
+}
+
+
+/* MOBILE */
+
+@media(max-width:650px){
+
+    .austa-final-side-card[data-austa-final-owner]{
+        padding:14px !important;
+    }
+
+    .austa-v158-promotion-actions button{
+        min-height:60px !important;
+    }
+
+}
+
+</style>
   
 </head>
 <body>
@@ -31508,37 +31774,95 @@ async function openFullListing(id){
                 Elanı idarə et
               </div>
 
-              <div class="austa-final-owner-actions">
+            
+              <div class="austa-final-owner-actions austa-v158-promotion-actions">
 
-                <button
-                  type="button"
-                  data-owner-edit
-                >
-                  ✎ Düzəlt
-                </button>
+  <button
+    type="button"
+    class="austa-v158-edit"
+    data-owner-edit
+  >
+    <span class="austa-v158-action-icon">✎</span>
 
-                <button
-                  type="button"
-                  data-owner-boost
-                >
-                  ↑ İrəli çək
-                </button>
+    <span class="austa-v158-action-content">
+      <strong>Düzəlt</strong>
+      <small>Elanın məlumatlarını yenilə</small>
+    </span>
 
-                <button
-                  type="button"
-                  data-owner-vip
-                >
-                  VIP
-                </button>
+    <span class="austa-v158-action-arrow">›</span>
+  </button>
 
-                <button
-                  type="button"
-                  data-owner-premium
-                >
-                  Premium
-                </button>
 
-              </div>
+  <button
+    type="button"
+    class="austa-v158-promo austa-v158-boost"
+    data-owner-boost
+  >
+    <span class="austa-v158-promo-icon">
+      🚀
+    </span>
+
+    <span class="austa-v158-action-content">
+      <strong>İrəli çək</strong>
+      <small>
+        Elanı siyahıda yuxarı qaldır
+      </small>
+    </span>
+
+    <span class="austa-v158-action-arrow">
+      ›
+    </span>
+  </button>
+
+
+  <button
+    type="button"
+    class="austa-v158-promo austa-v158-vip"
+    data-owner-vip
+  >
+    <span class="austa-v158-promo-icon">
+      ♛
+    </span>
+
+    <span class="austa-v158-action-content">
+      <strong>VIP</strong>
+      <small>
+        Üstün görünürlük və VIP statusu
+      </small>
+    </span>
+
+    <span class="austa-v158-action-arrow">
+      ›
+    </span>
+  </button>
+
+
+  <button
+    type="button"
+    class="austa-v158-promo austa-v158-premium"
+    data-owner-premium
+  >
+    <span class="austa-v158-promo-icon">
+      ◆
+    </span>
+
+    <span class="austa-v158-action-content">
+      <strong>Premium</strong>
+      <small>
+        Maksimum görünürlük və üstünlüklər
+      </small>
+    </span>
+
+    <span class="austa-v158-premium-badge">
+      TOP
+    </span>
+
+    <span class="austa-v158-action-arrow">
+      ›
+    </span>
+  </button>
+
+</div>
 
             </div>
 
