@@ -32123,32 +32123,6 @@ if(edit){
   return;
 }
 
-  if(
-    window.AUSTA_V153C &&
-    typeof window.AUSTA_V153C.edit===
-      'function'
-  ){
-
-    window.AUSTA_V153C.edit(
-      realItem
-    );
-
-    return;
-  }
-
-  console.error(
-    'A-USTA real edit sistemi tapılmadı.',
-    realItem
-  );
-
-  alert(
-    'Elanı düzəltmə pəncərəsi açıla bilmədi.'
-  );
-
-  return;
-}
-
-
     const promotion=
   event.target.closest(
     '[data-owner-boost],'+
