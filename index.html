@@ -32062,7 +32062,7 @@ async function openFullListing(id){
       }
 
 
-    const edit=
+ const edit=
   event.target.closest(
     '[data-owner-edit]'
   );
@@ -32074,10 +32074,28 @@ if(edit){
   event.stopImmediatePropagation();
 
   const realItem=
-    window.AUSTA_MY_LISTINGS_V156?.getItem?.(
-      item.id,
-      item.__austa_table
-    ) || item;
+    (
+      window.AUSTA_MY_LISTINGS_V156
+        ?.getAll?.() || []
+    ).find(
+      listing=>
+        String(listing?.id || '')===
+        String(item?.id || '')
+    );
+
+  if(!realItem){
+
+    console.error(
+      'A-USTA real listing tapılmadı:',
+      item?.id
+    );
+
+    alert(
+      'Elan məlumatları tapılmadı. Mənim elanlarım bölməsini yeniləyib yenidən yoxlayın.'
+    );
+
+    return;
+  }
 
   closePage();
 
@@ -32093,6 +32111,17 @@ if(edit){
 
     return;
   }
+
+  console.error(
+    'A-USTA V156 real edit funksiyası tapılmadı.'
+  );
+
+  alert(
+    'Elanı düzəltmə sistemi hazırda açıla bilmədi.'
+  );
+
+  return;
+}
 
   if(
     window.AUSTA_V153C &&
