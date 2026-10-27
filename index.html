@@ -11425,6 +11425,1388 @@ async function austaMyDelete(item) {
   }
 }
 
+  /* ============================================================
+   A-USTA V157
+   PROFESSIONAL PROMOTION / PACKAGE UI
+
+   IMPORTANT:
+   - Frontend NEVER activates promotion directly.
+   - Frontend NEVER trusts/display price as payment authority.
+   - Real payment/backend integration comes next.
+   ============================================================ */
+
+const AUSTA_V157_PACKAGE_CATALOG = Object.freeze({
+
+  boost: {
+    name: 'İrəli çək',
+    icon: '↑',
+    badge: 'Sürətli görünürlük',
+    description:
+      'Elanınızı müəyyən intervallarla siyahıda yenidən yuxarı qaldırın.',
+
+    plans: [
+      {
+        code: 'boost_3',
+        label: '3 dəfə',
+        detail: '8 saat intervalı ilə',
+        price: 0.99
+      },
+      {
+        code: 'boost_9',
+        label: '9 dəfə',
+        detail: '8 saat intervalı ilə',
+        price: 1.49,
+        popular: true
+      },
+      {
+        code: 'boost_15',
+        label: '15 dəfə',
+        detail: '8 saat intervalı ilə',
+        price: 1.99
+      },
+      {
+        code: 'boost_30',
+        label: '30 dəfə',
+        detail: '8 saat intervalı ilə',
+        price: 2.99
+      }
+    ]
+  },
+
+
+  vip: {
+    name: 'VIP',
+    icon: '★',
+    badge: 'Daha çox diqqət',
+    description:
+      'Elanınıza VIP görünüş verin və daha çox istifadəçinin diqqətini cəlb edin.',
+
+    plans: [
+      {
+        code: 'vip_1d',
+        label: '1 gün',
+        detail: 'VIP görünürlük',
+        price: 1.49
+      },
+      {
+        code: 'vip_5d',
+        label: '5 gün',
+        detail: 'VIP görünürlük',
+        price: 3.99,
+        popular: true
+      },
+      {
+        code: 'vip_15d',
+        label: '15 gün',
+        detail: 'VIP görünürlük',
+        price: 7.99
+      },
+      {
+        code: 'vip_30d',
+        label: '30 gün',
+        detail: 'VIP görünürlük',
+        price: 12.99
+      }
+    ]
+  },
+
+
+  premium: {
+    name: 'Premium',
+    icon: '◆',
+    badge: 'Maksimum görünürlük',
+    description:
+      'VIP üstünlükləri və əlavə önə çıxarma imkanları ilə maksimum görünürlük.',
+
+    plans: [
+      {
+        code: 'premium_1d',
+        label: '1 gün',
+        detail: 'Premium görünürlük',
+        price: 2.49
+      },
+      {
+        code: 'premium_5d',
+        label: '5 gün',
+        detail: 'Premium görünürlük',
+        price: 6.99
+      },
+      {
+        code: 'premium_15d',
+        label: '15 gün',
+        detail: 'Premium görünürlük',
+        price: 14.99,
+        popular: true
+      },
+      {
+        code: 'premium_30d',
+        label: '30 gün',
+        detail: 'Premium görünürlük',
+        price: 24.99
+      }
+    ]
+  }
+
+});
+
+
+function austaV157Escape(value) {
+
+  return String(value ?? '')
+    .replace(
+      /[&<>"']/g,
+      char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char])
+    );
+}
+
+
+function austaV157Money(value) {
+
+  return Number(value || 0)
+    .toFixed(2) + ' AZN';
+}
+
+
+function austaV157ListingType(item) {
+
+  const table =
+    item?.__austa_table || '';
+
+  if (table === 'vehicle_listings') {
+
+    return item?.listing_type === 'rent'
+      ? 'Rent a Car'
+      : 'Avtomobil';
+
+  }
+
+  if (table === 'service_provider_listings') {
+
+    return item?.provider_type === 'usta'
+      ? 'Usta profili'
+      : 'Avtoservis';
+
+  }
+
+  if (table === 'auto_dealer_listings') {
+    return 'Avtosalon';
+  }
+
+
+  const labels = {
+
+    parts: 'Ehtiyat hissələri',
+
+    accessories: 'Aksesuarlar',
+
+    moto: 'Moto / Moped / Skuter',
+
+    special: 'Xüsusi texnika',
+
+    bus: 'Avtobus',
+
+    water: 'Su nəqliyyatı',
+
+    caravan: 'Karavan',
+
+    trailer: 'Qoşqu / Treyler',
+
+    plate: 'Qeydiyyat nömrəsi'
+
+  };
+
+
+  return labels[item?.category] ||
+    'Elan';
+}
+
+
+function austaV157Close() {
+
+  document
+    .getElementById('austaV157Overlay')
+    ?.remove();
+
+  document.body.style
+    .removeProperty('overflow');
+}
+
+
+function austaV157Open(item, initialPackageType = 'boost') {
+
+  if (!item?.id) {
+
+    alert(
+      'Paket tətbiq ediləcək elan tapılmadı.'
+    );
+
+    return;
+  }
+
+
+  austaV157Close();
+
+
+  let selectedPackageType =
+    AUSTA_V157_PACKAGE_CATALOG[
+      initialPackageType
+    ]
+      ? initialPackageType
+      : 'boost';
+
+
+  let selectedPlanCode = null;
+
+
+  const overlay =
+    document.createElement('div');
+
+  overlay.id =
+    'austaV157Overlay';
+
+
+  overlay.innerHTML = `
+
+    <style id="austaV157Style">
+
+      #austaV157Overlay{
+        position:fixed;
+        inset:0;
+        z-index:2147483200;
+        display:flex;
+        align-items:flex-start;
+        justify-content:center;
+        padding:28px 14px;
+        overflow:auto;
+        background:
+          rgba(8,10,14,.82);
+        backdrop-filter:
+          blur(7px);
+      }
+
+
+      #austaV157Modal{
+        width:min(1050px,100%);
+        margin:auto;
+        overflow:hidden;
+        border:
+          1px solid rgba(255,255,255,.09);
+        border-radius:24px;
+        background:#fff;
+        color:#111827;
+        box-shadow:
+          0 30px 100px
+          rgba(0,0,0,.45);
+      }
+
+
+      .austa-v157-head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:18px;
+        padding:22px 24px;
+        border-bottom:
+          1px solid #eceef2;
+      }
+
+
+      .austa-v157-head-copy{
+        min-width:0;
+      }
+
+
+      .austa-v157-eyebrow{
+        margin-bottom:5px;
+        color:#e11d2e;
+        font-size:11px;
+        font-weight:950;
+        letter-spacing:.11em;
+        text-transform:uppercase;
+      }
+
+
+      .austa-v157-head h2{
+        margin:0;
+        font-size:25px;
+        line-height:1.15;
+        font-weight:950;
+      }
+
+
+      .austa-v157-head p{
+        margin:7px 0 0;
+        color:#6b7280;
+        font-size:13px;
+        line-height:1.45;
+      }
+
+
+      #austaV157Close{
+        flex:0 0 auto;
+        width:42px;
+        height:42px;
+        border:0;
+        border-radius:12px;
+        background:#111827;
+        color:#fff;
+        font-size:25px;
+        cursor:pointer;
+      }
+
+
+      .austa-v157-listing{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:16px;
+        margin:20px 24px 0;
+        padding:15px 17px;
+        border:1px solid #e5e7eb;
+        border-radius:15px;
+        background:#f8fafc;
+      }
+
+
+      .austa-v157-listing-label{
+        margin-bottom:4px;
+        color:#6b7280;
+        font-size:11px;
+        font-weight:900;
+        text-transform:uppercase;
+      }
+
+
+      .austa-v157-listing-title{
+        overflow:hidden;
+        color:#111827;
+        font-size:15px;
+        font-weight:950;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+      }
+
+
+      .austa-v157-listing-type{
+        flex:0 0 auto;
+        padding:7px 10px;
+        border-radius:999px;
+        background:#111827;
+        color:#fff;
+        font-size:11px;
+        font-weight:900;
+      }
+
+
+      .austa-v157-body{
+        display:grid;
+        grid-template-columns:
+          minmax(0,1.6fr)
+          minmax(280px,.75fr);
+        gap:22px;
+        padding:22px 24px 25px;
+      }
+
+
+      .austa-v157-section-title{
+        margin:0 0 12px;
+        font-size:14px;
+        font-weight:950;
+      }
+
+
+      .austa-v157-packages{
+        display:grid;
+        grid-template-columns:
+          repeat(3,minmax(0,1fr));
+        gap:10px;
+        margin-bottom:20px;
+      }
+
+
+      .austa-v157-package{
+        position:relative;
+        min-height:122px;
+        padding:15px;
+        border:
+          2px solid #e5e7eb;
+        border-radius:16px;
+        background:#fff;
+        text-align:left;
+        cursor:pointer;
+        transition:
+          .18s ease;
+      }
+
+
+      .austa-v157-package:hover{
+        transform:
+          translateY(-2px);
+        border-color:#b7bdc8;
+      }
+
+
+      .austa-v157-package.active{
+        border-color:#e11d2e;
+        background:#fff7f7;
+        box-shadow:
+          0 0 0 3px
+          rgba(225,29,46,.08);
+      }
+
+
+      .austa-v157-package-icon{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:34px;
+        height:34px;
+        margin-bottom:10px;
+        border-radius:10px;
+        background:#111827;
+        color:#fff;
+        font-size:17px;
+        font-weight:950;
+      }
+
+
+      .austa-v157-package.active
+      .austa-v157-package-icon{
+        background:#e11d2e;
+      }
+
+
+      .austa-v157-package-name{
+        font-size:15px;
+        font-weight:950;
+      }
+
+
+      .austa-v157-package-badge{
+        margin-top:4px;
+        color:#6b7280;
+        font-size:10px;
+        font-weight:850;
+      }
+
+
+      .austa-v157-description{
+        margin:-7px 0 15px;
+        color:#6b7280;
+        font-size:12px;
+        line-height:1.55;
+      }
+
+
+      .austa-v157-plans{
+        display:grid;
+        grid-template-columns:
+          repeat(2,minmax(0,1fr));
+        gap:10px;
+      }
+
+
+      .austa-v157-plan{
+        position:relative;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        min-height:68px;
+        padding:13px 14px;
+        border:
+          1.5px solid #e5e7eb;
+        border-radius:14px;
+        background:#fff;
+        cursor:pointer;
+        transition:.16s ease;
+      }
+
+
+      .austa-v157-plan:hover{
+        border-color:#9ca3af;
+      }
+
+
+      .austa-v157-plan.active{
+        border-color:#e11d2e;
+        background:#fff7f7;
+        box-shadow:
+          0 0 0 2px
+          rgba(225,29,46,.07);
+      }
+
+
+      .austa-v157-plan-name{
+        font-size:14px;
+        font-weight:950;
+      }
+
+
+      .austa-v157-plan-detail{
+        margin-top:3px;
+        color:#6b7280;
+        font-size:10px;
+      }
+
+
+      .austa-v157-plan-price{
+        flex:0 0 auto;
+        color:#111827;
+        font-size:14px;
+        font-weight:950;
+      }
+
+
+      .austa-v157-popular{
+        position:absolute;
+        top:-8px;
+        right:10px;
+        padding:3px 7px;
+        border-radius:999px;
+        background:#e11d2e;
+        color:#fff;
+        font-size:8px;
+        font-weight:950;
+        letter-spacing:.04em;
+      }
+
+
+      .austa-v157-summary{
+        align-self:start;
+        position:sticky;
+        top:0;
+        overflow:hidden;
+        border:
+          1px solid #e5e7eb;
+        border-radius:18px;
+        background:#111827;
+        color:#fff;
+      }
+
+
+      .austa-v157-summary-head{
+        padding:17px 18px;
+        border-bottom:
+          1px solid rgba(255,255,255,.1);
+        font-size:14px;
+        font-weight:950;
+      }
+
+
+      .austa-v157-summary-body{
+        padding:18px;
+      }
+
+
+      .austa-v157-summary-listing{
+        margin-bottom:17px;
+        padding-bottom:15px;
+        border-bottom:
+          1px solid rgba(255,255,255,.1);
+      }
+
+
+      .austa-v157-summary-listing strong{
+        display:block;
+        margin-bottom:4px;
+        font-size:13px;
+        line-height:1.4;
+      }
+
+
+      .austa-v157-summary-listing span{
+        color:#aeb5c0;
+        font-size:10px;
+      }
+
+
+      .austa-v157-summary-row{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        margin:10px 0;
+        color:#cbd5e1;
+        font-size:12px;
+      }
+
+
+      .austa-v157-summary-row strong{
+        color:#fff;
+        text-align:right;
+      }
+
+
+      .austa-v157-total{
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:12px;
+        margin-top:17px;
+        padding-top:16px;
+        border-top:
+          1px solid rgba(255,255,255,.14);
+      }
+
+
+      .austa-v157-total-label{
+        color:#cbd5e1;
+        font-size:11px;
+        font-weight:850;
+      }
+
+
+      #austaV157Total{
+        font-size:24px;
+        font-weight:950;
+      }
+
+
+      #austaV157Checkout{
+        width:100%;
+        min-height:50px;
+        margin-top:18px;
+        border:0;
+        border-radius:13px;
+        background:#e11d2e;
+        color:#fff;
+        font-size:14px;
+        font-weight:950;
+        cursor:pointer;
+      }
+
+
+      #austaV157Checkout:hover{
+        background:#c91527;
+      }
+
+
+      #austaV157Checkout:disabled{
+        opacity:.45;
+        cursor:not-allowed;
+      }
+
+
+      .austa-v157-secure{
+        display:flex;
+        align-items:flex-start;
+        gap:8px;
+        margin-top:12px;
+        color:#9ca3af;
+        font-size:10px;
+        line-height:1.45;
+      }
+
+
+      .austa-v157-launch{
+        margin-top:12px;
+        padding:9px 10px;
+        border:
+          1px solid rgba(255,255,255,.1);
+        border-radius:10px;
+        color:#d1d5db;
+        font-size:9px;
+        line-height:1.45;
+      }
+
+
+      @media(max-width:820px){
+
+        .austa-v157-body{
+          grid-template-columns:1fr;
+        }
+
+        .austa-v157-summary{
+          position:static;
+        }
+
+      }
+
+
+      @media(max-width:650px){
+
+        #austaV157Overlay{
+          padding:8px;
+        }
+
+        #austaV157Modal{
+          border-radius:18px;
+        }
+
+        .austa-v157-head{
+          padding:17px;
+        }
+
+        .austa-v157-head h2{
+          font-size:21px;
+        }
+
+        .austa-v157-listing{
+          margin:
+            14px 17px 0;
+        }
+
+        .austa-v157-body{
+          padding:
+            17px;
+        }
+
+        .austa-v157-packages{
+          grid-template-columns:1fr;
+        }
+
+        .austa-v157-package{
+          min-height:auto;
+        }
+
+        .austa-v157-plans{
+          grid-template-columns:1fr;
+        }
+
+      }
+
+    </style>
+
+
+    <div
+      id="austaV157Modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="austaV157Title"
+    >
+
+      <div class="austa-v157-head">
+
+        <div class="austa-v157-head-copy">
+
+          <div class="austa-v157-eyebrow">
+            A-USTA REKLAM ALƏTLƏRİ
+          </div>
+
+          <h2 id="austaV157Title">
+            Elanınızı önə çıxarın
+          </h2>
+
+          <p>
+            Daha çox görünürlük üçün
+            elanınıza uyğun paketi seçin.
+          </p>
+
+        </div>
+
+
+        <button
+          type="button"
+          id="austaV157Close"
+          aria-label="Bağla"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="austa-v157-listing">
+
+        <div style="min-width:0">
+
+          <div class="austa-v157-listing-label">
+            Paket tətbiq ediləcək elan
+          </div>
+
+          <div class="austa-v157-listing-title">
+            ${austaV157Escape(
+              item.title ||
+              item.dealer_name ||
+              item.name ||
+              'Elan'
+            )}
+          </div>
+
+        </div>
+
+
+        <div class="austa-v157-listing-type">
+          ${austaV157Escape(
+            austaV157ListingType(item)
+          )}
+        </div>
+
+      </div>
+
+
+      <div class="austa-v157-body">
+
+        <div>
+
+          <h3 class="austa-v157-section-title">
+            1. Paket seçin
+          </h3>
+
+          <div
+            id="austaV157Packages"
+            class="austa-v157-packages"
+          ></div>
+
+
+          <div
+            id="austaV157PackageDescription"
+            class="austa-v157-description"
+          ></div>
+
+
+          <h3 class="austa-v157-section-title">
+            2. Müddət / say seçin
+          </h3>
+
+          <div
+            id="austaV157Plans"
+            class="austa-v157-plans"
+          ></div>
+
+        </div>
+
+
+        <aside class="austa-v157-summary">
+
+          <div class="austa-v157-summary-head">
+            Sifariş xülasəsi
+          </div>
+
+
+          <div class="austa-v157-summary-body">
+
+            <div class="austa-v157-summary-listing">
+
+              <strong>
+                ${austaV157Escape(
+                  item.title ||
+                  item.dealer_name ||
+                  item.name ||
+                  'Elan'
+                )}
+              </strong>
+
+              <span>
+                ${austaV157Escape(
+                  austaV157ListingType(item)
+                )}
+              </span>
+
+            </div>
+
+
+            <div class="austa-v157-summary-row">
+
+              <span>Paket</span>
+
+              <strong id="austaV157SummaryPackage">
+                —
+              </strong>
+
+            </div>
+
+
+            <div class="austa-v157-summary-row">
+
+              <span>Seçim</span>
+
+              <strong id="austaV157SummaryPlan">
+                —
+              </strong>
+
+            </div>
+
+
+            <div class="austa-v157-total">
+
+              <div>
+
+                <div class="austa-v157-total-label">
+                  CƏMİ
+                </div>
+
+                <div id="austaV157Total">
+                  0.00 AZN
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <button
+              type="button"
+              id="austaV157Checkout"
+              disabled
+            >
+              Ödənişə keç
+            </button>
+
+
+            <div class="austa-v157-secure">
+              🔒
+              <span>
+                Paket yalnız təsdiqlənmiş
+                ödənişdən sonra aktivləşdirilir.
+              </span>
+            </div>
+
+
+            <div class="austa-v157-launch">
+              İlkin təqdimat qiymətləridir.
+              A-USTA tarifləri gələcəkdə
+              yenilənə bilər.
+            </div>
+
+          </div>
+
+        </aside>
+
+      </div>
+
+    </div>
+  `;
+
+
+  document.body.appendChild(
+    overlay
+  );
+
+  document.body.style.overflow =
+    'hidden';
+
+
+  const packagesBox =
+    overlay.querySelector(
+      '#austaV157Packages'
+    );
+
+  const plansBox =
+    overlay.querySelector(
+      '#austaV157Plans'
+    );
+
+  const descriptionBox =
+    overlay.querySelector(
+      '#austaV157PackageDescription'
+    );
+
+
+  function selectedPackage() {
+
+    return AUSTA_V157_PACKAGE_CATALOG[
+      selectedPackageType
+    ];
+  }
+
+
+  function selectedPlan() {
+
+    return selectedPackage()
+      ?.plans
+      ?.find(
+        plan =>
+          plan.code ===
+          selectedPlanCode
+      ) || null;
+  }
+
+
+  function renderPackages() {
+
+    packagesBox.innerHTML =
+      Object
+        .entries(
+          AUSTA_V157_PACKAGE_CATALOG
+        )
+        .map(
+          ([type, pack]) => `
+
+            <button
+              type="button"
+              class="austa-v157-package ${
+                type === selectedPackageType
+                  ? 'active'
+                  : ''
+              }"
+              data-v157-package="${type}"
+            >
+
+              <span class="austa-v157-package-icon">
+                ${austaV157Escape(
+                  pack.icon
+                )}
+              </span>
+
+              <div class="austa-v157-package-name">
+                ${austaV157Escape(
+                  pack.name
+                )}
+              </div>
+
+              <div class="austa-v157-package-badge">
+                ${austaV157Escape(
+                  pack.badge
+                )}
+              </div>
+
+            </button>
+          `
+        )
+        .join('');
+  }
+
+
+  function renderPlans() {
+
+    const pack =
+      selectedPackage();
+
+    descriptionBox.textContent =
+      pack.description;
+
+
+    plansBox.innerHTML =
+      pack.plans
+        .map(
+          plan => `
+
+            <button
+              type="button"
+              class="austa-v157-plan ${
+                plan.code ===
+                selectedPlanCode
+                  ? 'active'
+                  : ''
+              }"
+              data-v157-plan="${
+                austaV157Escape(
+                  plan.code
+                )
+              }"
+            >
+
+              ${
+                plan.popular
+                  ? `
+                    <span class="austa-v157-popular">
+                      POPULYAR
+                    </span>
+                  `
+                  : ''
+              }
+
+              <span>
+
+                <div class="austa-v157-plan-name">
+                  ${austaV157Escape(
+                    plan.label
+                  )}
+                </div>
+
+                <div class="austa-v157-plan-detail">
+                  ${austaV157Escape(
+                    plan.detail
+                  )}
+                </div>
+
+              </span>
+
+
+              <span class="austa-v157-plan-price">
+                ${austaV157Money(
+                  plan.price
+                )}
+              </span>
+
+            </button>
+          `
+        )
+        .join('');
+  }
+
+
+  function renderSummary() {
+
+    const pack =
+      selectedPackage();
+
+    const plan =
+      selectedPlan();
+
+
+    overlay.querySelector(
+      '#austaV157SummaryPackage'
+    ).textContent =
+      pack?.name || '—';
+
+
+    overlay.querySelector(
+      '#austaV157SummaryPlan'
+    ).textContent =
+      plan?.label || '—';
+
+
+    overlay.querySelector(
+      '#austaV157Total'
+    ).textContent =
+      plan
+        ? austaV157Money(
+            plan.price
+          )
+        : '0.00 AZN';
+
+
+    overlay.querySelector(
+      '#austaV157Checkout'
+    ).disabled =
+      !plan;
+  }
+
+
+  function selectPackage(type) {
+
+    if (
+      !AUSTA_V157_PACKAGE_CATALOG[
+        type
+      ]
+    ) {
+      return;
+    }
+
+
+    selectedPackageType =
+      type;
+
+    selectedPlanCode =
+      null;
+
+
+    renderPackages();
+
+    renderPlans();
+
+    renderSummary();
+  }
+
+
+  packagesBox.addEventListener(
+    'click',
+    event => {
+
+      const button =
+        event.target.closest(
+          '[data-v157-package]'
+        );
+
+      if (!button) return;
+
+
+      selectPackage(
+        button.dataset.v157Package
+      );
+    }
+  );
+
+
+  plansBox.addEventListener(
+    'click',
+    event => {
+
+      const button =
+        event.target.closest(
+          '[data-v157-plan]'
+        );
+
+      if (!button) return;
+
+
+      selectedPlanCode =
+        button.dataset.v157Plan;
+
+
+      renderPlans();
+
+      renderSummary();
+    }
+  );
+
+
+  overlay
+    .querySelector(
+      '#austaV157Close'
+    )
+    .addEventListener(
+      'click',
+      austaV157Close
+    );
+
+
+  overlay.addEventListener(
+    'click',
+    event => {
+
+      if (
+        event.target === overlay
+      ) {
+        austaV157Close();
+      }
+    }
+  );
+
+
+  document.addEventListener(
+    'keydown',
+    function escClose(event) {
+
+      if (
+        event.key !== 'Escape'
+      ) {
+        return;
+      }
+
+
+      document.removeEventListener(
+        'keydown',
+        escClose
+      );
+
+      austaV157Close();
+    },
+    {
+      once: true
+    }
+  );
+
+
+  overlay
+    .querySelector(
+      '#austaV157Checkout'
+    )
+    .addEventListener(
+      'click',
+      () => {
+
+        const pack =
+          selectedPackage();
+
+        const plan =
+          selectedPlan();
+
+
+        if (!pack || !plan) {
+          return;
+        }
+
+
+        const orderDraft = {
+
+          listingId:
+            item.id,
+
+          listingTable:
+            item.__austa_table,
+
+          listingSource:
+            item.__austa_source || null,
+
+          packageType:
+            selectedPackageType,
+
+          planCode:
+            plan.code,
+
+          displayAmount:
+            plan.price,
+
+          currency:
+            'AZN',
+
+          paymentStatus:
+            'not_started',
+
+          createdAt:
+            new Date()
+              .toISOString()
+
+        };
+
+
+        console.log(
+          'A-USTA V157 PROMOTION ORDER DRAFT:',
+          orderDraft
+        );
+
+
+        window.dispatchEvent(
+          new CustomEvent(
+            'austa:v157:checkout',
+            {
+              detail: {
+                ...orderDraft,
+                item
+              }
+            }
+          )
+        );
+
+
+        alert(
+          'Paket seçimi hazırdır.\n\n' +
+          pack.name +
+          ' — ' +
+          plan.label +
+          '\n' +
+          austaV157Money(
+            plan.price
+          ) +
+          '\n\n' +
+          'Real bank kartı ödənişi ' +
+          'backend/payment inteqrasiyası ' +
+          'qoşulduqdan sonra burada açılacaq.\n\n' +
+          'Hazırda paket aktivləşdirilmədi.'
+        );
+      }
+    );
+
+
+  renderPackages();
+
+  renderPlans();
+
+  renderSummary();
+}
+
+
+/*
+ * Public API.
+ * Later backend/payment module can use
+ * the same catalogue and checkout event.
+ */
+
+window.AUSTA_PROMOTION_V157 = {
+
+  version:
+    'V157-PROFESSIONAL-PACKAGE-UI',
+
+  open:
+    austaV157Open,
+
+  close:
+    austaV157Close,
+
+  catalog:
+    AUSTA_V157_PACKAGE_CATALOG
+
+};
 
 /* ------------------------------------------------------------
    PROMOTION ENTRY POINT
@@ -11432,16 +12814,10 @@ async function austaMyDelete(item) {
    NO DIRECT DB PROMOTION UPDATE.
    V156 SQL protects these fields.
    ------------------------------------------------------------ */
+  function austaMyOpenPackage(item, packageType) {
 
-function austaMyOpenPackage(item, packageType) {
   if (!item) return;
 
-  const packageName =
-    packageType === 'premium'
-      ? 'Premium'
-      : packageType === 'vip'
-        ? 'VIP'
-        : 'İrəli çək';
 
   window.dispatchEvent(
     new CustomEvent(
@@ -11458,22 +12834,28 @@ function austaMyOpenPackage(item, packageType) {
     )
   );
 
-  /*
-   * V156-C will replace this temporary
-   * message with the real package UI.
-   *
-   * We deliberately DO NOT run:
-   * update({ promotion_type: ... })
-   *
-   * Promotion activation must happen
-   * only after verified payment/backend.
-   */
+
+  if (
+    window.AUSTA_PROMOTION_V157 &&
+    typeof window.AUSTA_PROMOTION_V157.open ===
+      'function'
+  ) {
+
+    window.AUSTA_PROMOTION_V157.open(
+      item,
+      packageType
+    );
+
+    return;
+  }
+
+
+  console.error(
+    'A-USTA V157 package UI tapılmadı.'
+  );
 
   alert(
-    packageName +
-    ' paketi seçildi.\n\n' +
-    'Növbəti mərhələdə paket və ödəniş pəncərəsi açılacaq. ' +
-    'Paket ödəniş təsdiqi olmadan aktivləşdirilmir.'
+    'Paket pəncərəsi hazırda açıla bilmədi.'
   );
 }
 
