@@ -32242,12 +32242,14 @@ document.addEventListener(
   'click',
   event=>{
 
-    const card=
-      event.target.closest(
-        '.austa-v52-listing-card'+
-        '[data-austa-listing-id],'+
-        '[data-austa-home-listing]'
-      );
+  const card=
+  event.target.closest(
+    '.austa-v146-card'+
+    '[data-v146-listing-id],'+
+    '.austa-v52-listing-card'+
+    '[data-austa-listing-id],'+
+    '[data-austa-home-listing]'
+  );
 
     if(!card){
       return;
@@ -32261,10 +32263,11 @@ document.addEventListener(
       return;
     }
 
-    const id=
-      card.dataset.austaListingId ||
-      card.dataset.austaHomeListing ||
-      '';
+  const id=
+  card.dataset.v146ListingId ||
+  card.dataset.austaListingId ||
+  card.dataset.austaHomeListing ||
+  '';
 
     if(!id || !findListing(id)){
       return;
