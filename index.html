@@ -32123,6 +32123,65 @@ if(edit){
   return;
 }
 
+  const deleteButton=
+  event.target.closest(
+    '[data-owner-delete]'
+  );
+
+if(deleteButton){
+
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  const realItem=
+    (
+      window.AUSTA_MY_LISTINGS_V156
+        ?.getAll?.() || []
+    ).find(
+      listing=>
+        String(listing?.id || '')===
+        String(item?.id || '')
+    );
+
+  if(!realItem){
+
+    console.error(
+      'A-USTA silinəcək real elan tapılmadı:',
+      item?.id
+    );
+
+    alert(
+      'Elan məlumatları tapılmadı. Mənim elanlarım bölməsini yeniləyib yenidən yoxlayın.'
+    );
+
+    return;
+  }
+
+  if(
+    !window.AUSTA_MY_LISTINGS_V156 ||
+    typeof window.AUSTA_MY_LISTINGS_V156.delete!==
+      'function'
+  ){
+
+    console.error(
+      'A-USTA V156 real delete funksiyası tapılmadı.'
+    );
+
+    alert(
+      'Elanı silmə sistemi hazırda açıla bilmədi.'
+    );
+
+    return;
+  }
+
+  window.AUSTA_MY_LISTINGS_V156.delete(
+    realItem
+  );
+
+  return;
+}
+
     const promotion=
   event.target.closest(
     '[data-owner-boost],'+
