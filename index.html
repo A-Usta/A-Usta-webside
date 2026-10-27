@@ -10811,11 +10811,7 @@ const videos=[
 ['2016 Mercedes-Benz E 300 4MATIC','42,000 ₼','AVTOMOBİL','https://ilex.az/storage/39301/conversions/scaled_1000181664-card.webp'],
 ['2017 Hyundai Elantra','Elan üçün bax','AVTOMOBİL','https://ilex.az/storage/34115/conversions/1000239082-card.webp']
 ];
-const grid=document.getElementById('austaV22VideoGrid');
-if(grid){
- grid.innerHTML=videos.map((v,i)=>`<article class="austa-v22-video-card" data-v22-video="${i}"><div class="austa-v22-video-thumb" style="background-image:url('${v[3]}')"><span class="austa-v22-video-tag">${v[2]}</span><span class="austa-v22-video-play">▶</span></div><div class="austa-v22-video-body"><b>${E(v[0])}</b><strong>${E(v[1])}</strong><span>🎬 Video elan • A-USTA</span></div></article>`).join('');
- grid.addEventListener('click',e=>{const c=e.target.closest('[data-v22-video]');if(!c)return;const i=Number(c.dataset.v22Video);const v=videos[i];const m=document.getElementById('austaVideoDetailModal');if(m){m.classList.add('open');const media=m.querySelector('.austa-detail-media');const info=m.querySelector('.austa-detail-info');if(media)media.style.backgroundImage=`url('${v[3]}')`;if(info){const h=info.querySelector('h2');if(h)h.textContent=v[0];const p=info.querySelector('p');if(p)p.textContent=`${v[1]} • ${v[2]} • A-USTA video elan`;}}else{document.getElementById('carsModule')?.scrollIntoView({behavior:'smooth'});}});
-}
+
 function openListing(title){
  if(window.AUSTA_UNIFIED_FLOW?.open){window.AUSTA_UNIFIED_FLOW.open('listing',title);return}
  const b=[...document.querySelectorAll('[data-top-flow="listing"]')].find(x=String(x.dataset.topTitle||'').includes(title));
