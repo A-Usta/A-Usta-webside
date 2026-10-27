@@ -331,6 +331,201 @@
 }
 
 </style>
+
+<style id="austa-v158-owner-promotion-ui">
+
+/* ============================================================
+   A-USTA V158
+   LISTING OWNER — PROFESSIONAL PROMOTION CONTROL
+   ============================================================ */
+
+.austa-listing-owner-actions{
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:10px !important;
+
+    margin:18px 16px !important;
+    padding:18px !important;
+
+    border:1px solid #e5e7eb !important;
+    border-radius:18px !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #fafafa 100%
+        ) !important;
+
+    box-shadow:
+        0 8px 28px rgba(17,24,39,.07) !important;
+}
+
+
+/* BÜTÜN OWNER DÜYMƏLƏR */
+
+.austa-listing-owner-actions button{
+    position:relative !important;
+
+    min-height:54px !important;
+    padding:10px 12px !important;
+
+    border:1px solid #e5e7eb !important;
+    border-radius:13px !important;
+
+    background:#ffffff !important;
+    color:#111827 !important;
+
+    font-size:13px !important;
+    font-weight:800 !important;
+
+    cursor:pointer !important;
+
+    box-shadow:
+        0 3px 12px rgba(17,24,39,.05) !important;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease !important;
+}
+
+
+.austa-listing-owner-actions button:hover{
+    transform:translateY(-2px) !important;
+
+    border-color:#dc2626 !important;
+
+    box-shadow:
+        0 8px 22px rgba(17,24,39,.10) !important;
+}
+
+
+/* ============================================================
+   PROMOTION BUTTONS
+   ============================================================ */
+
+
+/* İRƏLİ ÇƏK */
+
+.austa-listing-owner-actions
+[data-austa-owner-boost]{
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff 0%,
+            #fff7ed 100%
+        ) !important;
+
+    border-color:#fed7aa !important;
+
+    color:#9a3412 !important;
+}
+
+
+/* VIP */
+
+.austa-listing-owner-actions
+[data-austa-owner-vip]{
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff 0%,
+            #fff1f2 100%
+        ) !important;
+
+    border-color:#fecdd3 !important;
+
+    color:#be123c !important;
+}
+
+
+/* PREMIUM */
+
+.austa-listing-owner-actions
+[data-austa-owner-premium]{
+
+    background:
+        linear-gradient(
+            135deg,
+            #111827 0%,
+            #030712 100%
+        ) !important;
+
+    border-color:#111827 !important;
+
+    color:#ffffff !important;
+
+    box-shadow:
+        0 8px 22px rgba(17,24,39,.20) !important;
+}
+
+
+.austa-listing-owner-actions
+[data-austa-owner-premium]:hover{
+
+    border-color:#dc2626 !important;
+
+    box-shadow:
+        0 10px 28px rgba(220,38,38,.20) !important;
+}
+
+
+/* ============================================================
+   PROMOTION ICONS
+   ============================================================ */
+
+.austa-listing-owner-actions
+[data-austa-owner-boost]::before{
+    content:"🚀";
+    margin-right:6px;
+}
+
+
+.austa-listing-owner-actions
+[data-austa-owner-vip]::before{
+    content:"♛";
+    margin-right:6px;
+    font-size:16px;
+}
+
+
+.austa-listing-owner-actions
+[data-austa-owner-premium]::before{
+    content:"◆";
+    margin-right:7px;
+
+    color:#fbbf24;
+
+    font-size:16px;
+}
+
+
+/* ============================================================
+   MOBILE — sonradan ayrıca tam optimallaşdıracağıq
+   ============================================================ */
+
+@media(max-width:650px){
+
+    .austa-listing-owner-actions{
+        grid-template-columns:
+            repeat(2,minmax(0,1fr)) !important;
+
+        padding:12px !important;
+        margin:14px 10px !important;
+    }
+
+    .austa-listing-owner-actions button{
+        min-height:50px !important;
+        font-size:12px !important;
+    }
+
+}
+
+</style>
+  
 </head>
 <body>
 <header class="site-header" id="austaMainHeader">
