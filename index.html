@@ -790,6 +790,35 @@
 
 }
 
+/* =========================================================
+   DELETE LISTING
+   ========================================================= */
+
+.austa-v158-delete{
+    margin-top:4px !important;
+
+    background:#fff !important;
+
+    border-color:#fecaca !important;
+}
+
+.austa-v158-delete .austa-v158-action-icon{
+    background:#fef2f2 !important;
+    color:#dc2626 !important;
+}
+
+.austa-v158-delete .austa-v158-action-content strong{
+    color:#dc2626 !important;
+}
+
+.austa-v158-delete:hover{
+    background:#fff7f7 !important;
+    border-color:#ef4444 !important;
+
+    box-shadow:
+        0 8px 22px rgba(220,38,38,.10) !important;
+}
+                        
 </style>
   
 </head>
@@ -31861,6 +31890,27 @@ async function openFullListing(id){
       ›
     </span>
   </button>
+
+  <button
+  type="button"
+  class="austa-v158-delete"
+  data-owner-delete
+>
+  <span class="austa-v158-action-icon">
+    🗑
+  </span>
+
+  <span class="austa-v158-action-content">
+    <strong>Elanı sil</strong>
+    <small>
+      Elanı A-USTA-dan birdəfəlik sil
+    </small>
+  </span>
+
+  <span class="austa-v158-action-arrow">
+    ›
+  </span>
+</button>
 
 </div>
 
