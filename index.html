@@ -32062,49 +32062,62 @@ async function openFullListing(id){
       }
 
 
-      const edit=
-        event.target.closest(
-          '[data-owner-edit]'
-        );
+    const edit=
+  event.target.closest(
+    '[data-owner-edit]'
+  );
 
-      if(edit){
+if(edit){
 
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
 
-        closePage();
+  const realItem=
+    window.AUSTA_MY_LISTINGS_V156?.getItem?.(
+      item.id,
+      item.__austa_table
+    ) || item;
 
-        if(
-          window.AUSTA_V53 &&
-          typeof window.AUSTA_V53.openListing===
-            'function'
-        ){
+  closePage();
 
-          window.AUSTA_V53.openListing();
+  if(
+    window.AUSTA_MY_LISTINGS_V156 &&
+    typeof window.AUSTA_MY_LISTINGS_V156.edit===
+      'function'
+  ){
 
-          setTimeout(()=>{
+    window.AUSTA_MY_LISTINGS_V156.edit(
+      realItem
+    );
 
-            const select=
-              document.getElementById(
-                'austaV53Type'
-              );
+    return;
+  }
 
-            if(select && item.category){
+  if(
+    window.AUSTA_V153C &&
+    typeof window.AUSTA_V153C.edit===
+      'function'
+  ){
 
-              select.value=
-                item.category;
+    window.AUSTA_V153C.edit(
+      realItem
+    );
 
-              select.dispatchEvent(
-                new Event('change')
-              );
-            }
+    return;
+  }
 
-          },50);
-        }
+  console.error(
+    'A-USTA real edit sistemi tapılmadı.',
+    realItem
+  );
 
-        return;
-      }
+  alert(
+    'Elanı düzəltmə pəncərəsi açıla bilmədi.'
+  );
+
+  return;
+}
 
 
     const promotion=
