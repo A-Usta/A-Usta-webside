@@ -18311,8 +18311,256 @@ function bindNewFunctionClicks(){
   });
 }
 function fixVideos(){
- const g=q('#austaV22VideoGrid');if(!g)return;
- g.style.setProperty('display','grid','important');g.style.setProperty('grid-template-columns','repeat(3,minmax(0,1fr))','important');g.style.setProperty('grid-auto-flow','row','important');g.style.setProperty('width','100%','important');
+  const g=q('#austaV22VideoGrid');
+  if(!g)return;
+
+  const realCards=
+    qa('#austaV22VideoGrid>.austa-v159-real-video-card');
+
+  /* V159 real Home videolarını V34 dəyişməsin */
+  if(realCards.length){
+
+    g.style.setProperty(
+      'display',
+      'flex',
+      'important'
+    );
+
+    g.style.setProperty(
+      'flex-wrap',
+      'wrap',
+      'important'
+    );
+
+    g.style.setProperty(
+      'grid-template-columns',
+      'none',
+      'important'
+    );
+
+    g.style.setProperty(
+      'grid-auto-flow',
+      'unset',
+      'important'
+    );
+
+    g.style.setProperty(
+      'width',
+      '100%',
+      'important'
+    );
+
+    g.style.setProperty(
+      'gap',
+      '12px',
+      'important'
+    );
+
+    g.style.setProperty(
+      'align-items',
+      'flex-start',
+      'important'
+    );
+
+    g.style.setProperty(
+      'justify-content',
+      'flex-start',
+      'important'
+    );
+
+    realCards.forEach(c=>{
+
+      c.style.setProperty(
+        'display',
+        'block',
+        'important'
+      );
+
+      c.style.setProperty(
+        'flex',
+        '0 0 215px',
+        'important'
+      );
+
+      c.style.setProperty(
+        'width',
+        '215px',
+        'important'
+      );
+
+      c.style.setProperty(
+        'min-width',
+        '215px',
+        'important'
+      );
+
+      c.style.setProperty(
+        'max-width',
+        '215px',
+        'important'
+      );
+
+      c.style.setProperty(
+        'height',
+        '380px',
+        'important'
+      );
+
+      c.style.setProperty(
+        'min-height',
+        '380px',
+        'important'
+      );
+
+      c.style.setProperty(
+        'max-height',
+        '380px',
+        'important'
+      );
+
+      c.style.setProperty(
+        'aspect-ratio',
+        'auto',
+        'important'
+      );
+
+      c.style.removeProperty(
+        'flex-direction'
+      );
+
+      const video=c.querySelector('video');
+
+      if(video){
+        video.style.setProperty(
+          'width',
+          '100%',
+          'important'
+        );
+
+        video.style.setProperty(
+          'height',
+          '100%',
+          'important'
+        );
+
+        video.style.setProperty(
+          'object-fit',
+          'cover',
+          'important'
+        );
+      }
+    });
+
+    return;
+  }
+
+
+  /* V34 köhnə kart davranışı */
+  g.style.setProperty(
+    'display',
+    'grid',
+    'important'
+  );
+
+  g.style.setProperty(
+    'grid-template-columns',
+    'repeat(3,minmax(0,1fr))',
+    'important'
+  );
+
+  g.style.setProperty(
+    'grid-auto-flow',
+    'row',
+    'important'
+  );
+
+  g.style.setProperty(
+    'width',
+    '100%',
+    'important'
+  );
+
+  qa(
+    '#austaV22VideoGrid>.austa-v22-video-card:not(.austa-v159-real-video-card)'
+  ).forEach((c,i)=>{
+
+    c.style.setProperty(
+      'display',
+      'flex',
+      'important'
+    );
+
+    c.style.setProperty(
+      'flex-direction',
+      'column',
+      'important'
+    );
+
+    c.style.setProperty(
+      'width',
+      '100%',
+      'important'
+    );
+
+    c.style.setProperty(
+      'min-width',
+      '0',
+      'important'
+    );
+
+    c.style.setProperty(
+      'max-width',
+      'none',
+      'important'
+    );
+
+    c.style.setProperty(
+      'height',
+      'auto',
+      'important'
+    );
+
+    const th=
+      c.querySelector('.austa-v22-video-thumb');
+
+    if(th){
+      th.style.setProperty(
+        'width',
+        '100%',
+        'important'
+      );
+
+      th.style.setProperty(
+        'height',
+        'auto',
+        'important'
+      );
+
+      th.style.setProperty(
+        'aspect-ratio',
+        '16/6',
+        'important'
+      );
+    }
+
+    if(!c.querySelector('.austa-v34-video-actions')){
+
+      const a=
+        document.createElement('div');
+
+      a.className=
+        'austa-v34-video-actions';
+
+      a.innerHTML=
+        '<button type="button" data-v34-video-action="like">♥ <span class="v34-count">0</span></button>'+
+        '<button type="button" data-v34-video-action="comment">💬</button>'+
+        '<button type="button" data-v34-video-action="save">🔖</button>'+
+        '<button type="button" data-v34-video-action="share">↗</button>';
+
+      c.appendChild(a);
+    }
+  });
+}
  qa('#austaV22VideoGrid>.austa-v22-video-card').forEach((c,i)=>{
    c.style.setProperty('display','flex','important');c.style.setProperty('flex-direction','column','important');c.style.setProperty('width','100%','important');c.style.setProperty('min-width','0','important');c.style.setProperty('max-width','none','important');c.style.setProperty('height','auto','important');
    const th=c.querySelector('.austa-v22-video-thumb');if(th){th.style.setProperty('width','100%','important');th.style.setProperty('height','auto','important');th.style.setProperty('aspect-ratio','16/6','important');}
