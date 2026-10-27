@@ -32107,44 +32107,61 @@ async function openFullListing(id){
       }
 
 
-      const promotion=
-        event.target.closest(
-          '[data-owner-boost],'+
-          '[data-owner-vip],'+
-          '[data-owner-premium]'
-        );
+    const promotion=
+  event.target.closest(
+    '[data-owner-boost],'+
+    '[data-owner-vip],'+
+    '[data-owner-premium]'
+  );
 
-      if(promotion){
+if(promotion){
 
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
 
-        let type='boost';
+  let type='boost';
 
-        if(
-          promotion.hasAttribute(
-            'data-owner-vip'
-          )
-        ){
-          type='vip';
-        }
+  if(
+    promotion.hasAttribute(
+      'data-owner-vip'
+    )
+  ){
+    type='vip';
+  }
 
-        if(
-          promotion.hasAttribute(
-            'data-owner-premium'
-          )
-        ){
-          type='premium';
-        }
+  if(
+    promotion.hasAttribute(
+      'data-owner-premium'
+    )
+  ){
+    type='premium';
+  }
 
-        window.AUSTA_OWNER_PROMOTION?.(
-          item.id,
-          type
-        );
+  if(
+    window.AUSTA_PROMOTION_V157 &&
+    typeof window.AUSTA_PROMOTION_V157.open===
+      'function'
+  ){
 
-        return;
-      }
+    window.AUSTA_PROMOTION_V157.open(
+      item,
+      type
+    );
+
+    return;
+  }
+
+  console.error(
+    'A-USTA V157 promotion UI tapılmadı.'
+  );
+
+  alert(
+    'Paket seçimi hazırda açıla bilmədi.'
+  );
+
+  return;
+}
 
     },
     true
