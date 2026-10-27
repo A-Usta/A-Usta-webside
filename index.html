@@ -59956,3 +59956,402 @@ if(
 
 })();
 </script>
+
+<script id="austa-v159-real-home-videos">
+(function(){
+  "use strict";
+
+  async function loadRealHomeVideos(){
+
+    const grid =
+      document.getElementById("austaV22VideoGrid");
+
+    const sb =
+      window.AUSTA_SUPABASE;
+
+    if(!grid){
+      console.error(
+        "[A-USTA V159] Video grid tapılmadı."
+      );
+      return;
+    }
+
+    if(!sb){
+      console.error(
+        "[A-USTA V159] Supabase client tapılmadı."
+      );
+      return;
+    }
+
+    try{
+
+      /*
+       * Aktiv + videosu olan
+       * Avtomobil / Rent a Car elanları
+       */
+      const {
+        data:listings,
+        error:listingsError
+      } = await sb
+        .from("vehicle_listings")
+        .select(
+          "id,listing_type,status,brand,model,year,price,daily_price,has_video,created_at"
+        )
+        .eq("status","active")
+        .eq("has_video",true)
+        .order(
+          "created_at",
+          {ascending:false}
+        );
+
+      if(listingsError){
+        throw listingsError;
+      }
+
+      if(!listings?.length){
+
+        grid.innerHTML="";
+
+        console.log(
+          "[A-USTA V159] Aktiv real video elanı yoxdur."
+        );
+
+        return;
+      }
+
+      const listingIds =
+        listings.map(item=>item.id);
+
+      /*
+       * Real video media
+       */
+      const {
+        data:mediaRows,
+        error:mediaError
+      } = await sb
+        .from("listing_media")
+        .select(
+          "id,listing_id,storage_path,media_type,sort_order,created_at"
+        )
+        .in(
+          "listing_id",
+          listingIds
+        )
+        .eq(
+          "media_type",
+          "video"
+        )
+        .order(
+          "sort_order",
+          {ascending:true}
+        );
+
+      if(mediaError){
+        throw mediaError;
+      }
+
+      const prepared=[];
+
+      for(const listing of listings){
+
+        const media =
+          (mediaRows || []).find(
+            row=>
+              String(row.listing_id)===
+              String(listing.id)
+          );
+
+        if(!media?.storage_path){
+          continue;
+        }
+
+        const {
+          data:signed,
+          error:signedError
+        } = await sb
+          .storage
+          .from("listing-media")
+          .createSignedUrl(
+            media.storage_path,
+            3600
+          );
+
+        if(
+          signedError ||
+          !signed?.signedUrl
+        ){
+          console.error(
+            "[A-USTA V159] Video URL:",
+            listing.id,
+            signedError
+          );
+
+          continue;
+        }
+
+        prepared.push({
+          id:media.id,
+          listingId:listing.id,
+          type:listing.listing_type,
+          title:[
+            listing.year,
+            listing.brand,
+            listing.model
+          ].filter(Boolean).join(" "),
+          price:
+            listing.listing_type==="rent"
+              ? (
+                  listing.daily_price != null
+                    ? listing.daily_price+
+                      " AZN / gün"
+                    : ""
+                )
+              : (
+                  listing.price != null
+                    ? listing.price+
+                      " AZN"
+                    : ""
+                ),
+          video:signed.signedUrl
+        });
+      }
+
+      /*
+       * Demo/internet kartları burada
+       * qətiyyən istifadə olunmur.
+       */
+      grid.innerHTML="";
+
+      if(!prepared.length){
+
+        console.log(
+          "[A-USTA V159] Video media tapılmadı."
+        );
+
+        return;
+      }
+
+      /*
+       * Köhnə grid CSS-lərini üstələyirik.
+       */
+      grid.style.setProperty(
+        "display",
+        "flex",
+        "important"
+      );
+
+      grid.style.setProperty(
+        "flex-wrap",
+        "wrap",
+        "important"
+      );
+
+      grid.style.setProperty(
+        "grid-template-columns",
+        "none",
+        "important"
+      );
+
+      grid.style.setProperty(
+        "gap",
+        "12px",
+        "important"
+      );
+
+      prepared.forEach(item=>{
+
+        const card =
+          document.createElement("article");
+
+        card.className =
+          "austa-v22-video-card "+
+          "austa-v159-real-video-card";
+
+        card.dataset.austaRealVideo="1";
+        card.dataset.listingId=item.listingId;
+
+        /*
+         * DƏQİQ 215 × 380
+         */
+        card.style.cssText =
+          "position:relative !important;"+
+          "display:block !important;"+
+          "flex:0 0 215px !important;"+
+          "width:215px !important;"+
+          "min-width:215px !important;"+
+          "max-width:215px !important;"+
+          "height:380px !important;"+
+          "min-height:380px !important;"+
+          "max-height:380px !important;"+
+          "aspect-ratio:auto !important;"+
+          "padding:0 !important;"+
+          "margin:0 !important;"+
+          "overflow:hidden !important;"+
+          "border-radius:16px !important;"+
+          "background:#000 !important;"+
+          "box-sizing:border-box !important;";
+
+        const video =
+          document.createElement("video");
+
+        video.src=item.video;
+        video.preload="metadata";
+        video.muted=true;
+        video.playsInline=true;
+        video.controls=true;
+
+        video.style.cssText =
+          "position:absolute;"+
+          "inset:0;"+
+          "display:block;"+
+          "width:100%;"+
+          "height:100%;"+
+          "object-fit:cover;"+
+          "background:#000;";
+
+        const info =
+          document.createElement("div");
+
+        info.style.cssText =
+          "position:absolute;"+
+          "left:0;right:0;bottom:0;"+
+          "z-index:3;"+
+          "padding:42px 10px 10px;"+
+          "pointer-events:none;"+
+          "background:linear-gradient("+
+            "transparent,"+
+            "rgba(0,0,0,.88)"+
+          ");"+
+          "color:#fff;";
+
+        const tag =
+          item.type==="rent"
+            ? "RENT A CAR"
+            : "AVTOMOBİL";
+
+        info.innerHTML=
+          '<span style="'+
+            'display:inline-block;'+
+            'padding:4px 7px;'+
+            'margin-bottom:5px;'+
+            'border-radius:6px;'+
+            'background:#e31b3d;'+
+            'font-size:9px;'+
+            'font-weight:900;'+
+          '">'+
+            tag+
+          '</span>'+
+          '<b style="'+
+            'display:block;'+
+            'font-size:12px;'+
+            'line-height:1.3;'+
+          '">'+
+            escapeHtml(item.title)+
+          '</b>'+
+          '<strong style="'+
+            'display:block;'+
+            'margin-top:4px;'+
+            'font-size:12px;'+
+          '">'+
+            escapeHtml(item.price)+
+          '</strong>';
+
+        card.appendChild(video);
+        card.appendChild(info);
+        grid.appendChild(card);
+      });
+
+      /*
+       * Mövcud action sistemi varsa
+       * yeni real kartlara yenidən bind et.
+       */
+      if(
+        window.AUSTA_RENT_VIDEO_ACTIONS &&
+        typeof window.AUSTA_RENT_VIDEO_ACTIONS.bind===
+          "function"
+      ){
+        window.AUSTA_RENT_VIDEO_ACTIONS.bind();
+      }
+
+      console.log(
+        "[A-USTA V159] REAL HOME VIDEOS:",
+        prepared.length
+      );
+    }
+    catch(error){
+
+      console.error(
+        "[A-USTA V159] Real video xətası:",
+        error
+      );
+    }
+  }
+
+
+  function escapeHtml(value){
+
+    return String(value ?? "")
+      .replace(
+        /[&<>"']/g,
+        char=>({
+          "&":"&amp;",
+          "<":"&lt;",
+          ">":"&gt;",
+          '"':"&quot;",
+          "'":"&#39;"
+        })[char]
+      );
+  }
+
+
+  function start(){
+
+    /*
+     * Supabase scriptlərinin yüklənməsi üçün
+     * qısa gözləmə.
+     */
+    let attempts=0;
+
+    const timer=setInterval(()=>{
+
+      attempts++;
+
+      if(window.AUSTA_SUPABASE){
+
+        clearInterval(timer);
+        loadRealHomeVideos();
+        return;
+      }
+
+      if(attempts>=30){
+
+        clearInterval(timer);
+
+        console.error(
+          "[A-USTA V159] Supabase gözləmə vaxtı bitdi."
+        );
+      }
+
+    },200);
+  }
+
+
+  if(document.readyState==="loading"){
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      start
+    );
+
+  }else{
+
+    start();
+  }
+
+
+  window.AUSTA_REAL_HOME_VIDEOS_V159={
+    refresh:loadRealHomeVideos
+  };
+
+})();
+</script>
