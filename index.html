@@ -31192,6 +31192,55 @@ const estimateText =
   }
 }
 
+/* V168A: scoped Vehicle/Rent detail presentation. */
+#austaFinalListingPage.austa-v168a-detail .austa-final-info-section,
+#austaFinalListingPage.austa-v168a-detail .austa-final-description{
+  background:#fff !important;
+  color:#111827 !important;
+  border:1px solid #e5e7eb !important;
+  border-radius:16px;
+  padding:22px;
+}
+#austaFinalListingPage.austa-v168a-detail .austa-final-spec-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0 28px;
+  margin:0;
+}
+#austaFinalListingPage.austa-v168a-detail .austa-final-spec{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
+  align-items:baseline;
+  gap:14px;
+  padding:14px 0;
+  background:transparent !important;
+  border:0 !important;
+  border-bottom:1px solid #eef0f3 !important;
+  border-radius:0;
+}
+#austaFinalListingPage.austa-v168a-detail dt{
+  color:#6b7280;
+  font-size:13px;
+  overflow-wrap:anywhere;
+}
+#austaFinalListingPage.austa-v168a-detail dd{
+  margin:0;
+  color:#111827;
+  font-size:14px;
+  font-weight:650;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+  min-width:0;
+}
+@media(max-width:700px){
+  #austaFinalListingPage.austa-v168a-detail .austa-final-spec-grid{
+    grid-template-columns:minmax(0,1fr);
+  }
+  #austaFinalListingPage.austa-v168a-detail .austa-final-info-section,
+  #austaFinalListingPage.austa-v168a-detail .austa-final-description{
+    padding:16px;
+  }
+}
+
 </style>
 
 <script id="austa-final-full-listing-js">
@@ -31719,39 +31768,92 @@ function descriptionOf(item){
 }
 
 
+// V168A: presentation only; never enumerate a vehicle listing's internal fields.
+function vehicleText(value){
+  if(typeof value!=='string' && typeof value!=='number')return '';
+  if(typeof value==='number' && !Number.isFinite(value))return '';
+  const text=String(value).trim();
+  return /^(?:null|undefined|n\/a|\[object Object\])$/i.test(text) ? '' : text;
+}
+
+function vehicleValue(item,key,legacy){
+  return vehicleText(item?.[key]) || vehicleText(item?.[legacy]);
+}
+
+function vehicleTechnical(value,type){
+  const text=vehicleText(value);
+  if(!text)return '';
+  const maps={
+    body:{sedan:'Sedan',suv:'SUV',hatchback:'Hetçbek',coupe:'Kupe',
+      wagon:'Universal',pickup:'Pikap',van:'Furqon',convertible:'Kabriolet'},
+    fuel:{petrol:'Benzin',gasoline:'Benzin',diesel:'Dizel',hybrid:'Hibrid',
+      electric:'Elektrik',lpg:'Qaz'},
+    transmission:{automatic:'Avtomat',manual:'Mexaniki',cvt:'Variator',robot:'Robot'},
+    color:{black:'Qara',white:'Ağ',gray:'Boz',grey:'Boz',silver:'Gümüşü',
+      red:'Qırmızı',blue:'Göy','dark blue':'Tünd göy',green:'Yaşıl',
+      beige:'Bej',brown:'Qəhvəyi',yellow:'Sarı',orange:'Narıncı',purple:'Bənövşəyi'}
+  };
+  const existing={
+    body:['Sedan','SUV','SUV / Offroad','Hetçbek','Universal','Kupe','Kabriolet',
+      'Miniven','Mikroavtobus','Pikap','Furqon','Digər'],
+    fuel:['Benzin','Dizel','Hibrid','Plug-in Hibrid','Elektrik','Qaz','Digər'],
+    transmission:['Avtomat','Mexaniki','Robot','Variator','Digər'],
+    color:['Qara','Ağ','Boz','Gümüşü','Qırmızı','Göy','Tünd göy','Yaşıl',
+      'Bej','Qəhvəyi','Sarı','Narıncı','Bənövşəyi','Digər']
+  };
+  // Preserve confirmed Azerbaijani values; omit unknown categorical codes.
+  if(existing[type]?.includes(text))return text;
+  return maps[type]?.[text.toLowerCase()] || '';
+}
+
 function carSpecs(item){
+  const value=(key,legacy)=>vehicleValue(item,key,legacy);
+  const mileage=value('mileage','Yürüş (km)');
+  return [
+    ['Şəhər',value('region','')],
+    ['Marka',value('brand','Marka')],
+    ['Model',value('model','Model')],
+    ['Buraxılış ili',value('year','Buraxılış ili')],
+    ['Ban növü',vehicleTechnical(value('body_type','Ban tipi'),'body')],
+    ['Rəng',vehicleTechnical(value('color','Rəng'),'color')],
+    ['Mühərrik',value('engine','Mühərrik həcmi')],
+    ['Yanacaq növü',vehicleTechnical(value('fuel_type','Yanacaq'),'fuel')],
+    ['Yürüş',mileage ? (/^[\d\s.,]+$/.test(mileage) ? mileage+' km' : mileage) : ''],
+    ['Sürətlər qutusu',vehicleTechnical(value('transmission','Sürətlər qutusu'),'transmission')]
+  ].filter(([,value])=>value!=='');
+}
 
-  const fields=[
-    ['Şəhər / ünvan','Region / ünvan'],
-    ['Marka','Marka'],
-    ['Model','Model'],
-    ['Buraxılış ili','Buraxılış ili'],
-    ['Ban tipi','Ban tipi'],
-    ['Rəng','Rəng'],
-    ['Mühərrik','Mühərrik həcmi'],
-    ['Mühərrik gücü','Mühərrik gücü (a.g.)'],
-    ['Yanacaq','Yanacaq'],
-    ['Yürüş','Yürüş (km)'],
-    ['Sürətlər qutusu','Sürətlər qutusu'],
-    ['Ötürücü','Ötürücü'],
-    ['Vəziyyət','Vəziyyət'],
-    ['Bazar','Hansı bazar üçün istehsal olunub?'],
-    ['VIN / Şassi','VIN / Şassi nömrəsi'],
-    ['Kredit / Lizinq','Kredit / Lizinq'],
-    ['Barter','Barter']
-  ];
+function vehicleSection(title,rows){
+  const present=rows.filter(([,value])=>vehicleText(value)!=='');
+  if(!present.length)return '';
+  return `<section class="austa-final-info-section">
+    <h3 class="austa-final-section-title">${escapeHtml(title)}</h3>
+    <dl class="austa-final-spec-grid">${present.map(([label,value])=>`
+      <div class="austa-final-spec"><dt>${escapeHtml(label)}</dt>
+      <dd>${escapeHtml(value)}</dd></div>`).join('')}</dl>
+  </section>`;
+}
 
-  return fields
-    .map(([label,key])=>[
-      label,
-      item?.[key]
-    ])
-    .filter(
-      ([,value])=>
-        value!==undefined &&
-        value!==null &&
-        String(value).trim()!==''
-    );
+function vehicleDate(value){
+  const raw=vehicleText(value);
+  if(!raw)return '';
+  const date=new Date(typeof value==='number' ? value : raw);
+  if(Number.isNaN(date.getTime()))return '';
+  return new Intl.DateTimeFormat('az-AZ',{
+    day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'
+  }).format(date);
+}
+
+function vehicleDetailSections(item){
+  return vehicleSection('Yerləşmə',[
+    ['Şəhər / region',vehicleText(item.region)],
+    ['Rayon',vehicleText(item.district)],
+    ['Ünvan',vehicleText(item.address)]
+  ])+vehicleSection('Elan məlumatı',[
+    ['Elan nömrəsi',vehicleText(item.id)],
+    ['Yaradılma tarixi',vehicleDate(item.created_at)],
+    ['Yerləşdirilmə tarixi',vehicleDate(item.published_at)]
+  ]);
 }
 
 
@@ -31810,7 +31912,7 @@ function genericSpecs(item){
 
 function specsFor(item){
 
-  if(categoryOf(item)==='cars'){
+  if(['cars','rent'].includes(categoryOf(item))){
     return carSpecs(item);
   }
 
@@ -32591,11 +32693,15 @@ async function openFullListing(id){
   const category=
     categoryOf(item);
 
+  const isVehicle=['cars','rent'].includes(category);
+
   const specs=
     specsFor(item);
 
   const description=
-    descriptionOf(item);
+    isVehicle
+      ? vehicleText(item.description) || vehicleText(item['Avtomobil haqqında əlavə məlumat'])
+      : descriptionOf(item);
 
   const phone=
     phoneOf(item);
@@ -32608,6 +32714,8 @@ async function openFullListing(id){
 
   page.id=
     'austaFinalListingPage';
+
+  if(isVehicle)page.classList.add('austa-v168a-detail');
 
   page.innerHTML=`
     <div class="austa-final-page">
@@ -32664,6 +32772,7 @@ async function openFullListing(id){
 
          
 
+          ${isVehicle ? vehicleSection('Avtomobil haqqında',specs) : `
           <section class="austa-final-info-section">
 
             <h3 class="austa-final-section-title">
@@ -32694,7 +32803,7 @@ async function openFullListing(id){
 
             </div>
 
-          </section>
+          </section>`}
 
           ${
             description
@@ -32702,7 +32811,7 @@ async function openFullListing(id){
                 <section class="austa-final-description">
 
                   <h3 class="austa-final-section-title">
-                    Əlavə məlumat
+                    ${isVehicle ? 'Təsvir' : 'Əlavə məlumat'}
                   </h3>
 
                   <div class="austa-final-description-text">
@@ -32713,6 +32822,8 @@ async function openFullListing(id){
               `
               : ''
           }
+
+          ${isVehicle ? vehicleDetailSections(item) : ''}
 
           ${similarHtml(item)}
 
