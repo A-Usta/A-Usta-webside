@@ -54414,11 +54414,10 @@ async function updateListing(
             phone:
                 nullable(input.phone),
 
-            has_video:
-                bool(
-                    input.has_video ??
-                    input.hasVideo
-                )
+            // V167: omitted video metadata must not clear the stored flag.
+            ...((input.has_video ?? input.hasVideo) !== undefined
+                ? {has_video:bool(input.has_video ?? input.hasVideo)}
+                : {})
         };
 
 
@@ -59114,6 +59113,29 @@ function safeFileName(name){
    UPLOAD SINGLE FILE
    ========================================================= */
 
+// V167: only confirmed listing_media rows determine the vehicle video flag.
+async function syncVehicleHasVideo(listingId, user){
+    const {data, error} = await sb()
+        .from('listing_media')
+        .select('id')
+        .eq('listing_id', listingId)
+        .eq('media_type', 'video')
+        .limit(1);
+
+    if(error){ throw error; }
+    if(!Array.isArray(data)){
+        throw new Error('Video media yoxlamasının nəticəsi alınmadı.');
+    }
+
+    const {error:updateError} = await sb()
+        .from('vehicle_listings')
+        .update({has_video:data.length > 0})
+        .eq('id', listingId)
+        .eq('owner_id', user.id);
+
+    if(updateError){ throw updateError; }
+}
+
 async function uploadOne(
     config,
     user,
@@ -59213,6 +59235,11 @@ async function uploadOne(
         throw mediaError;
     }
 
+
+    if(config.parentTable === 'vehicle_listings' && mediaType === 'video'){
+        // INSERT has succeeded; sync errors propagate without deleting real media.
+        await syncVehicleHasVideo(listingId, user);
+    }
 
     return {
 
@@ -59357,7 +59384,8 @@ async function uploadMedia(
 
     if(
         files.videos.length &&
-        config.hasVideoColumn
+        config.hasVideoColumn &&
+        config.parentTable !== 'vehicle_listings'
     ){
 
         const {
@@ -59554,6 +59582,16 @@ function patchSave(){
         };
 
 
+    // V167: reuse the same uploader after a successful Vehicle/Rent edit.
+    const originalUpdate = window.AUSTA_V153.updateListing.bind(window.AUSTA_V153);
+    window.AUSTA_V153.updateListing = async function(type, listingId, input){
+        const result = await originalUpdate(type, listingId, input);
+        if(VEHICLE_TYPES.has(type)){
+            await uploadMedia(type, listingId);
+        }
+        return result;
+    };
+
     window.AUSTA_V153
         .__v153d14Wrapped =
         true;
@@ -59718,6 +59756,16 @@ function patchOpen(){
             return result;
         };
 
+
+    // V167: the existing edit form needs the existing media inputs too.
+    const originalEdit = window.AUSTA_V153C.edit.bind(window.AUSTA_V153C);
+    window.AUSTA_V153C.edit = async function(item){
+        const result = await originalEdit(item);
+        if(item?.__austa_table === 'vehicle_listings'){
+            buildMediaBox();
+        }
+        return result;
+    };
 
     window.AUSTA_V153C
         .__v153d14OpenWrapped =
