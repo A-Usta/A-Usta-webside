@@ -61436,71 +61436,41 @@ if(
 })();
 </script>
 
-<style id="austa-v159-real-video-size-lock">
-/* A-USTA V159 — REAL HOME VIDEO FINAL 215x380 LOCK */
+<style id="austa-v161-real-video-final-css">
 
-#austaV22VideoGrid {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, 215px) !important;
-  grid-auto-columns: 215px !important;
-  gap: 12px !important;
-  justify-content: start !important;
-  align-items: start !important;
-}
-
-#austaV22VideoGrid .austa-v159-real-video-card {
-  width: 215px !important;
-  min-width: 215px !important;
-  max-width: 215px !important;
-
-  height: 380px !important;
-  min-height: 380px !important;
-  max-height: 380px !important;
-
-  aspect-ratio: auto !important;
-  flex: 0 0 215px !important;
-
-  overflow: hidden !important;
-  box-sizing: border-box !important;
-}
-
-#austaV22VideoGrid .austa-v159-real-video-card video {
-  width: 100% !important;
-  min-width: 100% !important;
-  max-width: 100% !important;
-
-  height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
-
-  aspect-ratio: auto !important;
-  object-fit: cover !important;
-  display: block !important;
-}
-</style>
-
-<style id="austa-v160-final-real-video-css">
 /* =========================================================
-   A-USTA V160 — REAL HOME VIDEO FINAL
+   A-USTA V161
+   REAL HOME VIDEO — FINAL 215x380 + SOCIAL ACTIONS
    ========================================================= */
+
+
+/* ---------- GRID ---------- */
 
 #austaV22VideoGrid{
   display:flex !important;
   flex-wrap:wrap !important;
   align-items:flex-start !important;
   justify-content:flex-start !important;
+
   grid-template-columns:none !important;
   grid-auto-columns:unset !important;
-  gap:12px !important;
+
   width:100% !important;
   max-width:none !important;
+
+  gap:12px !important;
+
   overflow:visible !important;
 }
+
+
+/* ---------- REAL VIDEO CARD ---------- */
 
 #austaV22VideoGrid > .austa-v159-real-video-card{
   position:relative !important;
 
   display:block !important;
+
   flex:0 0 215px !important;
 
   width:215px !important;
@@ -61519,15 +61489,21 @@ if(
   overflow:hidden !important;
 
   border-radius:16px !important;
+
   background:#000 !important;
 
   box-sizing:border-box !important;
 }
 
+
+/* ---------- VIDEO ---------- */
+
 #austaV22VideoGrid
 > .austa-v159-real-video-card
 > video{
+
   position:absolute !important;
+
   inset:0 !important;
 
   display:block !important;
@@ -61540,417 +61516,677 @@ if(
   min-height:100% !important;
   max-height:100% !important;
 
-  object-fit:cover !important;
   aspect-ratio:auto !important;
+
+  object-fit:cover !important;
 
   background:#000 !important;
 }
 
 
-/* ACTION BUTTONS */
-
-.austa-v159-real-video-card
-.austa-v160-video-actions{
-  position:absolute !important;
-  z-index:20 !important;
-
-  right:8px !important;
-  bottom:72px !important;
-
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:center !important;
-
-  gap:9px !important;
-
-  background:transparent !important;
-
-  padding:0 !important;
-  margin:0 !important;
-
-  pointer-events:auto !important;
-}
-
-.austa-v159-real-video-card
-.austa-v160-video-action{
-  width:39px !important;
-  min-width:39px !important;
-  height:39px !important;
-
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-
-  gap:2px !important;
-
-  padding:0 4px !important;
-
-  border:1px solid rgba(255,255,255,.35) !important;
-  border-radius:50% !important;
-
-  background:rgba(0,0,0,.52) !important;
-  color:#fff !important;
-
-  box-shadow:0 3px 12px rgba(0,0,0,.25) !important;
-
-  font-size:18px !important;
-  font-weight:800 !important;
-
-  cursor:pointer !important;
-
-  backdrop-filter:blur(5px) !important;
-  -webkit-backdrop-filter:blur(5px) !important;
-
-  pointer-events:auto !important;
-}
-
-.austa-v159-real-video-card
-.austa-v160-video-action:hover{
-  background:rgba(0,0,0,.72) !important;
-}
-
-.austa-v159-real-video-card
-.austa-v160-video-action.is-active{
-  color:#ff2448 !important;
-  border-color:#ff2448 !important;
-}
-
-.austa-v159-real-video-card
-.austa-v160-like-count{
-  font-size:9px !important;
-  font-weight:900 !important;
-  line-height:1 !important;
-}
-
-
-/* Köhnə V34 action paneli REAL V159 kartında görünməsin */
+/* =========================================================
+   KÖHNƏ V34 ACTION-LARI
+   yalnız REAL V159 kartında gizlənir
+   ========================================================= */
 
 .austa-v159-real-video-card
 .austa-v34-video-actions{
+
   display:none !important;
 }
 
 
 /* =========================================================
-   COMMENT SHEET
+   V161 ACTIONS
+   Videonun İÇİNDƏ sağ tərəfdə
    ========================================================= */
 
-#austaV160CommentOverlay{
-  position:fixed;
-  inset:0;
-  z-index:2147483647;
+.austa-v161-video-actions{
 
-  display:flex;
-  align-items:flex-end;
-  justify-content:center;
+  position:absolute !important;
 
-  background:rgba(0,0,0,.50);
+  z-index:50 !important;
+
+  right:9px !important;
+
+  top:50% !important;
+
+  transform:translateY(-50%) !important;
+
+  display:flex !important;
+
+  flex-direction:column !important;
+
+  align-items:center !important;
+
+  gap:10px !important;
+
+  width:auto !important;
+
+  padding:0 !important;
+
+  margin:0 !important;
+
+  background:transparent !important;
+
+  pointer-events:auto !important;
 }
 
-#austaV160CommentSheet{
-  width:min(560px,100%);
-  height:min(72vh,650px);
 
-  display:flex;
-  flex-direction:column;
+.austa-v161-action{
 
-  overflow:hidden;
+  position:relative !important;
 
-  background:#fff;
-  color:#111;
+  width:42px !important;
+  min-width:42px !important;
+  max-width:42px !important;
 
-  border-radius:22px 22px 0 0;
+  height:42px !important;
+  min-height:42px !important;
+  max-height:42px !important;
 
-  box-shadow:0 -15px 50px rgba(0,0,0,.25);
+  display:flex !important;
 
-  font-family:Arial,sans-serif;
+  align-items:center !important;
+
+  justify-content:center !important;
+
+  flex-direction:column !important;
+
+  padding:0 !important;
+
+  margin:0 !important;
+
+  border:1px solid rgba(255,255,255,.38) !important;
+
+  border-radius:50% !important;
+
+  background:rgba(0,0,0,.58) !important;
+
+  color:#fff !important;
+
+  box-shadow:
+    0 3px 12px rgba(0,0,0,.30) !important;
+
+  backdrop-filter:blur(5px) !important;
+
+  -webkit-backdrop-filter:blur(5px) !important;
+
+  font-family:Arial,sans-serif !important;
+
+  font-size:19px !important;
+
+  font-weight:900 !important;
+
+  line-height:1 !important;
+
+  cursor:pointer !important;
+
+  pointer-events:auto !important;
+
+  box-sizing:border-box !important;
+
+  user-select:none !important;
+
+  -webkit-user-select:none !important;
 }
 
-.austa-v160-comment-header{
-  position:relative;
 
-  min-height:58px;
+.austa-v161-action:hover{
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  background:rgba(0,0,0,.78) !important;
 
-  flex:0 0 auto;
-
-  border-bottom:1px solid #ededed;
-
-  background:#fff;
+  border-color:#fff !important;
 }
 
-.austa-v160-comment-header strong{
-  color:#111;
-  font-size:16px;
-  font-weight:900;
+
+.austa-v161-action.is-active{
+
+  color:#ff2448 !important;
+
+  border-color:#ff2448 !important;
+
+  background:rgba(0,0,0,.78) !important;
 }
 
-.austa-v160-comment-close{
-  position:absolute;
 
-  right:12px;
-  top:50%;
+.austa-v161-like-count{
 
-  transform:translateY(-50%);
+  position:absolute !important;
 
-  width:40px;
-  height:40px;
+  right:-3px !important;
 
-  padding:0;
+  bottom:-4px !important;
 
-  border:0;
-  background:transparent;
+  min-width:17px !important;
 
-  color:#444;
+  height:17px !important;
 
-  font-size:31px;
-  line-height:40px;
+  padding:0 4px !important;
 
-  cursor:pointer;
+  display:flex !important;
+
+  align-items:center !important;
+
+  justify-content:center !important;
+
+  border-radius:9px !important;
+
+  background:#111 !important;
+
+  color:#fff !important;
+
+  border:1px solid rgba(255,255,255,.35) !important;
+
+  font-size:9px !important;
+
+  line-height:17px !important;
+
+  box-sizing:border-box !important;
 }
 
-.austa-v160-comment-list{
-  flex:1 1 auto;
 
-  overflow-y:auto;
+/* =========================================================
+   COMMENT OVERLAY
+   ========================================================= */
 
-  padding:12px 16px 18px;
+#austaV161CommentOverlay{
 
-  background:#fff;
+  position:fixed !important;
+
+  inset:0 !important;
+
+  z-index:2147483647 !important;
+
+  display:flex !important;
+
+  align-items:flex-end !important;
+
+  justify-content:center !important;
+
+  background:rgba(0,0,0,.50) !important;
+
+  padding:0 !important;
+
+  margin:0 !important;
+
+  box-sizing:border-box !important;
 }
 
-.austa-v160-comment-empty{
-  min-height:100%;
 
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
+/* =========================================================
+   TIKTOK STYLE WHITE COMMENT SHEET
+   ========================================================= */
 
-  box-sizing:border-box;
+#austaV161CommentSheet{
 
-  padding:30px;
+  position:relative !important;
 
-  color:#777;
-  text-align:center;
+  width:min(600px,100%) !important;
+
+  height:min(72vh,680px) !important;
+
+  display:flex !important;
+
+  flex-direction:column !important;
+
+  background:#fff !important;
+
+  color:#111 !important;
+
+  border-radius:22px 22px 0 0 !important;
+
+  overflow:hidden !important;
+
+  box-shadow:
+    0 -14px 45px rgba(0,0,0,.28) !important;
+
+  font-family:Arial,sans-serif !important;
 }
 
-.austa-v160-comment-empty-icon{
-  width:58px;
-  height:58px;
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
+/* ---------- COMMENT HEADER ---------- */
 
-  margin-bottom:12px;
+.austa-v161-comment-header{
 
-  border-radius:50%;
+  position:relative !important;
 
-  background:#f2f2f2;
+  flex:0 0 58px !important;
 
-  font-size:25px;
+  height:58px !important;
+
+  display:flex !important;
+
+  align-items:center !important;
+
+  justify-content:center !important;
+
+  border-bottom:1px solid #ededed !important;
+
+  background:#fff !important;
 }
 
-.austa-v160-comment-empty strong{
-  color:#222;
-  font-size:16px;
+
+.austa-v161-comment-title{
+
+  margin:0 !important;
+
+  padding:0 !important;
+
+  color:#111 !important;
+
+  font-size:16px !important;
+
+  font-weight:900 !important;
 }
 
-.austa-v160-comment-empty span{
-  margin-top:5px;
 
-  font-size:13px;
+.austa-v161-comment-close{
+
+  position:absolute !important;
+
+  right:12px !important;
+
+  top:50% !important;
+
+  transform:translateY(-50%) !important;
+
+  width:40px !important;
+
+  height:40px !important;
+
+  display:flex !important;
+
+  align-items:center !important;
+
+  justify-content:center !important;
+
+  padding:0 !important;
+
+  border:0 !important;
+
+  background:transparent !important;
+
+  color:#333 !important;
+
+  font-size:31px !important;
+
+  line-height:40px !important;
+
+  cursor:pointer !important;
 }
 
-.austa-v160-comment-row{
-  display:flex;
 
-  gap:10px;
+/* ---------- COMMENT LIST ---------- */
 
-  padding:11px 0;
+.austa-v161-comment-list{
 
-  border-bottom:1px solid #f1f1f1;
+  flex:1 1 auto !important;
+
+  min-height:0 !important;
+
+  overflow-y:auto !important;
+
+  padding:12px 16px 18px !important;
+
+  background:#fff !important;
+
+  color:#111 !important;
+
+  box-sizing:border-box !important;
 }
 
-.austa-v160-comment-avatar{
-  width:38px;
-  min-width:38px;
-  height:38px;
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.austa-v161-comment-empty{
 
-  border-radius:50%;
+  min-height:100% !important;
 
-  background:#ededed;
+  display:flex !important;
 
-  font-size:18px;
+  flex-direction:column !important;
+
+  align-items:center !important;
+
+  justify-content:center !important;
+
+  padding:30px !important;
+
+  box-sizing:border-box !important;
+
+  color:#777 !important;
+
+  text-align:center !important;
 }
 
-.austa-v160-comment-body{
-  flex:1;
-  min-width:0;
+
+.austa-v161-comment-empty-icon{
+
+  width:58px !important;
+
+  height:58px !important;
+
+  display:flex !important;
+
+  align-items:center !important;
+
+  justify-content:center !important;
+
+  margin-bottom:12px !important;
+
+  border-radius:50% !important;
+
+  background:#f2f2f2 !important;
+
+  font-size:25px !important;
 }
 
-.austa-v160-comment-user{
-  margin-bottom:3px;
 
-  color:#888;
+.austa-v161-comment-empty strong{
 
-  font-size:12px;
-  font-weight:700;
+  color:#222 !important;
+
+  font-size:16px !important;
+
+  font-weight:800 !important;
 }
 
-.austa-v160-comment-text{
-  color:#111;
 
-  font-size:14px;
-  line-height:1.4;
+.austa-v161-comment-empty span{
 
-  word-break:break-word;
+  margin-top:5px !important;
+
+  color:#888 !important;
+
+  font-size:13px !important;
 }
 
-.austa-v160-comment-meta{
-  margin-top:6px;
 
-  color:#999;
+/* ---------- COMMENT ROW ---------- */
 
-  font-size:11px;
+.austa-v161-comment-row{
+
+  display:flex !important;
+
+  align-items:flex-start !important;
+
+  gap:10px !important;
+
+  padding:11px 0 !important;
+
+  border-bottom:1px solid #f1f1f1 !important;
+
+  background:#fff !important;
 }
 
-.austa-v160-comment-like{
-  align-self:center;
 
-  border:0;
-  background:transparent;
+.austa-v161-comment-avatar{
 
-  color:#777;
+  width:38px !important;
 
-  font-size:21px;
+  min-width:38px !important;
 
-  cursor:pointer;
+  height:38px !important;
+
+  display:flex !important;
+
+  align-items:center !important;
+
+  justify-content:center !important;
+
+  border-radius:50% !important;
+
+  background:#ededed !important;
+
+  font-size:18px !important;
 }
 
-.austa-v160-comment-like.is-active{
-  color:#e31b3d;
+
+.austa-v161-comment-content{
+
+  flex:1 1 auto !important;
+
+  min-width:0 !important;
 }
 
-.austa-v160-comment-bottom{
-  display:flex;
-  align-items:center;
 
-  gap:9px;
+.austa-v161-comment-user{
 
-  flex:0 0 auto;
+  margin-bottom:3px !important;
 
-  padding:10px 12px;
-  padding-bottom:max(10px,env(safe-area-inset-bottom));
+  color:#888 !important;
 
-  border-top:1px solid #eee;
+  font-size:12px !important;
 
-  background:#fff;
+  font-weight:700 !important;
 }
 
-.austa-v160-bottom-avatar{
-  width:38px;
-  min-width:38px;
-  height:38px;
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.austa-v161-comment-text{
 
-  border-radius:50%;
+  color:#111 !important;
 
-  background:#ededed;
+  font-size:14px !important;
 
-  font-size:18px;
+  line-height:1.4 !important;
+
+  word-break:break-word !important;
 }
 
-.austa-v160-input-wrap{
-  flex:1;
 
-  display:flex;
-  align-items:center;
+.austa-v161-comment-meta{
 
-  min-width:0;
+  margin-top:6px !important;
 
-  padding:3px 5px 3px 14px;
+  color:#999 !important;
 
-  border-radius:22px;
-
-  background:#f2f2f2;
+  font-size:11px !important;
 }
 
-.austa-v160-comment-input{
-  flex:1;
 
-  min-width:0;
-  height:38px;
+.austa-v161-comment-heart{
 
-  border:0;
-  outline:0;
+  align-self:center !important;
 
-  background:transparent;
+  width:34px !important;
 
-  color:#111;
+  height:34px !important;
 
-  font-size:14px;
+  display:flex !important;
+
+  align-items:center !important;
+
+  justify-content:center !important;
+
+  padding:0 !important;
+
+  border:0 !important;
+
+  background:transparent !important;
+
+  color:#777 !important;
+
+  font-size:21px !important;
+
+  cursor:pointer !important;
 }
 
-.austa-v160-comment-send{
-  width:38px;
-  min-width:38px;
-  height:38px;
 
-  padding:0;
+.austa-v161-comment-heart.is-active{
 
-  border:0;
-  border-radius:50%;
-
-  background:transparent;
-
-  color:#e31b3d;
-
-  font-size:22px;
-  font-weight:900;
-
-  cursor:pointer;
+  color:#e31b3d !important;
 }
+
+
+/* ---------- COMMENT INPUT ---------- */
+
+.austa-v161-comment-bottom{
+
+  flex:0 0 auto !important;
+
+  display:flex !important;
+
+  align-items:center !important;
+
+  gap:9px !important;
+
+  padding:10px 12px !important;
+
+  padding-bottom:
+    max(10px,env(safe-area-inset-bottom)) !important;
+
+  border-top:1px solid #eee !important;
+
+  background:#fff !important;
+
+  box-sizing:border-box !important;
+}
+
+
+.austa-v161-bottom-avatar{
+
+  width:38px !important;
+
+  min-width:38px !important;
+
+  height:38px !important;
+
+  display:flex !important;
+
+  align-items:center !important;
+
+  justify-content:center !important;
+
+  border-radius:50% !important;
+
+  background:#ededed !important;
+
+  font-size:18px !important;
+}
+
+
+.austa-v161-input-wrap{
+
+  flex:1 1 auto !important;
+
+  min-width:0 !important;
+
+  display:flex !important;
+
+  align-items:center !important;
+
+  padding:3px 5px 3px 14px !important;
+
+  border-radius:22px !important;
+
+  background:#f2f2f2 !important;
+
+  box-sizing:border-box !important;
+}
+
+
+.austa-v161-comment-input{
+
+  flex:1 1 auto !important;
+
+  min-width:0 !important;
+
+  height:38px !important;
+
+  padding:0 !important;
+
+  border:0 !important;
+
+  outline:0 !important;
+
+  background:transparent !important;
+
+  color:#111 !important;
+
+  font-family:Arial,sans-serif !important;
+
+  font-size:14px !important;
+}
+
+
+.austa-v161-comment-send{
+
+  width:38px !important;
+
+  min-width:38px !important;
+
+  height:38px !important;
+
+  display:flex !important;
+
+  align-items:center !important;
+
+  justify-content:center !important;
+
+  padding:0 !important;
+
+  border:0 !important;
+
+  border-radius:50% !important;
+
+  background:transparent !important;
+
+  color:#e31b3d !important;
+
+  font-size:22px !important;
+
+  font-weight:900 !important;
+
+  cursor:pointer !important;
+}
+
 </style>
 
 
-<script id="austa-v160-final-real-video-actions">
+<script id="austa-v161-real-video-final-actions">
 (function(){
 
   "use strict";
 
-  const GRID_ID="austaV22VideoGrid";
+
+  /* =========================================================
+     CONFIG
+     ========================================================= */
+
+  const GRID_ID=
+    "austaV22VideoGrid";
+
+  const CARD_SELECTOR=
+    ".austa-v159-real-video-card";
+
+  const LIKE_KEY=
+    "austa-v161-liked-videos";
 
   const SAVE_KEY=
-    "austa-saved-video-listings";
+    "austa-v161-saved-videos";
 
   const COMMENT_KEY=
-    "austa-v160-video-comments";
+    "austa-v161-video-comments";
 
 
-  function getGrid(){
-    return document.getElementById(GRID_ID);
+  /* =========================================================
+     HELPERS
+     ========================================================= */
+
+  function grid(){
+
+    return document.getElementById(
+      GRID_ID
+    );
   }
 
 
-  function getSavedIds(){
+  function readArray(key){
 
     try{
 
       const value=
         JSON.parse(
-          localStorage.getItem(SAVE_KEY) ||
+          localStorage.getItem(key) ||
           "[]"
         );
 
@@ -61961,55 +62197,62 @@ if(
     }catch(error){
 
       return [];
-
     }
   }
 
 
-  function setSavedIds(ids){
+  function writeArray(
+    key,
+    value
+  ){
 
     localStorage.setItem(
-      SAVE_KEY,
-      JSON.stringify(ids)
+      key,
+      JSON.stringify(value)
     );
   }
 
 
-  function getComments(){
+  function readComments(){
 
     try{
 
       const value=
         JSON.parse(
-          localStorage.getItem(COMMENT_KEY) ||
+          localStorage.getItem(
+            COMMENT_KEY
+          ) ||
           "{}"
         );
 
-      return (
+      if(
         value &&
-        typeof value==="object"
-      )
-        ? value
-        : {};
+        typeof value==="object" &&
+        !Array.isArray(value)
+      ){
+
+        return value;
+      }
+
+      return {};
 
     }catch(error){
 
       return {};
-
     }
   }
 
 
-  function saveComments(data){
+  function writeComments(value){
 
     localStorage.setItem(
       COMMENT_KEY,
-      JSON.stringify(data)
+      JSON.stringify(value)
     );
   }
 
 
-  function getListingId(card){
+  function listingId(card){
 
     return String(
       card?.dataset?.listingId ||
@@ -62018,116 +62261,14 @@ if(
   }
 
 
-  function createActions(card){
+  /* =========================================================
+     KEEP REAL VIDEO EXACTLY 215x380
+     ========================================================= */
+
+  function protectCard(card){
 
     if(!card)return;
 
-    /*
-     * Köhnə Rent listener-i bu REAL karta
-     * bağlanmasın.
-     */
-    card.dataset.rentVideoActionsBound="1";
-
-    /*
-     * Köhnə action panelini real kartdan
-     * çıxarırıq.
-     */
-    card
-      .querySelectorAll(
-        ".austa-v34-video-actions"
-      )
-      .forEach(
-        element=>element.remove()
-      );
-
-
-    let actions=
-      card.querySelector(
-        ".austa-v160-video-actions"
-      );
-
-    if(actions)return;
-
-
-    actions=
-      document.createElement("div");
-
-    actions.className=
-      "austa-v160-video-actions";
-
-
-    actions.innerHTML=`
-      <button
-        type="button"
-        class="austa-v160-video-action"
-        data-v160-action="like"
-        aria-label="Bəyən"
-        title="Bəyən"
-      >
-        ♥
-        <span class="austa-v160-like-count">0</span>
-      </button>
-
-      <button
-        type="button"
-        class="austa-v160-video-action"
-        data-v160-action="comment"
-        aria-label="Şərhlər"
-        title="Şərhlər"
-      >
-        💬
-      </button>
-
-      <button
-        type="button"
-        class="austa-v160-video-action"
-        data-v160-action="save"
-        aria-label="Yadda saxla"
-        title="Yadda saxla"
-      >
-        🔖
-      </button>
-
-      <button
-        type="button"
-        class="austa-v160-video-action"
-        data-v160-action="share"
-        aria-label="Paylaş"
-        title="Paylaş"
-      >
-        ↗
-      </button>
-    `;
-
-
-    const listingId=
-      getListingId(card);
-
-    const saved=
-      getSavedIds()
-        .includes(listingId);
-
-
-    if(saved){
-
-      const saveButton=
-        actions.querySelector(
-          '[data-v160-action="save"]'
-        );
-
-      saveButton?.classList.add(
-        "is-active"
-      );
-    }
-
-
-    card.appendChild(actions);
-  }
-
-
-  function protectRealCard(card){
-
-    if(!card)return;
 
     card.style.setProperty(
       "position",
@@ -62135,17 +62276,20 @@ if(
       "important"
     );
 
+
     card.style.setProperty(
       "display",
       "block",
       "important"
     );
 
+
     card.style.setProperty(
       "flex",
       "0 0 215px",
       "important"
     );
+
 
     [
       "width",
@@ -62161,6 +62305,7 @@ if(
 
     });
 
+
     [
       "height",
       "min-height",
@@ -62175,17 +62320,27 @@ if(
 
     });
 
+
     card.style.setProperty(
       "aspect-ratio",
       "auto",
       "important"
     );
 
+
     card.style.setProperty(
       "padding",
       "0",
       "important"
     );
+
+
+    card.style.setProperty(
+      "margin",
+      "0",
+      "important"
+    );
+
 
     card.style.setProperty(
       "overflow",
@@ -62197,6 +62352,7 @@ if(
     const video=
       card.querySelector("video");
 
+
     if(video){
 
       video.style.setProperty(
@@ -62205,11 +62361,20 @@ if(
         "important"
       );
 
+
       video.style.setProperty(
         "inset",
         "0",
         "important"
       );
+
+
+      video.style.setProperty(
+        "display",
+        "block",
+        "important"
+      );
+
 
       video.style.setProperty(
         "width",
@@ -62217,11 +62382,13 @@ if(
         "important"
       );
 
+
       video.style.setProperty(
         "height",
         "100%",
         "important"
       );
+
 
       video.style.setProperty(
         "object-fit",
@@ -62229,85 +62396,400 @@ if(
         "important"
       );
 
+
       video.style.setProperty(
         "aspect-ratio",
         "auto",
         "important"
       );
     }
-
-
-    createActions(card);
   }
 
 
   function protectGrid(){
 
-    const grid=getGrid();
+    const host=grid();
 
-    if(!grid)return;
+    if(!host)return;
 
-    grid.style.setProperty(
+
+    host.style.setProperty(
       "display",
       "flex",
       "important"
     );
 
-    grid.style.setProperty(
+
+    host.style.setProperty(
       "flex-wrap",
       "wrap",
       "important"
     );
 
-    grid.style.setProperty(
+
+    host.style.setProperty(
       "grid-template-columns",
       "none",
       "important"
     );
 
-    grid.style.setProperty(
+
+    host.style.setProperty(
       "grid-auto-columns",
       "unset",
       "important"
     );
 
-    grid.style.setProperty(
+
+    host.style.setProperty(
       "gap",
       "12px",
       "important"
     );
 
-    grid.style.setProperty(
+
+    host.style.setProperty(
       "align-items",
       "flex-start",
       "important"
     );
 
-    grid.style.setProperty(
+
+    host.style.setProperty(
       "justify-content",
       "flex-start",
       "important"
     );
-
-
-    grid
-      .querySelectorAll(
-        ".austa-v159-real-video-card"
-      )
-      .forEach(protectRealCard);
   }
 
 
+  /* =========================================================
+     REMOVE OLD V34 ACTIONS FROM REAL V159 CARD
+     ========================================================= */
+
+  function removeLegacyActions(card){
+
+    card
+      .querySelectorAll(
+        ".austa-v34-video-actions"
+      )
+      .forEach(
+        element=>element.remove()
+      );
+
+
+    /*
+     * Köhnə Rent binder sonradan bu karta
+     * yenidən action bağlamasın.
+     */
+
+    card.dataset
+      .rentVideoActionsBound="1";
+  }
+
+
+  /* =========================================================
+     CREATE NEW ACTIONS
+     ========================================================= */
+
+  function createActions(card){
+
+    if(!card)return;
+
+
+    removeLegacyActions(card);
+
+
+    let actions=
+      card.querySelector(
+        ".austa-v161-video-actions"
+      );
+
+
+    if(actions){
+
+      restoreCardState(card);
+
+      return;
+    }
+
+
+    actions=
+      document.createElement(
+        "div"
+      );
+
+
+    actions.className=
+      "austa-v161-video-actions";
+
+
+    actions.innerHTML=`
+
+      <button
+        type="button"
+        class="austa-v161-action"
+        data-v161-action="like"
+        aria-label="Bəyən"
+        title="Bəyən"
+      >
+        <span>♥</span>
+        <small
+          class="austa-v161-like-count"
+        >0</small>
+      </button>
+
+
+      <button
+        type="button"
+        class="austa-v161-action"
+        data-v161-action="comment"
+        aria-label="Şərhlər"
+        title="Şərhlər"
+      >
+        💬
+      </button>
+
+
+      <button
+        type="button"
+        class="austa-v161-action"
+        data-v161-action="save"
+        aria-label="Yadda saxla"
+        title="Yadda saxla"
+      >
+        🔖
+      </button>
+
+
+      <button
+        type="button"
+        class="austa-v161-action"
+        data-v161-action="share"
+        aria-label="Paylaş"
+        title="Paylaş"
+      >
+        ↗
+      </button>
+
+    `;
+
+
+    card.appendChild(
+      actions
+    );
+
+
+    restoreCardState(card);
+  }
+
+
+  /* =========================================================
+     RESTORE LIKE / SAVE STATE
+     ========================================================= */
+
+  function restoreCardState(card){
+
+    const id=
+      listingId(card);
+
+
+    if(!id)return;
+
+
+    const like=
+      card.querySelector(
+        '[data-v161-action="like"]'
+      );
+
+
+    const save=
+      card.querySelector(
+        '[data-v161-action="save"]'
+      );
+
+
+    const liked=
+      readArray(LIKE_KEY)
+        .includes(id);
+
+
+    const saved=
+      readArray(SAVE_KEY)
+        .includes(id);
+
+
+    if(like){
+
+      like.classList.toggle(
+        "is-active",
+        liked
+      );
+
+
+      const count=
+        like.querySelector(
+          ".austa-v161-like-count"
+        );
+
+
+      if(count){
+
+        count.textContent=
+          liked
+            ? "1"
+            : "0";
+      }
+    }
+
+
+    if(save){
+
+      save.classList.toggle(
+        "is-active",
+        saved
+      );
+    }
+  }
+
+
+  /* =========================================================
+     LIKE
+     ========================================================= */
+
+  function toggleLike(
+    card,
+    button
+  ){
+
+    const id=
+      listingId(card);
+
+
+    if(!id)return;
+
+
+    let ids=
+      readArray(
+        LIKE_KEY
+      );
+
+
+    const active=
+      ids.includes(id);
+
+
+    if(active){
+
+      ids=
+        ids.filter(
+          value=>value!==id
+        );
+
+    }else{
+
+      ids.push(id);
+    }
+
+
+    writeArray(
+      LIKE_KEY,
+      ids
+    );
+
+
+    button.classList.toggle(
+      "is-active",
+      !active
+    );
+
+
+    const count=
+      button.querySelector(
+        ".austa-v161-like-count"
+      );
+
+
+    if(count){
+
+      count.textContent=
+        active
+          ? "0"
+          : "1";
+    }
+  }
+
+
+  /* =========================================================
+     SAVE
+     ========================================================= */
+
+  function toggleSave(
+    card,
+    button
+  ){
+
+    const id=
+      listingId(card);
+
+
+    if(!id)return;
+
+
+    let ids=
+      readArray(
+        SAVE_KEY
+      );
+
+
+    const active=
+      ids.includes(id);
+
+
+    if(active){
+
+      ids=
+        ids.filter(
+          value=>value!==id
+        );
+
+    }else{
+
+      ids.push(id);
+    }
+
+
+    writeArray(
+      SAVE_KEY,
+      ids
+    );
+
+
+    button.classList.toggle(
+      "is-active",
+      !active
+    );
+  }
+
+
+  /* =========================================================
+     COMMENT RENDER
+     ========================================================= */
+
   function renderComments(
-    listingId,
+    id,
     list
   ){
 
-    const store=getComments();
+    const store=
+      readComments();
+
 
     const comments=
-      Array.isArray(store[listingId])
-        ? store[listingId]
+      Array.isArray(
+        store[id]
+      )
+        ? store[id]
         : [];
 
 
@@ -62317,10 +62799,13 @@ if(
     if(!comments.length){
 
       list.innerHTML=`
-        <div class="austa-v160-comment-empty">
+
+        <div
+          class="austa-v161-comment-empty"
+        >
 
           <div
-            class="austa-v160-comment-empty-icon"
+            class="austa-v161-comment-empty-icon"
           >
             💬
           </div>
@@ -62334,6 +62819,7 @@ if(
           </span>
 
         </div>
+
       `;
 
       return;
@@ -62344,35 +62830,40 @@ if(
       (item,index)=>{
 
         const row=
-          document.createElement("div");
+          document.createElement(
+            "div"
+          );
+
 
         row.className=
-          "austa-v160-comment-row";
+          "austa-v161-comment-row";
 
 
         row.innerHTML=`
+
           <div
-            class="austa-v160-comment-avatar"
+            class="austa-v161-comment-avatar"
           >
             👤
           </div>
 
+
           <div
-            class="austa-v160-comment-body"
+            class="austa-v161-comment-content"
           >
 
             <div
-              class="austa-v160-comment-user"
+              class="austa-v161-comment-user"
             >
               A-USTA istifadəçisi
             </div>
 
             <div
-              class="austa-v160-comment-text"
+              class="austa-v161-comment-text"
             ></div>
 
             <div
-              class="austa-v160-comment-meta"
+              class="austa-v161-comment-meta"
             >
               indi &nbsp;
               <b>Cavablandırın</b>
@@ -62380,98 +62871,132 @@ if(
 
           </div>
 
+
           <button
             type="button"
-            class="austa-v160-comment-like"
-            data-comment-index="${index}"
-            aria-label="Şərhi bəyən"
+            class="austa-v161-comment-heart"
+            data-v161-comment-like="${index}"
+            aria-label="Bəyən"
           >
             ♡
           </button>
+
         `;
 
 
-        row.querySelector(
-          ".austa-v160-comment-text"
-        ).textContent=
-          String(item.text || "");
+        const text=
+          row.querySelector(
+            ".austa-v161-comment-text"
+          );
 
 
-        list.appendChild(row);
+        if(text){
+
+          text.textContent=
+            String(
+              item?.text ||
+              ""
+            );
+        }
+
+
+        list.appendChild(
+          row
+        );
       }
     );
   }
 
 
+  /* =========================================================
+     TIKTOK COMMENT SHEET
+     ========================================================= */
+
   function openComments(card){
 
     document
       .getElementById(
-        "austaV160CommentOverlay"
+        "austaV161CommentOverlay"
       )
       ?.remove();
 
 
-    const listingId=
-      getListingId(card);
+    const id=
+      listingId(card);
 
 
     const overlay=
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
+
 
     overlay.id=
-      "austaV160CommentOverlay";
+      "austaV161CommentOverlay";
 
 
     overlay.innerHTML=`
-      <div id="austaV160CommentSheet">
 
-        <div
-          class="austa-v160-comment-header"
+      <section
+        id="austaV161CommentSheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Şərhlər"
+      >
+
+
+        <header
+          class="austa-v161-comment-header"
         >
 
-          <strong>
+          <strong
+            class="austa-v161-comment-title"
+          >
             Şərhlər
           </strong>
 
           <button
             type="button"
-            class="austa-v160-comment-close"
+            class="austa-v161-comment-close"
             aria-label="Bağla"
           >
             ×
           </button>
 
-        </div>
+        </header>
+
 
         <div
-          class="austa-v160-comment-list"
+          class="austa-v161-comment-list"
         ></div>
 
-        <div
-          class="austa-v160-comment-bottom"
+
+        <footer
+          class="austa-v161-comment-bottom"
         >
 
           <div
-            class="austa-v160-bottom-avatar"
+            class="austa-v161-bottom-avatar"
           >
             👤
           </div>
 
+
           <div
-            class="austa-v160-input-wrap"
+            class="austa-v161-input-wrap"
           >
 
             <input
               type="text"
-              class="austa-v160-comment-input"
+              class="austa-v161-comment-input"
               placeholder="Şərh əlavə edin..."
               autocomplete="off"
             >
 
+
             <button
               type="button"
-              class="austa-v160-comment-send"
+              class="austa-v161-comment-send"
               aria-label="Göndər"
             >
               ↑
@@ -62479,9 +63004,11 @@ if(
 
           </div>
 
-        </div>
+        </footer>
 
-      </div>
+
+      </section>
+
     `;
 
 
@@ -62492,49 +63019,63 @@ if(
 
     const list=
       overlay.querySelector(
-        ".austa-v160-comment-list"
+        ".austa-v161-comment-list"
       );
+
 
     const input=
       overlay.querySelector(
-        ".austa-v160-comment-input"
+        ".austa-v161-comment-input"
       );
+
 
     const send=
       overlay.querySelector(
-        ".austa-v160-comment-send"
+        ".austa-v161-comment-send"
+      );
+
+
+    const close=
+      overlay.querySelector(
+        ".austa-v161-comment-close"
       );
 
 
     renderComments(
-      listingId,
+      id,
       list
     );
 
 
-    function close(){
+    function closeSheet(){
 
       overlay.remove();
     }
 
 
-    overlay
-      .querySelector(
-        ".austa-v160-comment-close"
-      )
-      .addEventListener(
-        "click",
-        close
-      );
+    close.addEventListener(
+      "click",
+      event=>{
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+        closeSheet();
+      }
+    );
 
 
     overlay.addEventListener(
       "click",
       event=>{
 
-        if(event.target===overlay){
+        if(
+          event.target===
+          overlay
+        ){
 
-          close();
+          closeSheet();
         }
       }
     );
@@ -62544,66 +63085,84 @@ if(
       "click",
       event=>{
 
-        const button=
+        const heart=
           event.target.closest(
-            ".austa-v160-comment-like"
+            "[data-v161-comment-like]"
           );
 
-        if(!button)return;
+
+        if(!heart)return;
+
 
         event.preventDefault();
+
         event.stopPropagation();
 
-        button.classList.toggle(
-          "is-active"
+
+        const active=
+          heart.classList.contains(
+            "is-active"
+          );
+
+
+        heart.classList.toggle(
+          "is-active",
+          !active
         );
 
-        button.textContent=
-          button.classList.contains(
-            "is-active"
-          )
-            ? "♥"
-            : "♡";
+
+        heart.textContent=
+          active
+            ? "♡"
+            : "♥";
       }
     );
 
 
-    function sendComment(){
+    function submit(){
 
-      const text=
+      const value=
         input.value.trim();
 
-      if(!text)return;
+
+      if(!value)return;
 
 
       const store=
-        getComments();
+        readComments();
+
 
       if(
         !Array.isArray(
-          store[listingId]
+          store[id]
         )
       ){
 
-        store[listingId]=[];
+        store[id]=[];
       }
 
 
-      store[listingId].push({
-        text:text,
+      store[id].push({
+
+        text:value,
+
         createdAt:
-          new Date().toISOString()
+          new Date()
+            .toISOString()
+
       });
 
 
-      saveComments(store);
+      writeComments(
+        store
+      );
 
 
       input.value="";
 
 
       renderComments(
-        listingId,
+        id,
         list
       );
 
@@ -62618,9 +63177,10 @@ if(
       event=>{
 
         event.preventDefault();
+
         event.stopPropagation();
 
-        sendComment();
+        submit();
       }
     );
 
@@ -62629,11 +63189,16 @@ if(
       "keydown",
       event=>{
 
-        if(event.key==="Enter"){
+        if(
+          event.key===
+          "Enter"
+        ){
 
           event.preventDefault();
 
-          sendComment();
+          event.stopPropagation();
+
+          submit();
         }
       }
     );
@@ -62641,113 +63206,27 @@ if(
 
     setTimeout(
       ()=>input.focus(),
-      100
+      80
     );
   }
 
 
-  function toggleLike(button){
+  /* =========================================================
+     SHARE
+     ========================================================= */
 
-    const active=
-      button.classList.contains(
-        "is-active"
-      );
-
-    const count=
-      button.querySelector(
-        ".austa-v160-like-count"
-      );
-
-    let number=
-      Number(
-        count?.textContent || 0
-      );
-
-
-    if(active){
-
-      button.classList.remove(
-        "is-active"
-      );
-
-      number=
-        Math.max(
-          0,
-          number-1
-        );
-
-    }else{
-
-      button.classList.add(
-        "is-active"
-      );
-
-      number++;
-    }
-
-
-    if(count){
-
-      count.textContent=
-        String(number);
-    }
-  }
-
-
-  function toggleSave(
+  async function shareVideo(
     card,
     button
   ){
 
-    const listingId=
-      getListingId(card);
+    const id=
+      listingId(card);
 
-    if(!listingId)return;
-
-
-    let ids=
-      getSavedIds();
-
-
-    const exists=
-      ids.includes(listingId);
-
-
-    if(exists){
-
-      ids=
-        ids.filter(
-          id=>id!==listingId
-        );
-
-      button.classList.remove(
-        "is-active"
-      );
-
-    }else{
-
-      ids.push(listingId);
-
-      button.classList.add(
-        "is-active"
-      );
-    }
-
-
-    setSavedIds(ids);
-  }
-
-
-  async function shareListing(
-    card,
-    button
-  ){
-
-    const listingId=
-      getListingId(card);
 
     const title=
-      card.querySelector("b")
+      card
+        .querySelector("b")
         ?.textContent
         ?.trim() ||
       "A-USTA video elan";
@@ -62759,11 +63238,11 @@ if(
       );
 
 
-    if(listingId){
+    if(id){
 
       url.searchParams.set(
         "listing",
-        listingId
+        id
       );
     }
 
@@ -62774,12 +63253,19 @@ if(
 
     try{
 
-      if(navigator.share){
+      if(
+        typeof navigator.share===
+        "function"
+      ){
 
         await navigator.share({
+
           title:title,
+
           text:title,
+
           url:shareUrl
+
         });
 
         return;
@@ -62791,7 +63277,8 @@ if(
         window.isSecureContext
       ){
 
-        await navigator.clipboard
+        await navigator
+          .clipboard
           .writeText(
             shareUrl
           );
@@ -62803,23 +63290,31 @@ if(
             "textarea"
           );
 
+
         area.value=
           shareUrl;
+
 
         area.style.cssText=
           "position:fixed;"+
           "left:-9999px;"+
           "top:-9999px;";
 
+
         document.body.appendChild(
           area
         );
 
+
+        area.focus();
+
         area.select();
+
 
         document.execCommand(
           "copy"
         );
+
 
         area.remove();
       }
@@ -62828,11 +63323,17 @@ if(
       const old=
         button.innerHTML;
 
-      button.textContent="✓";
+
+      button.textContent=
+        "✓";
+
 
       setTimeout(
         ()=>{
-          button.innerHTML=old;
+
+          button.innerHTML=
+            old;
+
         },
         900
       );
@@ -62841,11 +63342,12 @@ if(
     }catch(error){
 
       if(
-        error?.name!=="AbortError"
+        error?.name!==
+        "AbortError"
       ){
 
         console.error(
-          "[A-USTA V160 SHARE]",
+          "[A-USTA V161 SHARE]",
           error
         );
       }
@@ -62853,134 +63355,227 @@ if(
   }
 
 
-  function bindGrid(){
+  /* =========================================================
+     ONE ACTION CONTROLLER
+     ========================================================= */
 
-    const grid=getGrid();
+  function bindActions(){
 
-    if(!grid)return;
+    const host=grid();
+
+
+    if(!host)return;
 
 
     if(
-      grid.dataset
-        .austaV160ActionsBound!=="1"
+      host.dataset
+        .v161ActionsBound===
+      "1"
     ){
 
-      grid.dataset
-        .austaV160ActionsBound="1";
-
-
-      grid.addEventListener(
-        "click",
-        async event=>{
-
-          const button=
-            event.target.closest(
-              "[data-v160-action]"
-            );
-
-          if(!button)return;
-
-
-          const card=
-            button.closest(
-              ".austa-v159-real-video-card"
-            );
-
-          if(!card)return;
-
-
-          event.preventDefault();
-          event.stopPropagation();
-          event.stopImmediatePropagation();
-
-
-          const action=
-            button.dataset.v160Action;
-
-
-          if(action==="like"){
-
-            toggleLike(button);
-            return;
-          }
-
-
-          if(action==="comment"){
-
-            openComments(card);
-            return;
-          }
-
-
-          if(action==="save"){
-
-            toggleSave(
-              card,
-              button
-            );
-
-            return;
-          }
-
-
-          if(action==="share"){
-
-            await shareListing(
-              card,
-              button
-            );
-
-            return;
-          }
-
-        },
-        true
-      );
+      return;
     }
 
 
-    protectGrid();
+    host.dataset
+      .v161ActionsBound=
+      "1";
+
+
+    /*
+     * CAPTURE PHASE.
+     *
+     * V161 düyməsinə klik gələndə
+     * köhnə video/listing listener-ləri
+     * həmin kliki ala bilməyəcək.
+     */
+
+    host.addEventListener(
+      "click",
+      async event=>{
+
+        const button=
+          event.target.closest(
+            "[data-v161-action]"
+          );
+
+
+        if(!button)return;
+
+
+        const card=
+          button.closest(
+            CARD_SELECTOR
+          );
+
+
+        if(!card)return;
+
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+        event.stopImmediatePropagation();
+
+
+        const action=
+          button.dataset
+            .v161Action;
+
+
+        if(
+          action===
+          "like"
+        ){
+
+          toggleLike(
+            card,
+            button
+          );
+
+          return;
+        }
+
+
+        if(
+          action===
+          "comment"
+        ){
+
+          openComments(
+            card
+          );
+
+          return;
+        }
+
+
+        if(
+          action===
+          "save"
+        ){
+
+          toggleSave(
+            card,
+            button
+          );
+
+          return;
+        }
+
+
+        if(
+          action===
+          "share"
+        ){
+
+          await shareVideo(
+            card,
+            button
+          );
+
+          return;
+        }
+
+      },
+      true
+    );
   }
 
 
-  /*
-   * Köhnə MutationObserver və gecikmiş
-   * CSS/JS-lər V159 kartı dəyişəndə
-   * V160 onu yenidən qoruyur.
-   */
+  /* =========================================================
+     APPLY TO ALL REAL CARDS
+     ========================================================= */
+
+  function apply(){
+
+    const host=grid();
+
+
+    if(!host)return;
+
+
+    protectGrid();
+
+
+    host
+      .querySelectorAll(
+        CARD_SELECTOR
+      )
+      .forEach(card=>{
+
+        protectCard(card);
+
+        removeLegacyActions(card);
+
+        createActions(card);
+
+      });
+  }
+
+
+  /* =========================================================
+     WATCH V159 ASYNC RENDER
+     ========================================================= */
 
   let scheduled=false;
 
-  function scheduleProtect(){
+
+  function scheduleApply(){
 
     if(scheduled)return;
 
+
     scheduled=true;
 
-    requestAnimationFrame(()=>{
 
-      scheduled=false;
+    requestAnimationFrame(
+      ()=>{
 
-      bindGrid();
-    });
+        scheduled=false;
+
+        apply();
+
+      }
+    );
   }
 
 
   function start(){
 
-    bindGrid();
+    bindActions();
 
-    const grid=getGrid();
+    apply();
 
-    if(grid){
+
+    const host=grid();
+
+
+    if(host){
 
       const observer=
         new MutationObserver(
-          scheduleProtect
+          mutations=>{
+
+            const relevant=
+              mutations.some(
+                mutation=>
+                  mutation.type===
+                  "childList"
+              );
+
+
+            if(relevant){
+
+              scheduleApply();
+            }
+          }
         );
 
+
       observer.observe(
-        grid,
+        host,
         {
           childList:true,
           subtree:false
@@ -62989,27 +63584,39 @@ if(
     }
 
 
+    /*
+     * Köhnə V32/V34/V36 gecikmiş kodları
+     * işlədikdən sonra son qoruma.
+     */
+
     setTimeout(
-      bindGrid,
+      apply,
       100
     );
 
+
     setTimeout(
-      bindGrid,
+      apply,
       350
     );
 
-    setTimeout(
-      bindGrid,
-      1000
-    );
 
     setTimeout(
-      bindGrid,
-      2200
+      apply,
+      1100
+    );
+
+
+    setTimeout(
+      apply,
+      2300
     );
   }
 
+
+  /* =========================================================
+     START
+     ========================================================= */
 
   if(
     document.readyState===
@@ -63027,10 +63634,19 @@ if(
   }
 
 
-  window.AUSTA_VIDEO_V160={
-    refresh:bindGrid,
-    comments:openComments
+  /* =========================================================
+     PUBLIC DEBUG API
+     ========================================================= */
+
+  window.AUSTA_VIDEO_V161={
+
+    refresh:apply,
+
+    version:
+      "V161-REAL-VIDEO-FINAL"
+
   };
+
 
 })();
 </script>
