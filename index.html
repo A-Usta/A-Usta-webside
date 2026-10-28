@@ -32542,6 +32542,27 @@ async function ownerControls(
 }
 
 
+/* V166: reuse V156 management rows without requiring the account cache to be open. */
+function ownerManagementItem(item){
+  const table=item.__austa_table ||
+    (item._austaSupabase ? 'vehicle_listings' : '');
+  const cached=(window.AUSTA_MY_LISTINGS_V156?.getAll?.() || []).find(listing=>
+    String(listing?.id || '')===String(item.id) &&
+    (!table || listing.__austa_table===table)
+  );
+  if(cached)return cached;
+  if(!item._austaSupabase || table!=='vehicle_listings')return null;
+  return {
+    ...item,
+    __austa_table:table,
+    __austa_source:'vehicle',
+    __austa_label:'Avtomobil',
+    __austa_title:titleOf(item),
+    __austa_price:priceOf(item)
+  };
+}
+
+
 async function openFullListing(id){
 
   let item=findListing(id);
@@ -32912,6 +32933,9 @@ async function openFullListing(id){
 
   document.body.appendChild(page);
 
+  // V166: ownership visibility must not wait for gallery/similar-media requests.
+  const ownerReady=ownerControls(item,page);
+
   document.body.style.overflow='hidden';
 
   history.replaceState(
@@ -33059,15 +33083,7 @@ if(edit){
   event.stopPropagation();
   event.stopImmediatePropagation();
 
-  const realItem=
-    (
-      window.AUSTA_MY_LISTINGS_V156
-        ?.getAll?.() || []
-    ).find(
-      listing=>
-        String(listing?.id || '')===
-        String(item?.id || '')
-    );
+  const realItem=ownerManagementItem(item);
 
   if(!realItem){
 
@@ -33120,15 +33136,7 @@ if(deleteButton){
   event.stopPropagation();
   event.stopImmediatePropagation();
 
-  const realItem=
-    (
-      window.AUSTA_MY_LISTINGS_V156
-        ?.getAll?.() || []
-    ).find(
-      listing=>
-        String(listing?.id || '')===
-        String(item?.id || '')
-    );
+  const realItem=ownerManagementItem(item);
 
   if(!realItem){
 
@@ -33206,7 +33214,7 @@ if(promotion){
   ){
 
     window.AUSTA_PROMOTION_V157.open(
-      item,
+      ownerManagementItem(item) || item,
       type
     );
 
@@ -33243,10 +33251,7 @@ if(promotion){
   );
 
 
-  await ownerControls(
-    item,
-    page
-  );
+  await ownerReady;
 
   return true;
 }
