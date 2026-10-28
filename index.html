@@ -61434,4 +61434,337 @@ if(
 })();
 </script>
 
+<style id="austa-v163-real-video-size-lock">
+/* A-USTA V163 — REAL HOME VIDEO PERMANENT 215x380 LOCK */
 
+#austaV22VideoGrid{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:12px !important;
+  align-items:flex-start !important;
+  justify-content:flex-start !important;
+  grid-template-columns:none !important;
+  grid-auto-columns:unset !important;
+}
+
+#austaV22VideoGrid > .austa-v159-real-video-card{
+  position:relative !important;
+  display:block !important;
+
+  flex:0 0 215px !important;
+
+  width:215px !important;
+  min-width:215px !important;
+  max-width:215px !important;
+
+  height:380px !important;
+  min-height:380px !important;
+  max-height:380px !important;
+
+  aspect-ratio:auto !important;
+
+  padding:0 !important;
+  margin:0 !important;
+
+  overflow:hidden !important;
+  box-sizing:border-box !important;
+}
+
+#austaV22VideoGrid > .austa-v159-real-video-card > video{
+  position:absolute !important;
+  inset:0 !important;
+
+  display:block !important;
+
+  width:100% !important;
+  min-width:100% !important;
+  max-width:100% !important;
+
+  height:100% !important;
+  min-height:100% !important;
+  max-height:100% !important;
+
+  aspect-ratio:auto !important;
+  object-fit:cover !important;
+}
+</style>
+
+<script id="austa-v163-real-video-size-lock-js">
+(function(){
+  "use strict";
+
+  function lockRealVideoSize(){
+
+    const grid=
+      document.getElementById("austaV22VideoGrid");
+
+    if(!grid)return;
+
+    grid.style.setProperty(
+      "display",
+      "flex",
+      "important"
+    );
+
+    grid.style.setProperty(
+      "flex-wrap",
+      "wrap",
+      "important"
+    );
+
+    grid.style.setProperty(
+      "grid-template-columns",
+      "none",
+      "important"
+    );
+
+    grid.style.setProperty(
+      "grid-auto-columns",
+      "unset",
+      "important"
+    );
+
+    grid.style.setProperty(
+      "gap",
+      "12px",
+      "important"
+    );
+
+    grid.style.setProperty(
+      "align-items",
+      "flex-start",
+      "important"
+    );
+
+    grid.style.setProperty(
+      "justify-content",
+      "flex-start",
+      "important"
+    );
+
+
+    grid
+      .querySelectorAll(
+        ".austa-v159-real-video-card"
+      )
+      .forEach(card=>{
+
+        card.style.setProperty(
+          "position",
+          "relative",
+          "important"
+        );
+
+        card.style.setProperty(
+          "display",
+          "block",
+          "important"
+        );
+
+        card.style.setProperty(
+          "flex",
+          "0 0 215px",
+          "important"
+        );
+
+        card.style.setProperty(
+          "width",
+          "215px",
+          "important"
+        );
+
+        card.style.setProperty(
+          "min-width",
+          "215px",
+          "important"
+        );
+
+        card.style.setProperty(
+          "max-width",
+          "215px",
+          "important"
+        );
+
+        card.style.setProperty(
+          "height",
+          "380px",
+          "important"
+        );
+
+        card.style.setProperty(
+          "min-height",
+          "380px",
+          "important"
+        );
+
+        card.style.setProperty(
+          "max-height",
+          "380px",
+          "important"
+        );
+
+        card.style.setProperty(
+          "aspect-ratio",
+          "auto",
+          "important"
+        );
+
+        card.style.setProperty(
+          "padding",
+          "0",
+          "important"
+        );
+
+        card.style.setProperty(
+          "margin",
+          "0",
+          "important"
+        );
+
+        card.style.setProperty(
+          "overflow",
+          "hidden",
+          "important"
+        );
+
+
+        const video=
+          card.querySelector("video");
+
+        if(video){
+
+          video.style.setProperty(
+            "position",
+            "absolute",
+            "important"
+          );
+
+          video.style.setProperty(
+            "inset",
+            "0",
+            "important"
+          );
+
+          video.style.setProperty(
+            "display",
+            "block",
+            "important"
+          );
+
+          video.style.setProperty(
+            "width",
+            "100%",
+            "important"
+          );
+
+          video.style.setProperty(
+            "min-width",
+            "100%",
+            "important"
+          );
+
+          video.style.setProperty(
+            "max-width",
+            "100%",
+            "important"
+          );
+
+          video.style.setProperty(
+            "height",
+            "100%",
+            "important"
+          );
+
+          video.style.setProperty(
+            "min-height",
+            "100%",
+            "important"
+          );
+
+          video.style.setProperty(
+            "max-height",
+            "100%",
+            "important"
+          );
+
+          video.style.setProperty(
+            "aspect-ratio",
+            "auto",
+            "important"
+          );
+
+          video.style.setProperty(
+            "object-fit",
+            "cover",
+            "important"
+          );
+        }
+      });
+  }
+
+
+  function start(){
+
+    lockRealVideoSize();
+
+    const grid=
+      document.getElementById(
+        "austaV22VideoGrid"
+      );
+
+    if(grid){
+
+      const observer=
+        new MutationObserver(
+          function(){
+            lockRealVideoSize();
+          }
+        );
+
+      observer.observe(
+        grid,
+        {
+          childList:true
+        }
+      );
+    }
+
+
+    [
+      100,
+      300,
+      700,
+      1200,
+      2000,
+      3500
+    ].forEach(ms=>{
+
+      setTimeout(
+        lockRealVideoSize,
+        ms
+      );
+
+    });
+  }
+
+
+  if(document.readyState==="loading"){
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      start,
+      {once:true}
+    );
+
+  }else{
+
+    start();
+  }
+
+
+  window.AUSTA_REAL_VIDEO_SIZE_V163={
+    lock:lockRealVideoSize
+  };
+
+})();
+</script>
