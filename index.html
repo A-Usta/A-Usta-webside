@@ -13849,15 +13849,8 @@ function getListingUrl(card){
 
 function bindRentVideoActions(){
 
-   qa("#austaV22VideoGrid .austa-v22-video-card").forEach(card=>{
-
-        /*
-         * V159 REAL HOME VIDEO
-         * köhnə Rent action sisteminə daxil olmur.
-         */
-        if(card.classList.contains("austa-v159-real-video-card")){
-            return;
-        }
+    qa("#austaV22VideoGrid .austa-v22-video-card").forEach(card=>{
+        if(card.classList.contains("austa-v159-real-video-card")) return;
 
         /*
          * Rent a Car olub-olmadığını müəyyən et
@@ -15439,6 +15432,7 @@ function listingIdFromCard(card){
 }
 
 function bindVideoCard(card){
+  if(card.classList.contains("austa-v159-real-video-card")) return;
 
   const category=videoCardCategory(card);
 
@@ -18176,7 +18170,7 @@ function bind(){
  // Make cart icon functional.
  const carts=[...document.querySelectorAll('.header-icon')].filter(x=>x.textContent.includes('🛒'));carts.forEach(c=>{if(c.dataset.v32Cart)return;c.dataset.v32Cart='1';c.style.cursor='pointer';c.onclick=()=>{let x=document.getElementById('v32CartBox');if(x){x.remove();return;}x=document.createElement('div');x.id='v32CartBox';x.innerHTML='<div class="v32-cart-box"><button class="v32-x">×</button><h3>🛒 Səbət</h3><p>Səbətiniz hazırda boşdur.</p><small>Ehtiyat hissəsi, aksesuar və digər məhsullar əlavə etdikdə burada görünəcək.</small></div>';document.body.appendChild(x);x.querySelector('.v32-x').onclick=()=>x.remove();};});
  // Force video grid layout after every late render.
- const vg=document.getElementById('austaV22VideoGrid');if(vg){const force=()=>{vg.style.setProperty('display','grid','important');vg.style.setProperty('grid-template-columns','repeat(3,minmax(0,1fr))','important');vg.style.setProperty('grid-auto-flow','row','important');vg.style.setProperty('width','100%','important');[...vg.children].forEach(c=>{c.style.setProperty('display','block','important');c.style.setProperty('width','100%','important');c.style.setProperty('min-width','0','important');});};new MutationObserver(force).observe(vg,{childList:true});force();}
+ const vg=document.getElementById('austaV22VideoGrid');if(vg){const force=()=>{if(document.getElementById('austa-v159-real-home-videos'))return;vg.style.setProperty('display','grid','important');vg.style.setProperty('grid-template-columns','repeat(3,minmax(0,1fr))','important');vg.style.setProperty('grid-auto-flow','row','important');vg.style.setProperty('width','100%','important');[...vg.children].forEach(c=>{c.style.setProperty('display','block','important');c.style.setProperty('width','100%','important');c.style.setProperty('min-width','0','important');});};new MutationObserver(force).observe(vg,{childList:true});force();}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
 window.AUSTA_V32={directTransport,openListingV32};
@@ -18250,6 +18244,7 @@ window.AUSTA_V32={directTransport,openListingV32};
  }
  function fixVideos(){
    const g=$('#austaV22VideoGrid');if(!g)return;
+   if(document.getElementById('austa-v159-real-home-videos'))return;
    g.style.setProperty('display','grid','important');g.style.setProperty('grid-template-columns','repeat(3,minmax(0,1fr))','important');g.style.setProperty('grid-auto-flow','row','important');g.style.setProperty('width','100%','important');g.style.setProperty('max-width','none','important');
    [...g.children].forEach(c=>{c.style.setProperty('display','flex','important');c.style.setProperty('flex-direction','column','important');c.style.setProperty('width','100%','important');c.style.setProperty('min-width','0','important');c.style.setProperty('max-width','none','important');c.style.setProperty('height','auto','important');const th=c.querySelector('.austa-v22-video-thumb');if(th){th.style.setProperty('width','100%','important');th.style.setProperty('height','auto','important');th.style.setProperty('aspect-ratio','16/6.2','important');}});
  }
@@ -19437,7 +19432,9 @@ function bindAuctions(){
  $$('.austa-v36-auction').forEach(b=>{if(b.dataset.v36Bound)return;b.dataset.v36Bound='1';b.onclick=e=>{e.preventDefault();e.stopPropagation();const src=b.dataset.auction;overlay('🌍 '+src+' — Xaricdən avtomobil sifarişi','<div class="austa-v36-grid"><label>Avtomobil marka/modeli<input placeholder="Məsələn: BMW X5"></label><label>İl<input placeholder="2020"></label><label>VIN / Lot nömrəsi<input placeholder="VIN və ya lot"></label><label>Büdcə (AZN)<input type="number" placeholder=""></label><label class="austa-v36-full">Əlavə tələb<textarea placeholder="Zədə, mühərrik, komplektasiya və s."></textarea></label></div><button class="btn btn-primary" style="margin-top:12px" onclick="this.nextElementSibling.hidden=false">Sifariş sorğusu yarat</button><div class="austa-v36-result" hidden style="margin-top:10px">✓ Sorğu yaradıldı. Mənbə: <b>'+esc(src)+'</b>.</div>')};});
 }
 function fixVideos(){
- const g=$('#austaV22VideoGrid');if(!g)return;g.style.setProperty('display','grid','important');g.style.setProperty('grid-template-columns','repeat(3,minmax(0,1fr))','important');g.style.setProperty('gap','12px','important');
+ const g=$('#austaV22VideoGrid');if(!g)return;
+ if(document.getElementById('austa-v159-real-home-videos'))return;
+ g.style.setProperty('display','grid','important');g.style.setProperty('grid-template-columns','repeat(3,minmax(0,1fr))','important');g.style.setProperty('gap','12px','important');
  $$('.austa-v22-video-card').forEach(c=>{c.style.setProperty('width','100%','important');c.style.setProperty('max-width','none','important');c.style.setProperty('min-width','0','important');const t=c.querySelector('.austa-v22-video-thumb');if(t){t.style.setProperty('aspect-ratio','24/4','important');t.style.setProperty('height','auto','important');t.style.setProperty('width','100%','important')}});
 }
 function init(){fixHeader();cleanPartsLegal();addServices();initV22ExtraCategories();addServiceListingType();bindAuctions();fixVideos();
@@ -31639,131 +31636,36 @@ async function signedUrl(path){
 }
   
 async function hydrateSupabaseListingMedia(item){
-
-  if(
-    !item ||
-    !item._austaSupabase ||
-    !item.id
-  ){
-    return item;
-  }
-
-  const sb=
-    window.AUSTA_SUPABASE;
-
-  if(!sb){
-
-    console.warn(
-      'A-USTA Supabase client tapılmadı'
-    );
-
-    return item;
-  }
-
+  if(!item || !item._austaSupabase || !item.id)return item;
+  const sb=window.AUSTA_SUPABASE;
+  item._austaMediaError=false;
+  if(!sb){item._austaMediaError=true;return item;}
   try{
-
-    const {
-      data,
-      error
-    }=await sb
-      .from('listing_media')
-      .select(
-        'id, listing_id, media_type, storage_path, sort_order, is_cover'
-      )
-      .eq(
-        'listing_id',
-        item.id
-      )
-      .order(
-        'sort_order',
-        {
-          ascending:true
-        }
-      );
-
-
-    if(error){
-
-      console.error(
-        'A-USTA listing media error:',
-        error
-      );
-
-      return item;
-    }
-
-
-    const media=
-      Array.isArray(data)
-        ? data
-        : [];
-
-
-    const images=
-      media
-        .filter(
-          row=>
-            row.media_type==='image' &&
-            row.storage_path
-        )
-        .sort(
-          (a,b)=>
-            Number(b.is_cover)-
-            Number(a.is_cover)
-        );
-
-
-    const videos=
-      media.filter(
-        row=>
-          row.media_type==='video' &&
-          row.storage_path
-      );
-
-
-    item.image_paths=
-      images.map(
-        row=>row.storage_path
-      );
-
-
-    const cover=
-      images.find(
-        row=>row.is_cover
-      ) || images[0];
-
-
-    item.cover_image_path=
-      cover?.storage_path || '';
-
-
-    item.video_path=
-      videos[0]?.storage_path || '';
-
-
-    item._austaListingMedia=
-      media;
-
-
-    console.log(
-      'A-USTA FULL LISTING MEDIA:',
-      item.id,
-      {
-        images:item.image_paths.length,
-        videos:videos.length
-      }
-    );
-
-
+    // Same vehicle listing_media columns and bucket used by the V159 Home loader.
+    const {data,error}=await sb.from('listing_media')
+      .select('id,listing_id,storage_path,media_type,sort_order,created_at')
+      .eq('listing_id',item.id).order('sort_order',{ascending:true});
+    if(error)throw error;
+    const media=(Array.isArray(data)?data:[]).filter(row=>
+      String(row.listing_id)===String(item.id) && row.storage_path &&
+      (row.media_type==='image' || row.media_type==='video'));
+    const resolved=await Promise.all(media.map(async row=>{
+      try{
+        const {data:signed,error:signedError}=await sb.storage.from('listing-media').createSignedUrl(row.storage_path,3600);
+        if(signedError || !signed?.signedUrl)throw signedError || new Error('Media URL alınmadı');
+        return {...row,signed_url:signed.signedUrl};
+      }catch(error){item._austaMediaError=true;console.warn('A-USTA listing media URL:',item.id,error);return null;}
+    }));
+    const ready=resolved.filter(Boolean);
+    // V147 already accepts HTTP URLs. It must not send these storage paths to the legacy backend signer.
+    item.image_paths=ready.filter(row=>row.media_type==='image').map(row=>row.signed_url);
+    item.cover_image_path=item.image_paths[0] || '';
+    item.video_path=ready.find(row=>row.media_type==='video')?.signed_url || '';
+    item._austaListingMedia=media;
     return item;
-
   }catch(error){
-
-    console.error(
-      'A-USTA listing media hydrate error:',
-      error
-    );
-
+    item._austaMediaError=true;
+    console.error('A-USTA listing media hydrate error:',item.id,error);
     return item;
   }
 }
@@ -32043,7 +31945,7 @@ async function mediaGallery(item,page){
 
     main.innerHTML=`
       <div class="austa-final-no-media">
-        Bu elan üçün media yoxdur.
+        ${item._austaMediaError ? 'Media yüklənmədi. Elanı yenidən açın.' : 'Bu elan üçün media yoxdur.'}
       </div>
     `;
 
@@ -45444,6 +45346,7 @@ $("austaHeaderAddListing")?.addEventListener("click",function(event){
 
 
     function prepareHomeVideos(){
+        if(document.getElementById("austa-v159-real-home-videos")) return;
 
         var grid = document.getElementById(
             'austaV22VideoGrid'
@@ -45672,7 +45575,7 @@ $("austaHeaderAddListing")?.addEventListener("click",function(event){
                     '.austa-v22-video-card'
                 );
 
-                if(!card){
+                if(!card || card.classList.contains("austa-v159-real-video-card")){
                     return;
                 }
 
@@ -46503,6 +46406,7 @@ loadSupabaseV137Items();
    ========================================================= */
 
 function renderRealVideosOnHome(){
+    if(document.getElementById("austa-v159-real-home-videos")) return;
 
     const grid =
         document.getElementById(
@@ -47351,7 +47255,7 @@ document.addEventListener(
                 "#austaV22VideoGrid .austa-v22-video-card"
             );
 
-        if(!card) return;
+        if(!card || card.classList.contains("austa-v159-real-video-card")) return;
 
         e.preventDefault();
 
@@ -61049,6 +60953,276 @@ if(
 (function(){
   "use strict";
 
+  /* V164 social actions belong exclusively to V159 real Home cards.
+     State is local to this browser; no backend writes are performed. */
+  const socialKeys={like:"austa-v164-liked-videos",save:"austa-v164-saved-videos",comments:"austa-v164-video-comments"};
+  const memoryState={};
+  let commentReturnFocus=null;
+  function readSocial(key,fallback){
+    if(Object.prototype.hasOwnProperty.call(memoryState,key))return memoryState[key];
+    try{return JSON.parse(localStorage.getItem(key)) ?? fallback;}catch(error){return fallback;}
+  }
+  function writeSocial(key,value){
+    memoryState[key]=value;
+    try{localStorage.setItem(key,JSON.stringify(value));}catch(error){console.warn("[A-USTA V164] State is available for this session only.");}
+  }
+  function socialIds(action){
+    const value=readSocial(socialKeys[action],[]);
+    return Array.isArray(value)?value.map(String):[];
+  }
+  function syncCard(card){
+    const id=String(card.dataset.listingId);
+    ["like","save"].forEach(action=>{
+      const button=card.querySelector('[data-v164-action="'+action+'"]');
+      if(!button)return;
+      const active=socialIds(action).includes(id);
+      button.classList.toggle("is-active",active);
+      button.setAttribute("aria-pressed",String(active));
+      const count=button.querySelector('.austa-v164-count');
+      if(count)count.textContent=active?"1":"0";
+    });
+  }
+  function syncAll(){document.querySelectorAll('#austaV22VideoGrid .austa-v159-real-video-card,#austaV159RealViewer .austa-v159-viewer-card').forEach(syncCard);}
+  function commentsFor(id){
+    const all=readSocial(socialKeys.comments,{});
+    return all && Array.isArray(all[id])?all[id]:[];
+  }
+  function renderComments(id){
+    const list=document.getElementById('austaV164CommentsList');
+    if(!list)return;
+    list.replaceChildren();
+    const rows=commentsFor(id);
+    if(!rows.length){list.textContent="Hələ şərh yoxdur. İlk şərhi sən yaz.";return;}
+    rows.forEach(row=>{
+      const entry=document.createElement('p');
+      entry.className='austa-v164-comment';
+      const author=document.createElement('strong');author.textContent='Siz';
+      const body=document.createElement('span');body.textContent=String(row.text || '');
+      entry.append(author,body);list.appendChild(entry);
+    });
+    list.scrollTop=list.scrollHeight;
+  }
+  function closeComments(){
+    const backdrop=document.getElementById('austaV164CommentBackdrop');
+    if(!backdrop)return;
+    backdrop.remove();
+    if(commentReturnFocus?.isConnected)commentReturnFocus.focus({preventScroll:true});
+    commentReturnFocus=null;
+  }
+  function openComments(card){
+    closeComments();
+    commentReturnFocus=document.activeElement;
+    const backdrop=document.createElement('div');
+    backdrop.id='austaV164CommentBackdrop';
+    backdrop.dataset.listingId=card.dataset.listingId;
+    backdrop.innerHTML='<section id="austaV164CommentSheet" role="dialog" aria-labelledby="austaV164CommentTitle">'+
+      '<header><h3 id="austaV164CommentTitle">Şərhlər</h3><button type="button" class="austa-v164-close" aria-label="Bağla">×</button></header>'+
+      '<div id="austaV164CommentsList" aria-live="polite"></div>'+
+      '<form id="austaV164CommentForm"><span class="austa-v164-avatar" aria-hidden="true">👤</span><input id="austaV164CommentInput" aria-label="Şərhiniz" placeholder="Şərh əlavə et..." maxlength="2000" required autocomplete="off"><button type="submit" aria-label="Göndər">↑</button></form></section>';
+    card.appendChild(backdrop);
+    backdrop.querySelector('.austa-v164-close').addEventListener('click',closeComments);
+    backdrop.addEventListener('click',event=>{if(event.target===backdrop)closeComments();});
+    backdrop.addEventListener('keydown',event=>{
+      if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeComments();}
+    });
+    backdrop.querySelector('form').addEventListener('submit',event=>{
+      event.preventDefault();event.stopPropagation();
+      const input=backdrop.querySelector('input'),text=input.value.trim();
+      if(!text)return;
+      const id=backdrop.dataset.listingId;
+      let all=readSocial(socialKeys.comments,{});
+      if(!all || typeof all!=='object' || Array.isArray(all))all={};
+      all[id]=[...commentsFor(id),{text,createdAt:new Date().toISOString()}];
+      writeSocial(socialKeys.comments,all);input.value='';renderComments(id);input.focus({preventScroll:true});
+    });
+    renderComments(card.dataset.listingId);
+    backdrop.querySelector('input').focus({preventScroll:true});
+  }
+  async function shareCard(card,button){
+    const url=new URL(location.href);url.searchParams.set('listing',card.dataset.listingId);url.hash='';
+    const title=card.querySelector('.austa-v159-info b')?.textContent || 'A-USTA elanı';
+    try{
+      if(navigator.share){
+        try{await navigator.share({title,text:title,url:url.href});return;}
+        catch(error){if(error.name==='AbortError')return;}
+      }
+      if(navigator.clipboard?.writeText){
+        try{await navigator.clipboard.writeText(url.href);button.querySelector('small').textContent='Kopyalandı';setTimeout(()=>{button.querySelector('small').textContent='Paylaş';},1600);return;}
+        catch(error){/* Manual copy remains available below. */}
+      }
+      window.prompt('Elan linkini kopyala:',url.href);
+    }catch(error){console.error('[A-USTA V164] Share:',error);}
+  }
+  async function openRealListing(id){
+    const open=window.AUSTA_OPEN_FULL_LISTING || window.AUSTA_OPEN_LISTING;
+    if(typeof open==='function'){
+      try{
+        // Match the existing real viewer -> full listing handoff.
+        const sb=window.AUSTA_SUPABASE;
+        if(sb){
+          const {data:listing,error}=await sb.from('vehicle_listings').select('*').eq('id',id).single();
+          if(error || !listing){console.error('[A-USTA V159] Listing not found:',error);return;}
+          window.AUSTA_CURRENT_SUPABASE_LISTING=listing;
+        }
+        await open(id);
+      }catch(error){console.error('[A-USTA V159] Listing:',error);}
+    }
+  }
+  const homeVideoItems=new WeakMap();
+  let viewerReturnFocus=null;
+  let viewerBodyOverflow='';
+  function createRealVideoInfo(item){
+    const info=document.createElement('div');
+    info.className='austa-v159-info';
+    const price=String(item.price || '').replace(/^(\d+)(?=\s|$)/,digits=>digits.replace(/\B(?=(\d{3})+(?!\d))/g,' '));
+    info.innerHTML='<span class="austa-v159-kind">'+(item.type==='rent'?'RENT A CAR':'AVTOMOBİL')+'</span>'+
+      '<b title="'+escapeHtml(item.headline)+'">'+escapeHtml(item.headline)+'</b>'+
+      '<span class="austa-v159-meta">'+escapeHtml(item.year ?? '')+'</span>'+
+      '<strong>'+escapeHtml(price)+'</strong>';
+    return info;
+  }
+  function createViewerActions(){
+    const actions=document.createElement('div');
+    actions.className='austa-v164-video-actions';
+    actions.innerHTML='<button type="button" data-v164-action="like" aria-label="Bəyən" aria-pressed="false"><span aria-hidden="true">♥</span><small class="austa-v164-count">0</small></button>'+
+      '<button type="button" data-v164-action="comment" aria-label="Şərhlər"><span aria-hidden="true">💬</span><small>Şərh</small></button>'+
+      '<button type="button" data-v164-action="save" aria-label="Yadda saxla" aria-pressed="false"><span aria-hidden="true">🔖</span><small>Saxla</small></button>'+
+      '<button type="button" data-v164-action="share" aria-label="Paylaş"><span aria-hidden="true">↗</span><small>Paylaş</small></button>';
+    return actions;
+  }
+  function closeRealVideoViewer(){
+    const root=document.getElementById('austaV159RealViewer');
+    if(!root)return;
+    closeComments();
+    root._austaViewerCleanup?.();
+    root.querySelectorAll('video').forEach(video=>video.pause());
+    root.remove();
+    document.body.style.overflow=viewerBodyOverflow;
+    if(viewerReturnFocus?.isConnected)viewerReturnFocus.focus();
+    viewerReturnFocus=null;
+  }
+  function openRealVideoViewer(sourceCard){
+    const sources=[...document.querySelectorAll('#austaV22VideoGrid .austa-v159-real-video-card')]
+      .filter(card=>homeVideoItems.has(card));
+    const startIndex=sources.indexOf(sourceCard);
+    if(startIndex<0)return;
+    closeRealVideoViewer();
+    viewerReturnFocus=document.activeElement;
+    viewerBodyOverflow=document.body.style.overflow;
+    document.body.style.overflow='hidden';
+    sources.forEach(card=>card.querySelector('video')?.pause());
+    const root=document.createElement('div');
+    root.id='austaV159RealViewer';
+    root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');
+    const feed=document.createElement('div');
+    feed.className='austa-v159-viewer-feed';
+    feed.setAttribute('aria-label','Real video lenti');
+    const close=document.createElement('button');
+    close.type='button';close.className='austa-v159-viewer-close';close.textContent='×';
+    close.setAttribute('aria-label','Video viewer-i bağla');
+    const cards=[],videos=[];
+    let activeIndex=-1,closed=false,scrollFrame=0,viewerMuted=true;
+    function playActive(index){
+      const video=videos[index];
+      if(!video || closed || index!==activeIndex)return;
+      video.play().then(()=>{if(closed || index!==activeIndex)video.pause();})
+        .catch(error=>{if(!closed && index===activeIndex && error.name!=='AbortError')console.warn('[A-USTA V159] Playback:',error);});
+    }
+    function activate(index){
+      index=Math.max(0,Math.min(videos.length-1,index));
+      if(closed || index===activeIndex)return;
+      closeComments();activeIndex=index;
+      root.dataset.activeIndex=String(index);
+      root.setAttribute('aria-label',homeVideoItems.get(sources[index]).title+' — video');
+      videos.forEach((video,i)=>{
+        if(i!==index)video.pause();
+        cards[i].inert=i!==index;
+        cards[i].setAttribute('aria-hidden',String(i!==index));
+      });
+      syncCard(cards[index]);playActive(index);
+    }
+    sources.forEach((source,index)=>{
+      const item=homeVideoItems.get(source);
+      const slide=document.createElement('section');slide.className='austa-v159-viewer-slide';
+      const card=document.createElement('div');card.className='austa-v159-viewer-card';
+      card.dataset.listingId=item.listingId;card.dataset.listingType=item.type;card.dataset.viewerIndex=String(index);
+      const video=document.createElement('video');
+      video.src=source.querySelector('video').src;
+      video.controls=true;video.muted=true;video.playsInline=true;video.preload=index===startIndex?'metadata':'none';
+      const playback=document.createElement('button');playback.type='button';playback.className='austa-v159-play-toggle';
+      playback.setAttribute('aria-label','Videonu oynat');
+      video.addEventListener('play',()=>{if(closed || index!==activeIndex){video.pause();return;}playback.setAttribute('aria-label','Videonu dayandır');});
+      video.addEventListener('pause',()=>playback.setAttribute('aria-label','Videonu oynat'));
+      const info=createRealVideoInfo(item);
+      const detail=document.createElement('button');detail.type='button';detail.className='austa-v159-detail';detail.textContent='Elana bax';
+      detail.setAttribute('aria-label',item.title+' — elana bax');info.appendChild(detail);
+      const mute=document.createElement('button');mute.type='button';mute.className='austa-v159-viewer-mute';
+      function syncMute(){mute.textContent=video.muted?'🔇':'🔊';mute.setAttribute('aria-label',video.muted?'Səsi aç':'Səsi bağla');mute.setAttribute('aria-pressed',String(!video.muted));}
+      video.addEventListener('volumechange',syncMute);syncMute();
+      card.append(video,playback,info,createViewerActions(),mute);slide.appendChild(card);feed.appendChild(slide);
+      cards.push(card);videos.push(video);
+    });
+    root.append(feed,close);
+    feed.addEventListener('scroll',()=>{
+      if(scrollFrame)return;
+      scrollFrame=requestAnimationFrame(()=>{scrollFrame=0;if(!closed && feed.clientHeight)activate(Math.round(feed.scrollTop/feed.clientHeight));});
+    },{passive:true});
+    const resizeObserver=new ResizeObserver(()=>{if(!closed && activeIndex>=0)feed.scrollTop=activeIndex*feed.clientHeight;});
+    root._austaViewerCleanup=()=>{closed=true;cancelAnimationFrame(scrollFrame);resizeObserver.disconnect();videos.forEach(video=>video.pause());};
+    root.addEventListener('click',event=>{
+      event.stopPropagation();
+      if(event.target.closest('.austa-v159-viewer-close')){closeRealVideoViewer();return;}
+      if(event.target.closest('#austaV164CommentBackdrop'))return;
+      const card=event.target.closest('.austa-v159-viewer-card');
+      if(!card || Number(card.dataset.viewerIndex)!==activeIndex)return;
+      const video=card.querySelector('video');
+      const button=event.target.closest('[data-v164-action]');
+      if(button){
+        event.preventDefault();event.stopImmediatePropagation();
+        const action=button.dataset.v164Action,id=String(card.dataset.listingId);
+        if(action==='like' || action==='save'){
+          const values=socialIds(action);
+          writeSocial(socialKeys[action],values.includes(id)?values.filter(value=>value!==id):[...values,id]);syncAll();
+        }else if(action==='comment')openComments(card);
+        else if(action==='share')shareCard(card,button);
+        return;
+      }
+      if(event.target.closest('.austa-v159-viewer-mute')){viewerMuted=!video.muted;videos.forEach(v=>{v.muted=viewerMuted;});return;}
+      if(event.target.closest('.austa-v159-play-toggle')){if(video.paused)playActive(activeIndex);else video.pause();return;}
+      if(event.target.closest('.austa-v159-detail')){const id=card.dataset.listingId;closeRealVideoViewer();openRealListing(id);}
+    });
+    root.addEventListener('keydown',event=>{
+      event.stopPropagation();
+      if(event.key==='Escape'){event.preventDefault();closeRealVideoViewer();return;}
+      if(!event.target.closest('input,textarea,#austaV164CommentBackdrop') && ['ArrowDown','ArrowUp','PageDown','PageUp'].includes(event.key)){
+        event.preventDefault();const direction=['ArrowDown','PageDown'].includes(event.key)?1:-1;
+        feed.scrollTo({top:Math.max(0,Math.min(cards.length-1,activeIndex+direction))*feed.clientHeight,behavior:'smooth'});return;
+      }
+      if(event.key==='Tab'){
+        const controls=[...root.querySelectorAll('button,input,video')].filter(el=>!el.closest('[inert]') && !el.disabled && el.getClientRects().length);
+        const first=controls[0],last=controls[controls.length-1];
+        if(event.shiftKey && document.activeElement===first){event.preventDefault();last.focus();}
+        else if(!event.shiftKey && document.activeElement===last){event.preventDefault();first.focus();}
+      }
+    });
+    document.body.appendChild(root);
+    feed.scrollTop=startIndex*feed.clientHeight;activate(startIndex);resizeObserver.observe(feed);close.focus();
+  }
+
+  function bindRealHomeActions(){
+    const grid=document.getElementById('austaV22VideoGrid');
+    if(!grid || grid.dataset.v164Bound==='1')return;
+    grid.dataset.v164Bound='1';
+    grid.addEventListener('click',event=>{
+      const card=event.target.closest('.austa-v159-real-video-card');
+      if(!card)return;
+      event.preventDefault();event.stopImmediatePropagation();
+      openRealVideoViewer(card);
+    },true);
+    window.addEventListener('storage',event=>{if(event.key===socialKeys.like || event.key===socialKeys.save){delete memoryState[event.key];syncAll();}});
+  }
+  window.AUSTA_VIDEO_V164={sync:syncAll,closeComments};
+
   async function loadRealHomeVideos(){
 
     const grid =
@@ -61181,6 +61355,8 @@ if(
           id:media.id,
           listingId:listing.id,
           type:listing.listing_type,
+          headline:[listing.brand,listing.model].filter(Boolean).join(" "),
+          year:listing.year,
           title:[
             listing.year,
             listing.brand,
@@ -61257,7 +61433,7 @@ if(
 
         card.dataset.austaRealVideo="1";
         card.dataset.listingId=item.listingId;
-        card.dataset.listingType=item.listingType || "car";
+        card.dataset.listingType=item.type;
 
         /*
          * DƏQİQ 215 × 380
@@ -61280,130 +61456,16 @@ if(
           "background:#000 !important;"+
           "box-sizing:border-box !important;";
 
-        const video =
-          document.createElement("video");
-
-        video.src=item.video;
-        video.preload="metadata";
-        video.muted=true;
-        video.playsInline=true;
-        video.controls=true;
-
-        video.style.cssText =
-          "position:absolute;"+
-          "inset:0;"+
-          "display:block;"+
-          "width:100%;"+
-          "height:100%;"+
-          "object-fit:cover;"+
-          "background:#000;";
-
-        const info =
-          document.createElement("div");
-
-        info.style.cssText =
-          "position:absolute;"+
-          "left:0;right:0;bottom:0;"+
-          "z-index:3;"+
-          "padding:42px 10px 10px;"+
-          "pointer-events:none;"+
-          "background:linear-gradient("+
-            "transparent,"+
-            "rgba(0,0,0,.88)"+
-          ");"+
-          "color:#fff;";
-
-        const tag =
-          item.type==="rent"
-            ? "RENT A CAR"
-            : "AVTOMOBİL";
-
-        info.innerHTML=
-          '<span style="'+
-            'display:inline-block;'+
-            'padding:4px 7px;'+
-            'margin-bottom:5px;'+
-            'border-radius:6px;'+
-            'background:#e31b3d;'+
-            'font-size:9px;'+
-            'font-weight:900;'+
-          '">'+
-            tag+
-          '</span>'+
-          '<b style="'+
-            'display:block;'+
-            'font-size:12px;'+
-            'line-height:1.3;'+
-          '">'+
-            escapeHtml(item.title)+
-          '</b>'+
-          '<strong style="'+
-            'display:block;'+
-            'margin-top:4px;'+
-            'font-size:12px;'+
-          '">'+
-            escapeHtml(item.price)+
-          '</strong>';
-
-      card.appendChild(video);
-card.appendChild(info);
-
-/*
- * ============================================================
- * A-USTA V164 — REAL VIDEO SOCIAL ACTIONS
- * ============================================================
- */
-
-const actions=document.createElement("div");
-actions.className="austa-v164-video-actions";
-
-actions.innerHTML=`
-  <button
-    type="button"
-    class="austa-v164-action"
-    data-v164-action="like"
-    aria-label="Bəyən"
-  >
-    <span class="austa-v164-icon">♥</span>
-    <span class="austa-v164-count">0</span>
-  </button>
-
-  <button
-    type="button"
-    class="austa-v164-action"
-    data-v164-action="comment"
-    aria-label="Şərhlər"
-  >
-    <span class="austa-v164-icon">💬</span>
-    <span class="austa-v164-label">Şərh</span>
-  </button>
-
-  <button
-    type="button"
-    class="austa-v164-action"
-    data-v164-action="save"
-    aria-label="Yadda saxla"
-  >
-    <span class="austa-v164-icon">🔖</span>
-    <span class="austa-v164-label">Saxla</span>
-  </button>
-
-  <button
-    type="button"
-    class="austa-v164-action"
-    data-v164-action="share"
-    aria-label="Paylaş"
-  >
-    <span class="austa-v164-icon">↗</span>
-    <span class="austa-v164-label">Paylaş</span>
-  </button>
-`;
-
-card.appendChild(actions);
-grid.appendChild(card);
+        const video=document.createElement('video');
+        video.src=item.video;video.preload='metadata';video.muted=true;video.playsInline=true;
+        video.style.cssText='position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;background:#000;';
+        const preview=document.createElement('button');
+        preview.type='button';preview.className='austa-v159-open-viewer';
+        preview.setAttribute('aria-label',item.title+' — videoya bax');
+        homeVideoItems.set(card,item);
+        card.append(video,preview,createRealVideoInfo(item));
+        grid.appendChild(card);
       });
-
-     
 
       console.log(
         "[A-USTA V159] REAL HOME VIDEOS:",
@@ -61437,6 +61499,7 @@ grid.appendChild(card);
 
 
   function start(){
+    bindRealHomeActions();
 
     /*
      * Supabase scriptlərinin yüklənməsi üçün
@@ -61452,6 +61515,8 @@ grid.appendChild(card);
 
         clearInterval(timer);
         loadRealHomeVideos();
+        const sharedId=new URL(location.href).searchParams.get('listing');
+        if(sharedId)openRealListing(sharedId);
         return;
       }
 
@@ -61489,1627 +61554,194 @@ grid.appendChild(card);
 </script>
 
 <style id="austa-v163-real-video-size-lock">
-/* A-USTA V163 — REAL HOME VIDEO PERMANENT 215x380 LOCK */
+/* A-USTA V163 — REAL HOME VIDEO FINAL 215x380 LOCK */
 
-#austaV22VideoGrid{
-  display:flex !important;
-  flex-wrap:wrap !important;
-  gap:12px !important;
-  align-items:flex-start !important;
-  justify-content:flex-start !important;
-  grid-template-columns:none !important;
-  grid-auto-columns:unset !important;
+#austaV22VideoGrid {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  grid-template-columns: none !important;
+  grid-auto-columns: unset !important;
+  gap: 12px !important;
+  justify-content: start !important;
+  align-items: start !important;
 }
 
-#austaV22VideoGrid > .austa-v159-real-video-card{
-  position:relative !important;
-  display:block !important;
+#austaV22VideoGrid .austa-v159-real-video-card {
+  width: 215px !important;
+  min-width: 215px !important;
+  max-width: 215px !important;
 
-  flex:0 0 215px !important;
+  height: 380px !important;
+  min-height: 380px !important;
+  max-height: 380px !important;
 
-  width:215px !important;
-  min-width:215px !important;
-  max-width:215px !important;
+  aspect-ratio: auto !important;
+  flex: 0 0 215px !important;
 
-  height:380px !important;
-  min-height:380px !important;
-  max-height:380px !important;
-
-  aspect-ratio:auto !important;
-
-  padding:0 !important;
-  margin:0 !important;
-
-  overflow:hidden !important;
-  box-sizing:border-box !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
 }
 
-#austaV22VideoGrid > .austa-v159-real-video-card > video{
-  position:absolute !important;
-  inset:0 !important;
-
-  display:block !important;
-
-  width:100% !important;
-  min-width:100% !important;
-  max-width:100% !important;
-
-  height:100% !important;
-  min-height:100% !important;
-  max-height:100% !important;
-
-  aspect-ratio:auto !important;
-  object-fit:cover !important;
-}
-</style>
-
-<script id="austa-v163-real-video-size-lock-js">
-(function(){
-  "use strict";
-
-  function lockRealVideoSize(){
-
-    const grid=
-      document.getElementById("austaV22VideoGrid");
-
-    if(!grid)return;
-
-    grid.style.setProperty(
-      "display",
-      "flex",
-      "important"
-    );
-
-    grid.style.setProperty(
-      "flex-wrap",
-      "wrap",
-      "important"
-    );
-
-    grid.style.setProperty(
-      "grid-template-columns",
-      "none",
-      "important"
-    );
-
-    grid.style.setProperty(
-      "grid-auto-columns",
-      "unset",
-      "important"
-    );
-
-    grid.style.setProperty(
-      "gap",
-      "12px",
-      "important"
-    );
-
-    grid.style.setProperty(
-      "align-items",
-      "flex-start",
-      "important"
-    );
-
-    grid.style.setProperty(
-      "justify-content",
-      "flex-start",
-      "important"
-    );
-
-
-    grid
-      .querySelectorAll(
-        ".austa-v159-real-video-card"
-      )
-      .forEach(card=>{
-
-        card.style.setProperty(
-          "position",
-          "relative",
-          "important"
-        );
-
-        card.style.setProperty(
-          "display",
-          "block",
-          "important"
-        );
-
-        card.style.setProperty(
-          "flex",
-          "0 0 215px",
-          "important"
-        );
-
-        card.style.setProperty(
-          "width",
-          "215px",
-          "important"
-        );
-
-        card.style.setProperty(
-          "min-width",
-          "215px",
-          "important"
-        );
-
-        card.style.setProperty(
-          "max-width",
-          "215px",
-          "important"
-        );
-
-        card.style.setProperty(
-          "height",
-          "380px",
-          "important"
-        );
-
-        card.style.setProperty(
-          "min-height",
-          "380px",
-          "important"
-        );
-
-        card.style.setProperty(
-          "max-height",
-          "380px",
-          "important"
-        );
-
-        card.style.setProperty(
-          "aspect-ratio",
-          "auto",
-          "important"
-        );
-
-        card.style.setProperty(
-          "padding",
-          "0",
-          "important"
-        );
-
-        card.style.setProperty(
-          "margin",
-          "0",
-          "important"
-        );
-
-        card.style.setProperty(
-          "overflow",
-          "hidden",
-          "important"
-        );
-
-
-        const video=
-          card.querySelector("video");
-
-        if(video){
-
-          video.style.setProperty(
-            "position",
-            "absolute",
-            "important"
-          );
-
-          video.style.setProperty(
-            "inset",
-            "0",
-            "important"
-          );
-
-          video.style.setProperty(
-            "display",
-            "block",
-            "important"
-          );
-
-          video.style.setProperty(
-            "width",
-            "100%",
-            "important"
-          );
-
-          video.style.setProperty(
-            "min-width",
-            "100%",
-            "important"
-          );
-
-          video.style.setProperty(
-            "max-width",
-            "100%",
-            "important"
-          );
-
-          video.style.setProperty(
-            "height",
-            "100%",
-            "important"
-          );
-
-          video.style.setProperty(
-            "min-height",
-            "100%",
-            "important"
-          );
-
-          video.style.setProperty(
-            "max-height",
-            "100%",
-            "important"
-          );
-
-          video.style.setProperty(
-            "aspect-ratio",
-            "auto",
-            "important"
-          );
-
-          video.style.setProperty(
-            "object-fit",
-            "cover",
-            "important"
-          );
-        }
-      });
-  }
-
-
-  function start(){
-
-    lockRealVideoSize();
-
-    const grid=
-      document.getElementById(
-        "austaV22VideoGrid"
-      );
-
-    if(grid){
-
-      const observer=
-        new MutationObserver(
-          function(){
-            lockRealVideoSize();
-          }
-        );
-
-      observer.observe(
-        grid,
-        {
-          childList:true
-        }
-      );
-    }
-
-
-    [
-      100,
-      300,
-      700,
-      1200,
-      2000,
-      3500
-    ].forEach(ms=>{
-
-      setTimeout(
-        lockRealVideoSize,
-        ms
-      );
-
-    });
-  }
-
-
-  if(document.readyState==="loading"){
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      start,
-      {once:true}
-    );
-
-  }else{
-
-    start();
-  }
-
-
-  window.AUSTA_REAL_VIDEO_SIZE_V163={
-    lock:lockRealVideoSize
-  };
-
-})();
-</script>
-
-<style id="austa-v164-real-video-social-css">
-
-/* ============================================================
-   A-USTA V164 — REAL HOME VIDEO SOCIAL ACTIONS
-   ============================================================ */
-
-#austaV22VideoGrid
-.austa-v159-real-video-card
-.austa-v164-video-actions{
-  position:absolute !important;
-  right:8px !important;
-  bottom:72px !important;
-
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:center !important;
-  gap:12px !important;
-
-  z-index:50 !important;
-
-  width:auto !important;
-  height:auto !important;
-
-  pointer-events:auto !important;
+#austaV22VideoGrid .austa-v159-real-video-card video {
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+
+  aspect-ratio: auto !important;
+  object-fit: cover !important;
+  display: block !important;
 }
 
-
-#austaV22VideoGrid
-.austa-v159-real-video-card
-.austa-v164-action{
-  appearance:none !important;
-  -webkit-appearance:none !important;
-
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:center !important;
-  justify-content:center !important;
-
-  width:42px !important;
-  min-width:42px !important;
-  max-width:42px !important;
-
-  height:auto !important;
-  min-height:42px !important;
-
-  padding:0 !important;
-  margin:0 !important;
-
-  border:0 !important;
-  outline:0 !important;
-
-  background:transparent !important;
-
-  color:#fff !important;
-
-  cursor:pointer !important;
-
-  position:relative !important;
-  z-index:51 !important;
-
-  pointer-events:auto !important;
-
-  text-shadow:
-    0 1px 3px rgba(0,0,0,.9),
-    0 0 8px rgba(0,0,0,.55) !important;
+/* V159 Home preview: real listing metadata only; social UI lives in the viewer. */
+#austaV22VideoGrid .austa-v159-real-video-card .austa-v159-open-viewer{
+  position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;
+  margin:0;padding:0;border:0;border-radius:0;background:transparent;cursor:pointer;
 }
-
-
-#austaV22VideoGrid
-.austa-v159-real-video-card
-.austa-v164-icon{
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-
-  width:38px !important;
-  height:38px !important;
-
-  font-size:25px !important;
-  line-height:1 !important;
-
-  color:#fff !important;
-
-  pointer-events:none !important;
+#austaV22VideoGrid .austa-v159-open-viewer::after{
+  content:'▶';position:absolute;top:12px;right:12px;display:grid;place-items:center;
+  width:30px;height:30px;border-radius:50%;background:#0008;color:#fff;font-size:12px;
 }
-
-
-#austaV22VideoGrid
-.austa-v159-real-video-card
-.austa-v164-count,
-
-#austaV22VideoGrid
-.austa-v159-real-video-card
-.austa-v164-label{
-  display:block !important;
-
-  margin-top:2px !important;
-
-  color:#fff !important;
-
-  font-size:10px !important;
-  font-weight:700 !important;
-  line-height:1.1 !important;
-
-  text-align:center !important;
-
-  pointer-events:none !important;
+#austaV22VideoGrid .austa-v159-real-video-card::before{
+  content:'';position:absolute;inset:auto 0 0;height:150px;z-index:2;
+  background:linear-gradient(transparent,rgba(0,0,0,.9));pointer-events:none;
 }
-
-
-#austaV22VideoGrid
-.austa-v159-real-video-card
-.austa-v164-action.is-active
-.austa-v164-icon{
-  color:#ff2448 !important;
+#austaV22VideoGrid .austa-v159-real-video-card .austa-v159-info{
+  position:absolute;left:11px;right:11px;bottom:12px;z-index:3;
+  min-width:0;max-height:120px;overflow:hidden;color:#fff;pointer-events:none;
+  text-shadow:0 1px 4px #000;
 }
-
-
-/* ============================================================
-   COMMENT BACKDROP
-   ============================================================ */
-
+:is(#austaV22VideoGrid .austa-v159-real-video-card,#austaV159RealViewer .austa-v159-viewer-card) .austa-v159-kind{
+  display:inline-block;max-width:100%;box-sizing:border-box;margin-bottom:5px;
+  padding:3px 6px;border-radius:5px;background:#e31b3d;color:#fff;
+  font-size:9px;line-height:13px;font-weight:850;letter-spacing:.3px;
+}
+:is(#austaV22VideoGrid .austa-v159-real-video-card,#austaV159RealViewer .austa-v159-viewer-card) .austa-v159-info b{
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;overflow-wrap:anywhere;font-size:12px;line-height:15px;color:#fff;font-weight:800;
+}
+:is(#austaV22VideoGrid .austa-v159-real-video-card,#austaV159RealViewer .austa-v159-viewer-card) .austa-v159-meta{
+  display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:11px;line-height:14px;color:#e7edf4;
+}
+:is(#austaV22VideoGrid .austa-v159-real-video-card,#austaV159RealViewer .austa-v159-viewer-card) .austa-v159-info strong{
+  display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:13px;line-height:17px;color:#fff;font-weight:800;
+}
+#austaV159RealViewer{
+  position:fixed;inset:0;z-index:2147483647;display:block;
+  width:100%;height:100%;box-sizing:border-box;padding:0;background:#000;overscroll-behavior:contain;
+}
+#austaV159RealViewer .austa-v159-viewer-feed{
+  width:100%;height:100%;overflow-y:auto;overflow-x:hidden;
+  scroll-snap-type:y mandatory;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:none;
+}
+#austaV159RealViewer .austa-v159-viewer-feed::-webkit-scrollbar{display:none}
+#austaV159RealViewer .austa-v159-viewer-slide{
+  position:relative;width:100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;
+  overflow:hidden;background:#000;
+}
+#austaV159RealViewer .austa-v159-viewer-card{
+  position:relative;width:100%;height:100%;min-height:0;overflow:hidden;
+  border-radius:0;background:#000;color:#fff;
+}
+#austaV159RealViewer video{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;background:#000}
+#austaV159RealViewer .austa-v159-play-toggle{
+  position:absolute;inset:0 0 64px;z-index:1;display:block;width:100%;margin:0;padding:0;
+  border:0;border-radius:0;background:transparent;cursor:pointer;appearance:none;
+}
+#austaV159RealViewer .austa-v159-viewer-card::before{
+  content:'';position:absolute;inset:auto 0 64px;height:190px;z-index:2;
+  background:linear-gradient(transparent,rgba(0,0,0,.8));pointer-events:none;
+}
+#austaV159RealViewer .austa-v159-info{
+  position:absolute;left:16px;right:78px;bottom:72px;z-index:3;
+  max-height:190px;min-width:0;overflow:hidden;color:#fff;pointer-events:none;text-shadow:0 1px 4px #000;
+}
+#austaV159RealViewer .austa-v159-info b{font-size:17px;line-height:21px}
+#austaV159RealViewer .austa-v159-kind{font-size:10px;line-height:14px}
+#austaV159RealViewer .austa-v159-meta{font-size:12px;line-height:16px}
+#austaV159RealViewer .austa-v159-info strong{font-size:16px;line-height:20px}
+#austaV159RealViewer .austa-v159-detail{
+  position:relative;z-index:6;display:inline-flex;align-items:center;justify-content:center;
+  opacity:1;visibility:visible;pointer-events:auto;margin-top:8px;min-height:32px;
+  max-width:100%;padding:6px 12px;border:1px solid #ffffff75;border-radius:8px;
+  background:#071727d9;color:#fff;font-size:12px;font-weight:750;line-height:18px;cursor:pointer;
+}
+#austaV159RealViewer .austa-v164-video-actions{
+  position:absolute;right:10px;bottom:76px;z-index:5;display:flex;flex-direction:column;
+  gap:12px;width:48px;pointer-events:auto;
+}
+#austaV159RealViewer [data-v164-action]{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;width:48px;min-width:48px;min-height:48px;padding:3px;margin:0;
+  border:0;border-radius:12px;background:#0005;color:#fff;cursor:pointer;line-height:1;text-shadow:0 1px 4px #000;
+}
+#austaV159RealViewer [data-v164-action] span{font-size:27px;color:inherit;pointer-events:none}
+#austaV159RealViewer [data-v164-action] small{display:block;font-size:10px;line-height:15px;color:inherit;pointer-events:none;max-width:48px;overflow:hidden;text-overflow:ellipsis}
+#austaV159RealViewer [data-v164-action].is-active{color:#ff2448;background:#fff;text-shadow:none}
+#austaV159RealViewer .austa-v159-viewer-close,#austaV159RealViewer .austa-v159-viewer-mute{
+  position:absolute;top:12px;z-index:8;display:grid;place-items:center;width:38px;height:38px;
+  padding:0;border:1px solid #fff4;border-radius:50%;background:#0008;color:#fff;cursor:pointer;
+}
+#austaV159RealViewer .austa-v159-viewer-close{position:fixed;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:50;font-size:29px;line-height:1}
+#austaV159RealViewer .austa-v159-viewer-mute{left:12px;font-size:21px}
+#austaV159RealViewer button:focus-visible,#austaV22VideoGrid .austa-v159-open-viewer:focus-visible{outline:2px solid #fff;outline-offset:-3px}
 #austaV164CommentBackdrop{
-  position:fixed !important;
-  inset:0 !important;
-
-  display:flex !important;
-  align-items:flex-end !important;
-  justify-content:center !important;
-
-  background:rgba(0,0,0,.48) !important;
-
-  z-index:2147483000 !important;
-
-  padding:0 !important;
-  margin:0 !important;
+  position:absolute!important;inset:0!important;z-index:20!important;
+  background:rgba(0,0,0,.18)!important;display:flex!important;
+  align-items:flex-end!important;justify-content:center!important;
+  border-radius:inherit;overflow:hidden;overscroll-behavior:contain;
 }
-
-
-/* ============================================================
-   TIKTOK STYLE COMMENT SHEET
-   ============================================================ */
-
 #austaV164CommentSheet{
-  width:100% !important;
-  max-width:560px !important;
-
-  height:min(68vh,620px) !important;
-
-  display:flex !important;
-  flex-direction:column !important;
-
-  background:#fff !important;
-  color:#111 !important;
-
-  border-radius:20px 20px 0 0 !important;
-
-  overflow:hidden !important;
-
-  box-shadow:
-    0 -12px 40px rgba(0,0,0,.22) !important;
-
-  animation:
-    austaV164SheetUp .22s ease-out !important;
+  width:100%!important;max-width:100%!important;height:290px!important;
+  max-height:100%!important;min-height:0;box-sizing:border-box!important;
+  border-radius:16px 16px 0 0!important;background:#fff!important;color:#172033!important;
+  display:flex!important;flex-direction:column!important;padding:10px 8px!important;
+  overflow:hidden;box-shadow:0 -6px 20px #0002;animation:austaV164SheetUp .2s ease-out;
 }
-
-
-@keyframes austaV164SheetUp{
-
-  from{
-    transform:translateY(100%);
-  }
-
-  to{
-    transform:translateY(0);
-  }
+@keyframes austaV164SheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+#austaV164CommentSheet header{
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  gap:6px;padding-bottom:7px;border-bottom:1px solid #eaecf0;
 }
-
-
-.austa-v164-comment-head{
-  flex:0 0 auto !important;
-
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-
-  min-height:56px !important;
-
-  padding:0 56px !important;
-
-  position:relative !important;
-
-  border-bottom:
-    1px solid #ededed !important;
-
-  background:#fff !important;
+#austaV164CommentSheet h3{margin:0;color:#172033;font-size:13px;line-height:20px}
+#austaV164CommentSheet .austa-v164-close{
+  border:0;background:#f0f2f5;color:#172033;border-radius:50%;
+  width:28px;height:28px;flex:0 0 28px;font-size:21px;cursor:pointer;
 }
-
-
-.austa-v164-comment-title{
-  font-size:16px !important;
-  font-weight:800 !important;
-  color:#111 !important;
+#austaV164CommentsList{
+  flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;
+  padding:10px 0;color:#475467;font-size:12px;line-height:17px;
 }
-
-
-.austa-v164-comment-close{
-  position:absolute !important;
-
-  right:14px !important;
-  top:50% !important;
-
-  transform:translateY(-50%) !important;
-
-  width:38px !important;
-  height:38px !important;
-
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-
-  border:0 !important;
-  border-radius:50% !important;
-
-  background:transparent !important;
-
-  color:#111 !important;
-
-  font-size:26px !important;
-  line-height:1 !important;
-
-  cursor:pointer !important;
+#austaV164CommentSheet .austa-v164-comment{margin:0 0 12px;overflow-wrap:anywhere;white-space:pre-wrap}
+#austaV164CommentSheet .austa-v164-comment strong{display:block;font-size:10px;color:#667085;margin-bottom:3px}
+#austaV164CommentSheet .austa-v164-comment span{color:#172033}
+#austaV164CommentForm{
+  display:flex;align-items:center;gap:4px;border-top:1px solid #eaecf0;
+  padding-top:8px;flex-shrink:0;min-width:0;
 }
-
-
-.austa-v164-comments-list{
-  flex:1 1 auto !important;
-
-  overflow-y:auto !important;
-
-  padding:16px !important;
-
-  background:#fff !important;
+#austaV164CommentForm .austa-v164-avatar{
+  flex:0 0 22px;width:22px;height:22px;display:grid;place-items:center;
+  border-radius:50%;background:#f0f2f5;font-size:13px;
 }
-
-
-.austa-v164-empty{
-  min-height:100% !important;
-
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-
-  padding:30px !important;
-
-  text-align:center !important;
-
-  color:#777 !important;
-
-  font-size:14px !important;
-  font-weight:600 !important;
-}
-
-
-.austa-v164-comment-row{
-  display:flex !important;
-  align-items:flex-start !important;
-
-  gap:10px !important;
-
-  margin-bottom:18px !important;
-}
-
-
-.austa-v164-avatar{
-  flex:0 0 38px !important;
-
-  width:38px !important;
-  height:38px !important;
-
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-
-  border-radius:50% !important;
-
-  background:#f0f0f0 !important;
-
-  color:#555 !important;
-
-  font-size:16px !important;
-  font-weight:800 !important;
-}
-
-
-.austa-v164-comment-content{
-  min-width:0 !important;
-  flex:1 !important;
-}
-
-
-.austa-v164-comment-user{
-  margin-bottom:4px !important;
-
-  color:#777 !important;
-
-  font-size:12px !important;
-  font-weight:700 !important;
-}
-
-
-.austa-v164-comment-text{
-  color:#111 !important;
-
-  font-size:14px !important;
-  line-height:1.4 !important;
-
-  overflow-wrap:anywhere !important;
-}
-
-
-.austa-v164-comment-compose{
-  flex:0 0 auto !important;
-
-  display:flex !important;
-  align-items:center !important;
-
-  gap:9px !important;
-
-  padding:
-    10px
-    12px
-    calc(10px + env(safe-area-inset-bottom)) !important;
-
-  border-top:
-    1px solid #ededed !important;
-
-  background:#fff !important;
-}
-
-
-.austa-v164-compose-avatar{
-  flex:0 0 36px !important;
-
-  width:36px !important;
-  height:36px !important;
-
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-
-  border-radius:50% !important;
-
-  background:#f1f1f1 !important;
-
-  color:#555 !important;
-
-  font-size:15px !important;
-  font-weight:800 !important;
-}
-
-
 #austaV164CommentInput{
-  flex:1 !important;
-
-  min-width:0 !important;
-  height:40px !important;
-
-  padding:0 14px !important;
-
-  border:1px solid #e5e5e5 !important;
-  border-radius:20px !important;
-
-  outline:none !important;
-
-  background:#f5f5f5 !important;
-
-  color:#111 !important;
-
-  font-size:14px !important;
+  flex:1;width:0;min-width:0;box-sizing:border-box;border:1px solid #d0d5dd;
+  border-radius:18px;background:#f7f8fa;color:#172033;padding:8px 6px;
+  font-size:11px;line-height:16px;
+}
+#austaV164CommentForm button{
+  flex:0 0 28px;width:28px;height:30px;border:0;border-radius:50%;padding:0;
+  background:#e31b3d;color:#fff;font-size:20px;font-weight:700;cursor:pointer;
 }
 
-
-#austaV164CommentInput:focus{
-  border-color:#cfcfcf !important;
-  background:#fff !important;
-}
-
-
-#austaV164CommentSend{
-  flex:0 0 auto !important;
-
-  min-width:42px !important;
-  height:40px !important;
-
-  padding:0 8px !important;
-
-  border:0 !important;
-
-  background:transparent !important;
-
-  color:#ff2448 !important;
-
-  font-size:14px !important;
-  font-weight:800 !important;
-
-  cursor:pointer !important;
-}
-
-
-@media(max-width:600px){
-
-  #austaV164CommentSheet{
-    max-width:none !important;
-    height:72vh !important;
-  }
-
-}
-
+#austaV159RealViewer #austaV164CommentSheet{height:340px!important;max-height:75%!important;padding:14px 12px!important}
+#austaV159RealViewer #austaV164CommentSheet h3{font-size:16px}
+#austaV159RealViewer #austaV164CommentsList{font-size:14px;line-height:20px}
+#austaV159RealViewer #austaV164CommentInput{font-size:16px;line-height:20px;padding:9px 8px}
+#austaV159RealViewer #austaV164CommentForm{gap:7px}
+#austaV159RealViewer #austaV164CommentForm button{flex-basis:34px;width:34px;height:34px}
 </style>
-
-
-<script id="austa-v164-real-video-social-actions">
-(function(){
-  "use strict";
-
-
-  const LIKE_KEY=
-    "austa-v164-liked-videos";
-
-  const SAVE_KEY=
-    "austa-v164-saved-videos";
-
-  const COMMENT_KEY=
-    "austa-v164-video-comments";
-
-
-  function readJSON(key,fallback){
-
-    try{
-
-      const value=
-        JSON.parse(
-          localStorage.getItem(key)
-        );
-
-      return value ?? fallback;
-
-    }catch(error){
-
-      return fallback;
-    }
-  }
-
-
-  function writeJSON(key,value){
-
-    try{
-
-      localStorage.setItem(
-        key,
-        JSON.stringify(value)
-      );
-
-    }catch(error){
-
-      console.warn(
-        "[A-USTA V164] Storage error:",
-        error
-      );
-    }
-  }
-
-
-  function getId(card){
-
-    return String(
-      card?.dataset?.listingId || ""
-    ).trim();
-  }
-
-
-  function syncCard(card){
-
-    if(!card)return;
-
-    const id=getId(card);
-
-    if(!id)return;
-
-
-    const likes=
-      readJSON(
-        LIKE_KEY,
-        []
-      );
-
-    const saves=
-      readJSON(
-        SAVE_KEY,
-        []
-      );
-
-
-    const likeButton=
-      card.querySelector(
-        '[data-v164-action="like"]'
-      );
-
-    const saveButton=
-      card.querySelector(
-        '[data-v164-action="save"]'
-      );
-
-
-    if(likeButton){
-
-      const active=
-        likes.includes(id);
-
-      likeButton.classList.toggle(
-        "is-active",
-        active
-      );
-
-      const count=
-        likeButton.querySelector(
-          ".austa-v164-count"
-        );
-
-      if(count){
-
-        count.textContent=
-          active ? "1" : "0";
-      }
-    }
-
-
-    if(saveButton){
-
-      saveButton.classList.toggle(
-        "is-active",
-        saves.includes(id)
-      );
-    }
-  }
-
-
-  function syncAll(){
-
-    document
-      .querySelectorAll(
-        "#austaV22VideoGrid .austa-v159-real-video-card"
-      )
-      .forEach(syncCard);
-  }
-
-
-  function toggleStored(
-    key,
-    id
-  ){
-
-    let values=
-      readJSON(
-        key,
-        []
-      );
-
-    if(!Array.isArray(values)){
-      values=[];
-    }
-
-
-    const exists=
-      values.includes(id);
-
-
-    if(exists){
-
-      values=
-        values.filter(
-          value=>value!==id
-        );
-
-    }else{
-
-      values.push(id);
-    }
-
-
-    writeJSON(
-      key,
-      values
-    );
-
-
-    return !exists;
-  }
-
-
-  function getComments(id){
-
-    const all=
-      readJSON(
-        COMMENT_KEY,
-        {}
-      );
-
-    if(
-      !all ||
-      typeof all!=="object"
-    ){
-      return [];
-    }
-
-    return Array.isArray(all[id])
-      ? all[id]
-      : [];
-  }
-
-
-  function saveComment(
-    id,
-    text
-  ){
-
-    let all=
-      readJSON(
-        COMMENT_KEY,
-        {}
-      );
-
-    if(
-      !all ||
-      typeof all!=="object" ||
-      Array.isArray(all)
-    ){
-      all={};
-    }
-
-
-    if(!Array.isArray(all[id])){
-      all[id]=[];
-    }
-
-
-    all[id].push({
-      id:
-        Date.now()+
-        "-"+
-        Math.random()
-          .toString(36)
-          .slice(2),
-
-      text:text,
-
-      createdAt:
-        new Date().toISOString()
-    });
-
-
-    writeJSON(
-      COMMENT_KEY,
-      all
-    );
-  }
-
-
-  function escapeHTML(value){
-
-    return String(value)
-      .replaceAll(
-        "&",
-        "&amp;"
-      )
-      .replaceAll(
-        "<",
-        "&lt;"
-      )
-      .replaceAll(
-        ">",
-        "&gt;"
-      )
-      .replaceAll(
-        '"',
-        "&quot;"
-      )
-      .replaceAll(
-        "'",
-        "&#039;"
-      );
-  }
-
-
-  function renderComments(
-    listingId
-  ){
-
-    const list=
-      document.getElementById(
-        "austaV164CommentsList"
-      );
-
-    if(!list)return;
-
-
-    const comments=
-      getComments(listingId);
-
-
-    if(!comments.length){
-
-      list.innerHTML=`
-        <div class="austa-v164-empty">
-          Hələ şərh yoxdur.<br>
-          İlk şərhi sən yaz.
-        </div>
-      `;
-
-      return;
-    }
-
-
-    list.innerHTML=
-      comments
-        .map(comment=>`
-
-          <div class="austa-v164-comment-row">
-
-            <div class="austa-v164-avatar">
-              A
-            </div>
-
-            <div class="austa-v164-comment-content">
-
-              <div class="austa-v164-comment-user">
-                A-USTA istifadəçisi
-              </div>
-
-              <div class="austa-v164-comment-text">
-                ${escapeHTML(comment.text)}
-              </div>
-
-            </div>
-
-          </div>
-
-        `)
-        .join("");
-
-
-    list.scrollTop=
-      list.scrollHeight;
-  }
-
-
-  function closeComments(){
-
-    document
-      .getElementById(
-        "austaV164CommentBackdrop"
-      )
-      ?.remove();
-
-    document.body.style.overflow="";
-  }
-
-
-  function openComments(card){
-
-    const listingId=
-      getId(card);
-
-    if(!listingId)return;
-
-
-    closeComments();
-
-
-    const backdrop=
-      document.createElement("div");
-
-    backdrop.id=
-      "austaV164CommentBackdrop";
-
-    backdrop.dataset.listingId=
-      listingId;
-
-
-    backdrop.innerHTML=`
-
-      <section
-        id="austaV164CommentSheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Şərhlər"
-      >
-
-        <div class="austa-v164-comment-head">
-
-          <div class="austa-v164-comment-title">
-            Şərhlər
-          </div>
-
-          <button
-            type="button"
-            class="austa-v164-comment-close"
-            aria-label="Bağla"
-          >
-            ×
-          </button>
-
-        </div>
-
-
-        <div
-          id="austaV164CommentsList"
-          class="austa-v164-comments-list"
-        ></div>
-
-
-        <div class="austa-v164-comment-compose">
-
-          <div class="austa-v164-compose-avatar">
-            A
-          </div>
-
-          <input
-            id="austaV164CommentInput"
-            type="text"
-            maxlength="500"
-            placeholder="Şərh əlavə et..."
-            autocomplete="off"
-          >
-
-          <button
-            id="austaV164CommentSend"
-            type="button"
-          >
-            Göndər
-          </button>
-
-        </div>
-
-      </section>
-    `;
-
-
-    document.body.appendChild(
-      backdrop
-    );
-
-    document.body.style.overflow=
-      "hidden";
-
-
-    renderComments(
-      listingId
-    );
-
-
-    const input=
-      document.getElementById(
-        "austaV164CommentInput"
-      );
-
-
-    setTimeout(
-      ()=>{
-        input?.focus();
-      },
-      120
-    );
-  }
-
-
-  function submitComment(){
-
-    const backdrop=
-      document.getElementById(
-        "austaV164CommentBackdrop"
-      );
-
-    const input=
-      document.getElementById(
-        "austaV164CommentInput"
-      );
-
-
-    if(
-      !backdrop ||
-      !input
-    ){
-      return;
-    }
-
-
-    const listingId=
-      String(
-        backdrop.dataset.listingId || ""
-      ).trim();
-
-    const text=
-      String(
-        input.value || ""
-      ).trim();
-
-
-    if(
-      !listingId ||
-      !text
-    ){
-      return;
-    }
-
-
-    saveComment(
-      listingId,
-      text
-    );
-
-
-    input.value="";
-
-
-    renderComments(
-      listingId
-    );
-  }
-
-
-  async function shareCard(card){
-
-    const listingId=
-      getId(card);
-
-
-    const title=
-      card.querySelector(
-        ".austa-v159-info"
-      )?.innerText
-      ?.trim() ||
-      "A-USTA elanı";
-
-
-    const url=
-      new URL(
-        window.location.href
-      );
-
-
-    if(listingId){
-
-      url.searchParams.set(
-        "listing",
-        listingId
-      );
-    }
-
-
-    const shareData={
-      title:title,
-      text:title,
-      url:url.toString()
-    };
-
-
-    try{
-
-      if(
-        navigator.share
-      ){
-
-        await navigator.share(
-          shareData
-        );
-
-        return;
-      }
-
-
-      if(
-        navigator.clipboard &&
-        navigator.clipboard.writeText
-      ){
-
-        await navigator.clipboard.writeText(
-          shareData.url
-        );
-
-        alert(
-          "Elan linki kopyalandı."
-        );
-
-        return;
-      }
-
-
-      window.prompt(
-        "Elan linkini kopyala:",
-        shareData.url
-      );
-
-    }catch(error){
-
-      if(
-        error?.name!=="AbortError"
-      ){
-
-        console.error(
-          "[A-USTA V164] Share error:",
-          error
-        );
-      }
-    }
-  }
-
-
-  function handleAction(
-    button,
-    card
-  ){
-
-    const action=
-      button.dataset.v164Action;
-
-    const id=
-      getId(card);
-
-
-    if(!id)return;
-
-
-    if(action==="like"){
-
-      toggleStored(
-        LIKE_KEY,
-        id
-      );
-
-      syncCard(card);
-
-      return;
-    }
-
-
-    if(action==="comment"){
-
-      openComments(card);
-
-      return;
-    }
-
-
-    if(action==="save"){
-
-      toggleStored(
-        SAVE_KEY,
-        id
-      );
-
-      syncCard(card);
-
-      return;
-    }
-
-
-    if(action==="share"){
-
-      shareCard(card);
-
-      return;
-    }
-  }
-
-
-  /*
-   * Capture phase istifadə olunur ki,
-   * köhnə listing/video click handler-ləri
-   * action klikini tutmasın.
-   */
-  document.addEventListener(
-    "click",
-    function(event){
-
-      const button=
-        event.target.closest(
-          "#austaV22VideoGrid .austa-v159-real-video-card [data-v164-action]"
-        );
-
-
-      if(button){
-
-        const card=
-          button.closest(
-            ".austa-v159-real-video-card"
-          );
-
-        if(!card)return;
-
-
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-
-
-        handleAction(
-          button,
-          card
-        );
-
-        return;
-      }
-
-
-      const close=
-        event.target.closest(
-          ".austa-v164-comment-close"
-        );
-
-
-      if(close){
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        closeComments();
-
-        return;
-      }
-
-
-      const send=
-        event.target.closest(
-          "#austaV164CommentSend"
-        );
-
-
-      if(send){
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        submitComment();
-
-        return;
-      }
-
-
-      const backdrop=
-        document.getElementById(
-          "austaV164CommentBackdrop"
-        );
-
-
-      if(
-        backdrop &&
-        event.target===backdrop
-      ){
-
-        closeComments();
-      }
-
-    },
-    true
-  );
-
-
-  document.addEventListener(
-    "keydown",
-    function(event){
-
-      if(
-        event.key==="Escape" &&
-        document.getElementById(
-          "austaV164CommentBackdrop"
-        )
-      ){
-
-        closeComments();
-
-        return;
-      }
-
-
-      if(
-        event.key==="Enter" &&
-        event.target?.id===
-          "austaV164CommentInput"
-      ){
-
-        event.preventDefault();
-
-        submitComment();
-      }
-
-    }
-  );
-
-
-  /*
-   * V159 kartlar async yarandığı üçün
-   * sonradan yaranan kartların state-ni də
-   * avtomatik sinxronlaşdırırıq.
-   */
-  const observer=
-    new MutationObserver(
-      function(mutations){
-
-        let needsSync=false;
-
-        for(
-          const mutation of mutations
-        ){
-
-          if(
-            mutation.type==="childList" &&
-            mutation.addedNodes.length
-          ){
-
-            needsSync=true;
-            break;
-          }
-        }
-
-
-        if(needsSync){
-
-          requestAnimationFrame(
-            syncAll
-          );
-        }
-      }
-    );
-
-
-  function start(){
-
-    const grid=
-      document.getElementById(
-        "austaV22VideoGrid"
-      );
-
-
-    if(grid){
-
-      observer.observe(
-        grid,
-        {
-          childList:true
-        }
-      );
-    }
-
-
-    syncAll();
-
-
-    console.log(
-      "[A-USTA V164] REAL VIDEO SOCIAL ACTIONS READY"
-    );
-  }
-
-
-  if(
-    document.readyState==="loading"
-  ){
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      start,
-      {
-        once:true
-      }
-    );
-
-  }else{
-
-    start();
-  }
-
-
-  window.AUSTA_VIDEO_V164={
-    sync:syncAll,
-    closeComments:closeComments
-  };
-
-})();
-</script>
