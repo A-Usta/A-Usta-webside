@@ -61257,6 +61257,7 @@ if(
 
         card.dataset.austaRealVideo="1";
         card.dataset.listingId=item.listingId;
+        card.dataset.listingType=item.listingType || "car";
 
         /*
          * DƏQİQ 215 × 380
@@ -61344,9 +61345,62 @@ if(
             escapeHtml(item.price)+
           '</strong>';
 
-        card.appendChild(video);
-        card.appendChild(info);
-        grid.appendChild(card);
+      card.appendChild(video);
+card.appendChild(info);
+
+/*
+ * ============================================================
+ * A-USTA V164 — REAL VIDEO SOCIAL ACTIONS
+ * ============================================================
+ */
+
+const actions=document.createElement("div");
+actions.className="austa-v164-video-actions";
+
+actions.innerHTML=`
+  <button
+    type="button"
+    class="austa-v164-action"
+    data-v164-action="like"
+    aria-label="Bəyən"
+  >
+    <span class="austa-v164-icon">♥</span>
+    <span class="austa-v164-count">0</span>
+  </button>
+
+  <button
+    type="button"
+    class="austa-v164-action"
+    data-v164-action="comment"
+    aria-label="Şərhlər"
+  >
+    <span class="austa-v164-icon">💬</span>
+    <span class="austa-v164-label">Şərh</span>
+  </button>
+
+  <button
+    type="button"
+    class="austa-v164-action"
+    data-v164-action="save"
+    aria-label="Yadda saxla"
+  >
+    <span class="austa-v164-icon">🔖</span>
+    <span class="austa-v164-label">Saxla</span>
+  </button>
+
+  <button
+    type="button"
+    class="austa-v164-action"
+    data-v164-action="share"
+    aria-label="Paylaş"
+  >
+    <span class="austa-v164-icon">↗</span>
+    <span class="austa-v164-label">Paylaş</span>
+  </button>
+`;
+
+card.appendChild(actions);
+grid.appendChild(card);
       });
 
      
@@ -61764,6 +61818,1297 @@ if(
 
   window.AUSTA_REAL_VIDEO_SIZE_V163={
     lock:lockRealVideoSize
+  };
+
+})();
+</script>
+
+<style id="austa-v164-real-video-social-css">
+
+/* ============================================================
+   A-USTA V164 — REAL HOME VIDEO SOCIAL ACTIONS
+   ============================================================ */
+
+#austaV22VideoGrid
+.austa-v159-real-video-card
+.austa-v164-video-actions{
+  position:absolute !important;
+  right:8px !important;
+  bottom:72px !important;
+
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  gap:12px !important;
+
+  z-index:50 !important;
+
+  width:auto !important;
+  height:auto !important;
+
+  pointer-events:auto !important;
+}
+
+
+#austaV22VideoGrid
+.austa-v159-real-video-card
+.austa-v164-action{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+
+  width:42px !important;
+  min-width:42px !important;
+  max-width:42px !important;
+
+  height:auto !important;
+  min-height:42px !important;
+
+  padding:0 !important;
+  margin:0 !important;
+
+  border:0 !important;
+  outline:0 !important;
+
+  background:transparent !important;
+
+  color:#fff !important;
+
+  cursor:pointer !important;
+
+  position:relative !important;
+  z-index:51 !important;
+
+  pointer-events:auto !important;
+
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.9),
+    0 0 8px rgba(0,0,0,.55) !important;
+}
+
+
+#austaV22VideoGrid
+.austa-v159-real-video-card
+.austa-v164-icon{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+
+  width:38px !important;
+  height:38px !important;
+
+  font-size:25px !important;
+  line-height:1 !important;
+
+  color:#fff !important;
+
+  pointer-events:none !important;
+}
+
+
+#austaV22VideoGrid
+.austa-v159-real-video-card
+.austa-v164-count,
+
+#austaV22VideoGrid
+.austa-v159-real-video-card
+.austa-v164-label{
+  display:block !important;
+
+  margin-top:2px !important;
+
+  color:#fff !important;
+
+  font-size:10px !important;
+  font-weight:700 !important;
+  line-height:1.1 !important;
+
+  text-align:center !important;
+
+  pointer-events:none !important;
+}
+
+
+#austaV22VideoGrid
+.austa-v159-real-video-card
+.austa-v164-action.is-active
+.austa-v164-icon{
+  color:#ff2448 !important;
+}
+
+
+/* ============================================================
+   COMMENT BACKDROP
+   ============================================================ */
+
+#austaV164CommentBackdrop{
+  position:fixed !important;
+  inset:0 !important;
+
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+
+  background:rgba(0,0,0,.48) !important;
+
+  z-index:2147483000 !important;
+
+  padding:0 !important;
+  margin:0 !important;
+}
+
+
+/* ============================================================
+   TIKTOK STYLE COMMENT SHEET
+   ============================================================ */
+
+#austaV164CommentSheet{
+  width:100% !important;
+  max-width:560px !important;
+
+  height:min(68vh,620px) !important;
+
+  display:flex !important;
+  flex-direction:column !important;
+
+  background:#fff !important;
+  color:#111 !important;
+
+  border-radius:20px 20px 0 0 !important;
+
+  overflow:hidden !important;
+
+  box-shadow:
+    0 -12px 40px rgba(0,0,0,.22) !important;
+
+  animation:
+    austaV164SheetUp .22s ease-out !important;
+}
+
+
+@keyframes austaV164SheetUp{
+
+  from{
+    transform:translateY(100%);
+  }
+
+  to{
+    transform:translateY(0);
+  }
+}
+
+
+.austa-v164-comment-head{
+  flex:0 0 auto !important;
+
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+
+  min-height:56px !important;
+
+  padding:0 56px !important;
+
+  position:relative !important;
+
+  border-bottom:
+    1px solid #ededed !important;
+
+  background:#fff !important;
+}
+
+
+.austa-v164-comment-title{
+  font-size:16px !important;
+  font-weight:800 !important;
+  color:#111 !important;
+}
+
+
+.austa-v164-comment-close{
+  position:absolute !important;
+
+  right:14px !important;
+  top:50% !important;
+
+  transform:translateY(-50%) !important;
+
+  width:38px !important;
+  height:38px !important;
+
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+
+  border:0 !important;
+  border-radius:50% !important;
+
+  background:transparent !important;
+
+  color:#111 !important;
+
+  font-size:26px !important;
+  line-height:1 !important;
+
+  cursor:pointer !important;
+}
+
+
+.austa-v164-comments-list{
+  flex:1 1 auto !important;
+
+  overflow-y:auto !important;
+
+  padding:16px !important;
+
+  background:#fff !important;
+}
+
+
+.austa-v164-empty{
+  min-height:100% !important;
+
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+
+  padding:30px !important;
+
+  text-align:center !important;
+
+  color:#777 !important;
+
+  font-size:14px !important;
+  font-weight:600 !important;
+}
+
+
+.austa-v164-comment-row{
+  display:flex !important;
+  align-items:flex-start !important;
+
+  gap:10px !important;
+
+  margin-bottom:18px !important;
+}
+
+
+.austa-v164-avatar{
+  flex:0 0 38px !important;
+
+  width:38px !important;
+  height:38px !important;
+
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+
+  border-radius:50% !important;
+
+  background:#f0f0f0 !important;
+
+  color:#555 !important;
+
+  font-size:16px !important;
+  font-weight:800 !important;
+}
+
+
+.austa-v164-comment-content{
+  min-width:0 !important;
+  flex:1 !important;
+}
+
+
+.austa-v164-comment-user{
+  margin-bottom:4px !important;
+
+  color:#777 !important;
+
+  font-size:12px !important;
+  font-weight:700 !important;
+}
+
+
+.austa-v164-comment-text{
+  color:#111 !important;
+
+  font-size:14px !important;
+  line-height:1.4 !important;
+
+  overflow-wrap:anywhere !important;
+}
+
+
+.austa-v164-comment-compose{
+  flex:0 0 auto !important;
+
+  display:flex !important;
+  align-items:center !important;
+
+  gap:9px !important;
+
+  padding:
+    10px
+    12px
+    calc(10px + env(safe-area-inset-bottom)) !important;
+
+  border-top:
+    1px solid #ededed !important;
+
+  background:#fff !important;
+}
+
+
+.austa-v164-compose-avatar{
+  flex:0 0 36px !important;
+
+  width:36px !important;
+  height:36px !important;
+
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+
+  border-radius:50% !important;
+
+  background:#f1f1f1 !important;
+
+  color:#555 !important;
+
+  font-size:15px !important;
+  font-weight:800 !important;
+}
+
+
+#austaV164CommentInput{
+  flex:1 !important;
+
+  min-width:0 !important;
+  height:40px !important;
+
+  padding:0 14px !important;
+
+  border:1px solid #e5e5e5 !important;
+  border-radius:20px !important;
+
+  outline:none !important;
+
+  background:#f5f5f5 !important;
+
+  color:#111 !important;
+
+  font-size:14px !important;
+}
+
+
+#austaV164CommentInput:focus{
+  border-color:#cfcfcf !important;
+  background:#fff !important;
+}
+
+
+#austaV164CommentSend{
+  flex:0 0 auto !important;
+
+  min-width:42px !important;
+  height:40px !important;
+
+  padding:0 8px !important;
+
+  border:0 !important;
+
+  background:transparent !important;
+
+  color:#ff2448 !important;
+
+  font-size:14px !important;
+  font-weight:800 !important;
+
+  cursor:pointer !important;
+}
+
+
+@media(max-width:600px){
+
+  #austaV164CommentSheet{
+    max-width:none !important;
+    height:72vh !important;
+  }
+
+}
+
+</style>
+
+
+<script id="austa-v164-real-video-social-actions">
+(function(){
+  "use strict";
+
+
+  const LIKE_KEY=
+    "austa-v164-liked-videos";
+
+  const SAVE_KEY=
+    "austa-v164-saved-videos";
+
+  const COMMENT_KEY=
+    "austa-v164-video-comments";
+
+
+  function readJSON(key,fallback){
+
+    try{
+
+      const value=
+        JSON.parse(
+          localStorage.getItem(key)
+        );
+
+      return value ?? fallback;
+
+    }catch(error){
+
+      return fallback;
+    }
+  }
+
+
+  function writeJSON(key,value){
+
+    try{
+
+      localStorage.setItem(
+        key,
+        JSON.stringify(value)
+      );
+
+    }catch(error){
+
+      console.warn(
+        "[A-USTA V164] Storage error:",
+        error
+      );
+    }
+  }
+
+
+  function getId(card){
+
+    return String(
+      card?.dataset?.listingId || ""
+    ).trim();
+  }
+
+
+  function syncCard(card){
+
+    if(!card)return;
+
+    const id=getId(card);
+
+    if(!id)return;
+
+
+    const likes=
+      readJSON(
+        LIKE_KEY,
+        []
+      );
+
+    const saves=
+      readJSON(
+        SAVE_KEY,
+        []
+      );
+
+
+    const likeButton=
+      card.querySelector(
+        '[data-v164-action="like"]'
+      );
+
+    const saveButton=
+      card.querySelector(
+        '[data-v164-action="save"]'
+      );
+
+
+    if(likeButton){
+
+      const active=
+        likes.includes(id);
+
+      likeButton.classList.toggle(
+        "is-active",
+        active
+      );
+
+      const count=
+        likeButton.querySelector(
+          ".austa-v164-count"
+        );
+
+      if(count){
+
+        count.textContent=
+          active ? "1" : "0";
+      }
+    }
+
+
+    if(saveButton){
+
+      saveButton.classList.toggle(
+        "is-active",
+        saves.includes(id)
+      );
+    }
+  }
+
+
+  function syncAll(){
+
+    document
+      .querySelectorAll(
+        "#austaV22VideoGrid .austa-v159-real-video-card"
+      )
+      .forEach(syncCard);
+  }
+
+
+  function toggleStored(
+    key,
+    id
+  ){
+
+    let values=
+      readJSON(
+        key,
+        []
+      );
+
+    if(!Array.isArray(values)){
+      values=[];
+    }
+
+
+    const exists=
+      values.includes(id);
+
+
+    if(exists){
+
+      values=
+        values.filter(
+          value=>value!==id
+        );
+
+    }else{
+
+      values.push(id);
+    }
+
+
+    writeJSON(
+      key,
+      values
+    );
+
+
+    return !exists;
+  }
+
+
+  function getComments(id){
+
+    const all=
+      readJSON(
+        COMMENT_KEY,
+        {}
+      );
+
+    if(
+      !all ||
+      typeof all!=="object"
+    ){
+      return [];
+    }
+
+    return Array.isArray(all[id])
+      ? all[id]
+      : [];
+  }
+
+
+  function saveComment(
+    id,
+    text
+  ){
+
+    let all=
+      readJSON(
+        COMMENT_KEY,
+        {}
+      );
+
+    if(
+      !all ||
+      typeof all!=="object" ||
+      Array.isArray(all)
+    ){
+      all={};
+    }
+
+
+    if(!Array.isArray(all[id])){
+      all[id]=[];
+    }
+
+
+    all[id].push({
+      id:
+        Date.now()+
+        "-"+
+        Math.random()
+          .toString(36)
+          .slice(2),
+
+      text:text,
+
+      createdAt:
+        new Date().toISOString()
+    });
+
+
+    writeJSON(
+      COMMENT_KEY,
+      all
+    );
+  }
+
+
+  function escapeHTML(value){
+
+    return String(value)
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+  }
+
+
+  function renderComments(
+    listingId
+  ){
+
+    const list=
+      document.getElementById(
+        "austaV164CommentsList"
+      );
+
+    if(!list)return;
+
+
+    const comments=
+      getComments(listingId);
+
+
+    if(!comments.length){
+
+      list.innerHTML=`
+        <div class="austa-v164-empty">
+          Hələ şərh yoxdur.<br>
+          İlk şərhi sən yaz.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    list.innerHTML=
+      comments
+        .map(comment=>`
+
+          <div class="austa-v164-comment-row">
+
+            <div class="austa-v164-avatar">
+              A
+            </div>
+
+            <div class="austa-v164-comment-content">
+
+              <div class="austa-v164-comment-user">
+                A-USTA istifadəçisi
+              </div>
+
+              <div class="austa-v164-comment-text">
+                ${escapeHTML(comment.text)}
+              </div>
+
+            </div>
+
+          </div>
+
+        `)
+        .join("");
+
+
+    list.scrollTop=
+      list.scrollHeight;
+  }
+
+
+  function closeComments(){
+
+    document
+      .getElementById(
+        "austaV164CommentBackdrop"
+      )
+      ?.remove();
+
+    document.body.style.overflow="";
+  }
+
+
+  function openComments(card){
+
+    const listingId=
+      getId(card);
+
+    if(!listingId)return;
+
+
+    closeComments();
+
+
+    const backdrop=
+      document.createElement("div");
+
+    backdrop.id=
+      "austaV164CommentBackdrop";
+
+    backdrop.dataset.listingId=
+      listingId;
+
+
+    backdrop.innerHTML=`
+
+      <section
+        id="austaV164CommentSheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Şərhlər"
+      >
+
+        <div class="austa-v164-comment-head">
+
+          <div class="austa-v164-comment-title">
+            Şərhlər
+          </div>
+
+          <button
+            type="button"
+            class="austa-v164-comment-close"
+            aria-label="Bağla"
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <div
+          id="austaV164CommentsList"
+          class="austa-v164-comments-list"
+        ></div>
+
+
+        <div class="austa-v164-comment-compose">
+
+          <div class="austa-v164-compose-avatar">
+            A
+          </div>
+
+          <input
+            id="austaV164CommentInput"
+            type="text"
+            maxlength="500"
+            placeholder="Şərh əlavə et..."
+            autocomplete="off"
+          >
+
+          <button
+            id="austaV164CommentSend"
+            type="button"
+          >
+            Göndər
+          </button>
+
+        </div>
+
+      </section>
+    `;
+
+
+    document.body.appendChild(
+      backdrop
+    );
+
+    document.body.style.overflow=
+      "hidden";
+
+
+    renderComments(
+      listingId
+    );
+
+
+    const input=
+      document.getElementById(
+        "austaV164CommentInput"
+      );
+
+
+    setTimeout(
+      ()=>{
+        input?.focus();
+      },
+      120
+    );
+  }
+
+
+  function submitComment(){
+
+    const backdrop=
+      document.getElementById(
+        "austaV164CommentBackdrop"
+      );
+
+    const input=
+      document.getElementById(
+        "austaV164CommentInput"
+      );
+
+
+    if(
+      !backdrop ||
+      !input
+    ){
+      return;
+    }
+
+
+    const listingId=
+      String(
+        backdrop.dataset.listingId || ""
+      ).trim();
+
+    const text=
+      String(
+        input.value || ""
+      ).trim();
+
+
+    if(
+      !listingId ||
+      !text
+    ){
+      return;
+    }
+
+
+    saveComment(
+      listingId,
+      text
+    );
+
+
+    input.value="";
+
+
+    renderComments(
+      listingId
+    );
+  }
+
+
+  async function shareCard(card){
+
+    const listingId=
+      getId(card);
+
+
+    const title=
+      card.querySelector(
+        ".austa-v159-info"
+      )?.innerText
+      ?.trim() ||
+      "A-USTA elanı";
+
+
+    const url=
+      new URL(
+        window.location.href
+      );
+
+
+    if(listingId){
+
+      url.searchParams.set(
+        "listing",
+        listingId
+      );
+    }
+
+
+    const shareData={
+      title:title,
+      text:title,
+      url:url.toString()
+    };
+
+
+    try{
+
+      if(
+        navigator.share
+      ){
+
+        await navigator.share(
+          shareData
+        );
+
+        return;
+      }
+
+
+      if(
+        navigator.clipboard &&
+        navigator.clipboard.writeText
+      ){
+
+        await navigator.clipboard.writeText(
+          shareData.url
+        );
+
+        alert(
+          "Elan linki kopyalandı."
+        );
+
+        return;
+      }
+
+
+      window.prompt(
+        "Elan linkini kopyala:",
+        shareData.url
+      );
+
+    }catch(error){
+
+      if(
+        error?.name!=="AbortError"
+      ){
+
+        console.error(
+          "[A-USTA V164] Share error:",
+          error
+        );
+      }
+    }
+  }
+
+
+  function handleAction(
+    button,
+    card
+  ){
+
+    const action=
+      button.dataset.v164Action;
+
+    const id=
+      getId(card);
+
+
+    if(!id)return;
+
+
+    if(action==="like"){
+
+      toggleStored(
+        LIKE_KEY,
+        id
+      );
+
+      syncCard(card);
+
+      return;
+    }
+
+
+    if(action==="comment"){
+
+      openComments(card);
+
+      return;
+    }
+
+
+    if(action==="save"){
+
+      toggleStored(
+        SAVE_KEY,
+        id
+      );
+
+      syncCard(card);
+
+      return;
+    }
+
+
+    if(action==="share"){
+
+      shareCard(card);
+
+      return;
+    }
+  }
+
+
+  /*
+   * Capture phase istifadə olunur ki,
+   * köhnə listing/video click handler-ləri
+   * action klikini tutmasın.
+   */
+  document.addEventListener(
+    "click",
+    function(event){
+
+      const button=
+        event.target.closest(
+          "#austaV22VideoGrid .austa-v159-real-video-card [data-v164-action]"
+        );
+
+
+      if(button){
+
+        const card=
+          button.closest(
+            ".austa-v159-real-video-card"
+          );
+
+        if(!card)return;
+
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+
+        handleAction(
+          button,
+          card
+        );
+
+        return;
+      }
+
+
+      const close=
+        event.target.closest(
+          ".austa-v164-comment-close"
+        );
+
+
+      if(close){
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        closeComments();
+
+        return;
+      }
+
+
+      const send=
+        event.target.closest(
+          "#austaV164CommentSend"
+        );
+
+
+      if(send){
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        submitComment();
+
+        return;
+      }
+
+
+      const backdrop=
+        document.getElementById(
+          "austaV164CommentBackdrop"
+        );
+
+
+      if(
+        backdrop &&
+        event.target===backdrop
+      ){
+
+        closeComments();
+      }
+
+    },
+    true
+  );
+
+
+  document.addEventListener(
+    "keydown",
+    function(event){
+
+      if(
+        event.key==="Escape" &&
+        document.getElementById(
+          "austaV164CommentBackdrop"
+        )
+      ){
+
+        closeComments();
+
+        return;
+      }
+
+
+      if(
+        event.key==="Enter" &&
+        event.target?.id===
+          "austaV164CommentInput"
+      ){
+
+        event.preventDefault();
+
+        submitComment();
+      }
+
+    }
+  );
+
+
+  /*
+   * V159 kartlar async yarandığı üçün
+   * sonradan yaranan kartların state-ni də
+   * avtomatik sinxronlaşdırırıq.
+   */
+  const observer=
+    new MutationObserver(
+      function(mutations){
+
+        let needsSync=false;
+
+        for(
+          const mutation of mutations
+        ){
+
+          if(
+            mutation.type==="childList" &&
+            mutation.addedNodes.length
+          ){
+
+            needsSync=true;
+            break;
+          }
+        }
+
+
+        if(needsSync){
+
+          requestAnimationFrame(
+            syncAll
+          );
+        }
+      }
+    );
+
+
+  function start(){
+
+    const grid=
+      document.getElementById(
+        "austaV22VideoGrid"
+      );
+
+
+    if(grid){
+
+      observer.observe(
+        grid,
+        {
+          childList:true
+        }
+      );
+    }
+
+
+    syncAll();
+
+
+    console.log(
+      "[A-USTA V164] REAL VIDEO SOCIAL ACTIONS READY"
+    );
+  }
+
+
+  if(
+    document.readyState==="loading"
+  ){
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      start,
+      {
+        once:true
+      }
+    );
+
+  }else{
+
+    start();
+  }
+
+
+  window.AUSTA_VIDEO_V164={
+    sync:syncAll,
+    closeComments:closeComments
   };
 
 })();
