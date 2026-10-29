@@ -31,7 +31,18 @@ function mount(container){
   const model=container.querySelector('[data-v153c-key="model"]');
   if(!brand || !model || brand.dataset.v169Bound)return;
   function change(input,value){input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));}
+  function syncModelMode(){
+    const manual=Boolean(brand.value) && !(catalog.models[catalog.resolveBrand(brand.value) || brand.value]?.length);
+    model.readOnly=!manual;
+    model.placeholder=manual?'Modeli daxil edin':'Modeli seçin';
+    model.setAttribute('role',manual?'textbox':'button');
+    model.setAttribute('aria-label',manual?'Modeli daxil edin':'Model seçin');
+    if(manual){model.removeAttribute('aria-haspopup');model.removeAttribute('aria-expanded');}
+    else{model.setAttribute('aria-haspopup','dialog');model.setAttribute('aria-expanded','false');}
+    return manual;
+  }
   function open(kind,trigger){
+    if(kind==='model' && syncModelMode()){model.focus();return;}
     closeActive(false);
     if(kind==='model' && !brand.value){open('brand',trigger);return;}
     const selectedBrand=catalog.resolveBrand(brand.value) || brand.value;
@@ -58,7 +69,7 @@ function mount(container){
     function choose(value){
       if(kind==='brand'){
         if(brand.value!==value){change(brand,value);change(model,'');}
-        dismiss(false);open('model',model);
+        dismiss(false);if(syncModelMode())model.focus();else open('model',model);
       }else{change(model,value);dismiss();}
     }
     function section(label,values){
@@ -114,8 +125,9 @@ function mount(container){
     input.setAttribute('role','button');input.setAttribute('aria-label',kind==='brand'?'Marka seçin':'Model seçin');
     input.setAttribute('aria-haspopup','dialog');input.setAttribute('aria-expanded','false');
     input.onclick=()=>open(kind,input);
-    input.onkeydown=event=>{if(['Enter',' ','ArrowDown'].includes(event.key)){event.preventDefault();open(kind,input);}};
+    input.onkeydown=event=>{if(kind==='model' && !input.readOnly)return;if(['Enter',' ','ArrowDown'].includes(event.key)){event.preventDefault();open(kind,input);}};
   }
+  syncModelMode();
 }
 window.AUSTA_VEHICLE_SELECTOR=Object.freeze({mount,close:()=>closeActive()});
 })();

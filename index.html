@@ -49872,7 +49872,7 @@ function ensureHome(){
                 class="austa-v151-section-title"
             >
                 <h2>
-                    👑 Premium elanlar
+                    Premium elanlar
                 </h2>
 
                 <span
@@ -49884,32 +49884,6 @@ function ensureHome(){
             <div
                 class="austa-v151-grid"
                 id="austaV151PremiumGrid"
-            ></div>
-
-        </section>
-
-
-        <section
-            class="austa-v151-section"
-            id="austaV151VipSection"
-        >
-
-            <div
-                class="austa-v151-section-title"
-            >
-                <h2>
-                    ⭐ VIP elanlar
-                </h2>
-
-                <span
-                    class="austa-v151-section-count"
-                    id="austaV151VipCount"
-                ></span>
-            </div>
-
-            <div
-                class="austa-v151-grid"
-                id="austaV151VipGrid"
             ></div>
 
         </section>
@@ -50655,10 +50629,7 @@ function appendHomeItems(items){
         );
 
 
-    const vipGrid =
-        document.getElementById(
-            "austaV151VipGrid"
-        );
+
 
 
     const normalGrid =
@@ -50669,7 +50640,7 @@ function appendHomeItems(items){
 
     const premium = [];
 
-    const vip = [];
+
 
     const normal = [];
 
@@ -50708,18 +50679,10 @@ function appendHomeItems(items){
                 item
             );
 
-        }else if(
-            type === "vip"
-        ){
-
-            vip.push(
-                item
-            );
-
         }else{
 
             /*
-             * Boost + Standard
+             * VIP + Boost + Standard
              * Avtomobil elanları bölməsində.
              * sortListings Boost-u əvvəl göstərir.
              */
@@ -50741,21 +50704,6 @@ function appendHomeItems(items){
         premiumGrid.insertAdjacentHTML(
             "beforeend",
             premium
-                .map(cardHtml)
-                .join("")
-        );
-
-    }
-
-
-    if(
-        vip.length &&
-        vipGrid
-    ){
-
-        vipGrid.insertAdjacentHTML(
-            "beforeend",
-            vip
                 .map(cardHtml)
                 .join("")
         );

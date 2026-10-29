@@ -59,7 +59,14 @@ function mount(){
     const status=node('p');status.setAttribute('role','status');
     const grid=node('div');grid.className='austa-v169d-grid';
     const retry=node('button','Yenidən cəhd et');retry.type='button';retry.className='austa-v169d-retry';retry.hidden=true;retry.addEventListener('click',()=>load(true));
-    root.append(heading,status,retry,grid);feed.after(root);
+    root.append(heading,status,retry,grid);
+    // Existing support/main-sections area is the single footer.footer.
+    const support=document.querySelector('footer.footer');
+    if(support){
+      support.before(root);
+    }else{
+      feed.after(root);
+    }
     root.hidden=document.getElementById('austaV151CategoryPage')?.classList.contains('open') || false;
   }
   render();load();
