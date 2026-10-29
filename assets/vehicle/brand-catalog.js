@@ -63,14 +63,14 @@ function mount(){
     // Existing support/main-sections area is the single footer.footer.
     const support=document.querySelector('footer.footer');
     if(support){
-      support.before(root);
+      support.after(root);
     }else{
       feed.after(root);
     }
-    root.hidden=document.getElementById('austaV151CategoryPage')?.classList.contains('open') || false;
+    root.hidden=false;
   }
   render();load();
 }
-window.AUSTA_V169D=Object.freeze({mount,invalidate,refresh:()=>load(true),setHomeVisible(visible){if(!root)mount();if(root){root.hidden=!visible;if(visible)load();}}});
+window.AUSTA_V169D=Object.freeze({mount,invalidate,refresh:()=>load(true),setHomeVisible(){if(!root)mount();if(root){root.hidden=false;load();}}});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })();
