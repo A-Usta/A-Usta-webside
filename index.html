@@ -9839,6 +9839,8 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 <div class="austa-flow-actions"><button class="btn" id="austaFlowBack" type="button">← Geri</button><button class="btn btn-primary" id="austaFlowNext" type="button">Davam et →</button></div>
 </div></div>
 <script src="assets/vehicle/catalog.js"></script>
+<link rel="stylesheet" href="assets/vehicle/brand-catalog.css">
+<script defer src="assets/vehicle/brand-catalog.js"></script>
 <script src="assets/vehicle/assets.js"></script>
 <script src="assets/vehicle/technical.js"></script>
 <script id="austa-all-in-one-flow">
@@ -49438,7 +49440,11 @@ const homeSeenIds =
     new Set();
 
 
+let categoryRequestGeneration = 0;
+
 let categoryState = {
+
+    filters:{},
 
     type:null,
 
@@ -50054,6 +50060,8 @@ function ensureCategoryPage(){
         </div>
 
 
+        <div id="austaV169DBrandFilter" hidden><span></span><button type="button">Filtri təmizlə</button></div>
+
         <div
             class="austa-v151-grid"
             id="austaV151CategoryGrid"
@@ -50076,6 +50084,8 @@ function ensureCategoryPage(){
         page
     );
 
+
+    page.querySelector("#austaV169DBrandFilter button").addEventListener("click", () => openCategory("cars"));
 
     page
         .querySelector(
@@ -51851,7 +51861,8 @@ function v154CardHtml(
 
 async function loadCategoryPage(
     type,
-    pageNumber = 1
+    pageNumber = 1,
+    filters = categoryState.filters
 ){
 
     const api =
@@ -51887,6 +51898,11 @@ async function loadCategoryPage(
             Number(pageNumber) || 1
         );
 
+
+    const requestId = ++categoryRequestGeneration;
+    const requestFilters = realType === "cars" && window.AUSTA_VEHICLE_CATALOG.brands.includes(filters?.brand)
+        ? {brand:filters.brand} : {};
+    categoryState.filters = requestFilters;
 
     categoryState.type =
         realType;
@@ -51927,13 +51943,22 @@ async function loadCategoryPage(
     }
 
 
+    categoryPage.classList.add("open");
+    document.getElementById("austaV151Marketplace").style.display = "none";
+    window.AUSTA_V169D?.setHomeVisible(false);
+    const filterBar = categoryPage.querySelector("#austaV169DBrandFilter");
+    filterBar.hidden = !requestFilters.brand;
+    filterBar.querySelector("span").textContent = requestFilters.brand || "";
+
     try{
 
         const result =
             await api.fetchCategory(
                 realType,
-                page
+                page,
+                requestFilters
             );
+        if(requestId !== categoryRequestGeneration) return;
 
 
         const rows =
@@ -51996,6 +52021,8 @@ async function loadCategoryPage(
         );
     }
 }
+
+        if(requestId !== categoryRequestGeneration) return;
 
         const sorted =
             typeof api.sortListings === "function"
@@ -52072,6 +52099,7 @@ async function loadCategoryPage(
 
 
     }catch(error){
+        if(requestId !== categoryRequestGeneration) return;
 
         console.error(
             "A-USTA V154 CATEGORY ERROR:",
@@ -52333,18 +52361,22 @@ function renderPagination(
    ========================================================= */
 
 function openCategory(
-    type
+    type,
+    filters = {}
 ){
 
     loadCategoryPage(
         type,
-        1
+        1,
+        filters
     );
 
 }
 
 
 function closeCategoryPage(){
+    ++categoryRequestGeneration;
+    window.AUSTA_V169D?.setHomeVisible(true);
 
     const categoryPage =
         document.getElementById(
@@ -52588,6 +52620,7 @@ function boot(){
 
 
     ensureHome();
+    window.AUSTA_V169D?.mount();
 
     ensureCategoryPage();
 
@@ -59614,7 +59647,7 @@ if(
     }
 
 
-    async function queryAll(type){
+    async function queryAll(type, filters = {}){
 
         const supabase =
             window.AUSTA_SUPABASE;
@@ -59736,6 +59769,10 @@ if(
          * alınır.
          */
 
+        if(type === "cars" && filters.brand){
+            query = query.eq("brand", filters.brand);
+        }
+
         const {
             data,
             error
@@ -59754,7 +59791,8 @@ if(
 
     async function fetchCategoryV154E(
         typeValue,
-        page = 1
+        page = 1,
+        filters = {}
     ){
 
         const type =
@@ -59790,7 +59828,7 @@ if(
          */
 
         const allItems =
-            await queryAll(type);
+            await queryAll(type, filters);
 
 
         /*
