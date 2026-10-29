@@ -49419,8 +49419,10 @@ video.austa-v150-home-real-video {
 const PAGE_SIZE = 40;
 
 const HOME_BATCH_SIZE = 40;
-const HOME_MAX_CARDS = 120;
-let homeBatches = 0;
+let homeHasMore = true;
+let homeGeneration = 0;
+let homeObserver = null;
+let homeAbort = null;
 let homeError = false;
 
 const MEDIA_BUCKET =
@@ -49431,7 +49433,6 @@ let homeOffset = 0;
 
 let homeLoading = false;
 
-let homeFinished = false;
 
 let homeStarted = false;
 
@@ -49889,6 +49890,7 @@ function ensureHome(){
         </section>
 
 
+        <div id="austaV169ESentinel" aria-hidden="true" style="height:1px"></div>
         <div
             id="austaV151Loader"
         >
@@ -49899,15 +49901,15 @@ function ensureHome(){
         <div
             id="austaV151End"
         >
-            Bütün satış elanları göstərildi.
+            Bütün Premium elanlar göstərildi.
         </div>
 
         <div class="austa-v169c-controls">
-            <button type="button" id="austaV169CMore" hidden>Daha çox elan göstər</button>
+            <button type="button" id="austaV169ERetry" hidden>Yenidən cəhd et</button>
             <button type="button" id="austaV169CAll">Bütün avtomobil elanları</button>
         </div>
     `;
-    home.querySelector("#austaV169CMore").addEventListener("click", () => loadNextHomeBatch());
+    home.querySelector("#austaV169ERetry").addEventListener("click", () => loadNextHomeBatch());
     home.querySelector("#austaV169CAll").addEventListener("click", () => openCategory("cars"));
 
     /*
@@ -50284,12 +50286,9 @@ function sortHomeListings(items){
 }
 
 function updateHomeControls(){
-    const button = document.getElementById("austaV169CMore");
-    if(button){
-        button.hidden = homeFinished || homeSeenIds.size >= HOME_MAX_CARDS || (!homeError && homeBatches < 2);
-        button.disabled = homeLoading;
-        button.textContent = homeError ? "Yenidən cəhd et" : "Daha çox elan göstər";
-    }
+    const retry = document.getElementById("austaV169ERetry");
+    if(retry){retry.hidden = !homeError;retry.disabled = homeLoading;}
+    document.getElementById("austaV151End")?.classList.toggle("show", !homeHasMore);
 }
 
 function badgeHtml(item){
@@ -50619,7 +50618,7 @@ function appendHomeItems(items){
     ){
 
         if(
-            !item?.id || item.listing_type !== "sale" || item.status !== "active" || homeSeenIds.size >= HOME_MAX_CARDS ||
+            !item?.id || item.listing_type !== "sale" || item.status !== "active" ||
             homeSeenIds.has(
                 item.id
             )
@@ -50778,260 +50777,88 @@ function updateSectionVisibility(){
    ========================================================= */
 
 async function loadNextHomeBatch(){
-
-    if(
-        homeLoading ||
-        homeFinished || homeSeenIds.size >= HOME_MAX_CARDS
-    ){
-        return;
-    }
-
-
-    const supabase =
-        window.AUSTA_SUPABASE;
-
-
-    if(!supabase){
-
-        console.warn(
-            "A-USTA V151: Supabase client tapılmadı"
-        );
-
-        return;
-    }
-
-
+    const home = document.getElementById("austaV151Marketplace");
+    const supabase = window.AUSTA_SUPABASE;
+    if(homeLoading || !homeHasMore || !supabase || !home || home.style.display === "none") return;
+    const generation = homeGeneration;
     homeLoading = true;
     homeError = false;
+    homeAbort = new AbortController();
+    const controller = homeAbort;
+    const loader = document.getElementById("austaV151Loader");
+    loader?.classList.add("show");
     updateHomeControls();
-
-
-    const loader =
-        document.getElementById(
-            "austaV151Loader"
-        );
-
-
-    loader?.classList.add(
-        "show"
-    );
-
-
     try{
-
-        const from =
-            homeOffset;
-
-
-        const to =
-            homeOffset +
-            HOME_BATCH_SIZE -
-            1;
-
-
-        const {
-            data,
-            error
-        } =
-            await supabase
-                .from(
-                    "vehicle_listings"
-                )
-                .select(`
-                    id,
-                    listing_type,
-                    status,
-                    brand,
-                    model,
-                    year,
-                    mileage,
-                    body_type,
-                    fuel_type,
-                    transmission,
-                    engine,
-                    engine_volume,
-                    horsepower,
-                    color,
-                    price,
-                    daily_price,
-                    region,
-                    district,
-                    has_video,
-                    promotion_type,
-                    promotion_started_at,
-                    promotion_until,
-                    last_boosted_at,
-                    published_at,
-                    created_at
-                `)
-                .eq(
-                    "status",
-                    "active"
-                )
-                .eq("listing_type", "sale")
-                .order(
-                    "created_at",
-                    {
-                        ascending:false
-                    }
-                )
-                .order("id", {ascending:false})
-                .range(
-                    from,
-                    to
-                );
-
-
-        if(error){
-            homeError = true;
-
-            console.error(
-                "A-USTA V151 HOME QUERY:",
-                error
-            );
-
-            return;
-        }
-
-
-        const rows =
-            Array.isArray(data)
-                ? data
-                : [];
-
-
-        if(!rows.length){
-
-            homeFinished = true;
-
-            document
-                .getElementById(
-                    "austaV151End"
-                )
-                ?.classList.add(
-                    "show"
-                );
-
-            return;
-        }
-
-
-        await attachImages(
-            supabase,
-            rows
-        );
-
-
-        appendHomeItems(
-            rows
-        );
-
-
-        homeBatches += 1;
-        homeOffset +=
-            rows.length;
-
-
-        if(
-            rows.length <
-            HOME_BATCH_SIZE
-        ){
-
-            homeFinished = true;
-
-            document
-                .getElementById(
-                    "austaV151End"
-                )
-                ?.classList.add(
-                    "show"
-                );
-
-        }
-
-
-        console.log(
-            "A-USTA V151 HOME:",
-            {
-                loaded:
-                    rows.length,
-
-                offset:
-                    homeOffset,
-
-                finished:
-                    homeFinished
-            }
-        );
-
-
+        const requestTime = new Date().toISOString();
+        let query = supabase.from("vehicle_listings")
+            .select(`id,listing_type,status,brand,model,year,mileage,body_type,
+                fuel_type,transmission,engine,engine_volume,horsepower,color,
+                price,daily_price,region,district,has_video,promotion_type,
+                promotion_started_at,promotion_until,last_boosted_at,published_at,created_at`)
+            .eq("status", "active")
+            .eq("listing_type", "sale")
+            .ilike("promotion_type", "premium")
+            .not("promotion_started_at", "is", null)
+            .not("promotion_until", "is", null)
+            .lte("promotion_started_at", requestTime)
+            .gt("promotion_until", requestTime)
+            .order("created_at", {ascending:false})
+            .order("id", {ascending:false})
+            .range(homeOffset, homeOffset + HOME_BATCH_SIZE);
+        if(typeof query.abortSignal === "function") query = query.abortSignal(controller.signal);
+        const {data,error} = await query;
+        if(generation !== homeGeneration) return;
+        if(error) throw error;
+        if(!Array.isArray(data)) throw new Error("Premium nəticəsi etibarsızdır.");
+        const consumed = data.slice(0, HOME_BATCH_SIZE);
+        const eligible = consumed.filter(item => !homeSeenIds.has(item.id) && homePromotionType(item) === "premium");
+        await attachImages(supabase, eligible);
+        if(generation !== homeGeneration) return;
+        // Promotion may expire while media URLs are being resolved.
+        appendHomeItems(eligible);
+        homeOffset += consumed.length;
+        homeHasMore = data.length > HOME_BATCH_SIZE;
+        if(!homeHasMore) homeObserver?.disconnect();
     }catch(error){
+        if(generation !== homeGeneration) return;
         homeError = true;
-
-        console.error(
-            "A-USTA V151 HOME ERROR:",
-            error
-        );
-
-
+        console.error("A-USTA V169E Home Premium:", error);
     }finally{
-
-        homeLoading = false;
-        updateHomeControls();
-
-
-        loader?.classList.remove(
-            "show"
-        );
-
+        if(generation === homeGeneration){
+            homeLoading = false;
+            homeAbort = null;
+            loader?.classList.remove("show");
+            updateHomeControls();
+            if(!homeError && homeHasMore) requestAnimationFrame(checkHomeScroll);
+        }
     }
-
 }
-
-
-/* =========================================================
-   INFINITE HOME SCROLL
-   ========================================================= */
 
 function checkHomeScroll(){
-
-    if(
-        homeFinished || homeBatches >= 2 || homeError ||
-        homeLoading
-    ){
-        return;
-    }
-
-
-    const home =
-        document.getElementById(
-            "austaV151Marketplace"
-        );
-
-
-    if(
-        !home ||
-        home.style.display ===
-        "none"
-    ){
-        return;
-    }
-
-
-    const distance = home.getBoundingClientRect().bottom - window.innerHeight;
-
-
-    if(
-        distance <
-        1000
-    ){
-
-        loadNextHomeBatch();
-
-    }
-
+    const home = document.getElementById("austaV151Marketplace");
+    const sentinel = document.getElementById("austaV169ESentinel");
+    if(homeLoading || !homeHasMore || homeError || !home || home.style.display === "none" || !sentinel) return;
+    const rect = sentinel.getBoundingClientRect();
+    // Do not keep loading after a rapid scroll past the Premium area.
+    if(rect.bottom >= 0 && rect.top <= window.innerHeight + 600) loadNextHomeBatch();
 }
 
+function observeHomePremium(){
+    homeObserver?.disconnect();
+    const sentinel = document.getElementById("austaV169ESentinel");
+    if(!sentinel || !homeHasMore) return;
+    const generation = homeGeneration;
+    if(typeof IntersectionObserver === "function"){
+        homeObserver = new IntersectionObserver(entries => {
+            if(generation !== homeGeneration) return;
+            if(entries.some(entry => entry.isIntersecting)){
+                // Re-entry permits retry; a persistent intersection does not loop on errors.
+                if(homeError) loadNextHomeBatch();else checkHomeScroll();
+            }
+        }, {root:null,rootMargin:"0px 0px 600px 0px",threshold:0});
+        homeObserver.observe(sentinel);
+    }
+}
 
 /* =========================================================
    OPEN REAL LISTING
@@ -52454,12 +52281,22 @@ document.addEventListener(
 
 window.addEventListener(
     "scroll",
-    checkHomeScroll,
+    () => {if(typeof IntersectionObserver !== "function") checkHomeScroll();},
     {
         passive:true
     }
 );
 
+
+window.addEventListener("pagehide", () => {
+    ++homeGeneration;
+    homeObserver?.disconnect();
+    homeAbort?.abort();
+    homeLoading = false;
+});
+window.addEventListener("pageshow", event => {
+    if(event.persisted){observeHomePremium();checkHomeScroll();}
+});
 
 /* =========================================================
    PUBLIC API
@@ -52527,18 +52364,8 @@ function boot(){
         );
 
 
+    observeHomePremium();
     loadNextHomeBatch();
-
-
-    /*
-     * Ekran hündürdürsə və ilk 40 elan
-     * scroll yaratmırsa növbəti batch.
-     */
-
-    setTimeout(
-        checkHomeScroll,
-        1200
-    );
 
 
     console.log(
