@@ -2,20 +2,16 @@
 (function(){
 'use strict';
 const catalog=window.AUSTA_VEHICLE_CATALOG;
-let root,expanded=false,counts=null,cachedAt=0,pending=null,generation=0,authClient;
-const normalize=value=>String(value || '').normalize('NFKC').toLocaleLowerCase('az-AZ');
+let root,counts=null,cachedAt=0,pending=null,generation=0,authClient;
 function node(tag,text){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;}
 function render(){
   if(!root)return;
-  const query=normalize(root.querySelector('input').value);
-  const brands=catalog.brands.filter(brand=>normalize(brand).includes(query));
   const grid=root.querySelector('.austa-v169d-grid');grid.replaceChildren();
-  for(const brand of query || expanded ? brands : brands.slice(0,12)){
+  for(const brand of catalog.brands){
     const button=node('button');button.type='button';button.className='austa-v169d-brand';
-    button.append(node('span',brand),node('b',counts ? String(counts.get(brand) ?? 0) : '—'));
+    button.append(node('span',brand),node('b',counts ? '('+String(counts.get(brand) ?? 0)+')' : '(—)'));
     button.addEventListener('click',()=>window.AUSTA_V151_MARKETPLACE?.openCategory('cars',{brand}));grid.append(button);
   }
-  const toggle=root.querySelector('.austa-v169d-toggle');toggle.hidden=Boolean(query);toggle.textContent=expanded?'Daha az göstər':'Bütün markaları göstər';toggle.setAttribute('aria-expanded',String(expanded));
 }
 function bindAuth(client){
   if(authClient===client)return;authClient=client;
@@ -60,12 +56,10 @@ function mount(){
   if(!root){
     root=node('section');root.id='austaV169DBrandCatalog';root.setAttribute('aria-labelledby','austaV169DBrandHeading');
     const heading=node('h2','Avtomobil markaları');heading.id='austaV169DBrandHeading';
-    const search=node('input');search.type='search';search.placeholder='Marka axtar';search.setAttribute('aria-label','Marka axtar');search.addEventListener('input',render);
     const status=node('p');status.setAttribute('role','status');
     const grid=node('div');grid.className='austa-v169d-grid';
-    const toggle=node('button');toggle.type='button';toggle.className='austa-v169d-toggle';toggle.addEventListener('click',()=>{expanded=!expanded;render();});
     const retry=node('button','Yenidən cəhd et');retry.type='button';retry.className='austa-v169d-retry';retry.hidden=true;retry.addEventListener('click',()=>load(true));
-    root.append(heading,search,status,retry,grid,toggle);feed.before(root);
+    root.append(heading,status,retry,grid);feed.after(root);
     root.hidden=document.getElementById('austaV151CategoryPage')?.classList.contains('open') || false;
   }
   render();load();
