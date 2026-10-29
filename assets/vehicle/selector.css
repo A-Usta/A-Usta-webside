@@ -1,0 +1,24 @@
+/* A-USTA V169A: scoped shared selector; no marketplace/video overrides. */
+.austa-v169-overlay{position:fixed;inset:0;z-index:2147483600;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+.austa-v169-dialog{width:860px;max-width:100%;max-height:88vh;max-height:88dvh;display:flex;flex-direction:column;background:#fff;color:#172033;border:1px solid #e2e8f0;border-radius:20px;box-shadow:0 24px 80px #0f172a40;overflow:hidden;font-family:Arial,sans-serif}
+.austa-v169-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 24px 12px}
+.austa-v169-head h2{margin:0;font-size:21px;overflow-wrap:anywhere}
+.austa-v169-close{flex:0 0 36px;height:36px;background:#f1f5f9;color:#374151;border:0;border-radius:10px;font-size:24px;cursor:pointer}
+.austa-v169-search{display:block;box-sizing:border-box;width:calc(100% - 48px);margin:0 24px;padding:13px 16px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#172033;font-size:16px;min-width:0}
+.austa-v169-status{padding:8px 24px;font-size:12px;color:#64748b}
+.austa-v169-results{overflow-y:auto;overscroll-behavior:contain;padding:0 24px 24px;min-height:0}
+.austa-v169-results h3{font-size:15px;margin:20px 0 12px;color:#475569}
+.austa-v169-results h3:first-child{margin-top:8px}
+.austa-v169-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.austa-v169-option{box-sizing:border-box;min-width:0;display:flex;align-items:center;gap:10px;padding:12px 10px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;color:#172033;text-align:left;font:inherit;cursor:pointer;min-height:62px}
+.austa-v169-option:hover{background:#f0fdf6;border-color:#86c9aa}
+.austa-v169-option[aria-pressed=true]{border-color:#15803d;background:#edf9f1;color:#166534}
+.austa-v169-visual{display:flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;border-radius:10px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:700;overflow:hidden}
+.austa-v169-visual img{display:block;width:100%;height:100%;object-fit:contain}
+.austa-v169-name{font-size:14px;line-height:1.35;overflow-wrap:anywhere;min-width:0}
+.austa-v169-check{margin-left:auto;color:#15803d;font-weight:bold}
+.austa-v169-option:focus-visible,.austa-v169-search:focus-visible,.austa-v169-close:focus-visible{outline:3px solid #15803d;outline-offset:2px}
+#austaV153CFields .austa-v169-trigger{cursor:pointer;background:#fff;color:#172033;border-color:#cbd5e1;padding-right:24px}
+#austaV153CFields .austa-v169-trigger:focus-visible{outline:2px solid #15803d;outline-offset:2px}
+@media(max-width:600px){.austa-v169-overlay{padding:10px}.austa-v169-dialog{max-height:94vh;max-height:94dvh;border-radius:15px}.austa-v169-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.austa-v169-head{padding:16px 14px 12px}.austa-v169-head h2{font-size:18px}.austa-v169-search{margin:0 14px;width:calc(100% - 28px)}.austa-v169-results{padding:0 14px 18px}.austa-v169-status{padding:8px 14px}.austa-v169-option{gap:7px;padding:9px 7px}.austa-v169-name{font-size:13px}.austa-v169-visual{flex-basis:30px;width:30px;height:30px}}
+@media(max-width:340px){.austa-v169-grid{grid-template-columns:minmax(0,1fr)}}
