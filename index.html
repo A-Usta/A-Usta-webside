@@ -9843,6 +9843,8 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 <script defer src="assets/vehicle/brand-catalog.js"></script>
 <script src="assets/vehicle/assets.js"></script>
 <script src="assets/vehicle/technical.js"></script>
+<link rel="stylesheet" href="assets/marketplace/card-data.css">
+<script src="assets/marketplace/card-data.js"></script>
 <script id="austa-all-in-one-flow">
 (function(){
 "use strict";
@@ -30824,7 +30826,9 @@ function carSpecs(item){
     ['Yeni',item.vehicle_condition==='new'?'Bəli':item.vehicle_condition==='used'?'Xeyr':''],
     ['Yerlərin sayı',item.seats!=null && Number.isInteger(Number(item.seats)) && Number(item.seats)>0 ? String(item.seats) : ''],
     ['Vəziyyəti',technical.damageLabel(item.damage_condition)],
-    ['Hansı bazar üçün yığılıb',technical.label('market',item.market)]
+    ['Hansı bazar üçün yığılıb',technical.label('market',item.market)],
+    ['Barter',item.listing_type==='sale' && item.barter_available===true?'Mümkündür':''],
+    ['Kredit',item.listing_type==='sale' && item.credit_available===true?'Mümkündür':'']
   ].filter(([,value])=>value!=='');
 }
 
@@ -50432,6 +50436,8 @@ function cardHtml(item){
                 >
                     ${badgeHtml(item)}
                 </div>
+                ${window.AUSTA_MARKETPLACE_CARD_DATA.attributes("cars",item)}
+                ${window.AUSTA_MARKETPLACE_CARD_DATA.heart("cars",item)}
 
             </div>
 
@@ -51519,6 +51525,8 @@ function v154CardHtml(
                 }
 
                 ${v154Badge(item)}
+                ${window.AUSTA_MARKETPLACE_CARD_DATA.attributes(type,item)}
+                ${window.AUSTA_MARKETPLACE_CARD_DATA.heart(type,item)}
 
             </div>
 
@@ -52926,6 +52934,7 @@ async function saveVehicle(type, input, user) {
             ),
 
         ...window.AUSTA_VEHICLE_TECHNICAL.payload(input),
+        ...window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,input),
 
         promotion_type: "standard",
 
@@ -53321,6 +53330,7 @@ async function updateListing(
         };
 
         window.AUSTA_VEHICLE_TECHNICAL.pruneUpdate(row,input,type);
+        Object.assign(row,window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,input));
 
 
     /* =====================================================
@@ -55250,6 +55260,7 @@ function renderFields(){
 
     if(type==='cars' || type==='rent'){
         window.AUSTA_VEHICLE_SELECTOR.mount(container);
+        if(type==='cars')window.AUSTA_MARKETPLACE_CARD_DATA.mount(container);
     }
 
 }
@@ -55292,6 +55303,7 @@ function readFields(){
     values.details=details;
 
     const type=document.getElementById('austaV153CCategory')?.value;
+    if(type==='cars')Object.assign(values,window.AUSTA_MARKETPLACE_CARD_DATA.read(document.getElementById('austaV153CFields'),Boolean(currentEdit)));
     return ['cars','rent'].includes(type)
         ? window.AUSTA_VEHICLE_TECHNICAL.read(document.getElementById('austaV153CFields'),values,Boolean(currentEdit))
         : values;
@@ -55711,6 +55723,7 @@ function fillEditFields(item,type){
 
     if(type==='cars' || type==='rent'){
         window.AUSTA_VEHICLE_TECHNICAL.remember(document.getElementById('austaV153CFields'),item);
+        if(type==='cars')window.AUSTA_MARKETPLACE_CARD_DATA.remember(document.getElementById('austaV153CFields'),item);
     }
 
 }
@@ -55742,6 +55755,7 @@ function buildRouterInput(type,data){
             year:numeric(data.year),
 
             ...window.AUSTA_VEHICLE_TECHNICAL.payload(data),
+            ...window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,data),
 
             price:numeric(data.price),
 
