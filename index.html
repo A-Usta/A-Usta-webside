@@ -9840,6 +9840,7 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 </div></div>
 <script src="assets/vehicle/catalog.js"></script>
 <script src="assets/vehicle/assets.js"></script>
+<script src="assets/vehicle/technical.js"></script>
 <script id="austa-all-in-one-flow">
 (function(){
 "use strict";
@@ -30803,6 +30804,9 @@ function vehicleTechnical(value,type){
 function carSpecs(item){
   const value=(key,legacy)=>vehicleValue(item,key,legacy);
   const mileage=value('mileage','Yürüş (km)');
+  const technical=window.AUSTA_VEHICLE_TECHNICAL;
+  const fuel=vehicleTechnical(value('fuel_type','Yanacaq'),'fuel');
+  const engine=technical.engineLabel(item,fuel);
   return [
     ['Şəhər',value('region','')],
     ['Marka',value('brand','Marka')],
@@ -30810,16 +30814,21 @@ function carSpecs(item){
     ['Buraxılış ili',value('year','Buraxılış ili')],
     ['Ban növü',vehicleTechnical(value('body_type','Ban tipi'),'body')],
     ['Rəng',vehicleTechnical(value('color','Rəng'),'color')],
-    ['Mühərrik',value('engine','Mühərrik həcmi')],
-    ['Yanacaq növü',vehicleTechnical(value('fuel_type','Yanacaq'),'fuel')],
-    ['Yürüş',mileage ? (/^[\d\s.,]+$/.test(mileage) ? mileage+' km' : mileage) : ''],
-    ['Sürətlər qutusu',vehicleTechnical(value('transmission','Sürətlər qutusu'),'transmission')]
+    ['Mühərrik',engine.text || value('engine','Mühərrik həcmi')],
+    ['Yanacaq növü',engine.fuelIncluded ? '' : fuel],
+    ['Yürüş',mileage ? (/^[\d\s.,]+$/.test(mileage) ? mileage.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+' km' : mileage) : ''],
+    ['Sürətlər qutusu',vehicleTechnical(value('transmission','Sürətlər qutusu'),'transmission')],
+    ['Ötürücü',technical.label('drivetrain',item.drivetrain)],
+    ['Yeni',item.vehicle_condition==='new'?'Bəli':item.vehicle_condition==='used'?'Xeyr':''],
+    ['Yerlərin sayı',item.seats!=null && Number.isInteger(Number(item.seats)) && Number(item.seats)>0 ? String(item.seats) : ''],
+    ['Vəziyyəti',technical.damageLabel(item.damage_condition)],
+    ['Hansı bazar üçün yığılıb',technical.label('market',item.market)]
   ].filter(([,value])=>value!=='');
 }
 
 function vehicleSection(title,rows){
   if(!rows.length)return '';
-  const rightLabels=new Set(['Yanacaq növü','Sürətlər qutusu']);
+  const rightLabels=new Set(['Yanacaq növü','Sürətlər qutusu','Ötürücü','Yeni','Yerlərin sayı','Vəziyyəti','Hansı bazar üçün yığılıb']);
   const columns=[rows.filter(([label])=>!rightLabels.has(label)),
     rows.filter(([label])=>rightLabels.has(label))];
   return `<section class="austa-final-info-section">
@@ -53146,6 +53155,8 @@ async function saveVehicle(type, input, user) {
                 input.hasVideo
             ),
 
+        ...window.AUSTA_VEHICLE_TECHNICAL.payload(input),
+
         promotion_type: "standard",
 
         promotion_started_at: null,
@@ -53538,6 +53549,8 @@ async function updateListing(
                 ? {has_video:bool(input.has_video ?? input.hasVideo)}
                 : {})
         };
+
+        window.AUSTA_VEHICLE_TECHNICAL.pruneUpdate(row,input,type);
 
 
     /* =====================================================
@@ -54713,47 +54726,7 @@ const CATEGORIES = {
             ['brand','Marka','text'],
             ['model','Model','text'],
             ['year','Buraxılış ili','number'],
-            ['mileage','Yürüş (km)','number'],
-            ['body_type','Ban növü','text'],
-            ['engine','Mühərrik həcmi','text'],
-
-            [
-                'fuel_type',
-                'Yanacaq',
-                'select',
-                [
-                    'Benzin',
-                    'Dizel',
-                    'Hibrid',
-                    'Elektrik',
-                    'Qaz',
-                    'Digər'
-                ]
-            ],
-
-            [
-                'transmission',
-                'Sürətlər qutusu',
-                'select',
-                [
-                    'Avtomat',
-                    'Mexaniki',
-                    'Robot',
-                    'Variator'
-                ]
-            ],
-
-            ['color','Rəng','text'],
-
-            [
-                'condition',
-                'Vəziyyət',
-                'select',
-                [
-                    'Yeni',
-                    'Sürülmüş'
-                ]
-            ],
+            ...window.AUSTA_VEHICLE_TECHNICAL.fields,
 
             ['price','Qiymət (AZN)','number'],
             ['region_address','Region / ünvan','text'],
@@ -54770,6 +54743,7 @@ const CATEGORIES = {
             ['brand','Marka','text'],
             ['model','Model','text'],
             ['year','İl','number'],
+            ...window.AUSTA_VEHICLE_TECHNICAL.fields,
 
             [
                 'rental_type',
@@ -55466,8 +55440,8 @@ function renderFields(){
                                 ${
                                     options.map(
                                         option=>
-                                        `<option value="${esc(option)}">
-                                            ${esc(option)}
+                                        `<option value="${esc(Array.isArray(option)?option[0]:option)}">
+                                            ${esc(Array.isArray(option)?option[1]:option)}
                                         </option>`
                                     ).join('')
                                 }
@@ -55493,7 +55467,7 @@ function renderFields(){
                             data-v153c-label="${esc(label)}"
                             ${
                                 fieldType==='number'
-                                    ? 'min="0"'
+                                    ? (key==='engine_volume' ? 'min="0" step="any"' : 'min="0" step="1"')
                                     : ''
                             }
                         >
@@ -55547,7 +55521,10 @@ function readFields(){
 
     values.details=details;
 
-    return values;
+    const type=document.getElementById('austaV153CCategory')?.value;
+    return ['cars','rent'].includes(type)
+        ? window.AUSTA_VEHICLE_TECHNICAL.read(document.getElementById('austaV153CFields'),values,Boolean(currentEdit))
+        : values;
 
 }
 
@@ -55962,6 +55939,10 @@ function fillEditFields(item,type){
 
         });
 
+    if(type==='cars' || type==='rent'){
+        window.AUSTA_VEHICLE_TECHNICAL.remember(document.getElementById('austaV153CFields'),item);
+    }
+
 }
 
 /* =========================================================
@@ -55990,17 +55971,7 @@ function buildRouterInput(type,data){
 
             year:numeric(data.year),
 
-            mileage:numeric(data.mileage),
-
-            body_type:data.body_type,
-
-            fuel_type:data.fuel_type,
-
-            transmission:data.transmission,
-
-            engine:data.engine,
-
-            color:data.color,
+            ...window.AUSTA_VEHICLE_TECHNICAL.payload(data),
 
             price:numeric(data.price),
 
@@ -56030,6 +56001,8 @@ function buildRouterInput(type,data){
             model:data.model,
 
             year:numeric(data.year),
+
+            ...window.AUSTA_VEHICLE_TECHNICAL.payload(data),
 
             daily_price:
                 numeric(data.daily_price),
