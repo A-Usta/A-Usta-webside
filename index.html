@@ -9845,6 +9845,7 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 <script src="assets/vehicle/technical.js"></script>
 <link rel="stylesheet" href="assets/marketplace/card-data.css">
 <script src="assets/marketplace/card-data.js"></script>
+<script src="assets/marketplace/seller-identity.js"></script>
 <script id="austa-all-in-one-flow">
 (function(){
 "use strict";
@@ -30883,6 +30884,7 @@ function genericSpecs(item){
   const ignored=new Set([
     'id',
     'owner_id',
+    'seller_profile_id',
     'category',
     'createdAt',
     'created_at',
@@ -31708,6 +31710,8 @@ async function openFullListing(id){
       );
   }
 
+
+  void window.AUSTA_SELLER_IDENTITY?.hydrate([item]);
 
   removeOldListingOverlays();
   
@@ -50800,7 +50804,7 @@ async function loadNextHomeBatch(){
             .select(`id,listing_type,status,brand,model,year,mileage,body_type,
                 fuel_type,transmission,engine,engine_volume,horsepower,color,
                 price,daily_price,region,district,has_video,promotion_type,
-                promotion_started_at,promotion_until,last_boosted_at,published_at,created_at`)
+                promotion_started_at,promotion_until,last_boosted_at,published_at,created_at,seller_profile_id`)
             .eq("status", "active")
             .eq("listing_type", "sale")
             .ilike("promotion_type", "premium")
@@ -50818,6 +50822,7 @@ async function loadNextHomeBatch(){
         if(!Array.isArray(data)) throw new Error("Premium nəticəsi etibarsızdır.");
         const consumed = data.slice(0, HOME_BATCH_SIZE);
         const eligible = consumed.filter(item => !homeSeenIds.has(item.id) && homePromotionType(item) === "premium");
+        void window.AUSTA_SELLER_IDENTITY?.hydrate(eligible);
         await attachImages(supabase, eligible);
         if(generation !== homeGeneration) return;
         // Promotion may expire while media URLs are being resolved.
@@ -51747,6 +51752,8 @@ async function loadCategoryPage(
 }
 
         if(requestId !== categoryRequestGeneration) return;
+
+        void window.AUSTA_SELLER_IDENTITY?.hydrate(rows);
 
         const sorted =
             typeof api.sortListings === "function"
