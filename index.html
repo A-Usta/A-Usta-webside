@@ -48953,6 +48953,13 @@ video.austa-v150-home-real-video {
    GRID — DESKTOP 4 ELAN
    ========================================================= */
 
+#austaV151Marketplace .austa-v151-no-image[hidden],
+#austaV151Marketplace .austa-v151-media img[hidden]{display:none}
+#austaV151Marketplace .austa-v169c-controls{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;padding:24px 0}
+#austaV151Marketplace .austa-v169c-controls button{border:1px solid #dce5df;border-radius:10px;padding:12px 18px;background:#fff;color:#137b46;font:inherit;cursor:pointer;max-width:100%}
+#austaV151Marketplace .austa-v169c-controls button:disabled{opacity:.5;cursor:wait}
+#austaV151Marketplace .austa-v169c-controls button[hidden]{display:none}
+
 .austa-v151-grid{
     display:grid;
     grid-template-columns:repeat(4,minmax(0,1fr));
@@ -49410,6 +49417,9 @@ video.austa-v150-home-real-video {
 const PAGE_SIZE = 40;
 
 const HOME_BATCH_SIZE = 40;
+const HOME_MAX_CARDS = 120;
+let homeBatches = 0;
+let homeError = false;
 
 const MEDIA_BUCKET =
     "listing-media";
@@ -49935,20 +49945,22 @@ function ensureHome(){
         <div
             id="austaV151End"
         >
-            Bütün elanlar göstərildi.
+            Bütün satış elanları göstərildi.
         </div>
 
+        <div class="austa-v169c-controls">
+            <button type="button" id="austaV169CMore" hidden>Daha çox elan göstər</button>
+            <button type="button" id="austaV169CAll">Bütün avtomobil elanları</button>
+        </div>
     `;
-
+    home.querySelector("#austaV169CMore").addEventListener("click", () => loadNextHomeBatch());
+    home.querySelector("#austaV169CAll").addEventListener("click", () => openCategory("cars"));
 
     /*
      * V146-nın olduğu yerə yerləşdir.
      */
 
-    const oldHome =
-        document.getElementById(
-            "austaV146HomeFeed"
-        );
+    const oldHome = document.getElementById("austaV22VideoGrid")?.closest(".austa-v22-video-wrap") || document.getElementById("austaV146HomeFeed");
 
 
     if(
@@ -50116,9 +50128,9 @@ async function signedImageUrl(
         )
     ){
 
-        return mediaUrlCache.get(
-            clean
-        );
+        const cached = mediaUrlCache.get(clean);
+        if(cached.expires > Date.now()) return cached.url;
+        mediaUrlCache.delete(clean);
 
     }
 
@@ -50149,7 +50161,7 @@ async function signedImageUrl(
 
         mediaUrlCache.set(
             clean,
-            data.signedUrl
+            {url:data.signedUrl, expires:Date.now() + 3500 * 1000}
         );
 
 
@@ -50273,29 +50285,10 @@ async function attachImages(
     }
 
 
-    for(
-        const item of listings
-    ){
-
-        const path =
-            byListing.get(
-                item.id
-            );
-
-
-        if(!path){
-            item._austaV151Image = "";
-            continue;
-        }
-
-
-        item._austaV151Image =
-            await signedImageUrl(
-                supabase,
-                path
-            );
-
-    }
+    await Promise.all(listings.map(async item => {
+        const path = byListing.get(item.id);
+        item._austaV151Image = path ? await signedImageUrl(supabase, path) : "";
+    }));
 
 
     return listings;
@@ -50307,10 +50300,44 @@ async function attachImages(
    CARD
    ========================================================= */
 
+function homePromotionType(item){
+    const start = Date.parse(item?.promotion_started_at);
+    const end = Date.parse(item?.promotion_until);
+    const now = Date.now();
+    return Number.isFinite(start) && Number.isFinite(end) && start <= now && end > now
+        ? promotionType(item) : "standard";
+}
+
+function sortHomeListings(items){
+    const ranks = {premium:3, vip:2, boost:1, standard:0};
+    const entries = items.map(item => {
+        const type = homePromotionType(item);
+        const time = (type === "boost" ? dateValue(item.last_boosted_at) : 0)
+            || dateValue(item.published_at) || dateValue(item.created_at);
+        return {item, rank:ranks[type], time};
+    });
+    return entries.sort((a,b) => {
+        const difference = b.rank - a.rank || b.time - a.time;
+        if(difference) return difference;
+        const aId = String(a.item.id ?? "");
+        const bId = String(b.item.id ?? "");
+        return aId < bId ? -1 : aId > bId ? 1 : 0;
+    }).map(entry => entry.item);
+}
+
+function updateHomeControls(){
+    const button = document.getElementById("austaV169CMore");
+    if(button){
+        button.hidden = homeFinished || homeSeenIds.size >= HOME_MAX_CARDS || (!homeError && homeBatches < 2);
+        button.disabled = homeLoading;
+        button.textContent = homeError ? "Yenidən cəhd et" : "Daha çox elan göstər";
+    }
+}
+
 function badgeHtml(item){
 
     const type =
-        promotionType(
+        homePromotionType(
             item
         );
 
@@ -50383,10 +50410,8 @@ function cardHtml(item){
         locationOf(item);
 
 
-    const engine =
-        String(
-            item?.engine || ""
-        ).trim();
+    const engineData = window.AUSTA_VEHICLE_TECHNICAL?.engineLabel(item, item?.fuel_type || "");
+    const engine = engineData?.text || String(item?.engine || "").trim();
 
 
     const mileage =
@@ -50395,10 +50420,7 @@ function cardHtml(item){
         );
 
 
-    const fuel =
-        String(
-            item?.fuel_type || ""
-        ).trim();
+    const fuel = engineData?.fuelIncluded ? "" : String(item?.fuel_type || "").trim();
 
 
     const transmission =
@@ -50433,14 +50455,16 @@ function cardHtml(item){
                             src="${esc(image)}"
                             alt="${esc(title)}"
                             loading="lazy"
+                            onerror="this.hidden=true;this.nextElementSibling.hidden=false"
                         >
+                        <div class="austa-v151-no-image" hidden>Şəkil mövcud deyil</div>
                         `
                         :
                         `
                         <div
                             class="austa-v151-no-image"
                         >
-                            A-USTA
+                            Şəkil mövcud deyil
                         </div>
                         `
                 }
@@ -50508,7 +50532,7 @@ function cardHtml(item){
 
 
                     ${
-                        mileage
+                        item?.mileage != null && item.mileage !== "" && Number.isFinite(Number(item.mileage))
                             ?
                             `
                             <span
@@ -50642,11 +50666,11 @@ function appendHomeItems(items){
 
     for(
         const item of
-        sortListings(items)
+        sortHomeListings(items)
     ){
 
         if(
-            !item?.id ||
+            !item?.id || item.listing_type !== "sale" || item.status !== "active" || homeSeenIds.size >= HOME_MAX_CARDS ||
             homeSeenIds.has(
                 item.id
             )
@@ -50661,7 +50685,7 @@ function appendHomeItems(items){
 
 
         const type =
-            promotionType(
+            homePromotionType(
                 item
             );
 
@@ -50858,7 +50882,7 @@ async function loadNextHomeBatch(){
 
     if(
         homeLoading ||
-        homeFinished
+        homeFinished || homeSeenIds.size >= HOME_MAX_CARDS
     ){
         return;
     }
@@ -50879,6 +50903,8 @@ async function loadNextHomeBatch(){
 
 
     homeLoading = true;
+    homeError = false;
+    updateHomeControls();
 
 
     const loader =
@@ -50924,6 +50950,8 @@ async function loadNextHomeBatch(){
                     fuel_type,
                     transmission,
                     engine,
+                    engine_volume,
+                    horsepower,
                     color,
                     price,
                     daily_price,
@@ -50941,19 +50969,14 @@ async function loadNextHomeBatch(){
                     "status",
                     "active"
                 )
-                .in(
-                    "listing_type",
-                    [
-                        "sale",
-                        "rent"
-                    ]
-                )
+                .eq("listing_type", "sale")
                 .order(
                     "created_at",
                     {
                         ascending:false
                     }
                 )
+                .order("id", {ascending:false})
                 .range(
                     from,
                     to
@@ -50961,6 +50984,7 @@ async function loadNextHomeBatch(){
 
 
         if(error){
+            homeError = true;
 
             console.error(
                 "A-USTA V151 HOME QUERY:",
@@ -51004,6 +51028,7 @@ async function loadNextHomeBatch(){
         );
 
 
+        homeBatches += 1;
         homeOffset +=
             rows.length;
 
@@ -51042,6 +51067,7 @@ async function loadNextHomeBatch(){
 
 
     }catch(error){
+        homeError = true;
 
         console.error(
             "A-USTA V151 HOME ERROR:",
@@ -51052,6 +51078,7 @@ async function loadNextHomeBatch(){
     }finally{
 
         homeLoading = false;
+        updateHomeControls();
 
 
         loader?.classList.remove(
@@ -51070,7 +51097,7 @@ async function loadNextHomeBatch(){
 function checkHomeScroll(){
 
     if(
-        homeFinished ||
+        homeFinished || homeBatches >= 2 || homeError ||
         homeLoading
     ){
         return;
@@ -51092,13 +51119,7 @@ function checkHomeScroll(){
     }
 
 
-    const distance =
-        document.documentElement
-            .scrollHeight -
-        (
-            window.scrollY +
-            window.innerHeight
-        );
+    const distance = home.getBoundingClientRect().bottom - window.innerHeight;
 
 
     if(
