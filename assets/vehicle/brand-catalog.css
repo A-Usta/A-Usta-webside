@@ -1,0 +1,16 @@
+/* V169D: scoped discovery section, separate from the Home listing feed. */
+#austaV169DBrandCatalog{box-sizing:border-box;width:100%;max-width:1440px;margin:24px auto 0;padding:20px 18px;background:#fff;color:#172033;border-block:1px solid #edf1ee}
+#austaV169DBrandCatalog[hidden],#austaV169DBrandCatalog [hidden],#austaV169DBrandFilter[hidden]{display:none!important}
+#austaV169DBrandCatalog h2{margin:0 0 16px;font-size:23px}
+#austaV169DBrandCatalog input{box-sizing:border-box;width:min(100%,360px);padding:10px 12px;border:1px solid #dce5df;border-radius:9px;background:#fff;color:#172033}
+#austaV169DBrandCatalog [role=status]{font-size:14px;color:#596b61;margin:10px 0}
+#austaV169DBrandCatalog .austa-v169d-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px 16px;margin:14px 0}
+#austaV169DBrandCatalog button,#austaV169DBrandFilter button{font:inherit;cursor:pointer;background:#fff;color:#137b46;border:1px solid #dce5df;border-radius:9px;padding:10px 12px}
+#austaV169DBrandCatalog .austa-v169d-brand{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;text-align:left;color:#243c2d}
+#austaV169DBrandCatalog .austa-v169d-brand span{min-width:0;overflow-wrap:anywhere}
+#austaV169DBrandCatalog .austa-v169d-brand b{font-size:13px;color:#63736a;flex-shrink:0}
+#austaV169DBrandCatalog button:hover{background:#f1f8f3;border-color:#a4cbb3}
+#austaV169DBrandCatalog :focus-visible,#austaV169DBrandFilter button:focus-visible{outline:2px solid #16854e;outline-offset:3px}
+#austaV169DBrandFilter{display:flex;align-items:center;gap:12px;margin:0 0 16px;color:#137b46;font-weight:700}
+@media(max-width:1199px){#austaV169DBrandCatalog .austa-v169d-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:600px){#austaV169DBrandCatalog .austa-v169d-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#austaV169DBrandCatalog{padding:16px}#austaV169DBrandCatalog .austa-v169d-brand{font-size:13px;padding:10px 8px}}
