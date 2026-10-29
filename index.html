@@ -31197,24 +31197,26 @@ const estimateText =
 #austaFinalListingPage.austa-v168a-detail .austa-final-description{
   background:#fff !important;
   color:#111827 !important;
-  border:1px solid #e5e7eb !important;
-  border-radius:16px;
-  padding:22px;
+  border:0 !important;
+  border-radius:0;
+  padding:0;
+  margin-top:18px;
 }
-#austaFinalListingPage.austa-v168a-detail .austa-final-spec-grid{
+#austaFinalListingPage.austa-v168a-detail .austa-compact-spec-columns{
+  display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:0 28px;
+  gap:0 32px;
   margin:0;
 }
 #austaFinalListingPage.austa-v168a-detail .austa-final-spec{
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
   align-items:baseline;
-  gap:14px;
-  padding:14px 0;
+  gap:12px;
+  padding:5px 0;
   background:transparent !important;
   border:0 !important;
-  border-bottom:1px solid #eef0f3 !important;
+  border-bottom:0 !important;
   border-radius:0;
 }
 #austaFinalListingPage.austa-v168a-detail dt{
@@ -31232,13 +31234,41 @@ const estimateText =
   min-width:0;
 }
 @media(max-width:700px){
-  #austaFinalListingPage.austa-v168a-detail .austa-final-spec-grid{
+  #austaFinalListingPage.austa-v168a-detail .austa-compact-spec-columns{
     grid-template-columns:minmax(0,1fr);
   }
   #austaFinalListingPage.austa-v168a-detail .austa-final-info-section,
   #austaFinalListingPage.austa-v168a-detail .austa-final-description{
-    padding:16px;
+    padding:0;
   }
+}
+
+#austaFinalListingPage.austa-v168a-detail .austa-compact-spec-column{
+  min-width:0;
+  margin:0;
+}
+#austaFinalListingPage.austa-v168a-detail .austa-compact-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 16px;
+  color:#6b7280;
+  font-size:12px;
+  margin:8px 0 16px;
+  overflow-wrap:anywhere;
+}
+#austaFinalListingPage.austa-v168a-detail .austa-final-section-title{
+  margin-bottom:10px;
+  font-size:17px;
+}
+#austaFinalListingPage.austa-v168a-detail .austa-compact-description{
+  margin-top:18px;
+  padding-top:14px;
+  border-top:1px solid #eef0f3;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  color:#374151;
+  font-size:14px;
+  line-height:1.65;
 }
 
 </style>
@@ -31824,13 +31854,16 @@ function carSpecs(item){
 }
 
 function vehicleSection(title,rows){
-  const present=rows.filter(([,value])=>vehicleText(value)!=='');
-  if(!present.length)return '';
+  if(!rows.length)return '';
+  const rightLabels=new Set(['Yanacaq növü','Sürətlər qutusu']);
+  const columns=[rows.filter(([label])=>!rightLabels.has(label)),
+    rows.filter(([label])=>rightLabels.has(label))];
   return `<section class="austa-final-info-section">
     <h3 class="austa-final-section-title">${escapeHtml(title)}</h3>
-    <dl class="austa-final-spec-grid">${present.map(([label,value])=>`
-      <div class="austa-final-spec"><dt>${escapeHtml(label)}</dt>
-      <dd>${escapeHtml(value)}</dd></div>`).join('')}</dl>
+    <div class="austa-compact-spec-columns">${columns.filter(column=>column.length).map(column=>`
+      <dl class="austa-compact-spec-column">${column.map(([label,value])=>`
+        <div class="austa-final-spec"><dt>${escapeHtml(label)}</dt>
+        <dd>${escapeHtml(value)}</dd></div>`).join('')}</dl>`).join('')}</div>
   </section>`;
 }
 
@@ -31839,23 +31872,32 @@ function vehicleDate(value){
   if(!raw)return '';
   const date=new Date(typeof value==='number' ? value : raw);
   if(Number.isNaN(date.getTime()))return '';
-  return new Intl.DateTimeFormat('az-AZ',{
-    day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'
-  }).format(date);
+  const parts=new Intl.DateTimeFormat('az-AZ',{
+    day:'2-digit',month:'2-digit',year:'numeric'
+  }).formatToParts(date);
+  const part=type=>parts.find(value=>value.type===type)?.value || '';
+  return [part('day'),part('month'),part('year')].join('.');
 }
 
-function vehicleDetailSections(item){
-  return vehicleSection('Yerləşmə',[
-    ['Şəhər / region',vehicleText(item.region)],
-    ['Rayon',vehicleText(item.district)],
-    ['Ünvan',vehicleText(item.address)]
-  ])+vehicleSection('Elan məlumatı',[
-    ['Elan nömrəsi',vehicleText(item.id)],
-    ['Yaradılma tarixi',vehicleDate(item.created_at)],
-    ['Yerləşdirilmə tarixi',vehicleDate(item.published_at)]
-  ]);
+function vehicleMetadata(item){
+  const id=vehicleText(item.id);
+  const date=vehicleDate(item.published_at) || vehicleDate(item.created_at);
+  return `<div class="austa-compact-meta">${id ? `<span>Elan № ${escapeHtml(id)}</span>` : ''}
+    ${date ? `<span>Yerləşdirildi: ${escapeHtml(date)}</span>` : ''}</div>`;
 }
 
+function vehicleExtraLocation(item){
+  // City is already in specs; keep only distinct district/address parts here.
+  const region=normalize(vehicleText(item.region));
+  const seen=new Set(region ? [region] : []);
+  return [item.district,item.address].flatMap(value=>vehicleText(value).split(/[,/]+/))
+    .map(value=>value.trim()).filter(value=>{
+      const key=normalize(value);
+      if(!key || seen.has(key))return false;
+      seen.add(key);
+      return true;
+    }).join(', ');
+}
 
 function genericSpecs(item){
 
@@ -32703,6 +32745,8 @@ async function openFullListing(id){
       ? vehicleText(item.description) || vehicleText(item['Avtomobil haqqında əlavə məlumat'])
       : descriptionOf(item);
 
+  const detailLocation=isVehicle ? vehicleExtraLocation(item) : locationOf(item);
+
   const phone=
     phoneOf(item);
 
@@ -32730,9 +32774,9 @@ async function openFullListing(id){
           ← Geri
         </button>
 
-        <div class="austa-final-id">
+        ${!isVehicle ? `<div class="austa-final-id">
           Elan № ${escapeHtml(item.id)}
-        </div>
+        </div>` : ''}
 
       </header>
 
@@ -32751,6 +32795,8 @@ async function openFullListing(id){
               titleOf(item)
             )}
           </h1>
+
+          ${isVehicle ? vehicleMetadata(item) : ''}
 
           <section class="austa-final-gallery">
 
@@ -32807,7 +32853,7 @@ async function openFullListing(id){
 
           ${
             description
-              ? `
+              ? (isVehicle ? `<div class="austa-compact-description">${escapeHtml(description)}</div>` : `
                 <section class="austa-final-description">
 
                   <h3 class="austa-final-section-title">
@@ -32819,11 +32865,9 @@ async function openFullListing(id){
                   </div>
 
                 </section>
-              `
+              `)
               : ''
           }
-
-          ${isVehicle ? vehicleDetailSections(item) : ''}
 
           ${similarHtml(item)}
 
@@ -32855,11 +32899,11 @@ async function openFullListing(id){
               </div>
 
               ${
-                locationOf(item)
+                detailLocation
                   ? `
                     <div class="austa-final-location">
                       📍 ${escapeHtml(
-                        locationOf(item)
+                        detailLocation
                       )}
                     </div>
                   `
@@ -32867,7 +32911,7 @@ async function openFullListing(id){
               }
 
               ${
-                createdTime(item)
+                !isVehicle && createdTime(item)
                   ? `
                     <div class="austa-final-time">
                       🕒 Elan yerləşdirildi:
