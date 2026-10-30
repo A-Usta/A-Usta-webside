@@ -9849,6 +9849,8 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 <link rel="stylesheet" href="assets/marketplace/listing-cards.css">
 <script src="assets/vehicle/vin.js"></script>
 <script src="assets/marketplace/listing-cards.js"></script>
+<link rel="stylesheet" href="assets/marketplace/seller-page.css">
+<script src="assets/marketplace/seller-page.js"></script>
 <script id="austa-all-in-one-flow">
 (function(){
 "use strict";
@@ -52039,6 +52041,9 @@ window.addEventListener("pageshow", event => {
    ========================================================= */
 
 window.AUSTA_V151_MARKETPLACE = {
+
+    hydrateVehicleCardMedia: listings => attachImages(window.AUSTA_SUPABASE, listings),
+    vehicleCardHtml: item => v154CardHtml("cars", item),
 
     openCategory,
 

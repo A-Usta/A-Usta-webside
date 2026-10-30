@@ -28,3 +28,5 @@
 .austa-market-card .austa-card-content-business .austa-card-price{font-size:12px;font-weight:500;color:#67766d}
 
 .austa-vin-detail{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 0;border-top:1px solid #edf0ed;font-size:13px;min-width:0}.austa-vin-detail>span{color:#79847d}.austa-vin-detail strong{overflow-wrap:anywhere}.austa-vin-detail button,.austa-vin-detail a{border:1px solid #dfe7e1;border-radius:6px;background:#fff;color:#176244;padding:6px 8px;font:inherit;text-decoration:none;cursor:pointer}.austa-vin-detail button:focus-visible,.austa-vin-detail a:focus-visible{outline:2px solid #16845c;outline-offset:2px}.austa-vin-detail small{color:#66766a}
+
+.austa-market-card .austa-card-seller-link{pointer-events:auto;border:0;padding:0;margin:0;background:none;color:inherit;font:inherit;cursor:pointer}.austa-market-card .austa-card-seller-link:focus-visible{outline:2px solid #16845c;outline-offset:2px}

@@ -1,0 +1,16 @@
+/* V169F.2D: scoped public seller view, below the existing listing-detail overlay. */
+#austaSellerPage{position:fixed;inset:0;z-index:999998;overflow-y:auto;background:#f5f7f5;color:#203c2d;overscroll-behavior:contain;font-family:inherit}
+#austaSellerPage .austa-seller-page-inner{max-width:1280px;margin:auto;padding:24px;box-sizing:border-box;min-height:100%}
+#austaSellerPage [data-seller-header]{padding:22px 0;border-bottom:1px solid #dfe7e1;margin-bottom:20px}
+#austaSellerPage h1{font-size:28px;margin:0 0 12px;overflow-wrap:anywhere}
+#austaSellerPage .austa-seller-page-meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px;color:#67786c;font-size:14px}
+#austaSellerPage .austa-seller-page-official{background:#196bb2;color:#fff;border-radius:5px;padding:4px 7px;font-size:12px;font-weight:700}
+#austaSellerPage .austa-seller-page-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+#austaSellerPage [data-seller-status]{font-size:14px;color:#65766a;line-height:1.6;margin:16px 0}
+#austaSellerPage [data-seller-status]:empty{display:none}
+#austaSellerPage .austa-seller-page-back,#austaSellerPage [data-seller-more],#austaSellerPage [data-seller-retry]{font:inherit;color:#176244;border:1px solid #d8e3dc;background:#fff;border-radius:8px;padding:10px 14px;cursor:pointer}
+#austaSellerPage [data-seller-more]{display:block;margin:24px auto}
+#austaSellerPage [hidden]{display:none!important}
+#austaSellerPage button:focus-visible{outline:2px solid #16845c;outline-offset:3px}
+@media(max-width:1000px){#austaSellerPage .austa-seller-page-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){#austaSellerPage .austa-seller-page-inner{padding:14px}#austaSellerPage h1{font-size:22px}#austaSellerPage .austa-seller-page-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
