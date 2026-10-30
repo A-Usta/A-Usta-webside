@@ -1,0 +1,33 @@
+/* Original A-USTA category advertising surfaces. No Home/header/footer selectors. */
+#austaV151CategoryPage{position:relative}
+#austaV151CategoryPage .aca-slot{box-sizing:border-box;background:#f3f6f4;border:1px solid #e0e7e2;border-radius:12px;color:#182d24;overflow:hidden;min-width:0}
+#austaV151CategoryPage .aca-top{margin:0 0 28px}
+#austaV151CategoryPage .aca-label{display:flex;align-items:center;gap:8px;padding:10px 18px 0;font-size:10px;letter-spacing:.06em;color:#66766e}
+#austaV151CategoryPage .aca-advertiser{letter-spacing:0;overflow-wrap:anywhere}
+#austaV151CategoryPage .aca-body{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:14px 24px 18px}
+#austaV151CategoryPage .aca-copy{max-width:650px;min-width:0;animation:aca-appear .35s ease-out}
+#austaV151CategoryPage .aca-eyebrow{font-size:10px;letter-spacing:.1em;font-weight:700;color:#176244;margin:0 0 10px}
+#austaV151CategoryPage .aca-headline{font-size:27px;line-height:1.18;letter-spacing:-.025em;margin:0 0 10px;overflow-wrap:anywhere}
+#austaV151CategoryPage .aca-description{font-size:14px;line-height:1.55;color:#53665b;max-width:580px;margin:0 0 16px;overflow-wrap:anywhere}
+#austaV151CategoryPage .aca-cta{display:inline-block;padding:10px 15px;border:1px solid #176244;border-radius:7px;background:#176244;color:#fff;font:inherit;font-size:13px;font-weight:600;text-decoration:none;cursor:pointer}
+#austaV151CategoryPage .aca-controls{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:12px;padding:0 18px 10px}
+#austaV151CategoryPage .aca-controls button{background:transparent;border:0;padding:4px;color:#53665b;font:inherit;font-size:10px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+#austaV151CategoryPage .aca-slot :focus-visible{outline:2px solid #176244;outline-offset:3px}
+#austaV151CategoryPage .aca-art{position:relative;flex:0 0 235px;height:140px;overflow:hidden;color:#176244}
+#austaV151CategoryPage .aca-art-name{position:absolute;right:8px;bottom:0;font-size:12px;font-weight:800;letter-spacing:.18em}
+#austaV151CategoryPage .aca-road{position:absolute;left:0;right:0;bottom:35px;border-bottom:1px solid #cbd7cf;transform:rotate(-8deg)}
+#austaV151CategoryPage .aca-car{position:absolute;left:22px;top:58px;width:185px;height:43px;border:2px solid currentColor;border-radius:28px 48px 12px 14px;box-sizing:border-box}
+#austaV151CategoryPage .aca-car:before{content:'';position:absolute;left:35px;top:-29px;width:103px;height:30px;border:2px solid currentColor;border-bottom:0;border-radius:65px 65px 0 0;transform:skewX(12deg)}
+#austaV151CategoryPage .aca-car i,#austaV151CategoryPage .aca-car b{position:absolute;bottom:-11px;width:23px;height:23px;border:4px solid currentColor;border-radius:50%;background:#f3f6f4;box-sizing:border-box}
+#austaV151CategoryPage .aca-car i{left:24px}#austaV151CategoryPage .aca-car b{right:22px}
+#austaV151CategoryPage .aca-media{flex:0 0 240px;min-width:0;height:160px;display:grid;place-items:center;border-radius:8px;overflow:hidden;background:#e6ece8}
+#austaV151CategoryPage .aca-media img,#austaV151CategoryPage .aca-media video{display:block;width:100%;height:100%;object-fit:cover}
+#austaV151CategoryPage .aca-media-fallback{font-size:16px;letter-spacing:.1em;color:#176244}
+#austaV151CategoryPage .aca-side{display:none}
+@media(min-width:1840px){#austaV151CategoryPage .aca-side{display:block;position:absolute;top:280px;width:140px;min-height:360px}#austaV151CategoryPage .aca-left{left:-160px}#austaV151CategoryPage .aca-right{right:-160px}#austaV151CategoryPage .aca-side .aca-body{display:block;padding:18px 13px}#austaV151CategoryPage .aca-side .aca-headline{font-size:18px;line-height:1.35}#austaV151CategoryPage .aca-side .aca-description{font-size:12px}#austaV151CategoryPage .aca-side .aca-label{padding:12px 13px 0}#austaV151CategoryPage .aca-side .aca-controls{justify-content:flex-start;padding:0 13px 12px;gap:7px}#austaV151CategoryPage .aca-side .aca-media{width:100%;height:170px;margin-top:16px}}
+@media(max-width:900px){#austaV151CategoryPage .aca-art{flex-basis:235px;transform:scale(.85);transform-origin:right center}#austaV151CategoryPage .aca-headline{font-size:24px}}
+@media(max-width:600px){#austaV151CategoryPage .aca-top{margin-bottom:20px}#austaV151CategoryPage .aca-body{padding:12px 16px;gap:0}#austaV151CategoryPage .aca-headline{font-size:21px}#austaV151CategoryPage .aca-description{font-size:12px;margin-bottom:12px}#austaV151CategoryPage .aca-art{display:none}#austaV151CategoryPage .aca-media{flex-basis:96px;height:106px;margin-left:12px}#austaV151CategoryPage .aca-eyebrow{font-size:9px}#austaV151CategoryPage .aca-cta{font-size:12px;padding:9px 12px}#austaV151CategoryPage .aca-label{padding-left:16px}}
+@keyframes aca-appear{from{opacity:.4}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){#austaV151CategoryPage .aca-copy{animation:none}}
+#austaV151CategoryPage .aca-top .aca-body{min-height:174px;box-sizing:border-box}
+@media(max-width:600px){#austaV151CategoryPage .aca-top .aca-body{min-height:155px}}

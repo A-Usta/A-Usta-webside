@@ -9852,6 +9852,10 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 <link rel="stylesheet" href="assets/marketplace/seller-page.css">
 <script src="assets/marketplace/seller-page.js"></script>
 <script src="assets/marketplace/seller-verification.js"></script>
+<link rel="stylesheet" href="assets/marketplace/category-filters.css">
+<link rel="stylesheet" href="assets/marketplace/category-campaigns.css">
+<script src="assets/marketplace/category-campaigns.js"></script>
+<script src="assets/marketplace/category-filters.js"></script>
 <script id="austa-all-in-one-flow">
 (function(){
 "use strict";
@@ -51337,8 +51341,8 @@ async function loadCategoryPage(
 
 
     const requestId = ++categoryRequestGeneration;
-    const requestFilters = realType === "cars" && window.AUSTA_VEHICLE_CATALOG.brands.includes(filters?.brand)
-        ? {brand:filters.brand} : {};
+    const requestFilters = window.AUSTA_CATEGORY_FILTERS.normalize(realType, filters);
+
     categoryState.filters = requestFilters;
 
     categoryState.type =
@@ -51350,6 +51354,8 @@ async function loadCategoryPage(
 
     const categoryPage =
         ensureCategoryPage();
+    window.AUSTA_CATEGORY_FILTERS.mount(categoryPage, realType, requestFilters,
+        next => openCategory(realType, next));
 
 
     const grid =
@@ -51428,6 +51434,8 @@ async function loadCategoryPage(
         }
 
 
+        window.AUSTA_CATEGORY_FILTERS.result(categoryPage, categoryState.total);
+
         /*
          * Hələlik real DB nəticəsini
          * V151 kart sisteminə veririk.
@@ -51490,7 +51498,8 @@ async function loadCategoryPage(
                             font-weight:800;
                             color:#8992a0;
                         ">
-                            Bu kateqoriyada hələ elan yoxdur.
+                            Seçdiyiniz filtrlərə uyğun elan tapılmadı.
+                            <button type="button" class="acf-state-action" data-acf-empty-clear>Filtrləri təmizlə</button>
                         </div>
                     `;
         }
@@ -51540,6 +51549,7 @@ async function loadCategoryPage(
     }catch(error){
         if(requestId !== categoryRequestGeneration) return;
 
+        window.AUSTA_CATEGORY_FILTERS.error(categoryPage);
         console.error(
             "A-USTA V154 CATEGORY ERROR:",
             error
@@ -51557,6 +51567,7 @@ async function loadCategoryPage(
                     color:#dc2626;
                 ">
                     Elanları yükləmək mümkün olmadı.
+                    <button type="button" class="acf-state-action" data-acf-retry>Yenidən cəhd et</button>
                 </div>
             `;
         }
@@ -59242,9 +59253,7 @@ if(
          * alınır.
          */
 
-        if(type === "cars" && filters.brand){
-            query = query.eq("brand", filters.brand);
-        }
+        query = window.AUSTA_CATEGORY_FILTERS.applyQuery(query, type, filters);
 
         const {
             data,

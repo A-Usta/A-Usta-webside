@@ -1,0 +1,56 @@
+/* Scoped category controls; existing cards and page chrome remain owned by their modules. */
+#austaV151CategoryPage .acf-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
+#austaV151CategoryPage .acf-layout.acf-with-filters{grid-template-columns:236px minmax(0,1fr)}
+#austaV151CategoryPage .acf-results{min-width:0}
+#austaV151CategoryPage .acf-panel{padding:16px;border:1px solid #dce1e8;border-radius:10px;background:#fff;min-width:0;box-sizing:border-box}
+#austaV151CategoryPage .acf-panel h3{margin:0 0 18px;font-size:17px;color:#172033}
+#austaV151CategoryPage .acf-panel label,#austaV151CategoryPage .acf-panel legend{font-size:13px;color:#172033;font-weight:600}
+#austaV151CategoryPage .acf-panel>form>label{display:block;margin-top:14px;margin-bottom:6px}
+#austaV151CategoryPage .acf-panel input,#austaV151CategoryPage .acf-panel select{width:100%;min-width:0;box-sizing:border-box;border:1px solid #dce1e8;border-radius:7px;padding:9px;background:#fff;color:#172033;font:inherit;font-size:13px}
+#austaV151CategoryPage .acf-panel fieldset{border:0;padding:0;margin:16px 0 0;min-width:0}
+#austaV151CategoryPage .acf-range{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:6px}
+#austaV151CategoryPage .acf-range span{display:block;font-size:11px;color:#697386;margin-bottom:4px}
+#austaV151CategoryPage .acf-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+#austaV151CategoryPage .acf-actions button,#austaV151CategoryPage .acf-toggle{border:1px solid #dce1e8;border-radius:8px;padding:10px;background:#fff;color:#172033;font:inherit;cursor:pointer}
+#austaV151CategoryPage .acf-actions [type=submit]{background:#16844b;color:#fff;border-color:#16844b}
+#austaV151CategoryPage .acf-error{font-size:13px;color:#b42335;overflow-wrap:anywhere}
+#austaV151CategoryPage .acf-count{margin:0 0 14px;color:#697386;font-size:14px}
+#austaV151CategoryPage .acf-toggle{display:none;margin-bottom:14px}
+#austaV151CategoryPage .acf-panel :focus-visible,#austaV151CategoryPage .acf-toggle:focus-visible{outline:2px solid #16844b;outline-offset:2px}
+#austaV151CategoryPage .acf-panel[hidden],#austaV151CategoryPage .acf-toggle[hidden]{display:none!important}
+@media(max-width:760px){#austaV151CategoryPage .acf-layout.acf-with-filters{grid-template-columns:minmax(0,1fr)}#austaV151CategoryPage .acf-toggle{display:inline-block}#austaV151CategoryPage .acf-panel{display:none}#austaV151CategoryPage.acf-filters-open .acf-panel{display:block}}
+/* Shared marketplace hierarchy, restrained green + neutrals; category cards are unchanged. */
+#austaV151CategoryPage .acf-breadcrumb{display:flex;align-items:center;gap:7px;font-size:12px;color:#69766e;margin:0 0 14px;flex-wrap:wrap}
+#austaV151CategoryPage .acf-breadcrumb button{font:inherit;color:#176244;background:none;border:0;padding:0;cursor:pointer}
+#austaV151CategoryPage .austa-v151-category-header{margin-bottom:8px}
+#austaV151CategoryPage .acf-count{margin:0 0 24px;color:#68766d}
+#austaV151CategoryPage .acf-panel{background:#fafbf9;border-color:#e0e6e1;padding:20px}
+#austaV151CategoryPage .acf-panel-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#68766d;margin:0 0 7px}
+#austaV151CategoryPage .acf-panel h3{font-size:16px;line-height:1.4;margin-bottom:22px}
+#austaV151CategoryPage .acf-panel input,#austaV151CategoryPage .acf-panel select{min-height:39px}
+#austaV151CategoryPage .acf-toolbar{display:flex;justify-content:flex-end;align-items:center;min-height:36px;color:#68766d;font-size:12px;margin-bottom:12px}
+#austaV151CategoryPage .acf-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;min-width:0}
+#austaV151CategoryPage .acf-chips:empty{display:none}
+#austaV151CategoryPage .acf-chips button{max-width:100%;overflow-wrap:anywhere;text-align:left;background:#f1f5f2;border:1px solid #dce5de;border-radius:6px;color:#244c37;padding:7px 10px;font:inherit;font-size:12px;cursor:pointer}
+#austaV151CategoryPage .acf-chips [data-acf-reset]{background:none;border-color:transparent;color:#68766d;text-decoration:underline}
+#austaV151CategoryPage .acf-state-action{display:block;margin:14px auto 0;background:#fff;color:#176244;border:1px solid #dce5de;padding:9px 12px;border-radius:7px;cursor:pointer;font:inherit;font-size:13px}
+#austaV151CategoryPage .austa-v151-page-btn.active{background:#176244;border-color:#176244}
+#austaV151CategoryPage .austa-v151-page-btn:hover{color:#176244;border-color:#176244}
+#austaV151CategoryPage .acf-actions [type=submit]{background:#176244;border-color:#176244}
+@media(max-width:1000px){#austaV151CategoryPage .acf-layout.acf-with-filters{grid-template-columns:minmax(0,1fr)}#austaV151CategoryPage .acf-toggle{display:inline-block}#austaV151CategoryPage .acf-panel{display:none}#austaV151CategoryPage.acf-filters-open .acf-panel{display:block}}
+@media(max-width:600px){#austaV151CategoryPage .austa-v151-category-header h2{font-size:22px}#austaV151CategoryPage .acf-count{margin-bottom:16px}#austaV151CategoryPage .acf-toolbar{justify-content:flex-start;font-size:11px}#austaV151CategoryPage .acf-panel{padding:16px}}
+/* Category-only badge palette: labels/eligibility stay with the existing renderer. */
+#austaV151CategoryPage .austa-card-promotion{background:#176244;color:#fff}
+#austaV151CategoryPage .austa-card-promotion.vip{background:#e7efe9;color:#244c37}
+#austaV151CategoryPage .austa-card-official-badge{background:#176244;color:#fff}
+#austaV151CategoryPage .austa-favorite[aria-pressed=true]{color:#b42335}
+/* The live chips replace the old single-brand presentation without changing its routing contract. */
+#austaV151CategoryPage #austaV169DBrandFilter{display:none}
+/* Final mobile QA: full-width cards keep long titles/specs readable and controls easy to tap. */
+@media(max-width:480px){
+ #austaV151CategoryPage #austaV151CategoryGrid{grid-template-columns:minmax(0,1fr)}
+ #austaV151CategoryPage .austa-favorite{width:44px;height:44px}
+ #austaV151CategoryPage .austa-card-attributes{right:64px}
+ #austaV151CategoryPage .acf-toggle,#austaV151CategoryPage .austa-v151-back,#austaV151CategoryPage .acf-chips button,#austaV151CategoryPage .acf-actions button,#austaV151CategoryPage .acf-state-action{min-height:44px}
+ #austaV151CategoryPage .aca-controls button{min-height:44px;padding:6px}
+}
