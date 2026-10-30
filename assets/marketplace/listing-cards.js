@@ -76,7 +76,8 @@ function promotion(item,candidate){
 function sellerHtml(id,sale=false){
   const api=window.AUSTA_SELLER_IDENTITY,profile=api?.getForListing({seller_profile_id:id}),label=api?.label(profile)||'';
   if(!label)return '';
-  return `<span class="austa-card-seller-label" title="${esc(text(profile.display_name)||label)}">${esc(label)}${!sale&&api.isOfficial(profile)?'<span class="austa-card-official" role="img" title="Rəsmi satıcı" aria-label="Rəsmi satıcı">✓</span>':''}</span>${sale&&api.isOfficial(profile)===true?'<span class="austa-card-official-badge" title="Rəsmi satıcı">Rəsmi</span>':''}`;
+  const identity=profile.business_type==='dealer'?`<button type="button" class="austa-card-seller-link" data-austa-seller-page="${esc(profile.id)}" aria-label="${esc((text(profile.display_name)||label)+' — Avtosalona bax')}">${esc(label)}</button>`:esc(label);
+  return `<span class="austa-card-seller-label" title="${esc(text(profile.display_name)||label)}">${identity}${!sale&&api.isOfficial(profile)?'<span class="austa-card-official" role="img" title="Rəsmi satıcı" aria-label="Rəsmi satıcı">✓</span>':''}</span>${sale&&api.isOfficial(profile)===true?'<span class="austa-card-official-badge" title="Rəsmi satıcı">Rəsmi</span>':''}`;
 }
 function render(typeValue,item,options={}){
   const type=typeValue==='mechanic'?'usta':typeValue,c=content(type,item),home=options.home===true,id=text(item.id);

@@ -82,5 +82,17 @@ async function hydrate(items,options={}){
     return ids.map(get).filter(Boolean);
   }catch(error){console.warn('A-USTA seller identity:',error?.message||'Məlumat yüklənmədi.');return [];}
 }
-window.AUSTA_SELLER_IDENTITY=Object.freeze({hydrate,get,getForListing,label,isOfficial,invalidate});
+// A public seller page must revalidate even when an old card/cache is still present.
+async function resolveFresh(id){
+  const key=idOf(id),sb=client();
+  if(!key)return null;
+  if(!sb?.from)throw new Error('Satıcı məlumatı hazırda yüklənmir.');
+  invalidate(); // Retire older in-flight reads as well as cached public identities.
+  const gen=generation;
+  await fetchBatch(sb,[key],gen);
+  if(gen!==generation)return null;
+  if(errors.has(key))throw new Error('Satıcı məlumatı yüklənmədi. Yenidən cəhd edin.');
+  return get(key);
+}
+window.AUSTA_SELLER_IDENTITY=Object.freeze({hydrate,get,getForListing,label,isOfficial,invalidate,resolveFresh});
 })();
