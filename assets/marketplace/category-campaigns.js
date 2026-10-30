@@ -72,7 +72,8 @@ function render(state,index=0){
 }
 function mount(page,options={}){
  let existing=[...instances].find(s=>s.page===page);if(existing){for(const state of instances)if(state.page===page)state.onAction=options.onAction;return;}
- for(const slot of slots){
+ // Category pages currently mount only side placements; keep TOP campaign support for future placement.
+ for(const slot of slots.filter(slot=>slot!=='marketplace_top')){
   const root=element('section','aca-slot '+(slot==='marketplace_top'?'aca-top':'aca-side '+(slot==='marketplace_left'?'aca-left':'aca-right')));root.dataset.adSlot=slot;root.setAttribute('aria-label',slot==='marketplace_top'?'Yuxarı reklam sahəsi':slot==='marketplace_left'?'Sol reklam sahəsi':'Sağ reklam sahəsi');
   if(slot==='marketplace_top')page.prepend(root);else page.append(root);
   const state={page,root,slot,id:null,inView:typeof IntersectionObserver!=='function',paused:false,hover:false,focus:false,onAction:options.onAction};instances.add(state);
