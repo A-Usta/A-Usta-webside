@@ -52782,11 +52782,8 @@ price:
         promotion_until: null,
         last_boosted_at: null,
 
-        has_video:
-            bool(
-                input.has_video ??
-                input.hasVideo
-            ),
+        // P0.2: only a confirmed media relation may make this true.
+        has_video: false,
 
         published_at:
             new Date().toISOString()
@@ -52941,6 +52938,35 @@ async function saveProvider(type, input, user) {
    UPDATE EXISTING LISTING
    V156-E REAL EDIT ROUTER
    ============================================================ */
+
+// P0.2: Marketplace video authority is the persisted relation, never form state.
+async function marketplaceHasVideo(listingId) {
+    if(!listingId) throw new Error('Elan ID-si tapılmadı.');
+    const {data,error} = await sb()
+        .from('marketplace_listing_media')
+        .select('id')
+        .eq('listing_id',listingId)
+        .eq('media_type','video')
+        .limit(1);
+    if(error) throw error;
+    if(!Array.isArray(data)) throw new Error('Video media vəziyyəti alınmadı.');
+    return data.length > 0;
+}
+
+// Also usable after a confirmed media removal; no delete UI is introduced here.
+async function syncMarketplaceHasVideo(listingId) {
+    const user = await currentUser();
+    const hasVideo = await marketplaceHasVideo(listingId);
+    const {data,error} = await sb()
+        .from('marketplace_listings')
+        .update({has_video:hasVideo})
+        .eq('id',listingId)
+        .eq('owner_id',user.id)
+        .select('id,has_video')
+        .single();
+    if(error) throw error;
+    return data;
+}
 
 async function updateListing(
     typeValue,
@@ -53157,11 +53183,7 @@ async function updateListing(
             longitude:
                 num(input.longitude),
 
-            has_video:
-                bool(
-                    input.has_video ??
-                    input.hasVideo
-                )
+            has_video: await marketplaceHasVideo(listingId)
         };
 
 
@@ -54003,6 +54025,9 @@ window.AUSTA_V153 = {
 
      updateListing:
         updateListing,
+
+    syncMarketplaceHasVideo:
+        syncMarketplaceHasVideo,
 
     fetchCategory:
         fetchCategory,
@@ -57867,6 +57892,10 @@ async function uploadOne(
         // INSERT has succeeded; sync errors propagate without deleting real media.
         await syncVehicleHasVideo(listingId, user);
     }
+    if(config.parentTable === 'marketplace_listings' && mediaType === 'video'){
+        // Reconcile each confirmed video, even if a later file in the batch fails.
+        await window.AUSTA_V153.syncMarketplaceHasVideo(listingId);
+    }
 
     return {
 
@@ -58006,34 +58035,6 @@ async function uploadMedia(
             )
 
         );
-    }
-
-
-    if(
-        files.videos.length &&
-        config.hasVideoColumn &&
-        config.parentTable !== 'vehicle_listings'
-    ){
-
-        const {
-            error
-        } =
-            await sb()
-                .from(
-                    config.parentTable
-                )
-                .update({
-                    has_video:true
-                })
-                .eq(
-                    'id',
-                    listingId
-                );
-
-
-        if(error){
-            throw error;
-        }
     }
 
 
@@ -58209,11 +58210,11 @@ function patchSave(){
         };
 
 
-    // V167: reuse the same uploader after a successful Vehicle/Rent edit.
+    // Reuse the uploader for Vehicle/Rent and Marketplace edits.
     const originalUpdate = window.AUSTA_V153.updateListing.bind(window.AUSTA_V153);
     window.AUSTA_V153.updateListing = async function(type, listingId, input){
         const result = await originalUpdate(type, listingId, input);
-        if(VEHICLE_TYPES.has(type)){
+        if(VEHICLE_TYPES.has(type) || MARKETPLACE_TYPES.has(type)){
             await uploadMedia(type, listingId);
         }
         return result;
@@ -58388,7 +58389,7 @@ function patchOpen(){
     const originalEdit = window.AUSTA_V153C.edit.bind(window.AUSTA_V153C);
     window.AUSTA_V153C.edit = async function(item){
         const result = await originalEdit(item);
-        if(item?.__austa_table === 'vehicle_listings'){
+        if(item?.__austa_table === 'vehicle_listings' || item?.__austa_table === 'marketplace_listings'){
             buildMediaBox();
         }
         return result;
