@@ -9846,6 +9846,8 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 <link rel="stylesheet" href="assets/marketplace/card-data.css">
 <script src="assets/marketplace/card-data.js"></script>
 <script src="assets/marketplace/seller-identity.js"></script>
+<link rel="stylesheet" href="assets/marketplace/listing-cards.css">
+<script src="assets/marketplace/listing-cards.js"></script>
 <script id="austa-all-in-one-flow">
 (function(){
 "use strict";
@@ -30309,6 +30311,12 @@ function mapSupabaseListing(item){
     return null;
   }
 
+  const source=item.__austa_table;
+  const sourceCategories={marketplace_listings:item.category,service_provider_listings:item.provider_type,auto_dealer_listings:'dealer'};
+  if(Object.prototype.hasOwnProperty.call(sourceCategories,source)){
+    return {...item,category:sourceCategories[source],title:item.title || item.dealer_name || item.name || '',_austaSupabase:true};
+  }
+
   const isRent=
     item.listing_type === 'rent';
 
@@ -30480,6 +30488,11 @@ function categoryTitle(category){
     special:'🏗 Xüsusi texnika',
     moto:'🏍 Moto / Moped / Skuter',
     plate:'🔢 Qeydiyyat nömrəsi',
+    bus:'Avtobus',
+    water:'Su nəqliyyatı',
+    trailer:'Qoşqu / Treyler',
+    service:'Avtoservis',
+    dealer:'Avtosalon',
     usta:'🧑‍🔧 Usta profili'
   })[category] || 'A-USTA elanı';
 }
@@ -30690,9 +30703,15 @@ async function hydrateSupabaseListingMedia(item){
   item._austaMediaError=false;
   if(!sb){item._austaMediaError=true;return item;}
   try{
+    const source=item.__austa_table || 'vehicle_listings';
+    const config=source==='vehicle_listings'
+      ? {table:'listing_media',bucket:'listing-media',parentTable:source}
+      : window.AUSTA_V153?.mediaConfig(categoryOf(item));
+    const mediaTables={vehicle_listings:'listing_media',marketplace_listings:'marketplace_listing_media',service_provider_listings:'service_provider_media',auto_dealer_listings:'auto_dealer_media'};
+    if(!config || config.table!==mediaTables[source])throw new Error('Elanın media mənbəyi uyğun deyil.');
     // Same vehicle listing_media columns and bucket used by the V159 Home loader.
-    const {data,error}=await sb.from('listing_media')
-      .select('id,listing_id,storage_path,media_type,sort_order,created_at')
+    const {data,error}=await sb.from(config.table)
+      .select(source==='vehicle_listings'?'id,listing_id,storage_path,media_type,sort_order,created_at':'listing_id,storage_path,media_type,sort_order')
       .eq('listing_id',item.id).order('sort_order',{ascending:true});
     if(error)throw error;
     const media=(Array.isArray(data)?data:[]).filter(row=>
@@ -30700,7 +30719,7 @@ async function hydrateSupabaseListingMedia(item){
       (row.media_type==='image' || row.media_type==='video'));
     const resolved=await Promise.all(media.map(async row=>{
       try{
-        const {data:signed,error:signedError}=await sb.storage.from('listing-media').createSignedUrl(row.storage_path,3600);
+        const {data:signed,error:signedError}=await sb.storage.from(config.bucket).createSignedUrl(row.storage_path,3600);
         if(signedError || !signed?.signedUrl)throw signedError || new Error('Media URL alınmadı');
         return {...row,signed_url:signed.signedUrl};
       }catch(error){item._austaMediaError=true;console.warn('A-USTA listing media URL:',item.id,error);return null;}
@@ -30885,6 +30904,9 @@ function genericSpecs(item){
     'id',
     'owner_id',
     'seller_profile_id',
+    '__austa_table',
+    '__austa_source',
+    '_austaSupabase',
     'category',
     'createdAt',
     'created_at',
@@ -31676,21 +31698,35 @@ function ownerManagementItem(item){
     (!table || listing.__austa_table===table)
   );
   if(cached)return cached;
-  if(!item._austaSupabase || table!=='vehicle_listings')return null;
+  const sources={vehicle_listings:'vehicle',marketplace_listings:'marketplace',service_provider_listings:'provider',auto_dealer_listings:'dealer'};
+  if(!item._austaSupabase || !Object.prototype.hasOwnProperty.call(sources,table))return null;
   return {
     ...item,
     __austa_table:table,
-    __austa_source:'vehicle',
-    __austa_label:'Avtomobil',
+    __austa_source:sources[table],
+    __austa_label:table==='vehicle_listings'?'Avtomobil':categoryTitle(categoryOf(item)),
     __austa_title:titleOf(item),
     __austa_price:priceOf(item)
   };
 }
 
 
-async function openFullListing(id){
+async function openFullListing(id,source,expectedCategory){
 
-  let item=findListing(id);
+  let item;
+  if(source){
+    if(!['vehicle_listings','marketplace_listings','service_provider_listings','auto_dealer_listings'].includes(source))return false;
+    try{
+      const sb=window.AUSTA_SUPABASE;
+      if(!sb)return false;
+      const {data,error}=await sb.from(source).select('*').eq('id',id).maybeSingle();
+      if(error || !data || String(data.id)!==String(id))return false;
+      item=mapSupabaseListing({...data,__austa_table:source});
+      if(expectedCategory && categoryOf(item)!==expectedCategory)return false;
+    }catch(error){console.warn('A-USTA category detail:',error);return false;}
+  }else{
+    item=findListing(id);
+  }
 
   if(!item){
     return false;
@@ -32482,7 +32518,8 @@ window.addEventListener(
 
     const opened=
       await openFullListing(
-        realListing.id
+        realListing.id,
+        realListing.__austa_table || 'vehicle_listings'
       );
 
     console.log(
@@ -50365,244 +50402,9 @@ function badgeHtml(item){
 
 
 function cardHtml(item){
-
-    const title =
-        titleOf(item) ||
-        "Avtomobil elanı";
-
-
-    const location =
-        locationOf(item);
-
-
-    const engineData = window.AUSTA_VEHICLE_TECHNICAL?.engineLabel(item, item?.fuel_type || "");
-    const engine = engineData?.text || String(item?.engine || "").trim();
-
-
-    const mileage =
-        number(
-            item?.mileage
-        );
-
-
-    const fuel = engineData?.fuelIncluded ? "" : String(item?.fuel_type || "").trim();
-
-
-    const transmission =
-        String(
-            item?.transmission || ""
-        ).trim();
-
-
-    const image =
-        String(
-            item?._austaV151Image ||
-            ""
-        ).trim();
-
-
-    return `
-
-        <article
-            class="austa-v151-card"
-            data-austa-v151-listing-id="${esc(item.id)}"
-        >
-
-            <div
-                class="austa-v151-media"
-            >
-
-                ${
-                    image
-                        ?
-                        `
-                        <img
-                            src="${esc(image)}"
-                            alt="${esc(title)}"
-                            loading="lazy"
-                            onerror="this.hidden=true;this.nextElementSibling.hidden=false"
-                        >
-                        <div class="austa-v151-no-image" hidden>Şəkil mövcud deyil</div>
-                        `
-                        :
-                        `
-                        <div
-                            class="austa-v151-no-image"
-                        >
-                            Şəkil mövcud deyil
-                        </div>
-                        `
-                }
-
-
-                <div
-                    class="austa-v151-badges"
-                >
-                    ${badgeHtml(item)}
-                </div>
-                ${window.AUSTA_MARKETPLACE_CARD_DATA.attributes("cars",item)}
-                ${window.AUSTA_MARKETPLACE_CARD_DATA.heart("cars",item)}
-
-            </div>
-
-
-            <div
-                class="austa-v151-card-body"
-            >
-
-                <b
-                    class="austa-v151-card-title"
-                >
-                    ${esc(title)}
-                </b>
-
-
-                <strong
-                    class="austa-v151-price"
-                >
-                    ${esc(priceOf(item))}
-                </strong>
-
-
-                <div
-                    class="austa-v151-specs"
-                >
-
-                    ${
-                        item?.year
-                            ?
-                            `
-                            <span
-                                class="austa-v151-spec"
-                            >
-                                ${esc(item.year)}
-                            </span>
-                            `
-                            :
-                            ""
-                    }
-
-
-                    ${
-                        engine
-                            ?
-                            `
-                            <span
-                                class="austa-v151-spec"
-                            >
-                                ${esc(engine)}
-                            </span>
-                            `
-                            :
-                            ""
-                    }
-
-
-                    ${
-                        item?.mileage != null && item.mileage !== "" && Number.isFinite(Number(item.mileage))
-                            ?
-                            `
-                            <span
-                                class="austa-v151-spec"
-                            >
-                                ${esc(
-                                    mileage.toLocaleString(
-                                        "az-AZ"
-                                    )
-                                )} km
-                            </span>
-                            `
-                            :
-                            ""
-                    }
-
-
-                    ${
-                        fuel
-                            ?
-                            `
-                            <span
-                                class="austa-v151-spec"
-                            >
-                                ${esc(fuel)}
-                            </span>
-                            `
-                            :
-                            ""
-                    }
-
-
-                    ${
-                        transmission
-                            ?
-                            `
-                            <span
-                                class="austa-v151-spec"
-                            >
-                                ${esc(transmission)}
-                            </span>
-                            `
-                            :
-                            ""
-                    }
-
-                </div>
-
-
-                ${
-                    location
-                        ?
-                        `
-                        <div
-                            class="austa-v151-location"
-                        >
-                            📍 ${esc(location)}
-                        </div>
-                        `
-                        :
-                        ""
-                }
-
-
-                <div
-                    class="austa-v151-bottom"
-                >
-
-                    <span>
-                        ${
-                            item?.listing_type ===
-                            "rent"
-                                ?
-                                "İcarə"
-                                :
-                                "Satış"
-                        }
-                    </span>
-
-
-                    <span>
-                        ${esc(
-                            relativeTime(
-                                item?.published_at ||
-                                item?.created_at
-                            )
-                        )}
-                    </span>
-
-                </div>
-
-            </div>
-
-        </article>
-
-    `;
-
+    return window.AUSTA_LISTING_CARDS.render("cars",item,{home:true,promotion:homePromotionType(item)});
 }
 
-
-/* =========================================================
-   APPEND HOME ITEMS
-   ========================================================= */
 
 function appendHomeItems(items){
 
@@ -50803,7 +50605,7 @@ async function loadNextHomeBatch(){
         let query = supabase.from("vehicle_listings")
             .select(`id,listing_type,status,brand,model,year,mileage,body_type,
                 fuel_type,transmission,engine,engine_volume,horsepower,color,
-                price,daily_price,region,district,has_video,promotion_type,
+                price,daily_price,region,district,has_video,barter_available,credit_available,promotion_type,
                 promotion_started_at,promotion_until,last_boosted_at,published_at,created_at,seller_profile_id`)
             .eq("status", "active")
             .eq("listing_type", "sale")
@@ -51478,110 +51280,10 @@ function v154Meta(type,item){
 }
 
 
-function v154CardHtml(
-    type,
-    item
-){
-
-    const title =
-        v154Title(type,item);
-
-    const price =
-        v154Price(type,item);
-
-    const location =
-        v154Location(item);
-
-    const meta =
-        v154Meta(type,item)
-            .filter(Boolean)
-            .slice(0,4);
-
-    const image =
-        item?._austaV151Image || "";
-
-    const id =
-        String(item?.id || "");
-
-
-    return `
-        <article
-            class="austa-v154-card"
-            data-austa-v154-id="${escapeV154(id)}"
-            data-austa-v154-type="${escapeV154(type)}"
-        >
-
-            <div class="austa-v154-media">
-
-                ${
-                    image
-                        ? `
-                            <img
-                                src="${escapeV154(image)}"
-                                alt="${escapeV154(title)}"
-                                loading="lazy"
-                            >
-                        `
-                        : `
-                            <div class="austa-v154-no-image">
-                                A-USTA
-                            </div>
-                        `
-                }
-
-                ${v154Badge(item)}
-                ${window.AUSTA_MARKETPLACE_CARD_DATA.attributes(type,item)}
-                ${window.AUSTA_MARKETPLACE_CARD_DATA.heart(type,item)}
-
-            </div>
-
-            <div class="austa-v154-body">
-
-                <h3>
-                    ${escapeV154(title)}
-                </h3>
-
-                ${
-                    price
-                        ? `
-                            <div class="austa-v154-price">
-                                ${escapeV154(price)}
-                            </div>
-                        `
-                        : ""
-                }
-
-                ${
-                    meta.length
-                        ? `
-                            <div class="austa-v154-meta">
-                                ${meta
-                                    .map(
-                                        value =>
-                                            `<span>${escapeV154(value)}</span>`
-                                    )
-                                    .join("")
-                                }
-                            </div>
-                        `
-                        : ""
-                }
-
-                ${
-                    location
-                        ? `
-                            <div class="austa-v154-location">
-                                📍 ${escapeV154(location)}
-                            </div>
-                        `
-                        : ""
-                }
-
-            </div>
-
-        </article>
-    `;
+function v154CardHtml(type,item){
+    return window.AUSTA_LISTING_CARDS.render(type,item,{promotion:v154Promotion(item)});
 }
+
 
 /* =========================================================
    CATEGORY QUERY
@@ -52150,6 +51852,20 @@ document.addEventListener(
     "click",
     function(event){
 
+        const categoryCard=event.target.closest('.austa-v154-card[data-austa-v154-id]');
+        if(categoryCard){
+            if(event.target.closest('button,a,input,select,textarea,[role="button"],[contenteditable="true"]'))return;
+            const type=categoryCard.dataset.austaV154Type;
+            const source=window.AUSTA_MARKETPLACE_CARD_DATA.source(type);
+            const tables={vehicle:'vehicle_listings',marketplace:'marketplace_listings',service_provider:'service_provider_listings',auto_dealer:'auto_dealer_listings'};
+            const id=categoryCard.dataset.austaV154Id;
+            if(id && tables[source] && typeof window.AUSTA_OPEN_FULL_LISTING==='function'){
+                event.preventDefault();
+                event.stopPropagation();
+                void window.AUSTA_OPEN_FULL_LISTING(id,tables[source],type==='mechanic'?'usta':type);
+            }
+            return;
+        }
         const card =
             event.target.closest(
                 ".austa-v151-card[data-austa-v151-listing-id]"
@@ -52157,6 +51873,8 @@ document.addEventListener(
 
 
         if(card){
+            if(event.target.closest('button,a,input,select,textarea,[role="button"],[contenteditable="true"]'))return;
+
 
             event.preventDefault();
 
