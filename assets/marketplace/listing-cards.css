@@ -8,7 +8,10 @@
 .austa-market-card .austa-card-attributes{position:absolute;top:9px;left:9px;right:52px;display:flex;flex-wrap:wrap;gap:5px;pointer-events:none}
 .austa-market-card .austa-card-attribute{display:grid;place-items:center;width:27px;height:27px;border-radius:6px;background:#fff;color:#176244;font-size:18px;font-weight:800;box-shadow:0 1px 4px #0002}
 .austa-market-card .austa-card-lower-overlay{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:flex-end;justify-content:space-between;gap:6px;padding:18px 8px 8px;background:linear-gradient(transparent,#0008);pointer-events:none;min-height:28px;box-sizing:content-box}
-.austa-market-card .austa-card-seller{min-width:0;max-width:calc(100% - 82px)}
+.austa-market-card .austa-card-identity-group{display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px;min-width:0;max-width:calc(100% - 82px)}
+.austa-market-card .austa-card-seller{display:flex;flex-wrap:wrap;gap:4px;min-width:0;max-width:100%}
+.austa-market-card .austa-card-vin,.austa-market-card .austa-card-official-badge{border-radius:5px;padding:4px 5px;background:#fff;color:#263d32;font-size:10px;font-weight:700;white-space:nowrap}
+.austa-market-card .austa-card-official-badge{background:#196bb2;color:#fff}
 .austa-market-card .austa-card-seller-label{display:inline-flex;align-items:center;gap:4px;max-width:100%;box-sizing:border-box;border-radius:5px;background:#fff;color:#1b4935;font-size:10px;font-weight:700;padding:4px 5px;white-space:nowrap}
 .austa-market-card .austa-card-official{display:inline-grid;place-items:center;border-radius:50%;width:13px;height:13px;background:#16845c;color:#fff;font-size:10px;flex-shrink:0}
 .austa-market-card .austa-card-promotion{flex-shrink:0;align-self:flex-end;margin-left:auto;border-radius:5px;padding:4px 6px;background:#f1d784;color:#49370b;font-size:10px;font-weight:800;white-space:nowrap}
@@ -23,3 +26,5 @@
 @media(max-width:480px){.austa-market-card .austa-card-content{padding:9px 8px 10px;gap:4px}.austa-market-card .austa-card-price{font-size:17px}.austa-market-card .austa-card-title{font-size:13px}.austa-market-card .austa-card-summary{font-size:11px}.austa-market-card .austa-card-location-time{font-size:10px;gap:5px}}
 
 .austa-market-card .austa-card-content-business .austa-card-price{font-size:12px;font-weight:500;color:#67766d}
+
+.austa-vin-detail{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 0;border-top:1px solid #edf0ed;font-size:13px;min-width:0}.austa-vin-detail>span{color:#79847d}.austa-vin-detail strong{overflow-wrap:anywhere}.austa-vin-detail button,.austa-vin-detail a{border:1px solid #dfe7e1;border-radius:6px;background:#fff;color:#176244;padding:6px 8px;font:inherit;text-decoration:none;cursor:pointer}.austa-vin-detail button:focus-visible,.austa-vin-detail a:focus-visible{outline:2px solid #16845c;outline-offset:2px}.austa-vin-detail small{color:#66766a}

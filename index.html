@@ -9847,6 +9847,7 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 <script src="assets/marketplace/card-data.js"></script>
 <script src="assets/marketplace/seller-identity.js"></script>
 <link rel="stylesheet" href="assets/marketplace/listing-cards.css">
+<script src="assets/vehicle/vin.js"></script>
 <script src="assets/marketplace/listing-cards.js"></script>
 <script id="austa-all-in-one-flow">
 (function(){
@@ -31870,6 +31871,8 @@ async function openFullListing(id,source,expectedCategory){
 
           </section>`}
 
+          ${category==='cars' ? window.AUSTA_VEHICLE_VIN.detail(item) : ''}
+
           ${
             description
               ? (isVehicle ? `<div class="austa-compact-description">${escapeHtml(description)}</div>` : `
@@ -50605,7 +50608,7 @@ async function loadNextHomeBatch(){
         let query = supabase.from("vehicle_listings")
             .select(`id,listing_type,status,brand,model,year,mileage,body_type,
                 fuel_type,transmission,engine,engine_volume,horsepower,color,
-                price,daily_price,region,district,has_video,barter_available,credit_available,promotion_type,
+                price,daily_price,region,district,vin,has_video,barter_available,credit_available,promotion_type,
                 promotion_started_at,promotion_until,last_boosted_at,published_at,created_at,seller_profile_id`)
             .eq("status", "active")
             .eq("listing_type", "sale")
@@ -52660,6 +52663,7 @@ async function saveVehicle(type, input, user) {
 
         ...window.AUSTA_VEHICLE_TECHNICAL.payload(input),
         ...window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,input),
+        ...window.AUSTA_VEHICLE_VIN.payload(type,input),
 
         promotion_type: "standard",
 
@@ -53055,7 +53059,7 @@ async function updateListing(
         };
 
         window.AUSTA_VEHICLE_TECHNICAL.pruneUpdate(row,input,type);
-        Object.assign(row,window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,input));
+        Object.assign(row,window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,input),window.AUSTA_VEHICLE_VIN.payload(type,input));
 
 
     /* =====================================================
@@ -54231,6 +54235,7 @@ const CATEGORIES = {
             ['brand','Marka','text'],
             ['model','Model','text'],
             ['year','Buraxılış ili','number'],
+            ['vin','VIN-kod','text'],
             ...window.AUSTA_VEHICLE_TECHNICAL.fields,
 
             ['price','Qiymət (AZN)','number'],
@@ -54968,6 +54973,7 @@ function renderFields(){
 
                         <input
                             type="${esc(fieldType)}"
+                            ${key==='vin'?'placeholder="17 simvol" autocapitalize="characters" spellcheck="false"':''}
                             data-v153c-key="${esc(key)}"
                             data-v153c-label="${esc(label)}"
                             ${
@@ -55025,10 +55031,12 @@ function readFields(){
         });
 
 
+    delete details['VIN-kod']; // VIN authority is the dedicated production column only.
     values.details=details;
 
     const type=document.getElementById('austaV153CCategory')?.value;
     if(type==='cars')Object.assign(values,window.AUSTA_MARKETPLACE_CARD_DATA.read(document.getElementById('austaV153CFields'),Boolean(currentEdit)));
+    if(type==='cars')window.AUSTA_VEHICLE_VIN.read(document.getElementById('austaV153CFields'),values,Boolean(currentEdit));
     return ['cars','rent'].includes(type)
         ? window.AUSTA_VEHICLE_TECHNICAL.read(document.getElementById('austaV153CFields'),values,Boolean(currentEdit))
         : values;
@@ -55448,7 +55456,10 @@ function fillEditFields(item,type){
 
     if(type==='cars' || type==='rent'){
         window.AUSTA_VEHICLE_TECHNICAL.remember(document.getElementById('austaV153CFields'),item);
-        if(type==='cars')window.AUSTA_MARKETPLACE_CARD_DATA.remember(document.getElementById('austaV153CFields'),item);
+        if(type==='cars'){
+            window.AUSTA_MARKETPLACE_CARD_DATA.remember(document.getElementById('austaV153CFields'),item);
+            window.AUSTA_VEHICLE_VIN.remember(document.getElementById('austaV153CFields'),item);
+        }
     }
 
 }
@@ -55481,6 +55492,7 @@ function buildRouterInput(type,data){
 
             ...window.AUSTA_VEHICLE_TECHNICAL.payload(data),
             ...window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,data),
+            ...window.AUSTA_VEHICLE_VIN.payload(type,data),
 
             price:numeric(data.price),
 

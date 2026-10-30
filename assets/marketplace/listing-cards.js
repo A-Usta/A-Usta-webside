@@ -73,16 +73,17 @@ function promotion(item,candidate){
   if(!['premium','vip'].includes(candidate)||!Number.isFinite(start)||!Number.isFinite(end)||start>now||end<=now)return '';
   return `<span class="austa-card-promotion ${candidate}">${candidate==='premium'?'Premium':'VIP'}</span>`;
 }
-function sellerHtml(id){
+function sellerHtml(id,sale=false){
   const api=window.AUSTA_SELLER_IDENTITY,profile=api?.getForListing({seller_profile_id:id}),label=api?.label(profile)||'';
   if(!label)return '';
-  return `<span class="austa-card-seller-label" title="${esc(text(profile.display_name)||label)}">${esc(label)}${api.isOfficial(profile)?'<span class="austa-card-official" role="img" title="Rəsmi satıcı" aria-label="Rəsmi satıcı">✓</span>':''}</span>`;
+  return `<span class="austa-card-seller-label" title="${esc(text(profile.display_name)||label)}">${esc(label)}${!sale&&api.isOfficial(profile)?'<span class="austa-card-official" role="img" title="Rəsmi satıcı" aria-label="Rəsmi satıcı">✓</span>':''}</span>${sale&&api.isOfficial(profile)===true?'<span class="austa-card-official-badge" title="Rəsmi satıcı">Rəsmi</span>':''}`;
 }
 function render(typeValue,item,options={}){
   const type=typeValue==='mechanic'?'usta':typeValue,c=content(type,item),home=options.home===true,id=text(item.id);
   const klass=home?'austa-v151-card':'austa-v154-card',mediaClass=home?'austa-v151-media':'austa-v154-media';
   const connection=home?`data-austa-v151-listing-id="${esc(id)}"`:`data-austa-v154-id="${esc(id)}" data-austa-v154-type="${esc(type)}"`;
-  const image=text(item._austaV151Image),sellerId=text(item.seller_profile_id);
+  const image=text(item._austaV151Image),sellerId=text(item.seller_profile_id),sale=type==='cars'&&item.listing_type==='sale';
+  const vin=sale&&window.AUSTA_VEHICLE_VIN?.valid(item.vin)?'<span class="austa-card-vin" title="VIN-kod mövcuddur">VIN</span>':'';
   const price=c.price?`<div class="austa-card-price">${esc(c.price)}</div>`:'';
   const title=c.title?`<h3 class="austa-card-title" title="${esc(c.title)}">${esc(c.title)}</h3>`:'';
   const summary=c.summary.length?`<div class="austa-card-summary">${c.summary.map(esc).join(' • ')}</div>`:'';
@@ -90,7 +91,7 @@ function render(typeValue,item,options={}){
     <div class="${mediaClass} austa-card-media">
       ${image?`<img src="${esc(image)}" alt="${esc(c.title)}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="austa-card-no-image" hidden>Şəkil mövcud deyil</div>`:'<div class="austa-card-no-image">Şəkil mövcud deyil</div>'}
       ${attributes(type,item)}${window.AUSTA_MARKETPLACE_CARD_DATA.heart(type,item)}
-      <div class="austa-card-lower-overlay"><span class="austa-card-seller" data-card-seller="${esc(sellerId)}">${sellerHtml(sellerId)}</span>${promotion(item,options.promotion)}</div>
+      <div class="austa-card-lower-overlay"><span class="austa-card-identity-group">${vin}<span class="austa-card-seller" data-card-seller="${esc(sellerId)}" data-card-seller-sale="${sale}">${sellerHtml(sellerId,sale)}</span></span>${promotion(item,options.promotion)}</div>
     </div>
     <div class="austa-card-content${c.business?' austa-card-content-business':''}">${c.business?title+summary+price:price+title+summary}${locationRow(item)}</div>
   </article>`;
@@ -100,9 +101,9 @@ const cardKey=card=>card?JSON.stringify([card.dataset.austaV151ListingId||card.d
 function refreshSellers(){
   scheduled=false;const api=window.AUSTA_SELLER_IDENTITY;if(!api)return;
   const slots=[...document.querySelectorAll('.austa-market-card [data-card-seller]')].filter(slot=>slot.dataset.cardSeller);
-  const records=slots.map(slot=>{const token={},card=slot.closest('.austa-market-card');tokens.set(slot,token);return {slot,card,key:cardKey(card),id:slot.dataset.cardSeller,token};});
+  const records=slots.map(slot=>{const token={},card=slot.closest('.austa-market-card');tokens.set(slot,token);return {slot,card,key:cardKey(card),id:slot.dataset.cardSeller,sale:slot.dataset.cardSellerSale,token};});
   void api.hydrate(records.map(r=>({seller_profile_id:r.id}))).then(()=>{
-    records.forEach(({slot,card,key,id,token})=>{if(slot.isConnected&&slot.closest('.austa-market-card')===card&&cardKey(card)===key&&slot.dataset.cardSeller===id&&tokens.get(slot)===token)slot.innerHTML=sellerHtml(id);});
+    records.forEach(({slot,card,key,id,sale,token})=>{if(slot.isConnected&&slot.closest('.austa-market-card')===card&&cardKey(card)===key&&slot.dataset.cardSeller===id&&slot.dataset.cardSellerSale===sale&&tokens.get(slot)===token)slot.innerHTML=sellerHtml(id,sale==='true');});
   }).catch(error=>console.warn('A-USTA card seller:',error?.message));
 }
 function start(){
