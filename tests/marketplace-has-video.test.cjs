@@ -201,7 +201,7 @@ test('no files means no upload or sync work',async()=>{
 test('unrelated inline scripts and five pre-existing syntax issues remain unchanged',()=>{
   const base=cp.execFileSync('git',['show','origin/main:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
   const scripts=text=>[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
-  const old=scripts(base),current=scripts(html).filter(s=>!s[1].includes('src="assets/marketplace/listing-publish.js"'));assert.equal(old.length,current.length);let legacy=0;
+  const old=scripts(base),current=scripts(html);assert.equal(old.length,current.length);let legacy=0;
   for(let i=0;i<old.length;i++){
     const id=current[i][1];let before,after;
     try{new vm.Script(old[i][2]);}catch(e){before=e.message;legacy++;}
