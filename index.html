@@ -30844,6 +30844,7 @@ function carSpecs(item){
     ['Şəhər',value('region','')],
     ['Marka',value('brand','Marka')],
     ['Model',value('model','Model')],
+    ['İcarə növü',item.listing_type==='rent' ? vehicleText(item.rental_type) : ''],
     ['Buraxılış ili',value('year','Buraxılış ili')],
     ['Ban növü',vehicleTechnical(value('body_type','Ban tipi'),'body')],
     ['Rəng',vehicleTechnical(value('color','Rəng'),'color')],
@@ -52588,6 +52589,14 @@ function buildTitle(type, input) {
    cars + rent
    ============================================================ */
 
+const RENTAL_TYPES = Object.freeze(['Günlük','Həftəlik','Aylıq','Uzunmüddətli']);
+function rentalType(value) {
+    // The existing select has a blank option; explicit blank clears to SQL NULL.
+    if (value === undefined || value === null || value === '') return null;
+    if (!RENTAL_TYPES.includes(value)) throw new Error('İcarə növü düzgün deyil.');
+    return value;
+}
+
 async function saveVehicle(type, input, user, publishAttempt) {
 
     const isRent = type === "rent";
@@ -52674,6 +52683,7 @@ async function saveVehicle(type, input, user, publishAttempt) {
             nullable(input.phone),
 
         has_video: false,
+        ...(isRent ? {rental_type:rentalType(input.rental_type)} : {}),
 
         ...window.AUSTA_VEHICLE_TECHNICAL.payload(input),
         ...window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,input),
@@ -53168,6 +53178,10 @@ async function updateListing(
 
         window.AUSTA_VEHICLE_TECHNICAL.pruneUpdate(row,input,type);
         Object.assign(row,window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,input),window.AUSTA_VEHICLE_VIN.payload(type,input));
+        if (isRent && Object.prototype.hasOwnProperty.call(input,'rental_type') && input.rental_type !== undefined) {
+            row.rental_type = rentalType(input.rental_type);
+        }
+
 
 
     /* =====================================================
@@ -54108,6 +54122,8 @@ window.AUSTA_V153 = {
      updateListing:
         updateListing,
 
+    rentalTypes: RENTAL_TYPES,
+
     detailsFromForm,
     preserveDetails,
 
@@ -54386,12 +54402,7 @@ const CATEGORIES = {
                 'rental_type',
                 'İcarə növü',
                 'select',
-                [
-                    'Günlük',
-                    'Həftəlik',
-                    'Aylıq',
-                    'Uzunmüddətli'
-                ]
+                window.AUSTA_V153.rentalTypes
             ],
 
             ['daily_price','Qiymət (AZN)','number'],
@@ -55376,7 +55387,7 @@ function fillEditFields(item,type){
                 item.deposit,
 
             rental_type:
-                details.rental_type || ''
+                item.rental_type ?? ''
         });
 
     }
@@ -55669,10 +55680,7 @@ function buildRouterInput(type,data){
 
             description:data.description,
 
-            details:{
-                ...data.details,
-                rental_type:data.rental_type
-            }
+            rental_type:data.rental_type
 
         };
 
