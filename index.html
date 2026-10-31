@@ -56923,6 +56923,19 @@ async function editDealer(item){
                         .call(values,key)
                 ){
 
+                    if(key==='vehicle_condition' && element.tagName==='SELECT'){
+                        element.querySelectorAll('option[data-dealer-legacy-condition]').forEach(option=>option.remove());
+                        const stored=values[key];
+                        if(typeof stored==='string' && stored.length &&
+                            !Array.from(element.options).some(option=>option.value===stored)){
+                            const option=document.createElement('option');
+                            option.value=stored;
+                            option.textContent=stored+' (mövcud dəyər)';
+                            option.dataset.dealerLegacyCondition='true';
+                            element.appendChild(option);
+                        }
+                    }
+
                     element.value=
                         values[key] ?? '';
 
@@ -57214,7 +57227,11 @@ function readCurrentFields(partialUpdate=false){
             ] =
                 String(
                     partialUpdate ? (element.value ?? '') : (element.value || '')
-                ).trim();
+                );
+            if(!(partialUpdate && element.dataset.v153cKey==='vehicle_condition' &&
+                element.selectedOptions?.[0]?.dataset.dealerLegacyCondition==='true')){
+                result[element.dataset.v153cKey]=result[element.dataset.v153cKey].trim();
+            }
 
         });
 

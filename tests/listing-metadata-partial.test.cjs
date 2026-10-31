@@ -93,9 +93,31 @@ test('protected scripts and modules unchanged against base',()=>{
     }
 
 `;
+  const legacyOption = `                    if(key==='vehicle_condition' && element.tagName==='SELECT'){
+                        element.querySelectorAll('option[data-dealer-legacy-condition]').forEach(option=>option.remove());
+                        const stored=values[key];
+                        if(typeof stored==='string' && stored.length &&
+                            !Array.from(element.options).some(option=>option.value===stored)){
+                            const option=document.createElement('option');
+                            option.value=stored;
+                            option.textContent=stored+' (mövcud dəyər)';
+                            option.dataset.dealerLegacyCondition='true';
+                            element.appendChild(option);
+                        }
+                    }
+
+`;
+  const legacyRead = `                );
+            if(!(partialUpdate && element.dataset.v153cKey==='vehicle_condition' &&
+                element.selectedOptions?.[0]?.dataset.dealerLegacyCondition==='true')){
+                result[element.dataset.v153cKey]=result[element.dataset.v153cKey].trim();
+            }`;
   const current=script(html,id);
+  assert.ok(current.includes(legacyOption));
+  assert.ok(current.includes(legacyRead));
   assert.ok(current.includes(dealerPresence));
-  assert.equal(current.replace(detailsUpdate,'').replace(dealerPresence,'')
+  assert.equal(current.replace(detailsUpdate,'').replace(dealerPresence,'').replace(legacyOption,'')
+   .replace(legacyRead,'                ).trim();')
    .replace('readCurrentFields(true);','readCurrentFields();')
    .replace('function readCurrentFields(partialUpdate=false){','function readCurrentFields(){')
    .replace('\n\n            if(partialUpdate && element.value === undefined)return;','')
