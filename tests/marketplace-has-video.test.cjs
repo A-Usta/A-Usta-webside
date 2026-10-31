@@ -210,7 +210,9 @@ test('unrelated inline scripts and five pre-existing syntax issues remain unchan
     if(!id.includes(routerId)&&!id.includes(mediaId)&&!id.includes('austa-v153c-real-listing-form-js')){
       // P1.1C adds exactly one Rent-only spec; all other detail code stays identical.
       const rentalSpec="    ['İcarə növü',item.listing_type==='rent' ? vehicleText(item.rental_type) : ''],\n";
-      assert.equal(current[i][2].replace(rentalSpec,''),old[i][2].replace(rentalSpec,''));
+      // P1.1E.5 changes only Vehicle contact sourcing in the detail helper.
+      const contactSource = "  if(item?.category === 'cars' || item?.category === 'rent' ||\n     item?.__austa_table === 'vehicle_listings' ||\n     item?.listing_type === 'sale' || item?.listing_type === 'rent'){\n    return String(item.contact_name ?? '').trim() || 'Elan sahibi';\n  }\n\n";
+      assert.equal(current[i][2].replace(rentalSpec,'').replace(contactSource,''),old[i][2].replace(rentalSpec,''));
     }
   }
   assert.equal(legacy,5);
