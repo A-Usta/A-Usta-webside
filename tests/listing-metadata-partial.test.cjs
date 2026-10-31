@@ -41,11 +41,13 @@ for(const type of [...marketplace,'service','usta']){
 }
 for(const type of ['parts','service','usta'])for(const value of [undefined,null,false,0,'']){
  test(type+': explicit '+String(value)+' follows existing normalizers; undefined omitted',async()=>{
-  const f=fixture();await f.api.updateListing(type,'listing',{description:value,about:value,latitude:value,longitude:value,rating:value,reviews_count:value});const row=f.state.writes.at(-1).row;
+  const f=fixture();const input={description:value,about:value,latitude:value,longitude:value,rating:value,reviews_count:value};
+  if(value===false){await assert.rejects(f.api.updateListing(type,'listing',input));assert.equal(f.state.writes.length,0);return;}
+  await f.api.updateListing(type,'listing',input);const row=f.state.writes.at(-1).row;
   if(value===undefined){for(const k of ['latitude','longitude','rating','reviews_count','about','description'])assert.ok(!Object.hasOwn(row,k));return;}
   assert.equal(row.latitude,value===null||value===''?null:Number(value));
   const textKey=type==='parts'?'description':'about';assert.equal(row[textKey],value===null||value===''?null:String(value));
-  if(type!=='parts'){assert.equal(row.rating,value===null||value===''?null:Number(value));assert.equal(row.reviews_count,Number(value)||0);}
+  if(type!=='parts'){assert.ok(!Object.hasOwn(row,'rating'));assert.ok(!Object.hasOwn(row,'reviews_count'));assert.equal(f.state.row.rating,4.8);assert.equal(f.state.row.reviews_count,57);}
  });
 }
 for(const [type,data,absent] of [
@@ -61,73 +63,25 @@ test('present marketplace controls retain explicit clear and zero',async()=>{
  for(const k of ['brand','model','year','condition'])assert.equal(row[k],null);assert.equal(row.price,0);
 });
 test('provider aliases retain zero and explicit clear',async()=>{
- const f=fixture();await f.api.updateListing('usta','listing',{reviews:0,hours:'',message:null,rating:0});const r=f.state.writes.at(-1).row;assert.equal(r.reviews_count,0);assert.equal(r.rating,0);assert.equal(r.working_hours,null);assert.equal(r.message_contact,null);
+ const f=fixture();await f.api.updateListing('usta','listing',{reviews:0,hours:'',message:null,rating:0});const r=f.state.writes.at(-1).row;assert.ok(!Object.hasOwn(r,'reviews_count'));assert.ok(!Object.hasOwn(r,'rating'));assert.equal(f.state.row.reviews_count,57);assert.equal(f.state.row.rating,4.8);assert.equal(r.working_hours,null);assert.equal(r.message_contact,null);
 });
 test('service specialty-only update does not synthesize a title',async()=>{
  const f=fixture();await f.api.updateListing('service','listing',{specialty:'Repair'});assert.ok(!Object.hasOwn(f.state.writes.at(-1).row,'title'));
 });
 for(const type of [...marketplace,'service','usta'])test(type+': create payload defaults unchanged against approved base',async()=>{
- const current=fixture(),old=fixture(baseline),input={title:'Listing',name:'Name',phone:'123',price:25};
+ const current=fixture(),old=fixture(baseline),input={title:'Listing',name:'Name',phone:'123',price:25,specialty:'Repair'};
  await current.api.saveListing(type,input,{});await old.api.saveListing(type,input,{});
- const normalize=f=>{const row=f.state.writes.at(-1).row;delete row.published_at;return row;};assert.deepEqual(normalize(current),normalize(old));
+ const normalize=f=>{const row=f.state.writes.at(-1).row;delete row.published_at;delete row.rating;delete row.reviews_count;return row;};assert.deepEqual(normalize(current),normalize(old));
 });
-test('protected scripts and modules unchanged against base',()=>{
- for(const id of ['austa-v153d-14-category-media-js','austa-v153c-real-listing-form-js']){
-  if(id.includes('v153c'))continue;
-  const detailsUpdate = `    const detailPatch = window.AUSTA_V153.detailsFromForm('dealer',values,details);
-    const preserved = await window.AUSTA_V153.preserveDetails('dealer',item.id,user,detailPatch);
-    if(preserved === undefined) delete payload.details;
-    else payload.details = preserved;
-
-`;
-  const dealerPresence = `    // A missing control must not clear an existing optional column.
-    for(const key of [
-        'contact_name','message_contact','district','working_hours',
-        'brands','vehicle_condition','about','credit_available',
-        'leasing_available','barter_available','delivery_available'
-    ]){
-        if(!Object.prototype.hasOwnProperty.call(values,key) || values[key] === undefined){
-            delete payload[key];
-            delete details[key];
-        }
-    }
-
-`;
-  const legacyOption = `                    if(key==='vehicle_condition' && element.tagName==='SELECT'){
-                        element.querySelectorAll('option[data-dealer-legacy-condition]').forEach(option=>option.remove());
-                        const stored=values[key];
-                        if(typeof stored==='string' && stored.length &&
-                            !Array.from(element.options).some(option=>option.value===stored)){
-                            const option=document.createElement('option');
-                            option.value=stored;
-                            option.textContent=stored+' (mövcud dəyər)';
-                            option.dataset.dealerLegacyCondition='true';
-                            element.appendChild(option);
-                        }
-                    }
-
-`;
-  const legacyRead = `                );
-            if(!(partialUpdate && element.dataset.v153cKey==='vehicle_condition' &&
-                element.selectedOptions?.[0]?.dataset.dealerLegacyCondition==='true')){
-                result[element.dataset.v153cKey]=result[element.dataset.v153cKey].trim();
-            }`;
-  const current=script(html,id);
-  assert.ok(current.includes(legacyOption));
-  assert.ok(current.includes(legacyRead));
-  assert.ok(current.includes(dealerPresence));
-  assert.equal(current.replace(detailsUpdate,'').replace(dealerPresence,'').replace(legacyOption,'')
-   .replace(legacyRead,'                ).trim();')
-   .replace('readCurrentFields(true);','readCurrentFields();')
-   .replace('function readCurrentFields(partialUpdate=false){','function readCurrentFields(){')
-   .replace('\n\n            if(partialUpdate && element.value === undefined)return;','')
-   .replace("partialUpdate ? (element.value ?? '') : (element.value || '')","element.value || ''"),script(baseline,id));
+test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
+ const main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
+ const blocks=text=>[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
+ const old=blocks(main),now=blocks(html);assert.equal(now.length,old.length);
+ for(let i=0;i<old.length;i++){
+  if(['austa-v153b-all-real-listing-router','austa-v153c-real-listing-form-js','austa-v153d-14-category-media-js'].some(id=>now[i][1].includes(id)))continue;
+  assert.equal(now[i][0],old[i][0]);
  }
- // P0.3.1 intentionally changes the shared coordinator; listing-publish.test.cjs owns its contract.
- const diff=cp.execFileSync('git',['diff','a755d25b7ea953bec268bdcc105382330bc91c7b','--','assets','backend',':(exclude)assets/marketplace/category-filters.js',':(exclude)assets/marketplace/listing-publish.js',':(exclude)backend/a-usta56/tests/listing-media.test.ts'],{cwd:root,encoding:'utf8'});assert.equal(diff,'');
- const filters=fs.readFileSync(path.join(root,'assets/marketplace/category-filters.js'),'utf8');
- const oldFilters=cp.execFileSync('git',['show','a755d25b7ea953bec268bdcc105382330bc91c7b:assets/marketplace/category-filters.js'],{cwd:root,encoding:'utf8'});
- assert.equal(filters,oldFilters.replace("detail('rental_type','İcarə növü')","text('rental_type','İcarə növü')"));
+ assert.equal(cp.execFileSync('git',['diff','19c91a76502dad439811fa86d95af0fac922c88a','--','assets','backend'],{cwd:root,encoding:'utf8'}),'');
 });
 for(const type of ['cars','rent'])test(type+': existing Vehicle technical partial update retained',async()=>{
  const f=fixture();await f.api.updateListing(type,'listing',{phone:'123',mileage:0});const r=f.state.writes.at(-1).row;

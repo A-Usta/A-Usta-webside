@@ -52630,6 +52630,108 @@ function buildTitle(type, input) {
     );
 }
 
+// P1.1G: listing-boundary validation; legacy num()/integer() stay unchanged.
+const supplied = (input,key) => Object.prototype.hasOwnProperty.call(input,key) && input[key] !== undefined;
+const listingBlank = value => value === null || value === undefined || (typeof value === 'string' && !value.trim());
+const MANAGED_LISTING_FIELDS = Object.freeze(['owner_id','status','promotion_type',
+    'promotion_started_at','promotion_until','last_boosted_at','seller_profile_id',
+    'rating','reviews_count','reviews','has_video','hasVideo','created_at','updated_at','published_at']);
+function listingNumber(value,key,{required=false,integer=false,min=-Infinity,max=Infinity}={}) {
+    if(listingBlank(value)) {
+        if(required) throw new Error('Mütləq rəqəm sahəsi: '+key);
+        return value === undefined ? undefined : null;
+    }
+    // Reject booleans, collections and non-decimal coercions before Number().
+    if((typeof value !== 'number' && typeof value !== 'string') ||
+       (typeof value === 'string' && !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value.trim()))) {
+        throw new Error('Rəqəm düzgün deyil: '+key);
+    }
+    const result=Number(value);
+    if(typeof value === 'string') {
+        const [mantissa,exponent='0']=value.trim().toLowerCase().split('e');
+        const digits=mantissa.replace(/[+.-]/g,'');
+        const scale=(mantissa.split('.')[1]?.length || 0)-Number(exponent);
+        // Do not round a supplied fractional integer (or underflow a nonzero decimal) to zero/an integer.
+        if((result===0 && /[1-9]/.test(digits)) || (integer && scale>0 && /[1-9]/.test(digits.slice(-scale)))) {
+            throw new Error('Rəqəm düzgün deyil: '+key);
+        }
+    }
+    if(!Number.isFinite(result) || (integer && !Number.isSafeInteger(result)) || result<min || result>max) {
+        throw new Error('Rəqəm düzgün deyil: '+key);
+    }
+    return result;
+}
+function listingBoolean(value) {
+    if(value === undefined) return undefined;
+    if(value === true || value === 1) return true;
+    if(value === false || value === 0) return false;
+    if(typeof value === 'string') {
+        const text=value.trim().toLocaleLowerCase('az-AZ');
+        if(['bəli','true','1'].includes(text)) return true;
+        if(['','xeyr','false','0'].includes(text)) return false;
+    }
+    throw new Error('Bəli və ya Xeyr seçin.');
+}
+function validateListingInput(type,input,editing=false) {
+    if(!ALL_TYPES.has(type) && type !== 'dealer') throw new Error('Naməlum elan kateqoriyası.');
+    if(!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Elan məlumat formatı düzgün deyil.');
+    const result={...input};
+    MANAGED_LISTING_FIELDS.forEach(key=>delete result[key]);
+    const textRequired=(keys,label)=>{
+        if((!editing || keys.some(key=>supplied(result,key))) &&
+           !keys.some(key=>typeof result[key] === 'string' && result[key].trim())) {
+            throw new Error('Mütləq sahə: '+label);
+        }
+    };
+    const number=(key,options={})=>{
+        if(supplied(result,key) || options.required && !editing) result[key]=listingNumber(result[key],key,options);
+    };
+    for(const key of ['latitude','longitude'])number(key);
+    if(VEHICLE_TYPES.has(type)) {
+        textRequired(['brand'],'Marka');textRequired(['model'],'Model');
+        number('year',{required:true,integer:true,min:1900,max:2100});
+        number('mileage',{integer:true,min:0});
+        number('deposit',{min:0});
+        if(type === 'rent') {
+            // First supplied canonical/legacy key wins, including explicit null.
+            const source=['daily_price','dailyPrice','price'].find(key=>supplied(result,key));
+            if(source)result.daily_price=result[source];
+            number('daily_price',{required:true,min:0});
+            if(supplied(result,'price'))number('price',{min:0});
+            if(supplied(result,'dailyPrice'))number('dailyPrice',{min:0});
+            if(supplied(result,'rental_type'))result.rental_type=rentalType(result.rental_type);
+        }else{
+            number('price',{required:true,min:0});
+            if(supplied(result,'rental_type') && !listingBlank(result.rental_type))throw new Error('İcarə növü yalnız icarə elanı üçündür.');
+            if(supplied(result,'daily_price'))number('daily_price',{min:0});
+        }
+        if(supplied(result,'vin'))result.vin=window.AUSTA_VEHICLE_VIN.normalize(result.vin);
+        // Preserve the existing technical/selector vocabulary and validation.
+        Object.assign(result,window.AUSTA_VEHICLE_TECHNICAL.payload(result));
+    }else if(MARKETPLACE_TYPES.has(type)){
+        number('price',{min:0});number('year',{integer:true});
+    }else if(PROVIDER_TYPES.has(type)){
+        if(supplied(result,'provider_type') && result.provider_type !== type)throw new Error('Xidmət təminatçısının növü düzgün deyil.');
+        // CREATE follows the required form contract. Sparse API edits retain the
+        // existing nullable-column clear semantics; full edit forms still validate required fields.
+        if(!editing){
+            textRequired(['phone'],'Telefon');textRequired(['specialty'],'İxtisaslaşma');
+            textRequired(type==='service'?['service_name','name','title']:['name','title'],'Ad / başlıq');
+        }
+    }else if(type === 'dealer'){
+        for(const key of ['dealer_name','phone','region','address']){
+            if((!editing || supplied(result,key)) && (typeof result[key] !== 'string' || !result[key].trim()))throw new Error('Salonun adı, telefon, region və tam ünvan mütləqdir.');
+        }
+        for(const key of ['credit_available','leasing_available','barter_available','delivery_available']){
+            if(supplied(result,key))result[key]=listingBoolean(result[key]);
+        }
+        if(!editing && !listingBlank(result.vehicle_condition) && !['Yeni','Sürülmüş','Yeni və sürülmüş'].includes(result.vehicle_condition)){
+            throw new Error('Avtomobillərin vəziyyəti üçün düzgün seçim edin.');
+        }
+    }
+    return result;
+}
+
 /* ============================================================
    VEHICLE LISTINGS
    cars + rent
@@ -52879,29 +52981,6 @@ async function saveProvider(type, input, user, publishAttempt) {
         );
     }
 
-    let rating =
-        num(input.rating);
-
-    if (
-        rating !== null &&
-        (rating < 0 || rating > 5)
-    ) {
-        rating = null;
-    }
-
-    let reviews =
-        integer(
-            input.reviews_count ??
-            input.reviews
-        );
-
-    if (
-        reviews === null ||
-        reviews < 0
-    ) {
-        reviews = 0;
-    }
-
     const row = {
         owner_id: user.id,
 
@@ -52961,10 +53040,6 @@ async function saveProvider(type, input, user, publishAttempt) {
 
         longitude:
             num(input.longitude),
-
-        rating: rating,
-
-        reviews_count: reviews,
 
         promotion_type: "standard",
 
@@ -53114,6 +53189,8 @@ async function updateListing(
         );
     }
 
+    input = validateListingInput(type,input,true);
+
     const user =
         await currentUser();
 
@@ -53217,12 +53294,7 @@ async function updateListing(
                 ),
 
             phone:
-                nullable(input.phone),
-
-            // V167: omitted video metadata must not clear the stored flag.
-            ...((input.has_video ?? input.hasVideo) !== undefined
-                ? {has_video:bool(input.has_video ?? input.hasVideo)}
-                : {})
+                nullable(input.phone)
         };
 
         if (Object.prototype.hasOwnProperty.call(input,'contact_name') && input.contact_name !== undefined) {
@@ -53339,32 +53411,6 @@ async function updateListing(
             );
         }
 
-        let rating =
-            num(input.rating);
-
-        if (
-            rating !== null &&
-            (
-                rating < 0 ||
-                rating > 5
-            )
-        ) {
-            rating = null;
-        }
-
-        let reviews =
-            integer(
-                input.reviews_count ??
-                input.reviews
-            );
-
-        if (
-            reviews === null ||
-            reviews < 0
-        ) {
-            reviews = 0;
-        }
-
         table =
             "service_provider_listings";
 
@@ -53429,13 +53475,7 @@ async function updateListing(
                 num(input.latitude),
 
             longitude:
-                num(input.longitude),
-
-            rating:
-                rating,
-
-            reviews_count:
-                reviews
+                num(input.longitude)
         };
 
     } else {
@@ -53557,6 +53597,8 @@ async function saveListing(typeValue, input = {}, publishAttempt) {
             typeValue
         );
     }
+
+    input = validateListingInput(type,input,false);
 
     const user =
         await currentUser();
@@ -54174,6 +54216,10 @@ window.AUSTA_V153 = {
 
      updateListing:
         updateListing,
+
+    validateListingInput,
+    listingNumber,
+    listingBoolean,
 
     rentalTypes: RENTAL_TYPES,
 
@@ -55314,7 +55360,7 @@ function validate(type,data){
 
     const missing=
         (required[type] || [])
-            .filter(key=>!data[key]);
+            .filter(key=>data[key] == null || (typeof data[key] === 'string' && !data[key].trim()));
 
     if(['moto','bus','caravan'].includes(type) &&
         ![data.brand,data.model].some(value=>String(value ?? '').trim())){
@@ -55641,6 +55687,8 @@ function fillEditFields(item,type){
 
 function buildRouterInput(type,data){
 
+    data=window.AUSTA_V153.validateListingInput(type,data,Boolean(currentEdit));
+
     const location=
         splitLocation(
             data.region_address
@@ -55661,13 +55709,13 @@ function buildRouterInput(type,data){
 
             model:data.model,
 
-            year:numeric(data.year),
+            year:(data.year === undefined ? undefined : numeric(data.year)),
 
             ...window.AUSTA_VEHICLE_TECHNICAL.payload(data),
             ...window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,data),
             ...window.AUSTA_VEHICLE_VIN.payload(type,data),
 
-            price:numeric(data.price),
+            price:(data.price === undefined ? undefined : numeric(data.price)),
 
             region:location.region,
 
@@ -55696,15 +55744,15 @@ function buildRouterInput(type,data){
 
             model:data.model,
 
-            year:numeric(data.year),
+            year:(data.year === undefined ? undefined : numeric(data.year)),
 
             ...window.AUSTA_VEHICLE_TECHNICAL.payload(data),
 
             daily_price:
-                numeric(data.daily_price),
+                (data.daily_price === undefined ? undefined : numeric(data.daily_price)),
 
             deposit:
-                numeric(data.deposit),
+                (data.deposit === undefined ? undefined : numeric(data.deposit)),
 
             region:location.region,
 
@@ -55996,12 +56044,12 @@ const brandModel=[data.brand,data.model].map(value=>String(value ?? '').trim()).
             data.description || '',
 
         price:
-            numeric(data.price),
+            (data.price === undefined ? undefined : numeric(data.price)),
 
         ...(type!=='plate' && Object.prototype.hasOwnProperty.call(data,'brand') && data.brand !== undefined ? {brand:data.brand} : {}),
         ...(type!=='plate' && Object.prototype.hasOwnProperty.call(data,'model') && data.model !== undefined ? {model:data.model} : {}),
 
-        ...(Object.prototype.hasOwnProperty.call(data,'year') && data.year !== undefined ? {year:numeric(data.year)} : {}),
+        ...(Object.prototype.hasOwnProperty.call(data,'year') && data.year !== undefined ? {year:(data.year === undefined ? undefined : numeric(data.year))} : {}),
 
         ...(Object.prototype.hasOwnProperty.call(data,'condition') && data.condition !== undefined ? {condition:data.condition || ''} : {}),
 
@@ -57047,8 +57095,7 @@ async function updateDealer(item){
     const user=
         await currentUser();
 
-    const values=
-        readCurrentFields(true);
+    const values=window.AUSTA_V153.validateListingInput('dealer',readCurrentFields(true),true);
 
 
     if(
@@ -57258,11 +57305,7 @@ function ensureDealerOption(){
    ========================================================= */
 
 function yesNo(value){
-
-    return String(value || '')
-        .trim()
-        .toLocaleLowerCase('az-AZ') ===
-        'bəli';
+    return window.AUSTA_V153.listingBoolean(value) ?? false;
 }
 
 
@@ -57281,6 +57324,11 @@ function readCurrentFields(partialUpdate=false){
         .forEach(element=>{
 
             if(partialUpdate && element.value === undefined)return;
+
+            if(['credit_available','leasing_available','barter_available','delivery_available'].includes(element.dataset.v153cKey)){
+                result[element.dataset.v153cKey]=element.value;
+                return;
+            }
 
             result[
                 element.dataset.v153cKey
@@ -57308,8 +57356,7 @@ async function saveDealer(publishAttempt){
     const user =
         await currentUser();
 
-    const values =
-        readCurrentFields();
+    const values = window.AUSTA_V153.validateListingInput('dealer',readCurrentFields(),false);
 
 
     if(

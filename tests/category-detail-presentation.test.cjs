@@ -90,12 +90,13 @@ test('inherited JSON values and prototype category names are not public metadata
  assert.deepEqual(fixture().rows({category:'parts',details:Object.create({oem:'PRIVATE'})}),[]);
  const f=fixture();f.c.__item={category:'__proto__',details:{oem:'PRIVATE'}};assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(marketplaceSpecs(__item))',f.c)),[]);
 });
-test('P1.1F presentation preserved; only exact P0.3.1 app changes against main',()=>{
- const helper=between(html,'// P1.1F: public Marketplace specs','function genericSpecs(item){');
- // P0.3.1 separately tests its exact Vehicle CREATE and private-detail changes.
- const stagingGuard="  // P0.3.1: Vehicle staging is private even for direct/cached detail opens.\n  if(item?.status==='draft' && (item.__austa_table==='vehicle_listings' ||\n      item.listing_type==='sale' || item.listing_type==='rent'))return false;\n\n";
- const undoVehicle=text=>text.replace(/(async function saveVehicle\([\s\S]*?status: )"draft"/,'$1"inactive"').replace(stagingGuard,'');
- assert.ok(helper);assert.equal(undoVehicle(html),base);
+test('P1.1F presentation preserved outside three P1.1G listing boundaries',()=>{
+ let normalized=html;
+ for(const id of ['austa-v153b-all-real-listing-router','austa-v153c-real-listing-form-js','austa-v153d-14-category-media-js']){
+  const pattern=new RegExp('<script id="'+id+'">[\\s\\S]*?</script>');
+  assert.ok(pattern.test(base));normalized=normalized.replace(pattern,()=>base.match(pattern)[0]);
+ }
+ assert.equal(normalized,base);
 });
 test('Cars/Rent professional specs, contact and non-Marketplace fallback stay identical',()=>{
  const f=fixture(),old=vm.createContext({window:{}});vm.runInContext(technical,old);vm.runInContext(between(base,'function escapeHtml(value){','function maskedPhone(phone){'),old);

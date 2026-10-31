@@ -61,7 +61,7 @@ test('sparse API '+key+' '+String(value),async()=>{
 });
 test('absent Service router field does not fabricate counterpart',async()=>{
  for(const key of ['specialty','services']){
-  const f=setup();const input=f.form.buildRouterInput('service',{[key]:'Changed',details:{}});
+  const f=setup();f.form.setEdit();const input=f.form.buildRouterInput('service',{[key]:'Changed',details:{}});
   await f.api.updateListing('service','listing',input);
   assert.equal(f.state.row[key],'Changed');
   assert.equal(f.state.row[key==='specialty'?'services':'specialty'],key==='specialty'?'Brakes':'Engine');
@@ -82,6 +82,7 @@ test('JSON fresh read failure still blocks provider update',async()=>{
 for(const key of ['specialty','services'])
 test('Service persistence builder does not fabricate absent '+key,async()=>{
  const f=setup();const other=key==='specialty'?'services':'specialty';
+ if(key==='specialty'){await assert.rejects(async()=>f.api.saveListing('service',f.form.buildRouterInput('service',{service_name:'Workshop',phone:'123',[other]:'Independent',details:{}}),{}));assert.ok(!f.state.ops.some(o=>o.op==='insert'));return;}
  await f.api.saveListing('service',f.form.buildRouterInput('service',{service_name:'Workshop',phone:'123',[other]:'Independent',details:{}}),{});
  assert.equal(f.state.row[key],null);assert.equal(f.state.row[other],'Independent');
 });
