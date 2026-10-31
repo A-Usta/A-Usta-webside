@@ -30914,6 +30914,38 @@ function vehicleExtraLocation(item){
     }).join(', ');
 }
 
+// P1.1F: public Marketplace specs use explicit canonical sources only.
+function marketplaceSpecs(item){
+  const fields={
+    parts:[['part_name','Hissənin adı'],['oem','OEM / kod'],['compatibility','Uyğunluq'],['stock','Stok vəziyyəti']],
+    accessories:[['accessory_name','Aksessuarın adı'],['stock','Stok vəziyyəti']],
+    moto:[['moto_type','Nəqliyyat növü'],['mileage','Yürüş']],
+    special:[['special_type','Texnika növü'],['work_hours','İş saatı'],['sale_rent','Təklif növü']],
+    bus:[['capacity','Sərnişin tutumu'],['sale_rent','Təklif növü']],
+    water:[['water_type','Su nəqliyyatı növü'],['engine','Mühərrik']],
+    caravan:[['caravan_type','Karavan növü'],['beds','Yataq sayı'],['sale_rent','Təklif növü']],
+    trailer:[['trailer_type','Qoşqu növü'],['load_capacity','Yük tutumu']],
+    plate:[['plate_number','Qeydiyyat nişanı'],['plate_series','Seriya'],['document_status','Sənəd vəziyyəti']]
+  };
+  const category=categoryOf(item);
+  if(!Object.prototype.hasOwnProperty.call(fields,category))return [];
+  const details=item.details && typeof item.details==='object' && !Array.isArray(item.details)
+    ? item.details : {};
+  const text=value=>{
+    const scalar=vehicleText(value);
+    return /^(?:\{\s*\}|\[\s*\])$/.test(scalar) ? '' : scalar;
+  };
+  // Common columns never fall back to legacy JSON copies. Price/location/
+  // description retain their existing sidebar and description presentation.
+  return [
+    ...[['brand','Marka'],['model','Model'],['year','Buraxılış ili'],['condition','Vəziyyət'],
+      ['region','Şəhər'],['district','Rayon']].map(([key,label])=>[label,text(item[key])]),
+    ...fields[category].map(([key,label])=>[label,
+      Object.prototype.hasOwnProperty.call(details,key) ? text(details[key]) : ''])
+  ].filter(([,value])=>value!=='');
+}
+
+
 function genericSpecs(item){
 
   const ignored=new Set([
@@ -30975,6 +31007,10 @@ function specsFor(item){
 
   if(['cars','rent'].includes(categoryOf(item))){
     return carSpecs(item);
+  }
+
+  if(['parts','accessories','moto','special','bus','water','caravan','trailer','plate'].includes(categoryOf(item))){
+    return marketplaceSpecs(item);
   }
 
   return genericSpecs(item);
