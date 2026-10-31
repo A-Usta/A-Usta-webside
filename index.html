@@ -53199,7 +53199,7 @@ async function updateListing(
         const title =
             buildTitle(type, input);
 
-        if (!title) {
+        if (!title && ["title", "name", "service_name"].some(key => Object.prototype.hasOwnProperty.call(input, key) && input[key] !== undefined)) {
             throw new Error(
                 type === "usta"
                     ? "Ustanın adı və ixtisasını daxil edin."
@@ -53323,6 +53323,22 @@ async function updateListing(
        - promotion dəyişmir
        - published_at dəyişmir
        ===================================================== */
+
+    // P1.1A: absent/undefined metadata is not an instruction to clear it.
+    // Derived video state remains authoritative; details merging belongs to P1.1B.
+    if (MARKETPLACE_TYPES.has(type) || PROVIDER_TYPES.has(type)) {
+        const aliases = {reviews_count: ["reviews_count", "reviews"],
+            message_contact: ["message_contact", "message"],
+            working_hours: ["working_hours", "hours"]};
+        const titleKeys = MARKETPLACE_TYPES.has(type)
+            ? ["title", "name", "brand", "model"]
+            : (type === "usta" ? ["title", "name", "specialty"] : ["title", "name", "service_name"]);
+        Object.keys(row).forEach(key => {
+            if (key === "category" || key === "provider_type" || key === "has_video") return;
+            const keys = key === "title" ? titleKeys : (aliases[key] || [key]);
+            if (!keys.some(source => Object.prototype.hasOwnProperty.call(input, source) && input[source] !== undefined)) delete row[key];
+        });
+    }
 
     const {
         data,
@@ -55879,15 +55895,11 @@ let model='';
         price:
             numeric(data.price),
 
-        brand,
+        ...(Object.prototype.hasOwnProperty.call(data,'brand_model') && data.brand_model !== undefined ? {brand, model} : {}),
 
-        model,
+        ...(Object.prototype.hasOwnProperty.call(data,'year') && data.year !== undefined ? {year:numeric(data.year)} : {}),
 
-        year:
-            numeric(data.year),
-
-        condition:
-            data.condition || '',
+        ...(Object.prototype.hasOwnProperty.call(data,'condition') && data.condition !== undefined ? {condition:data.condition || ''} : {}),
 
         phone:
             data.phone || '',
