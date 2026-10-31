@@ -30590,6 +30590,12 @@ function phoneOf(item){
 
 function sellerOf(item){
 
+  if(item?.category === 'cars' || item?.category === 'rent' ||
+     item?.__austa_table === 'vehicle_listings' ||
+     item?.listing_type === 'sale' || item?.listing_type === 'rent'){
+    return String(item.contact_name ?? '').trim() || 'Elan sahibi';
+  }
+
   return String(
     item?.['Ad / soyad'] ||
     item?.name ||
@@ -52682,6 +52688,8 @@ async function saveVehicle(type, input, user, publishAttempt) {
         phone:
             nullable(input.phone),
 
+        contact_name: nullable(input.contact_name),
+
         has_video: false,
         ...(isRent ? {rental_type:rentalType(input.rental_type)} : {}),
 
@@ -53176,6 +53184,10 @@ async function updateListing(
                 ? {has_video:bool(input.has_video ?? input.hasVideo)}
                 : {})
         };
+
+        if (Object.prototype.hasOwnProperty.call(input,'contact_name') && input.contact_name !== undefined) {
+            row.contact_name = nullable(input.contact_name);
+        }
 
         window.AUSTA_VEHICLE_TECHNICAL.pruneUpdate(row,input,type);
         Object.assign(row,window.AUSTA_MARKETPLACE_CARD_DATA.salePayload(type,input),window.AUSTA_VEHICLE_VIN.payload(type,input));
@@ -55337,6 +55349,10 @@ function fillEditFields(item,type){
         editLocation(item);
 
 
+    if(type==='cars' || type==='rent'){
+        values.name = item.contact_name ?? '';
+    }
+
     /* =====================================================
        CARS
        ===================================================== */
@@ -55599,6 +55615,8 @@ function buildRouterInput(type,data){
 
             phone:data.phone,
 
+            contact_name:data.name,
+
             brand:data.brand,
 
             model:data.model,
@@ -55631,6 +55649,8 @@ function buildRouterInput(type,data){
         return {
 
             phone:data.phone,
+
+            contact_name:data.name,
 
             brand:data.brand,
 
