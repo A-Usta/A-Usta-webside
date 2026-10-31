@@ -75,6 +75,7 @@ function fixture({flag=false, videos=0, images=0, fail, failUploadAt=0, failRela
     AUSTA_V153C:{open(){},async edit(){return 'edited';}}};
   const context = vm.createContext({window,document,console:{log(){},warn(){},error(){}},
     CustomEvent:class{},setTimeout(){},clearTimeout(){},alert(){}});
+  vm.runInContext(fs.readFileSync(path.join(root,'assets/marketplace/listing-publish.js'),'utf8'),context);
   vm.runInContext(script(routerId),context);
   const mediaSource=script(mediaId);
   const tail=mediaSource.lastIndexOf('})();');assert.ok(tail>0);
@@ -82,6 +83,7 @@ function fixture({flag=false, videos=0, images=0, fail, failUploadAt=0, failRela
     window.__mediaTest={uploadMedia,patchSave,patchOpen};
     buildMediaBox=()=>{window.__mediaBuilds=(window.__mediaBuilds||0)+1;};
   `+mediaSource.slice(tail),context);
+  window.__mediaTest.patchSave();
   const api=window.AUSTA_V153;
   const metadata=(type='parts',extra={})=>api.updateListing(type,'listing-1',{title:'Updated',price:25,description:'Text',...extra});
   return {state,files,window,api,metadata,media:window.__mediaTest};
@@ -199,13 +201,13 @@ test('no files means no upload or sync work',async()=>{
 test('unrelated inline scripts and five pre-existing syntax issues remain unchanged',()=>{
   const base=cp.execFileSync('git',['show','origin/main:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
   const scripts=text=>[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
-  const old=scripts(base),current=scripts(html);assert.equal(old.length,current.length);let legacy=0;
+  const old=scripts(base),current=scripts(html).filter(s=>!s[1].includes('src="assets/marketplace/listing-publish.js"'));assert.equal(old.length,current.length);let legacy=0;
   for(let i=0;i<old.length;i++){
     const id=current[i][1];let before,after;
     try{new vm.Script(old[i][2]);}catch(e){before=e.message;legacy++;}
     try{new vm.Script(current[i][2]);}catch(e){after=e.message;}
     assert.equal(after,before);
-    if(!id.includes(routerId)&&!id.includes(mediaId))assert.equal(current[i][2],old[i][2]);
+    if(!id.includes(routerId)&&!id.includes(mediaId)&&!id.includes('austa-v153c-real-listing-form-js'))assert.equal(current[i][2],old[i][2]);
   }
   assert.equal(legacy,5);
 });
