@@ -56975,7 +56975,7 @@ async function updateDealer(item){
         await currentUser();
 
     const values=
-        readCurrentFields();
+        readCurrentFields(true);
 
 
     if(
@@ -57082,6 +57082,18 @@ async function updateDealer(item){
     };
 
 
+    // A missing control must not clear an existing optional column.
+    for(const key of [
+        'contact_name','message_contact','district','working_hours',
+        'brands','vehicle_condition','about','credit_available',
+        'leasing_available','barter_available','delivery_available'
+    ]){
+        if(!Object.prototype.hasOwnProperty.call(values,key) || values[key] === undefined){
+            delete payload[key];
+            delete details[key];
+        }
+    }
+
     const detailPatch = window.AUSTA_V153.detailsFromForm('dealer',values,details);
     const preserved = await window.AUSTA_V153.preserveDetails('dealer',item.id,user,detailPatch);
     if(preserved === undefined) delete payload.details;
@@ -57185,7 +57197,7 @@ function yesNo(value){
    READ CURRENT V153-C FIELDS
    ========================================================= */
 
-function readCurrentFields(){
+function readCurrentFields(partialUpdate=false){
 
     const result = {};
 
@@ -57195,11 +57207,13 @@ function readCurrentFields(){
         )
         .forEach(element=>{
 
+            if(partialUpdate && element.value === undefined)return;
+
             result[
                 element.dataset.v153cKey
             ] =
                 String(
-                    element.value || ''
+                    partialUpdate ? (element.value ?? '') : (element.value || '')
                 ).trim();
 
         });

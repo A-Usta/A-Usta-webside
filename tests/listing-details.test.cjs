@@ -100,11 +100,13 @@ test('Service form canonical owner_name/brands/price_policy and label aliases',a
 });
 test('dealer actual updater preserves unknown JSON and absent known keys',async()=>{
  const f=fixture('dealer',{brands:'BMW',credit_available:true,unknown:{nested:[1,2]}});
+ f.state.row.credit_available=true;
  f.setFields({dealer_name:'Salon',phone:'123',region:'Bakı',address:'Address',working_hours:'09–18'});
  await f.dealer.updateDealer(f.state.row);
  assert.equal(f.state.row.details.brands,'BMW');assert.equal(f.state.row.details.credit_available,true);assert.equal(f.state.row.details.working_hours,'09–18');assert.deepEqual(f.state.row.details.unknown,{nested:[1,2]});
- // P1.1E deliberately deferred: top-level Dealer boolean behavior is unchanged.
- assert.equal(f.state.row.credit_available,false);
+ // Sparse Dealer updates now preserve an absent top-level boolean, too.
+ assert.equal(f.state.row.credit_available,true);
+ assert.equal(Object.hasOwn(f.state.ops.find(o=>o.op==='update').row,'credit_available'),false);
 });
 test('dealer explicit Bəli/Xeyr preserves existing boolean conversion',async()=>{
  const f=fixture('dealer',{unknown:'KEEP',credit_available:true});f.setFields({dealer_name:'Salon',phone:'123',region:'Bakı',address:'Address',credit_available:'Xeyr',barter_available:'Bəli'});

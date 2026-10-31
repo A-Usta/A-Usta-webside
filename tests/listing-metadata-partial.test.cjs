@@ -80,7 +80,26 @@ test('protected scripts and modules unchanged against base',()=>{
     else payload.details = preserved;
 
 `;
-  assert.equal(script(html,id).replace(detailsUpdate,''),script(baseline,id));
+  const dealerPresence = `    // A missing control must not clear an existing optional column.
+    for(const key of [
+        'contact_name','message_contact','district','working_hours',
+        'brands','vehicle_condition','about','credit_available',
+        'leasing_available','barter_available','delivery_available'
+    ]){
+        if(!Object.prototype.hasOwnProperty.call(values,key) || values[key] === undefined){
+            delete payload[key];
+            delete details[key];
+        }
+    }
+
+`;
+  const current=script(html,id);
+  assert.ok(current.includes(dealerPresence));
+  assert.equal(current.replace(detailsUpdate,'').replace(dealerPresence,'')
+   .replace('readCurrentFields(true);','readCurrentFields();')
+   .replace('function readCurrentFields(partialUpdate=false){','function readCurrentFields(){')
+   .replace('\n\n            if(partialUpdate && element.value === undefined)return;','')
+   .replace("partialUpdate ? (element.value ?? '') : (element.value || '')","element.value || ''"),script(baseline,id));
  }
  const diff=cp.execFileSync('git',['diff','a755d25b7ea953bec268bdcc105382330bc91c7b','--','assets','backend',':(exclude)assets/marketplace/category-filters.js'],{cwd:root,encoding:'utf8'});assert.equal(diff,'');
  const filters=fs.readFileSync(path.join(root,'assets/marketplace/category-filters.js'),'utf8');
