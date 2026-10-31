@@ -83,3 +83,61 @@ P12A_MUTATION=verification node --test --test-name-pattern=ineligible tests/db/s
 
 Those commands must fail on the intended eligibility cases. Normal tests must
 pass with P12A_MUTATION unset. No seller-selection UI is included in this phase.
+
+## P1.2A.1 owned eligible seller discovery
+
+`20261101010000_p12a1_owned_seller_discovery_rpc.sql` introduces only
+`public.get_my_seller_profiles()` with zero input arguments. Repository RPCs use
+semantic snake_case names; the supplied production discovery inventory reports
+no existing owner-read RPC. The migration also rejects an unexpected same-name
+function/overload or drifted body/return contract before replacement.
+
+The smallest selector contract is **eligible profiles only**: ownership derives
+exclusively from `auth.uid()`, with `status='active'` and
+`verification_status='verified'`. Official approval is not required. The explicit
+seven-column table DTO is id, business_type, display_name, status,
+verification_status, official_status, official_scope. It contains no owner,
+reviewer, application, legal, tax, document or rejection data. All four business
+types are returned; source compatibility remains enforced by P1.2A listing guards.
+Existing stale associations are preserved by the future P1.2B sparse-edit path,
+not by expanding this discovery surface to ineligible profiles.
+
+The STABLE PL/pgSQL function is SECURITY DEFINER with empty search_path and
+fully-qualified objects. Missing auth UID raises SQLSTATE 28000 even for a
+privileged SQL caller. PUBLIC/anon execution is explicitly revoked and
+authenticated execution granted. A postcondition rejects inherited anon access.
+The creating role (or preserved existing function owner on reapplication) must
+have all eight internal SELECT privileges and authoritative RLS-bypass/table-owner
+access. Apply through a trusted controlled owner; do not grant private columns or
+weaken the preflight to make application succeed.
+
+No seller table grants, RLS policies, existing guards, review workflow or runtime
+UI are changed. No migration is executed automatically. Production application
+requires separate review/authorization; P1.2B remains paused.
+
+Tests run actual local PostgreSQL through the existing pinned PGlite package:
+
+```sh
+npm ci --prefix tests/db --ignore-scripts --no-audit --no-fund
+npm test --prefix tests/db
+```
+
+Negative mutation proofs modify only SQL strings in a fresh in-memory database:
+
+```sh
+P12A1_MUTATION=owner node --test --test-name-pattern='cross-user isolation' tests/db/owned-seller-discovery.test.cjs
+P12A1_MUTATION=status node --test --test-name-pattern=ineligible tests/db/owned-seller-discovery.test.cjs
+P12A1_MUTATION=verification node --test --test-name-pattern=ineligible tests/db/owned-seller-discovery.test.cjs
+```
+
+Each mutant must fail its intended data-isolation/eligibility assertions. Run the
+normal suite without P12A1_MUTATION afterward. The isolated fixture is a synthetic
+model of supplied production contracts, not a full production schema dump.
+
+Existing-function preflight also requires the catalog security mode, volatility,
+language and configuration to match the reviewed state: SECURITY DEFINER, STABLE,
+plpgsql, and only explicit empty search_path. PostgreSQL serializes that setting
+in proconfig as `search_path=""`; missing settings and nonempty paths are rejected.
+Security metadata drift is never silently repaired. Isolated drift tests commit
+the incompatible state before migration, then verify its full pg_proc row remains
+unchanged after the failed migration transaction is rolled back.
