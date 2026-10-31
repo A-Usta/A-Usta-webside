@@ -54729,7 +54729,8 @@ const CATEGORIES = {
             ['name','Ad / soyad','text'],
             ['phone','Telefon','tel'],
             ['service_name','Servis adı','text'],
-            ['specialty','İxtisas / xidmətlər','textarea'],
+            ['specialty','İxtisaslaşma','textarea'],
+            ['services','Göstərilən xidmətlər','textarea'],
             ['brands','Markalar','text'],
             ['region_address','Region / iş ünvanı','text'],
             ['working_hours','İş saatları','text'],
@@ -55488,9 +55489,10 @@ function fillEditFields(item,type){
                 '',
 
             specialty:
-                item.specialty ||
-                item.services ||
-                '',
+                item.specialty ?? '',
+
+            services:
+                item.services ?? '',
 
             brands:
                 details.brands || '',
@@ -55677,7 +55679,7 @@ function buildRouterInput(type,data){
 
             specialty:data.specialty,
 
-            services:data.specialty,
+            services:data.services,
 
             working_hours:
                 data.working_hours,
