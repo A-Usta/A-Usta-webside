@@ -64,7 +64,7 @@ for(const value of values){
  });
 }
 for(const value of ['Yearly','günlük',' Günlük ',false,0,[],{},'undefined'])for(const op of ['create','update'])test(op+': unsupported '+JSON.stringify(value)+' rejected before write',async()=>{
- const f=fixture({stored:'Aylıq'});await assert.rejects(op==='create'?f.create({rental_type:value}):f.update({rental_type:value}));assert.ok(!f.state.ops.some(o=>['insert','update'].includes(o.op)));assert.equal(f.state.row.rental_type,'Aylıq');
+ const f=fixture({stored:'Aylıq'});await assert.rejects(async()=>op==='create'?f.create({rental_type:value}):f.update({rental_type:value}));assert.ok(!f.state.ops.some(o=>['insert','update'].includes(o.op)));assert.equal(f.state.row.rental_type,'Aylıq');
 });
 test('Rent Günlük → Həftəlik update changes canonical DB column and filters',async()=>{
  const f=fixture();await f.create({rental_type:'Günlük'});await f.update({rental_type:'Həftəlik'});assert.equal(f.state.row.rental_type,'Həftəlik');
@@ -90,8 +90,8 @@ test('Rent real edit form save persists a changed selection',async()=>{
 });
 for(const op of ['create','edit','filter','detail'])test('Cars '+op+' isolation',async()=>{
  const f=fixture({type:'cars'});
- if(op==='create'){await f.create({rental_type:'Günlük'});assert.equal(f.state.row.rental_type,null);assert.ok(!Object.hasOwn(f.state.ops.find(o=>o.op==='insert').payload,'rental_type'));}
- if(op==='edit'){await f.update({price:75,rental_type:'Günlük'});assert.ok(!Object.hasOwn(f.state.ops.find(o=>o.op==='update').payload,'rental_type'));}
+ if(op==='create'){await assert.rejects(async()=>f.create({rental_type:'Günlük'}));assert.ok(!f.state.ops.some(o=>o.op==='insert'));}
+ if(op==='edit'){await assert.rejects(async()=>f.update({price:75,rental_type:'Günlük'}));assert.ok(!f.state.ops.some(o=>o.op==='update'));}
  if(op==='filter'){const result=await f.query({rental_type:'Günlük'});assert.equal(result.total,1);assert.ok(!f.state.ops.at(-1).filters.some(([,k])=>k==='rental_type'));}
  if(op==='detail')assert.ok(!f.specs({...f.state.row,rental_type:'Günlük'}).some(([l])=>l==='İcarə növü'));
 });

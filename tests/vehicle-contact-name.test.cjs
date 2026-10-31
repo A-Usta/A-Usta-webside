@@ -49,7 +49,7 @@ function fixture({type='rent',stored=null}={}){
 
 for(const type of ['cars','rent']){
  test(type+': create canonical contact, trim only, phone and rental isolation',async()=>{
-  const f=fixture({type});await f.create({name:'  Əli  Məmmədov  ',rental_type:'Günlük',seller_profile_id:'evil',owner_id:'evil',arbitrary:'evil'});
+  const f=fixture({type});await f.create({name:'  Əli  Məmmədov  ',rental_type:type==='rent'?'Günlük':null,seller_profile_id:'evil',owner_id:'evil',arbitrary:'evil'});
   const row=f.state.ops.find(o=>o.op==='insert').payload;
   assert.equal(row.contact_name,'Əli  Məmmədov');assert.equal(row.phone,'123');assert.equal(row.owner_id,'owner');
   for(const key of ['name','details','seller_profile_id','arbitrary'])assert.ok(!Object.hasOwn(row,key));
@@ -88,7 +88,7 @@ test('non-Vehicle seller identity and router remain isolated',()=>{
  for(const category of ['dealer','service','usta','parts']){
   f.context.item={category,name:'Existing identity',contact_name:'Vehicle only'};
   assert.equal(vm.runInContext('sellerOf(item)',f.context),'Existing identity');
-  const input=f.form.buildRouterInput(category,{name:'Existing identity',phone:'123',brand:'Brand',model:'Model'});
+  const input=f.form.buildRouterInput(category,{name:'Existing identity',service_name:'Existing service',specialty:'Repair',phone:'123',brand:'Brand',model:'Model',dealer_name:'Dealer',region:'Bakı',address:'Street'});
   assert.ok(!Object.hasOwn(input,'contact_name'));
  }
 });

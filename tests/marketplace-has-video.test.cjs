@@ -208,9 +208,7 @@ test('unrelated inline scripts and five pre-existing syntax issues remain unchan
     try{new vm.Script(current[i][2]);}catch(e){after=e.message;}
     assert.equal(after,before);
     if(!id.includes(routerId)&&!id.includes(mediaId)&&!id.includes('austa-v153c-real-listing-form-js')){
-      // Permit only the exact P0.3.1 private Vehicle detail guard.
-      const stagingGuard="  // P0.3.1: Vehicle staging is private even for direct/cached detail opens.\n  if(item?.status==='draft' && (item.__austa_table==='vehicle_listings' ||\n      item.listing_type==='sale' || item.listing_type==='rent'))return false;\n\n";
-      assert.equal(current[i][2].replace(stagingGuard,''),old[i][2]);
+      assert.equal(current[i][2],old[i][2]);
     }
   }
   assert.equal(legacy,5);
