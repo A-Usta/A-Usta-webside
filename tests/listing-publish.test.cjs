@@ -27,7 +27,7 @@ function fixture(){
    let selected=rows.filter(r=>this.filters.every(([c,v])=>r[c]===v));
    if(this.op==='insert'){
     const r={id:'row-'+(++serial),...this.row};rows.push(r);selected=[r];
-    if(!this.table.endsWith('_media')){state.insertions++;assert.equal(r.status,'inactive','never insert public');}
+    if(!this.table.endsWith('_media')){state.insertions++;assert.equal(r.status,this.table==='vehicle_listings'?'draft':'inactive','source-specific private staging');}
    }else if(this.op==='update'||this.op==='delete'){
     assert.ok(this.filters.some(([c,v])=>c==='owner_id'&&v===state.owner),'owner scope');
     assert.ok(this.filters.some(([c])=>c==='id'||c==='listing_id'),'listing scope');
@@ -101,7 +101,7 @@ for(const type of Object.keys(maps)){
   const f=fixture();await f.create(type);
   assert.equal(f.listings().length,1);assert.equal(f.listings()[0].status,'active');
   assert.equal(f.state.uploads,0);assert.equal(f.state.events.length,1);
-  const ops=f.state.ops;assert.ok(ops.findIndex(o=>o.row?.status==='inactive')<ops.findIndex(o=>o.row?.status==='active'));
+  const ops=f.state.ops;assert.ok(ops.findIndex(o=>o.op==='insert'&&o.row?.status===(maps[type][0]==='vehicle_listings'?'draft':'inactive'))<ops.findIndex(o=>o.row?.status==='active'));
  });
  test(`${type}: images/video complete before public activation`,async()=>{
   const f=fixture();f.files.images=[photo('a.jpg'),photo('b.jpg')];f.files.videos=[video('a.mp4')];
@@ -315,3 +315,120 @@ test('dealer edit media failure retains existing listing and edit mode',async()=
  assert.ok(!f.state.ops.some(o=>o.op==='delete'&&o.table==='auto_dealer_listings'));
  await f.create('dealer');assert.equal(f.state.insertions,0);
 });
+
+// P0.3.1: exercise the coordinator boundary independently of form normalization.
+function coordinator(f,source,status,extra={}){
+ const config={parentTable:source,table:source==='vehicle_listings'?'listing_media':'marketplace_listing_media',bucket:'listing-media',...extra.config};
+ return f.window.AUSTA_LISTING_PUBLISH.run({client:f.window.AUSTA_SUPABASE,
+  user:{id:'owner-1'},config,files:{images:[],videos:[]},
+  create:async()=>({id:'test',owner_id:'owner-1',status}),upload:async()=>{},...extra,config});
+}
+for(const status of ['inactive','sold','rented','archived','active',null,undefined]){
+ test(`Vehicle guard rejects ${status} before upload or activation`,async()=>{
+  const f=fixture();let uploads=0;
+  await assert.rejects(coordinator(f,'vehicle_listings',status,{upload:async()=>{uploads++;}}));
+  assert.equal(uploads,0);assert.equal(f.state.ops.length,0);noSuccess(f);
+ });
+}
+for(const source of ['marketplace_listings','service_provider_listings','auto_dealer_listings']){
+ test(`${source}: draft is not an accepted staging alternative`,async()=>{
+  const f=fixture();await assert.rejects(coordinator(f,source,'draft'));assert.equal(f.state.ops.length,0);
+ });
+}
+for(const status of ['inactive','active','sold','rented','archived','nonsense']){
+ test(`Vehicle rejects caller expected staging ${status}`,async()=>{
+  for(const field of ['option','config']){
+   const f=fixture();let created=false;
+   await assert.rejects(coordinator(f,'vehicle_listings','draft',{
+    ...(field==='option'?{stagingStatus:status}:{config:{stagingStatus:status}}),
+    create:async()=>{created=true;return null;}}));
+   assert.equal(created,false);assert.equal(f.state.ops.length,0);
+  }
+ });
+}
+test('unknown/inherited source cannot select a staging contract',async()=>{
+ for(const source of ['unknown','toString','__proto__']){
+  const f=fixture();await assert.rejects(coordinator(f,source,'draft'));assert.equal(f.state.ops.length,0);
+ }
+});
+for(const type of ['cars','rent']){
+ test(`${type}: form status/config injection cannot choose staging or activation`,async()=>{
+  const f=fixture();await f.create(type,{status:'sold',stagingStatus:'inactive',config:{parentTable:'marketplace_listings',stagingStatus:'inactive'},owner_id:'attacker'});
+  const insert=f.state.ops.find(o=>o.op==='insert');assert.equal(insert.table,'vehicle_listings');
+  assert.equal(insert.row.status,'draft');assert.equal(insert.row.owner_id,'owner-1');
+  assert.ok(!f.state.ops.some(o=>o.row?.status==='inactive'));
+  const active=f.state.ops.find(o=>o.row?.status==='active');
+  assert.ok(active.filters.some(([k,v])=>k==='status'&&v==='draft'));
+  assert.ok(active.filters.some(([k,v])=>k==='owner_id'&&v==='owner-1'));
+ });
+ test(`${type}: failed upload deletes only expected draft parent`,async()=>{
+  const f=fixture();f.files.images=[photo('a.jpg')];f.failure(o=>o.op==='upload');
+  await assert.rejects(f.create(type));clean(f);
+  const deletion=f.state.ops.find(o=>o.op==='delete'&&o.table==='vehicle_listings');
+  assert.ok(deletion.filters.some(([k,v])=>k==='status'&&v==='draft'));
+  assert.ok(deletion.filters.some(([k,v])=>k==='owner_id'&&v==='owner-1'));
+ });
+ test(`${type}: lost activation response quarantines active to draft with owner/status guards`,async()=>{
+  const f=fixture();f.files.images=[photo('a.jpg')];f.failure(o=>o.op==='update'&&o.row?.status==='active',{after:true});
+  await assert.rejects(f.create(type));clean(f);
+  const quarantine=f.state.ops.find(o=>o.op==='update'&&o.row?.status==='draft');
+  assert.ok(quarantine.filters.some(([k,v])=>k==='status'&&v==='active'));
+  assert.ok(quarantine.filters.some(([k,v])=>k==='owner_id'&&v==='owner-1'));
+ });
+}
+for(const status of ['sold','rented','archived','inactive','active']){
+ test(`cleanup refuses Vehicle moved to ${status} before activation, retaining media`,async()=>{
+  const f=fixture();f.files.images=[photo('a.jpg'),photo('b.jpg')];f.hold();
+  const task=f.create('cars');await tick();f.state.tables.vehicle_listings[0].status=status;
+  f.failure(o=>o.op==='upload'&&o.n===2);f.state.release();
+  await assert.rejects(task,e=>e.code==='PUBLISH_CLEANUP_PENDING');
+  assert.equal(f.listings()[0].status,status);assert.equal(f.media().length,1);assert.equal(f.state.objects.size,1);
+  assert.ok(!f.state.ops.some(o=>o.op==='delete'||o.op==='remove'));noSuccess(f);
+ });
+}
+for(const change of ['row-owner','session-owner']){
+ test(`Vehicle cleanup ${change} mismatch fails closed`,async()=>{
+  const f=fixture();f.files.images=[photo('a.jpg')];f.hold();const task=f.create('rent');await tick();
+  if(change==='row-owner')f.state.tables.vehicle_listings[0].owner_id='someone-else';else f.state.owner='someone-else';
+  f.failure(o=>o.op==='upload');f.state.release();await assert.rejects(task,e=>e.code==='PUBLISH_CLEANUP_PENDING');
+  assert.equal(f.listings().length,1);assert.ok(!f.state.ops.some(o=>o.op==='delete'||o.op==='remove'));noSuccess(f);
+ });
+}
+test('created owner mismatch rejects before media or activation',async()=>{
+ const f=fixture();let uploaded=false;
+ await assert.rejects(coordinator(f,'vehicle_listings','draft',{create:async()=>({id:'test',owner_id:'other',status:'draft'}),upload:async()=>{uploaded=true;}}));
+ assert.equal(uploaded,false);assert.equal(f.state.ops.length,0);
+});
+test('status changes after cleanup read still prevent parent deletion',async()=>{
+ const f=fixture();f.files.images=[photo('a.jpg')];f.failure(o=>o.op==='upload');
+ f.failure(o=>{if(o.op==='delete'&&o.table==='vehicle_listings')f.state.tables.vehicle_listings[0].status='sold';return false;});
+ await assert.rejects(f.create('cars'),e=>e.code==='PUBLISH_CLEANUP_PENDING');assert.equal(f.listings()[0].status,'sold');
+});
+for(const status of ['sold','rented','archived'])test(`activation cannot reactivate Vehicle moved to ${status}`,async()=>{
+ const f=fixture();f.files.images=[photo('a.jpg')];f.hold();const task=f.create('cars');await tick();
+ f.state.tables.vehicle_listings[0].status=status;f.state.release();
+ await assert.rejects(task,e=>e.code==='PUBLISH_CLEANUP_PENDING');
+ assert.equal(f.listings()[0].status,status);noSuccess(f);
+ assert.ok(!f.state.ops.some(o=>o.op==='delete'||o.op==='remove'));
+});
+test('owner changed after cleanup read cannot delete parent',async()=>{
+ const f=fixture();f.files.images=[photo('a.jpg')];f.failure(o=>o.op==='upload');
+ f.failure(o=>{if(o.op==='delete'&&o.table==='vehicle_listings')f.state.tables.vehicle_listings[0].owner_id='other';return false;});
+ await assert.rejects(f.create('cars'));assert.equal(f.listings().length,1);assert.equal(f.listings()[0].owner_id,'other');noSuccess(f);
+});
+for(const type of ['cars','rent']){
+ test(`${type}: pending draft cleanup retry completes before another insert`,async()=>{
+  const f=fixture();f.files.images=[photo('a.jpg')];f.failure(o=>o.op==='upload');
+  f.failure(o=>o.op==='delete'&&o.table==='vehicle_listings',{once:false});
+  await assert.rejects(f.create(type));await assert.rejects(f.create(type));
+  assert.equal(f.state.insertions,1);assert.equal(f.listings()[0].status,'draft');noSuccess(f);
+  f.state.failures=[];await f.create(type);assert.equal(f.state.insertions,2);
+  assert.equal(f.listings().length,1);assert.equal(f.listings()[0].status,'active');
+ });
+ test(`${type}: duplicate submissions share one draft attempt and success event`,async()=>{
+  const f=fixture();f.files.images=[photo('a.jpg')];f.hold();const first=f.create(type),second=f.create(type);await tick();
+  assert.equal(f.state.insertions,1);assert.equal(f.listings()[0].status,'draft');noSuccess(f);
+  f.state.release();await Promise.all([first,second]);await f.create(type);
+  assert.equal(f.state.insertions,1);assert.equal(f.state.events.length,1);
+ });
+}
