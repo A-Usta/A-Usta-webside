@@ -53001,6 +53001,7 @@ function detailControls(type) {
     // readFields historically stores current form labels as JSON keys, too.
     if (type !== 'dealer') {
         for (const [key,label] of window.AUSTA_V153C?.categories?.[type]?.fields || []) {
+            if (MARKETPLACE_TYPES.has(type) && ['brand','model'].includes(key)) continue;
             controls.set(label, key);
         }
     }
@@ -54420,7 +54421,8 @@ const CATEGORIES = {
             ['phone','Telefon','tel'],
             ['part_name','Hissənin adı','text'],
             ['oem','OEM / kod','text'],
-            ['brand_model','Marka / model','text'],
+            ['brand','Uyğun avtomobil markası','text'],
+            ['model','Uyğun avtomobil modeli','text'],
 
             [
                 'condition',
@@ -54449,7 +54451,8 @@ const CATEGORIES = {
             ['name','Ad / soyad','text'],
             ['phone','Telefon','tel'],
             ['accessory_name','Aksesuarın adı','text'],
-            ['brand_model','Marka / model uyğunluğu','text'],
+            ['brand','Uyğun avtomobil markası','text'],
+            ['model','Uyğun avtomobil modeli','text'],
 
             [
                 'condition',
@@ -54486,7 +54489,8 @@ const CATEGORIES = {
                 ]
             ],
 
-            ['brand_model','Marka / model','text'],
+            ['brand','Marka','text'],
+            ['model','Model','text'],
             ['year','İl','number'],
             ['mileage','Yürüş (km)','number'],
 
@@ -54513,7 +54517,8 @@ const CATEGORIES = {
             ['name','Ad / soyad','text'],
             ['phone','Telefon','tel'],
             ['special_type','Texnikanın növü','text'],
-            ['brand_model','Marka / model','text'],
+            ['brand','Marka','text'],
+            ['model','Model','text'],
             ['year','İl','number'],
             ['work_hours','İş saatı / yürüş','text'],
 
@@ -54550,7 +54555,8 @@ const CATEGORIES = {
         fields:[
             ['name','Ad / soyad','text'],
             ['phone','Telefon','tel'],
-            ['brand_model','Avtobus marka / model','text'],
+            ['brand','Marka','text'],
+            ['model','Model','text'],
             ['year','İl','number'],
             ['capacity','Tutum (nəfər)','number'],
 
@@ -54591,7 +54597,8 @@ const CATEGORIES = {
                 ]
             ],
 
-            ['brand_model','Marka / model','text'],
+            ['brand','Marka','text'],
+            ['model','Model','text'],
             ['year','İl','number'],
             ['engine','Mühərrik','text'],
 
@@ -54617,7 +54624,8 @@ const CATEGORIES = {
         fields:[
             ['name','Ad / soyad','text'],
             ['phone','Telefon','tel'],
-            ['brand_model','Karavan marka / model','text'],
+            ['brand','Marka','text'],
+            ['model','Model','text'],
             ['year','İl','number'],
 
             [
@@ -54668,7 +54676,8 @@ const CATEGORIES = {
             ['name','Ad / soyad','text'],
             ['phone','Telefon','tel'],
             ['trailer_type','Qoşqu / treyler növü','text'],
-            ['brand_model','Marka / model','text'],
+            ['brand','Marka','text'],
+            ['model','Model','text'],
             ['year','İl','number'],
             ['load_capacity','Yük tutumu (kq)','number'],
 
@@ -54784,27 +54793,6 @@ function numeric(value){
     return Number.isFinite(n)
         ? n
         : null;
-
-}
-
-
-function splitBrandModel(value){
-
-    const text=String(value||'').trim();
-
-    if(!text){
-        return {
-            brand:'',
-            model:''
-        };
-    }
-
-    const parts=text.split(/\s+/);
-
-    return {
-        brand:parts.shift() || '',
-        model:parts.join(' ')
-    };
 
 }
 
@@ -55143,6 +55131,8 @@ function readFields(){
 
     const values={};
     const details={};
+    const type=document.getElementById('austaV153CCategory')?.value;
+    const marketplace=['parts','accessories','moto','special','bus','water','caravan','trailer','plate'].includes(type);
 
 
     document
@@ -55162,7 +55152,7 @@ function readFields(){
 
             values[key]=value;
 
-            if(value){
+            if(value && !(marketplace && ['brand','model'].includes(key))){
                 details[label]=value;
             }
 
@@ -55172,7 +55162,6 @@ function readFields(){
     delete details['VIN-kod']; // VIN authority is the dedicated production column only.
     values.details=details;
 
-    const type=document.getElementById('austaV153CCategory')?.value;
     if(type==='cars')Object.assign(values,window.AUSTA_MARKETPLACE_CARD_DATA.read(document.getElementById('austaV153CFields'),Boolean(currentEdit)));
     if(type==='cars')window.AUSTA_VEHICLE_VIN.read(document.getElementById('austaV153CFields'),values,Boolean(currentEdit));
     return ['cars','rent'].includes(type)
@@ -55219,7 +55208,6 @@ function validate(type,data){
 
         moto:[
             'phone',
-            'brand_model',
             'price'
         ],
 
@@ -55231,7 +55219,6 @@ function validate(type,data){
 
         bus:[
             'phone',
-            'brand_model',
             'price'
         ],
 
@@ -55243,7 +55230,6 @@ function validate(type,data){
 
         caravan:[
             'phone',
-            'brand_model',
             'price'
         ],
 
@@ -55276,6 +55262,11 @@ function validate(type,data){
     const missing=
         (required[type] || [])
             .filter(key=>!data[key]);
+
+    if(['moto','bus','caravan'].includes(type) &&
+        ![data.brand,data.model].some(value=>String(value ?? '').trim())){
+        missing.push('brand/model');
+    }
 
 
     if(missing.length){
@@ -55420,13 +55411,8 @@ function fillEditFields(item,type){
         values.condition=
             item.condition ?? '';
 
-        values.brand_model=
-            [
-                item.brand,
-                item.model
-            ]
-            .filter(Boolean)
-            .join(' ');
+        values.brand=item.brand ?? '';
+        values.model=item.model ?? '';
 
 
         /*
@@ -55461,24 +55447,10 @@ function fillEditFields(item,type){
                 item.title ||
                 '';
 
-        }else if(type==='bus'){
-
-            if(!values.brand_model){
-                values.brand_model=
-                    item.title || '';
-            }
-
         }else if(type==='water'){
 
             values.water_type=
                 details.water_type || '';
-
-        }else if(type==='caravan'){
-
-            if(!values.brand_model){
-                values.brand_model=
-                    item.title || '';
-            }
 
         }else if(type==='trailer'){
 
@@ -55894,21 +55866,8 @@ switch(type){
 
 let title='';
 
-let brand='';
-let model='';
-
-
-    if(data.brand_model){
-
-        const bm=
-            splitBrandModel(
-                data.brand_model
-            );
-
-        brand=bm.brand;
-        model=bm.model;
-
-    }
+// Presentation only; DB brand/model retain their explicit input boundaries.
+const brandModel=[data.brand,data.model].map(value=>String(value ?? '').trim()).filter(Boolean).join(' ');
 
 
     switch(type){
@@ -55923,37 +55882,37 @@ let model='';
 
         case 'moto':
             title=
-                data.brand_model ||
+                brandModel ||
                 data.moto_type;
             break;
 
         case 'special':
             title=
                 data.special_type ||
-                data.brand_model;
+                brandModel;
             break;
 
         case 'bus':
             title=
-                data.brand_model ||
+                brandModel ||
                 'Avtobus';
             break;
 
         case 'water':
             title=
-                data.brand_model ||
+                brandModel ||
                 data.water_type;
             break;
 
         case 'caravan':
             title=
-                data.brand_model ||
+                brandModel ||
                 'Karavan';
             break;
 
         case 'trailer':
             title=
-                data.brand_model ||
+                brandModel ||
                 data.trailer_type;
             break;
 
@@ -55977,7 +55936,8 @@ let model='';
         price:
             numeric(data.price),
 
-        ...(Object.prototype.hasOwnProperty.call(data,'brand_model') && data.brand_model !== undefined ? {brand, model} : {}),
+        ...(type!=='plate' && Object.prototype.hasOwnProperty.call(data,'brand') && data.brand !== undefined ? {brand:data.brand} : {}),
+        ...(type!=='plate' && Object.prototype.hasOwnProperty.call(data,'model') && data.model !== undefined ? {model:data.model} : {}),
 
         ...(Object.prototype.hasOwnProperty.call(data,'year') && data.year !== undefined ? {year:numeric(data.year)} : {}),
 

@@ -67,7 +67,7 @@ for(const [type,keys] of Object.entries(fields)){
  });
  test(type+': form hydration → sparse edit → save preserves hidden JSON',async()=>{
   const previous={...Object.fromEntries(keys.map(k=>[k,'old-'+k])),name:'Seller',legacy_key:'KEEP',legacy_nested:{z:[1,2]}};
-  const f=fixture(type,previous);f.setFields({name:'',phone:'123',price:'25',[keys[0]]:'',...(type==='plate'?{}:{brand_model:'BMW X5'})});
+  const f=fixture(type,previous);f.setFields({name:'',phone:'123',price:'25',[keys[0]]:'',...(type==='plate'?{}:{brand:'BMW',model:'X5'})});
   f.form.fillEditFields({...f.state.row,title:'Listing',brand:'BMW',model:'X5',price:25,phone:'123'},type);
   f.state.nodes.find(n=>n.dataset.v153cKey===keys[0]).value='changed';
   f.form.setEdit();await f.form.saveCurrentListing();
