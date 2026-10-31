@@ -50,13 +50,13 @@ for(const type of ['parts','service','usta'])for(const value of [undefined,null,
 }
 for(const [type,data,absent] of [
  ['parts',{part_name:'Filter'},['year','condition']],['accessories',{accessory_name:'Mat'},['year','condition']],
- ['bus',{brand_model:'Bus 1'},['condition']],['plate',{plate_number:'10-AA-100'},['brand','model','year','condition']]
+ ['bus',{brand:'Bus',model:'1'},['condition']],['plate',{plate_number:'10-AA-100'},['brand','model','year','condition']]
 ])test(type+': real form router does not synthesize missing controls',async()=>{
  const f=fixture(),input=f.input(type,{phone:'123',price:'25',region_address:'Bakı',details:{},...data});for(const key of absent)assert.ok(!Object.hasOwn(input,key),key);
  await f.api.updateListing(type,'listing',input);for(const key of absent)assert.ok(!Object.hasOwn(f.state.writes.at(-1).row,key),key);
 });
 test('present marketplace controls retain explicit clear and zero',async()=>{
- const f=fixture(),input=f.input('moto',{brand_model:'',year:'',condition:'',price:'0',details:{}});
+ const f=fixture(),input=f.input('moto',{brand:'',model:'',year:'',condition:'',price:'0',details:{}});
  await f.api.updateListing('moto','listing',input);const row=f.state.writes.at(-1).row;
  for(const k of ['brand','model','year','condition'])assert.equal(row[k],null);assert.equal(row.price,0);
 });
