@@ -1,0 +1,6 @@
+{
+  "name": "austa-database-guard-tests",
+  "private": true,
+  "scripts": { "test": "node --test seller-eligibility.test.cjs" },
+  "devDependencies": { "@electric-sql/pglite": "0.5.14" }
+}
