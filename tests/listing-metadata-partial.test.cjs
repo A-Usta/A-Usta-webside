@@ -13,6 +13,11 @@ function fixture(source=html){
  const sb={auth:{getSession:async()=>({data:{session:{user:{id:'owner'}}}})},from(table){
   const q={op:'read',filters:[],select(){return this},eq(k,v){this.filters.push([k,v]);return this},limit(){return this},single(){return this},insert(row){this.op='insert';this.row=row;return this},update(row){this.op='update';this.row=row;return this},then(resolve,reject){return Promise.resolve().then(()=>{
    if(table==='marketplace_listing_media')return {data:[],error:null};
+   if(this.op==='read'){
+    assert.ok(this.filters.some(([k,v])=>k==='id'&&v==='listing'));
+    assert.ok(this.filters.some(([k,v])=>k==='owner_id'&&v==='owner'));
+    return {data:{details:state.row.details??{}},error:null};
+   }
    const row=JSON.parse(JSON.stringify(this.row));state.writes.push({table,row,filters:this.filters,op:this.op});Object.assign(state.row,row);return {data:{...state.row},error:null};
   }).then(resolve,reject)}};return q;}};
  const window={AUSTA_SUPABASE:sb,dispatchEvent(){}};
@@ -68,7 +73,14 @@ for(const type of [...marketplace,'service','usta'])test(type+': create payload 
 });
 test('protected scripts and modules unchanged against base',()=>{
  for(const id of ['austa-v153d-14-category-media-js','austa-v153c-real-listing-form-js']){
-  if(id.includes('v153c'))continue;assert.equal(script(html,id),script(baseline,id));
+  if(id.includes('v153c'))continue;
+  const detailsUpdate = `    const detailPatch = window.AUSTA_V153.detailsFromForm('dealer',values,details);
+    const preserved = await window.AUSTA_V153.preserveDetails('dealer',item.id,user,detailPatch);
+    if(preserved === undefined) delete payload.details;
+    else payload.details = preserved;
+
+`;
+  assert.equal(script(html,id).replace(detailsUpdate,''),script(baseline,id));
  }
  const diff=cp.execFileSync('git',['diff','a755d25b7ea953bec268bdcc105382330bc91c7b','--','assets','backend'],{cwd:root,encoding:'utf8'});assert.equal(diff,'');
 });

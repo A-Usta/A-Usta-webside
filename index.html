@@ -52968,6 +52968,71 @@ async function syncMarketplaceHasVideo(listingId) {
     return data;
 }
 
+// P1.1B: only existing category/form keys may patch details. No deep merge.
+const LISTING_DETAIL_KEYS = Object.freeze({
+    parts: ['name','part_name','oem','compatibility','stock'],
+    accessories: ['name','accessory_name','stock'],
+    moto: ['name','moto_type','mileage'],
+    special: ['name','special_type','work_hours','sale_rent'],
+    bus: ['name','capacity','sale_rent'],
+    water: ['name','water_type','engine'],
+    caravan: ['name','caravan_type','beds','sale_rent'],
+    trailer: ['name','trailer_type','load_capacity'],
+    plate: ['name','plate_number','plate_series','document_status'],
+    service: ['owner_name','brands','price_policy'],
+    usta: [],
+    dealer: ['contact_name','message_contact','working_hours','brands','vehicle_condition',
+        'credit_available','leasing_available','barter_available','delivery_available']
+});
+function detailControls(type) {
+    if (!Object.prototype.hasOwnProperty.call(LISTING_DETAIL_KEYS, type)) return new Map();
+    const controls = new Map(LISTING_DETAIL_KEYS[type].map(key =>
+        [key, type === 'service' && key === 'owner_name' ? 'name' : key]));
+    // readFields historically stores current form labels as JSON keys, too.
+    if (type !== 'dealer') {
+        for (const [key,label] of window.AUSTA_V153C?.categories?.[type]?.fields || []) {
+            controls.set(label, key);
+        }
+    }
+    return controls;
+}
+function detailsFromForm(type, values, normalized) {
+    const entries = [];
+    for (const [key,control] of detailControls(type)) {
+        if (!Object.prototype.hasOwnProperty.call(values, control) || values[control] === undefined) continue;
+        const value = normalized && Object.prototype.hasOwnProperty.call(normalized, key)
+            ? normalized[key] : values[control];
+        if (value !== undefined) entries.push([key,value]);
+    }
+    return Object.fromEntries(entries);
+}
+async function preserveDetails(type, listingId, user, input) {
+    const tables = {dealer:'auto_dealer_listings', service:'service_provider_listings',
+        usta:'service_provider_listings'};
+    const table = MARKETPLACE_TYPES.has(type) ? 'marketplace_listings' : tables[type];
+    if (!table || input === undefined) return undefined;
+    if (!input || typeof input !== 'object' || Array.isArray(input)) {
+        throw new Error('Elanın əlavə məlumat formatı düzgün deyil.');
+    }
+    const controls = detailControls(type);
+    const entries = Object.entries(input).filter(([key,value]) => controls.has(key) && value !== undefined);
+    if (!entries.length) return undefined;
+    // Current editable details fields are scalar. Existing arrays/objects remain opaque.
+    if (entries.some(([,value]) => value !== null && !(['string','boolean'].includes(typeof value) || (typeof value === 'number' && Number.isFinite(value))))) {
+        throw new Error('Əlavə məlumat sahəsinin formatı düzgün deyil.');
+    }
+    const {data,error} = await sb().from(table).select('details')
+        .eq('id',listingId).eq('owner_id',user.id).single();
+    if (error || !data || !Object.prototype.hasOwnProperty.call(data, 'details')) {
+        throw new Error('Elanın əlavə məlumatları alınmadı. Yenidən cəhd edin.');
+    }
+    const previous = data.details;
+    if (previous != null && (typeof previous !== 'object' || Array.isArray(previous))) {
+        throw new Error('Əvvəlki əlavə məlumat formatını təhlükəsiz yeniləmək mümkün deyil.');
+    }
+    return {...(previous || {}), ...Object.fromEntries(entries)};
+}
+
 async function updateListing(
     typeValue,
     listingId,
@@ -53338,6 +53403,12 @@ async function updateListing(
             const keys = key === "title" ? titleKeys : (aliases[key] || [key]);
             if (!keys.some(source => Object.prototype.hasOwnProperty.call(input, source) && input[source] !== undefined)) delete row[key];
         });
+    }
+
+    if (Object.prototype.hasOwnProperty.call(row, 'details')) {
+        const details = await preserveDetails(type, listingId, user, input.details);
+        if (details === undefined) delete row.details;
+        else row.details = details;
     }
 
     const {
@@ -54036,6 +54107,9 @@ window.AUSTA_V153 = {
 
      updateListing:
         updateListing,
+
+    detailsFromForm,
+    preserveDetails,
 
     syncMarketplaceHasVideo:
         syncMarketplaceHasVideo,
@@ -55996,6 +56070,11 @@ async function saveCurrentListing(){
 
 if(currentEdit){
 
+    if(!['cars','rent','dealer'].includes(type)){
+        input.details=window.AUSTA_V153.detailsFromForm(type,data);
+    }
+
+
     result=
         await window.AUSTA_V153
             .updateListing(
@@ -57032,6 +57111,11 @@ async function updateDealer(item){
         details
     };
 
+
+    const detailPatch = window.AUSTA_V153.detailsFromForm('dealer',values,details);
+    const preserved = await window.AUSTA_V153.preserveDetails('dealer',item.id,user,detailPatch);
+    if(preserved === undefined) delete payload.details;
+    else payload.details = preserved;
 
     const {
         data,
