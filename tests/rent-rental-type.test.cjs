@@ -49,7 +49,7 @@ function fixture({type='rent',stored=null}={}){
 for(const value of values){
  test('Rent '+value+': real form router → P0.3 staging → activation persists column',async()=>{
   const f=fixture();await f.create({rental_type:value});assert.equal(f.state.row.rental_type,value);assert.equal(f.state.row.status,'active');
-  const insert=f.state.ops.find(o=>o.op==='insert');assert.equal(insert.payload.rental_type,value);assert.equal(insert.payload.status,'inactive');assert.ok(!Object.hasOwn(insert.payload,'details'));
+  const insert=f.state.ops.find(o=>o.op==='insert');assert.equal(insert.payload.rental_type,value);assert.equal(insert.payload.status,'draft');assert.ok(!Object.hasOwn(insert.payload,'details'));
   assert.equal(f.state.ops.filter(o=>o.op==='insert').length,1);
  });
  test('Rent '+value+': edit hydrates real column, ignores conflicting legacy JSON',()=>{
@@ -97,4 +97,9 @@ for(const op of ['create','edit','filter','detail'])test('Cars '+op+' isolation'
 });
 test('no production rental_type JSON source remains in runtime',()=>{
  assert.ok(!/details\.rental_type/.test(html));const filters=fs.readFileSync(path.join(root,'assets/marketplace/category-filters.js'),'utf8');assert.ok(!filters.includes("detail('rental_type'"));
+});
+for(const type of ['cars','rent'])test(type+': public category excludes draft staging',async()=>{
+ const f=fixture({type});f.state.row.status='draft';assert.equal((await f.query({})).total,0);
+ f.state.row.status='active';assert.equal((await f.query({})).total,1);
+ assert.ok(f.state.ops.at(-1).filters.some(([,k,v])=>k==='status'&&v==='active'));
 });

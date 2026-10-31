@@ -112,6 +112,8 @@ for (const [name, authorization] of [
 }
 
 const denied: [string, Scenario, string?][] = [
+  ["anon draft", { status: "draft" }],
+  ["non-owner draft", { status: "draft", user: "another-owner" }, `Bearer ${secret}`],
   ["anon inactive", { status: "inactive" }],
   ["invalid bearer inactive", { status: "inactive", failure: "auth", user: owner }, `Bearer ${secret}`],
   ["no verified user", { status: "inactive" }, `Bearer ${secret}`],
@@ -148,8 +150,8 @@ for (const [name, scenario, authorization] of denied) {
   });
 }
 
-test("verified owner inactive: verifies before signing", async () => {
-  const { response, calls } = await request({ status: "inactive", user: owner }, `Bearer ${secret}`);
+test("verified owner draft: verifies before signing", async () => {
+  const { response, calls } = await request({ status: "draft", user: owner }, `Bearer ${secret}`);
   assert.equal(response.statusCode, 200);
   assert.deepEqual(calls, ["from:listing_media", "relation", "from:vehicle_listings", "parent", "auth", "storage", "sign"]);
 });
@@ -248,7 +250,7 @@ for (const parameter of ["bucket=marketplace-media", "source=marketplace", "path
 for (const [name, status, listingType] of [
   ["active Vehicle detail", "active", "sale"],
   ["active Rent detail/video", "active", "rent"],
-  ["inactive owner detail media", "inactive", "sale"],
+  ["draft owner detail media", "draft", "sale"],
 ]) {
   test(`${name}: existing real hydration signs via shared Storage, not legacy backend`, async () => {
     const html = readFileSync(new URL("../../../index.html", import.meta.url), "utf8");

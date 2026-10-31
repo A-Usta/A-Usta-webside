@@ -90,10 +90,12 @@ test('inherited JSON values and prototype category names are not public metadata
  assert.deepEqual(fixture().rows({category:'parts',details:Object.create({oem:'PRIVATE'})}),[]);
  const f=fixture();f.c.__item={category:'__proto__',details:{oem:'PRIVATE'}};assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(marketplaceSpecs(__item))',f.c)),[]);
 });
-test('only Marketplace presentation changes: all other app bytes identical to main',()=>{
+test('P1.1F presentation preserved; only exact P0.3.1 app changes against main',()=>{
  const helper=between(html,'// P1.1F: public Marketplace specs','function genericSpecs(item){');
- const branch="  if(['parts','accessories','moto','special','bus','water','caravan','trailer','plate'].includes(categoryOf(item))){\n    return marketplaceSpecs(item);\n  }\n\n";
- assert.ok(helper);assert.equal(html.replace(helper,'').replace(branch,''),base);
+ // P0.3.1 separately tests its exact Vehicle CREATE and private-detail changes.
+ const stagingGuard="  // P0.3.1: Vehicle staging is private even for direct/cached detail opens.\n  if(item?.status==='draft' && (item.__austa_table==='vehicle_listings' ||\n      item.listing_type==='sale' || item.listing_type==='rent'))return false;\n\n";
+ const undoVehicle=text=>text.replace(/(async function saveVehicle\([\s\S]*?status: )"draft"/,'$1"inactive"').replace(stagingGuard,'');
+ assert.ok(helper);assert.equal(undoVehicle(html),base);
 });
 test('Cars/Rent professional specs, contact and non-Marketplace fallback stay identical',()=>{
  const f=fixture(),old=vm.createContext({window:{}});vm.runInContext(technical,old);vm.runInContext(between(base,'function escapeHtml(value){','function maskedPhone(phone){'),old);

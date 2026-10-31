@@ -31780,6 +31780,10 @@ async function openFullListing(id,source,expectedCategory){
     item=findListing(id);
   }
 
+  // P0.3.1: Vehicle staging is private even for direct/cached detail opens.
+  if(item?.status==='draft' && (item.__austa_table==='vehicle_listings' ||
+      item.listing_type==='sale' || item.listing_type==='rent'))return false;
+
   if(!item){
     return false;
   }
@@ -52649,7 +52653,7 @@ async function saveVehicle(type, input, user, publishAttempt) {
         listing_type:
             isRent ? "rent" : "sale",
 
-        status: "inactive",
+        status: "draft",
 
         brand:
             nullable(input.brand),
