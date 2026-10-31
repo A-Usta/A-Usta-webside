@@ -17,7 +17,7 @@ const yesNo=[['true','Bəli'],['false','Xeyr']];
 // Text-backed fields intentionally stay text search; no invented canonical facets or numeric JSON casts.
 const definitions={
  cars:{title:'Avtomobil axtar',fields:[...vehicleBrand,year,price,range('mileage','Yürüş (km)',true),range('engine_volume','Mühərrik həcmi (L)'),range('horsepower','Mühərrik gücü (a.g.)',true),technical('fuel_type','Yanacaq növü'),technical('transmission'),technical('drivetrain'),text('body_type','Ban növü'),text('color','Rəng'),technical('vehicle_condition','Avtomobilin vəziyyəti'),technical('market','Bazar'),choice('credit_available','Kredit',yesNo),choice('barter_available','Barter',yesNo),...location]},
- rent:{title:'İcarə avtomobili axtar',fields:[...vehicleBrand,year,range('daily_price','Günlük qiymət (AZN)'),detail('rental_type','İcarə növü'),technical('fuel_type','Yanacaq növü'),technical('transmission'),text('body_type','Ban növü'),...location]},
+ rent:{title:'İcarə avtomobili axtar',fields:[...vehicleBrand,year,range('daily_price','Günlük qiymət (AZN)'),text('rental_type','İcarə növü'),technical('fuel_type','Yanacaq növü'),technical('transmission'),text('body_type','Ban növü'),...location]},
  parts:{title:'Ehtiyat hissəsi axtar',fields:[text('title','Hissənin adı'),text('brand','Avtomobil markası'),text('model','Avtomobil modeli'),detail('oem','OEM / hissə kodu'),condition,price,...location]},
  accessories:{title:'Avtomobil aksessuarı axtar',fields:[text('title','Aksessuarın adı'),text('brand','Avtomobil markası'),text('model','Avtomobil modeli'),condition,price,...location]},
  moto:{title:'Moto nəqliyyat axtar',fields:[detail('moto_type','Növ'),...common]},

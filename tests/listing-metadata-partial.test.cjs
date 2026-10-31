@@ -82,7 +82,10 @@ test('protected scripts and modules unchanged against base',()=>{
 `;
   assert.equal(script(html,id).replace(detailsUpdate,''),script(baseline,id));
  }
- const diff=cp.execFileSync('git',['diff','a755d25b7ea953bec268bdcc105382330bc91c7b','--','assets','backend'],{cwd:root,encoding:'utf8'});assert.equal(diff,'');
+ const diff=cp.execFileSync('git',['diff','a755d25b7ea953bec268bdcc105382330bc91c7b','--','assets','backend',':(exclude)assets/marketplace/category-filters.js'],{cwd:root,encoding:'utf8'});assert.equal(diff,'');
+ const filters=fs.readFileSync(path.join(root,'assets/marketplace/category-filters.js'),'utf8');
+ const oldFilters=cp.execFileSync('git',['show','a755d25b7ea953bec268bdcc105382330bc91c7b:assets/marketplace/category-filters.js'],{cwd:root,encoding:'utf8'});
+ assert.equal(filters,oldFilters.replace("detail('rental_type','İcarə növü')","text('rental_type','İcarə növü')"));
 });
 for(const type of ['cars','rent'])test(type+': existing Vehicle technical partial update retained',async()=>{
  const f=fixture();await f.api.updateListing(type,'listing',{phone:'123',mileage:0});const r=f.state.writes.at(-1).row;

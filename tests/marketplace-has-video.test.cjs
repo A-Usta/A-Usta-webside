@@ -207,7 +207,11 @@ test('unrelated inline scripts and five pre-existing syntax issues remain unchan
     try{new vm.Script(old[i][2]);}catch(e){before=e.message;legacy++;}
     try{new vm.Script(current[i][2]);}catch(e){after=e.message;}
     assert.equal(after,before);
-    if(!id.includes(routerId)&&!id.includes(mediaId)&&!id.includes('austa-v153c-real-listing-form-js'))assert.equal(current[i][2],old[i][2]);
+    if(!id.includes(routerId)&&!id.includes(mediaId)&&!id.includes('austa-v153c-real-listing-form-js')){
+      // P1.1C adds exactly one Rent-only spec; all other detail code stays identical.
+      const rentalSpec="    ['İcarə növü',item.listing_type==='rent' ? vehicleText(item.rental_type) : ''],\n";
+      assert.equal(current[i][2].replace(rentalSpec,''),old[i][2].replace(rentalSpec,''));
+    }
   }
   assert.equal(legacy,5);
 });
