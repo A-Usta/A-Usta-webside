@@ -264,10 +264,11 @@ for (const [name, status, listingType] of [
         return {
           select() { return this; },
           eq(column: string, id: string) { assert.equal(column, "listing_id"); assert.equal(id, listing); return this; },
-          async order() { return { error: null, data: [
-            { id: "image", listing_id: listing, storage_path: path, media_type: "image" },
-            { id: "video", listing_id: listing, storage_path: `${owner}/${listing}/clip.mp4`, media_type: "video" },
-          ] }; },
+          order() { return this; },
+          then(resolve: (value: unknown) => unknown) { return Promise.resolve({ error: null, data: [
+            { id: "image", listing_id: listing, storage_path: path, media_type: "image", is_cover: true },
+            { id: "video", listing_id: listing, storage_path: `${owner}/${listing}/clip.mp4`, media_type: "video", is_cover: false },
+          ] }).then(resolve); },
         };
       },
       storage: {

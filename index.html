@@ -30720,8 +30720,8 @@ async function hydrateSupabaseListingMedia(item){
     if(!config || config.table!==mediaTables[source])throw new Error('Elanın media mənbəyi uyğun deyil.');
     // Same vehicle listing_media columns and bucket used by the V159 Home loader.
     const {data,error}=await sb.from(config.table)
-      .select(source==='vehicle_listings'?'id,listing_id,storage_path,media_type,sort_order,created_at':'listing_id,storage_path,media_type,sort_order')
-      .eq('listing_id',item.id).order('sort_order',{ascending:true});
+      .select(source==='vehicle_listings'?'id,listing_id,storage_path,media_type,sort_order,created_at,is_cover':'id,listing_id,storage_path,media_type,sort_order,created_at,is_cover')
+      .eq('listing_id',item.id).order('sort_order',{ascending:true}).order('created_at',{ascending:true}).order('id',{ascending:true});
     if(error)throw error;
     const media=(Array.isArray(data)?data:[]).filter(row=>
       String(row.listing_id)===String(item.id) && row.storage_path &&
@@ -30735,7 +30735,7 @@ async function hydrateSupabaseListingMedia(item){
     }));
     const ready=resolved.filter(Boolean);
     // V147 already accepts HTTP URLs. It must not send these storage paths to the legacy backend signer.
-    item.image_paths=ready.filter(row=>row.media_type==='image').map(row=>row.signed_url);
+    item.image_paths=ready.filter(row=>row.media_type==='image').sort((a,b)=>Number(b.is_cover)-Number(a.is_cover)).map(row=>row.signed_url);
     item.cover_image_path=item.image_paths[0] || '';
     item.video_path=ready.find(row=>row.media_type==='video')?.signed_url || '';
     item._austaListingMedia=media;
@@ -56737,6 +56737,7 @@ if(
 </style>
 
 
+<script src="assets/marketplace/media-manager.js"></script>
 <script id="austa-v153d-14-category-media-js">
 (function(){
 
@@ -56975,7 +56976,7 @@ async function editDealer(item){
     }
 
 
-    dealerEditItem=item;
+
 
 
     if(
@@ -56994,7 +56995,10 @@ async function editDealer(item){
     );
 
 
+    dealerEditItem=item;
+    const mediaRoot=document.getElementById('austaV153CFields'),mediaEpoch=mediaFormEpoch;
     setTimeout(()=>{
+        if(mediaEpoch!==mediaFormEpoch || document.getElementById('austaV153CFields')!==mediaRoot || mediaRoot?.isConnected===false || dealerEditItem!==item)return;
 
         const values={
 
@@ -57091,6 +57095,7 @@ async function editDealer(item){
 
         void window.AUSTA_SELLER_INTENT?.mount(
             document.getElementById('austaV153CFields'),'dealer',item);
+        window.AUSTA_MEDIA_MANAGER?.mount(document.getElementById('austaV153CFields'),'dealer',item.id);
         const button=
             document.getElementById(
                 'austaV153CSave'
@@ -57666,6 +57671,7 @@ function videoAllowed(type){
 
 
 function buildMediaBox(){
+    window.AUSTA_MEDIA_MANAGER?.dispose();
 
     const fields =
         document.getElementById(
@@ -57800,6 +57806,8 @@ function buildMediaBox(){
    ========================================================= */
 
 function selectedFiles(){
+    const managed=window.AUSTA_MEDIA_MANAGER?.files(document.getElementById('austaV153CFields'));
+    if(managed)return managed;
     // Keep invalid supplied files visible to validation; never silently discard them.
     return {
         images:[...(document.getElementById('austaV153DImages')?.files || [])],
@@ -57811,7 +57819,7 @@ function selectedFiles(){
 const MAX_MEDIA_BYTES=50*1024*1024;
 function mediaSnapshot(type, files=selectedFiles()){
     mediaConfig(type); // Only internal source/category mappings are accepted.
-    const snapshot={images:[...files.images],videos:[...files.videos]};
+    const snapshot={images:[...files.images],videos:[...files.videos],...(files.managerToken?{managerToken:files.managerToken}:{})};
     for(const [kind,items] of [['image',snapshot.images],['video',snapshot.videos]]){
         if(kind==='video' && items.length && !videoAllowed(type))throw new Error('Bu kateqoriyada video əlavə edilmir.');
         for(const file of items){
@@ -57850,6 +57858,7 @@ async function persistedMedia(client,config,id,user){
 const mediaEditFlights=new Map();
 function mediaEdit(type,id,action){
     const key=mediaConfig(type).parentTable+':'+id;
+    if(mediaMutationFlights.has(key))return Promise.reject(new Error('Media əməliyyatı davam edir.'));
     if(mediaDeleteFlights.has(key))return Promise.reject(new Error('Elan silinir; əməliyyatın tamamlanmasını gözləyin.'));
     if(mediaEditFlights.has(key))return mediaEditFlights.get(key);
     const files=mediaSnapshot(type);
@@ -57858,7 +57867,8 @@ function mediaEdit(type,id,action){
         await mediaParent(client,mediaConfig(type),id,user);
         const result=await action();
         await mediaSession(client,user);
-        await uploadMedia(type,id,null,files,{client,user});
+        await uploadMedia(type,id,null,files,{client,user,check:files.managerToken
+            ? ()=>window.AUSTA_MEDIA_MANAGER.assert(files.managerToken) : undefined});
         return result;
     }).finally(()=>mediaEditFlights.delete(key));
     mediaEditFlights.set(key,work);
@@ -57876,6 +57886,7 @@ const mediaDeleteFlights=new Map();
 function deleteOwnedListing(source,id){
     if(!Object.prototype.hasOwnProperty.call(deleteMediaSources,source) || !id)return Promise.reject(new Error('Elan mənbəyi uyğun deyil.'));
     const key=source+':'+id;
+    if(mediaMutationFlights.has(key))return Promise.reject(new Error('Media əməliyyatı davam edir.'));
     if(mediaEditFlights.has(key))return Promise.reject(new Error('Media saxlanılır; əməliyyatın tamamlanmasını gözləyin.'));
     if(mediaDeleteFlights.has(key))return mediaDeleteFlights.get(key);
     const work=Promise.resolve().then(async()=>{
@@ -57915,7 +57926,108 @@ function deleteOwnedListing(source,id){
     mediaDeleteFlights.set(key,work);
     return work;
 }
-window.AUSTA_LISTING_MEDIA=Object.freeze({deleteOwnedListing});
+// P1.3B handles are opaque: DOM data cannot manufacture an owner/path context.
+const mediaMutationFlights=new Map(),mediaHandles=new WeakMap();
+async function managerContext(handle){
+    const context=mediaHandles.get(handle);
+    if(!context?.active)throw new Error('Media forması artıq aktiv deyil.');
+    await mediaParent(context.client,context.config,context.id,context.user);
+    if(!context.active)throw new Error('Media forması dəyişib.');
+    return context;
+}
+async function managerRows(context){
+    const rows=await persistedMedia(context.client,context.config,context.id,context.user);
+    if(new Set(rows.map(row=>row.id)).size!==rows.length || rows.some(row=>!row.id || !['image','video'].includes(row.media_type)))throw new Error('Media məlumatları uyğun deyil.');
+    return rows;
+}
+async function managerView(handle){
+    const context=await managerContext(handle),rows=await managerRows(context);
+    const previews=await Promise.all(rows.map(async row=>{
+        try{
+            const {data,error}=await context.client.storage.from(context.config.bucket).createSignedUrl(row.storage_path,3600);
+            if(error || !data?.signedUrl)throw new Error('preview');
+            return {...row,previewUrl:data.signedUrl,previewError:false};
+        }catch{return {...row,previewUrl:null,previewError:true};}
+    }));
+    await managerContext(handle);
+    return previews;
+}
+async function openMediaManager(type,id){
+    const context={type,id,config:mediaConfig(type),client:sb(),user:await currentUser(),active:true};
+    const handle=Object.freeze({});mediaHandles.set(handle,context);
+    try{return {handle,rows:await managerView(handle)};}
+    catch{context.active=false;throw new Error('Elanın mediası yüklənmədi. Hesabı və bağlantını yoxlayın.');}
+}
+function closeMediaManager(handle){const context=mediaHandles.get(handle);if(context)context.active=false;}
+async function managerWrite(handle,row,patch){
+    const c=await managerContext(handle);
+    const {data,error}=await c.client.from(c.config.table).update(patch)
+        .eq('id',row.id).eq('listing_id',c.id).eq('owner_id',c.user.id)
+        .eq('storage_path',row.storage_path).select('id').single();
+    if(error || !data || data.id!==row.id)throw new Error('Media dəyişikliyi saxlanılmadı.');
+}
+async function writeCover(handle,rows,targetId){
+    const target=rows.find(row=>row.id===targetId && row.media_type==='image');
+    if(!target)throw new Error('Əsas şəkil yalnız mövcud şəkil ola bilər.');
+    // Clear old covers before setting the target: respects Vehicle's partial unique index.
+    for(const row of rows.filter(row=>row.is_cover))await managerWrite(handle,row,{is_cover:false});
+    await managerWrite(handle,target,{is_cover:true});
+}
+function managerMutation(handle,action){
+    const c=mediaHandles.get(handle);
+    if(!c?.active)return Promise.reject(new Error('Media forması artıq aktiv deyil.'));
+    const key=c.config.parentTable+':'+c.id;
+    if(mediaMutationFlights.has(key) || mediaEditFlights.has(key) || mediaDeleteFlights.has(key))return Promise.reject(new Error('Əvvəlki media əməliyyatının tamamlanmasını gözləyin.'));
+    const work=Promise.resolve().then(async()=>{
+        await managerContext(handle);
+        await action(c,await managerRows(c));
+        return managerView(handle);
+    }).catch(async()=>{
+        let rows=null;
+        try{rows=await managerView(handle);}catch{}
+        throw Object.assign(new Error('Media əməliyyatı tamamlanmadı. Bəzi dəyişikliklər saxlanmış ola bilər. Mövcud vəziyyəti yoxlayıb yenidən cəhd edin.'),{code:'MEDIA_OPERATION_FAILED',mediaState:rows});
+    }).finally(()=>mediaMutationFlights.delete(key));
+    mediaMutationFlights.set(key,work);return work;
+}
+function coverMedia(handle,id){return managerMutation(handle,async(c,rows)=>writeCover(handle,rows,id));}
+function reorderMedia(handle,ids){
+    const desired=Array.isArray(ids)?[...ids]:[];
+    return managerMutation(handle,async(c,rows)=>{
+        if(desired.length!==rows.length || new Set(desired).size!==rows.length || desired.some(id=>!rows.some(row=>row.id===id)))throw new Error('Media sırası uyğun deyil.');
+        for(let i=0;i<desired.length;i++)await managerWrite(handle,rows.find(row=>row.id===desired[i]),{sort_order:i});
+    });
+}
+function removeMedia(handle,id){return managerMutation(handle,async(c,rows)=>{
+    const row=rows.find(row=>row.id===id);
+    if(!row || typeof row.storage_path!=='string' || !row.storage_path.startsWith(c.user.id+'/'+c.id+'/') || row.storage_path.split('/').length!==3 || !row.storage_path.split('/')[2])throw new Error('Media sahibliyi təsdiqlənmədi.');
+    await managerContext(handle);
+    const {data:removed,error:storageError}=await c.client.storage.from(c.config.bucket).remove([row.storage_path]);
+    if(storageError || !Array.isArray(removed) || !removed.some(object=>object.name===row.storage_path))throw new Error('Storage silinməsi təsdiqlənmədi.');
+    await managerContext(handle);
+    const {data,error}=await c.client.from(c.config.table).delete()
+        .eq('id',row.id).eq('listing_id',c.id).eq('owner_id',c.user.id)
+        .eq('storage_path',row.storage_path).select('id');
+    if(error || !Array.isArray(data) || data.length!==1 || data[0].id!==row.id)throw new Error('Media silinməsi tamamlanmadı.');
+    // The persisted relation is authoritative; a SELECT error must never clear a video flag.
+    if(row.media_type==='video'){
+        await managerContext(handle);
+        if(c.config.parentTable==='vehicle_listings')await syncVehicleHasVideo(c.id,c.user);
+        if(c.config.parentTable==='marketplace_listings')await window.AUSTA_V153.syncMarketplaceHasVideo(c.id);
+    }
+    if(row.is_cover){
+        const remaining=await managerRows(c),replacement=remaining.find(item=>item.media_type==='image');
+        if(replacement)await writeCover(handle,remaining,replacement.id);
+        else for(const item of remaining.filter(item=>item.is_cover))await managerWrite(handle,item,{is_cover:false});
+    }
+});}
+function appendMedia(handle,files){
+    const c=mediaHandles.get(handle);
+    if(!c?.active)return Promise.reject(new Error('Media forması artıq aktiv deyil.'));
+    const snapshot=mediaSnapshot(c.type,files);
+    return managerMutation(handle,async()=>uploadMedia(c.type,c.id,null,snapshot,{client:c.client,user:c.user,check:()=>managerContext(handle)}));
+}
+window.AUSTA_LISTING_MEDIA=Object.freeze({deleteOwnedListing,open:openMediaManager,refresh:managerView,
+    close:closeMediaManager,remove:removeMedia,cover:coverMedia,reorder:reorderMedia,append:appendMedia});
 
 
 /* =========================================================
@@ -58137,6 +58249,7 @@ async function uploadOne(
     operation
 ){
     const client=operation.client;
+    await operation.check?.();
     await mediaParent(client,config,listingId,user);
 
     const randomId =
@@ -58184,7 +58297,17 @@ async function uploadOne(
 
     if(publishAttempt)publishAttempt.objects.push({path});
 
-    await mediaSession(client,user);
+    try{
+        await mediaSession(client,user);
+        await operation.check?.();
+    }catch(error){
+        // A closed edit context must not strand a newly uploaded object when
+        // the same owner is still authenticated. Create compensation is unchanged.
+        if(!publishAttempt){
+            try{await mediaSession(client,user);await client.storage.from(config.bucket).remove([path]);}catch{}
+        }
+        throw error;
+    }
 
     const {
         error:mediaError
@@ -58227,6 +58350,8 @@ async function uploadOne(
         }
         throw new Error('Media əlavə edilmədi. Yenidən cəhd edin.');
     }
+
+    window.AUSTA_MEDIA_MANAGER?.persisted(file,listingId,operation.managerToken);
 
     if(config.parentTable === 'vehicle_listings' && mediaType === 'video'){
         // INSERT has succeeded; sync errors propagate without deleting real media.
@@ -58300,7 +58425,7 @@ async function uploadMedia(
 
     const result = [];
 
-    const operation=editOperation || {client:publishAttempt?.client || sb(),user};
+    const operation={...(editOperation || {client:publishAttempt?.client || sb(),user}),managerToken:files.managerToken};
     await mediaParent(operation.client,config,listingId,user);
     const existing=await persistedMedia(operation.client,config,listingId,user);
     const maxOrder=existing.reduce((max,row)=>{
@@ -58512,7 +58637,7 @@ function patchSave(){
     // Reuse the uploader for Vehicle/Rent and Marketplace edits.
     const originalUpdate = window.AUSTA_V153.updateListing.bind(window.AUSTA_V153);
     window.AUSTA_V153.updateListing = async function(type, listingId, input, sellerIntent){
-        if(VEHICLE_TYPES.has(type) || MARKETPLACE_TYPES.has(type)){
+        if(VEHICLE_TYPES.has(type) || MARKETPLACE_TYPES.has(type) || PROVIDER_TYPES.has(type)){
             return mediaEdit(type,listingId,()=>originalUpdate(type,listingId,input,sellerIntent));
         }
         return originalUpdate(type,listingId,input,sellerIntent);
@@ -58601,6 +58726,7 @@ function patchBuildRouterInput(){
    PATCH V153-C OPEN
    ========================================================= */
 
+let mediaFormEpoch=0;
 function patchOpen(){
 
     if(
@@ -58630,6 +58756,9 @@ function patchOpen(){
 
     window.AUSTA_V153C.open =
         function(type){
+            const epoch=++mediaFormEpoch;
+            dealerEditItem=null;
+            window.AUSTA_MEDIA_MANAGER?.dispose();
 
             const result =
                 original(
@@ -58639,8 +58768,10 @@ function patchOpen(){
                 );
 
 
+            const root=document.getElementById('austaV153CFields');
             setTimeout(
                 ()=>{
+                    if(epoch!==mediaFormEpoch || document.getElementById('austaV153CFields')!==root || root?.isConnected===false)return;
 
                     ensureDealerOption();
 
@@ -58686,9 +58817,18 @@ function patchOpen(){
     // V167: the existing edit form needs the existing media inputs too.
     const originalEdit = window.AUSTA_V153C.edit.bind(window.AUSTA_V153C);
     window.AUSTA_V153C.edit = async function(item){
-        const result = await originalEdit(item);
-        if(item?.__austa_table === 'vehicle_listings' || item?.__austa_table === 'marketplace_listings'){
+        ++mediaFormEpoch;
+        dealerEditItem=null;
+        window.AUSTA_MEDIA_MANAGER?.dispose();
+        const pending=originalEdit(item),epoch=mediaFormEpoch,root=document.getElementById('austaV153CFields');
+        const result = await pending;
+        if(epoch!==mediaFormEpoch || document.getElementById('austaV153CFields')!==root || root?.isConnected===false)return result;
+        if(item?.id && Object.prototype.hasOwnProperty.call(deleteMediaSources,item.__austa_table)){
             buildMediaBox();
+            const type=item.__austa_table==='vehicle_listings'?(item.listing_type==='rent'?'rent':'cars')
+                :item.__austa_table==='marketplace_listings'?item.category
+                :item.__austa_table==='service_provider_listings'?item.provider_type:'dealer';
+            window.AUSTA_MEDIA_MANAGER?.mount(document.getElementById('austaV153CFields'),type,item.id);
         }
         return result;
     };
@@ -58716,10 +58856,10 @@ function categoryChangeHandler(event){
     }
 
 
-    setTimeout(
-        buildMediaBox,
-        0
-    );
+    const root=document.getElementById('austaV153CFields'),epoch=mediaFormEpoch;
+    setTimeout(()=>{
+        if(epoch===mediaFormEpoch && document.getElementById('austaV153CFields')===root && event.target===document.getElementById('austaV153CCategory'))buildMediaBox();
+    },0);
 }
 
 

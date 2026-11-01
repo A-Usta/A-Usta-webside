@@ -82,7 +82,7 @@ test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
   assert.equal(now[i][0],old[i][0]);
  }
  const changed=cp.execFileSync('git',['diff','--name-only','19c91a76502dad439811fa86d95af0fac922c88a','--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- assert.deepEqual(changed.filter(p=>p!=='assets/marketplace/seller-intent.js'),[]);
+ assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','backend/a-usta56/tests/listing-media.test.ts'].includes(p)),[]);
 });
 for(const type of ['cars','rent'])test(type+': existing Vehicle technical partial update retained',async()=>{
  const f=fixture();await f.api.updateListing(type,'listing',{phone:'123',mileage:0});const r=f.state.writes.at(-1).row;

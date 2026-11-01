@@ -188,11 +188,11 @@ test('owner-scoped synchronization rejects another owner',async()=>{
   const f=fixture({foreignOwner:true,videos:1});await assert.rejects(f.api.syncMarketplaceHasVideo('listing-1'));
   assert.equal(f.state.writes.length,0);
 });
-test('edit builds existing media inputs for Marketplace; provider/dealer unchanged',async()=>{
+test('edit mounts shared media inputs for Marketplace, Provider and Dealer',async()=>{
   const f=fixture();f.media.patchOpen();
-  await f.window.AUSTA_V153C.edit({__austa_table:'marketplace_listings'});assert.equal(f.window.__mediaBuilds,1);
-  await f.window.AUSTA_V153C.edit({__austa_table:'service_provider_listings'});assert.equal(f.window.__mediaBuilds,1);
-  await f.window.AUSTA_V153C.edit({__austa_table:'auto_dealer_listings'});assert.equal(f.window.__mediaBuilds,1);
+  await f.window.AUSTA_V153C.edit({id:'listing-1',category:'parts',__austa_table:'marketplace_listings'});assert.equal(f.window.__mediaBuilds,1);
+  await f.window.AUSTA_V153C.edit({id:'listing-1',provider_type:'service',__austa_table:'service_provider_listings'});assert.equal(f.window.__mediaBuilds,2);
+  await f.window.AUSTA_V153C.edit({id:'listing-1',__austa_table:'auto_dealer_listings'});assert.equal(f.window.__mediaBuilds,3);
 });
 test('missing listing ID cannot query/write',async()=>{
   const f=fixture();await assert.rejects(f.api.syncMarketplaceHasVideo(''));assert.equal(f.state.calls.length,0);

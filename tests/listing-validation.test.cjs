@@ -153,10 +153,10 @@ test('P0.3.1 helper, visibility, public queries and protected runtime assets rem
   const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');assert.equal(html.match(re)[0],main.match(re)[0]);
  }
  const changed=cp.execFileSync('git',['diff','--name-only',base,'--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- assert.deepEqual(changed.filter(p=>p!=='assets/marketplace/seller-intent.js'),[]);
+ assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','backend/a-usta56/tests/listing-media.test.ts'].includes(p)),[]);
  // Permit only the reviewed supplemental seller block; all original detail logic remains exact.
  const detail=s=>s.match(/<script id="austa-final-full-listing-js">([\s\S]*?)<\/script>/)[1];
- const normalized=detail(html)
+ const normalized=detail(require('./helpers/seller-integration-baseline.cjs').withBaselineMediaHydration(html,main))
   .replace('const sellerIdentityReady=Promise.resolve(window.AUSTA_SELLER_IDENTITY?.hydrate([item]));','void window.AUSTA_SELLER_IDENTITY?.hydrate([item]);')
   .replace('              <div data-professional-seller></div>\n','')
   .replace(`  void sellerIdentityReady.then(()=>{
