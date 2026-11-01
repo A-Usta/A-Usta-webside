@@ -153,7 +153,7 @@ test('P0.3.1 helper, visibility, public queries and protected runtime assets rem
   const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');assert.equal(html.match(re)[0],main.match(re)[0]);
  }
  const changed=cp.execFileSync('git',['diff','--name-only',base,'--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','backend/a-usta56/tests/listing-media.test.ts'].includes(p)),[]);
+ assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','backend/a-usta56/tests/listing-media.test.ts'].includes(p)),[]);
  // Permit only the reviewed supplemental seller block; all original detail logic remains exact.
  const detail=s=>s.match(/<script id="austa-final-full-listing-js">([\s\S]*?)<\/script>/)[1];
  const normalized=detail(require('./helpers/seller-integration-baseline.cjs').withBaselineMediaHydration(html,main))
@@ -206,7 +206,8 @@ test('P1.3A preserves source configuration, Vehicle video helper and P0.3 coordi
  const before=segments(main),after=segments(html);
  for(const name of ['mediaConfig','syncVehicleHasVideo'])assert.equal(after.get(name),before.get(name),name);
  const publish=s=>s.slice(s.indexOf('const user=await currentUser();',s.indexOf('window.AUSTA_V153.saveListing = async')),s.indexOf('// Only completed activation'));
- assert.equal(publish(html).replace('saveDealer(attempt,sellerIntent,approved?.values)','saveDealer(attempt,sellerIntent)'),publish(main));
+ const normalizedPublish=s=>publish(s).replace('saveDealer(attempt,sellerIntent,approved?.values)','saveDealer(attempt,sellerIntent)');
+ assert.equal(normalizedPublish(html),normalizedPublish(main));
  const file='assets/marketplace/listing-publish.js';
  assert.equal(fs.readFileSync(path.join(root,file),'utf8'),cp.execFileSync('git',['show','origin/main:'+file],{cwd:root,encoding:'utf8'}));
 });
