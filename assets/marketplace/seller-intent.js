@@ -139,5 +139,16 @@ function detail(item){
   if(!eligible(p))return '';
   return `<section class="austa-professional-seller" aria-label="Peşəkar satıcı"><strong>${esc(p.display_name)}</strong><div>${labels[p.business_type]} · Təsdiqlənmiş${p.official_status==='approved'?' · Rəsmi':''}</div></section>`;
 }
-window.AUSTA_SELLER_INTENT=Object.freeze({mount,capture,resolve,detail});
+// P1.4 presentation only. This accessor grants no seller-association authority;
+// resolve() still performs fresh owned RPC validation at final persistence.
+function preview(root){
+  const state=roots.get(root),intent=capture(root),version=epoch,revision=state?.revision;
+  const id=state?.changed?state.selected:state?.existing?.seller_profile_id;
+  const profile=state?.profiles.find(p=>p.id===id);
+  const presentation=profile?Object.freeze({display_name:profile.display_name,
+    business_label:labels[profile.business_type],verified:true,official:profile.official_status==='approved'}):null;
+  return Object.freeze({intent,presentation,isCurrent:()=>client===window.AUSTA_SUPABASE &&
+    (state?currentState(state,version,revision)&&!state.blocked:!roots.has(root)&&epoch===version)});
+}
+window.AUSTA_SELLER_INTENT=Object.freeze({mount,capture,resolve,detail,preview});
 })();

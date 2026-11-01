@@ -84,9 +84,14 @@ function fixture(){
  function installForm(){
   const form=block(ids.form),end=form.lastIndexOf('})();');
   vm.runInContext(form.slice(0,end)+`
-    readFields=()=>({});validate=()=>{};buildRouterInput=()=>window.__formInput;
+    readFields=()=>({...window.__formInput});validate=()=>{};buildRouterInput=()=>window.__formInput;
     window.__form={save:saveCurrentListing,invalidate:()=>++formGeneration};
   `+form.slice(end),context);
+  // Older coordinator tests model explicit user confirmation at the new UI seam.
+  // P1.4 focused tests replace this adapter with the actual preview runtime.
+  let prepared;
+  window.AUSTA_LISTING_PREVIEW={review:async options=>{prepared=options;return {};},
+   consume:async()=>prepared,success(){},failure(){},cancel(){}};
   window.__formInput={...input};return window.__form;
  }
  return {state,files,window,api,core,create,failure,installForm,status,button,
