@@ -149,10 +149,22 @@ test('Dealer create condition canonical only; untouched legacy update retained',
 test('P0.3.1 helper, visibility, public queries and protected runtime assets remain byte-identical',()=>{
  const base='19c91a76502dad439811fa86d95af0fac922c88a',html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const main=cp.execFileSync('git',['show',base+':index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
- for(const id of ['austa-final-full-listing-js','austa-v154e-global-promotion-pagination']){
+ for(const id of ['austa-v154e-global-promotion-pagination']){
   const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');assert.equal(html.match(re)[0],main.match(re)[0]);
  }
- assert.equal(cp.execFileSync('git',['diff',base,'--','assets','backend'],{cwd:root,encoding:'utf8'}),'');
+ const changed=cp.execFileSync('git',['diff','--name-only',base,'--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
+ assert.deepEqual(changed.filter(p=>p!=='assets/marketplace/seller-intent.js'),[]);
+ // Permit only the reviewed supplemental seller block; all original detail logic remains exact.
+ const detail=s=>s.match(/<script id="austa-final-full-listing-js">([\s\S]*?)<\/script>/)[1];
+ const normalized=detail(html)
+  .replace('const sellerIdentityReady=Promise.resolve(window.AUSTA_SELLER_IDENTITY?.hydrate([item]));','void window.AUSTA_SELLER_IDENTITY?.hydrate([item]);')
+  .replace('              <div data-professional-seller></div>\n','')
+  .replace(`  void sellerIdentityReady.then(()=>{
+    if(!page.isConnected)return;
+    const target=page.querySelector('[data-professional-seller]');
+    if(target)target.innerHTML=window.AUSTA_SELLER_INTENT?.detail(item)||'';
+  }).catch(()=>{});\n`,'');
+ assert.equal(normalized,detail(main));
 });
 test('legacy num()/integer() unchanged and no arbitrary text maximum added',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
@@ -192,5 +204,13 @@ test('media uploader, source configuration, video sync and publish wrapper remai
  const block=s=>s.match(/<script id="austa-v153d-14-category-media-js">([\s\S]*?)<\/script>/)[1];
  const segments=s=>{const parts=[...block(s).matchAll(/\n(?:async )?function (\w+)\(/g)];return new Map(parts.map((m,i)=>[m[1],block(s).slice(m.index,parts[i+1]?.index||block(s).length)]));};
  const before=segments(main),after=segments(html);
- for(const name of ['patchSave','mediaConfig','syncVehicleHasVideo','uploadMedia'])assert.equal(after.get(name),before.get(name),name);
+ for(const name of ['mediaConfig','syncVehicleHasVideo','uploadMedia'])assert.equal(after.get(name),before.get(name),name);
+ const patch=after.get('patchSave')
+  .replace('function(type,input,sellerIntent)','function(type,input)')
+  .replace('updateDealer(dealerEditItem,sellerIntent)','updateDealer(dealerEditItem)')
+  .replace('saveDealer(attempt,sellerIntent)','saveDealer(attempt)')
+  .replace('original(type,input,attempt,sellerIntent)','original(type,input,attempt)')
+  .replace('function(type, listingId, input, sellerIntent)','function(type, listingId, input)')
+  .replace('originalUpdate(type, listingId, input, sellerIntent)','originalUpdate(type, listingId, input)');
+ assert.equal(patch,before.get('patchSave'));
 });

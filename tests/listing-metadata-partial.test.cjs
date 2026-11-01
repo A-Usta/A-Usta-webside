@@ -71,17 +71,18 @@ test('service specialty-only update does not synthesize a title',async()=>{
 for(const type of [...marketplace,'service','usta'])test(type+': create payload defaults unchanged against approved base',async()=>{
  const current=fixture(),old=fixture(baseline),input={title:'Listing',name:'Name',phone:'123',price:25,specialty:'Repair'};
  await current.api.saveListing(type,input,{});await old.api.saveListing(type,input,{});
- const normalize=f=>{const row=f.state.writes.at(-1).row;delete row.published_at;delete row.rating;delete row.reviews_count;return row;};assert.deepEqual(normalize(current),normalize(old));
+ const normalize=f=>{const row=f.state.writes.at(-1).row;delete row.published_at;delete row.rating;delete row.reviews_count;row.seller_profile_id??=null;return row;};assert.deepEqual(normalize(current),normalize(old));
 });
 test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
  const main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  const blocks=text=>[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
- const old=blocks(main),now=blocks(html);assert.equal(now.length,old.length);
+ const old=blocks(main),now=blocks(require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(html));assert.equal(now.length,old.length);
  for(let i=0;i<old.length;i++){
   if(['austa-v153b-all-real-listing-router','austa-v153c-real-listing-form-js','austa-v153d-14-category-media-js'].some(id=>now[i][1].includes(id)))continue;
   assert.equal(now[i][0],old[i][0]);
  }
- assert.equal(cp.execFileSync('git',['diff','19c91a76502dad439811fa86d95af0fac922c88a','--','assets','backend'],{cwd:root,encoding:'utf8'}),'');
+ const changed=cp.execFileSync('git',['diff','--name-only','19c91a76502dad439811fa86d95af0fac922c88a','--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
+ assert.deepEqual(changed.filter(p=>p!=='assets/marketplace/seller-intent.js'),[]);
 });
 for(const type of ['cars','rent'])test(type+': existing Vehicle technical partial update retained',async()=>{
  const f=fixture();await f.api.updateListing(type,'listing',{phone:'123',mileage:0});const r=f.state.writes.at(-1).row;

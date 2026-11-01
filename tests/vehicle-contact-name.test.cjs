@@ -52,7 +52,8 @@ for(const type of ['cars','rent']){
   const f=fixture({type});await f.create({name:'  Əli  Məmmədov  ',rental_type:type==='rent'?'Günlük':null,seller_profile_id:'evil',owner_id:'evil',arbitrary:'evil'});
   const row=f.state.ops.find(o=>o.op==='insert').payload;
   assert.equal(row.contact_name,'Əli  Məmmədov');assert.equal(row.phone,'123');assert.equal(row.owner_id,'owner');
-  for(const key of ['name','details','seller_profile_id','arbitrary'])assert.ok(!Object.hasOwn(row,key));
+  for(const key of ['name','details','arbitrary'])assert.ok(!Object.hasOwn(row,key));
+  assert.equal(row.seller_profile_id,null);
   if(type==='rent')assert.equal(row.rental_type,'Günlük');
  });
  for(const name of ['', '   ',undefined])test(type+': blank create '+JSON.stringify(name),async()=>{

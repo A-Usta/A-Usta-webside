@@ -24,8 +24,12 @@ function fixture(type='parts',details={},options={}){
    assert.ok(this.filters.some(([k,v])=>k==='owner_id'&&v==='owner'));
    if(!this.filters.every(([k,v])=>state.row[k]===v)||options.missing)return {data:null,error:{message:'private SDK details'}};
    if(this.op==='read'){
-    assert.equal(this.columns,'details');
     if(options.failRead)return {data:null,error:{message:'SECRET SDK PATH'}};
+    if(this.columns==='provider_type'){
+     assert.equal(table,'service_provider_listings');
+     return {data:{provider_type:state.row.provider_type||type},error:null};
+    }
+    assert.equal(this.columns,'details');
     if(options.malformedRead)return {data:{},error:null};
     return {data:{details:json(state.row.details)},error:null};
    }
@@ -150,7 +154,7 @@ for(const type of [...Object.keys(fields),'service','usta','dealer'])test(type+'
  if(type==='dealer'){
   for(const f of [current,old]){f.setFields({dealer_name:'Salon',phone:'123',region:'Bakı',address:'Address',credit_available:'Bəli'});await f.dealer.saveDealer({});}
  }else{for(const f of [current,old])await f.api.saveListing(type,input,{});}
- const normalize=f=>{const row=f.state.ops.find(o=>o.op==='insert').row;delete row.published_at;delete row.rating;delete row.reviews_count;return row;};assert.deepEqual(normalize(current),normalize(old));
+ const normalize=f=>{const row=f.state.ops.find(o=>o.op==='insert').row;delete row.published_at;delete row.rating;delete row.reviews_count;row.seller_profile_id??=null;return row;};assert.deepEqual(normalize(current),normalize(old));
 });
 for(const type of ['cars','rent'])test(type+': Vehicle JSON/rental_type persistence behavior is unchanged',async()=>{
  const f=fixture(type,{rental_type:'Aylıq',unknown:'KEEP'});await f.api.updateListing(type,'listing',{phone:'123',details:{rental_type:'Günlük'}});
