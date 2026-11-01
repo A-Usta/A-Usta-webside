@@ -150,10 +150,13 @@ for(const drift of ['missing-trigger','wrong-update-columns','unprivileged-funct
   const before=await catalog(isolated);await assert.rejects(isolated.exec(migration),/P1.2A preflight/);await isolated.exec('ROLLBACK');assert.deepEqual(await catalog(isolated),before);
  }finally{await isolated.close();}
 });
-test('migration is functions-only; application, managed fields and protected runtime are untouched',()=>{
+test('migration is functions-only; reviewed SQL, managed fields and protected runtime remain intact',()=>{
  const definitions=[...reviewedMigration.matchAll(/CREATE OR REPLACE FUNCTION public\.(\w+)\(/g)].map(m=>m[1]).sort();assert.deepEqual(definitions,[...guarded].sort());
  assert.ok(!/\b(?:DROP\s+(?:TRIGGER|FUNCTION|TABLE)|ALTER\s+(?:TABLE|POLICY)|GRANT\b|REVOKE\b|CREATE\s+TRIGGER)/i.test(reviewedMigration.replace(/--[^\n]*/g,'')));
- const base='dc035b49ed50a2f9f89eeced2cb307e64161ab51';assert.equal(cp.execFileSync('git',['diff',base,'--','index.html','assets','backend'],{cwd:root,encoding:'utf8'}),'');
+ const base='3a4d0f0138ff8b6d30341dfa0ab3dd007a349a9c';
+ assert.equal(reviewedMigration,cp.execFileSync('git',['show',base+':supabase/migrations/20261101000000_p12a_seller_eligibility_guard.sql'],{cwd:root,encoding:'utf8'}));
+ const protectedPaths=['backend','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
+ assert.equal(cp.execFileSync('git',['diff',base,'--',...protectedPaths],{cwd:root,encoding:'utf8'}),'');
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');assert.match(html,/MANAGED_LISTING_FIELDS = Object\.freeze\(\[[\s\S]*?'seller_profile_id'/);
 });
 test('missing JWT on authenticated role fails before privileged seller lookup',()=>scenario(async()=>{

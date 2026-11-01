@@ -9847,6 +9847,7 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 <script src="assets/marketplace/card-data.js"></script>
 <script src="assets/marketplace/listing-publish.js"></script>
 <script src="assets/marketplace/seller-identity.js"></script>
+<script src="assets/marketplace/seller-intent.js"></script>
 <link rel="stylesheet" href="assets/marketplace/listing-cards.css">
 <script src="assets/vehicle/vin.js"></script>
 <script src="assets/marketplace/listing-cards.js"></script>
@@ -31803,7 +31804,7 @@ async function openFullListing(id,source,expectedCategory){
   }
 
 
-  void window.AUSTA_SELLER_IDENTITY?.hydrate([item]);
+  const sellerIdentityReady=Promise.resolve(window.AUSTA_SELLER_IDENTITY?.hydrate([item]));
 
   removeOldListingOverlays();
   
@@ -31969,6 +31970,7 @@ async function openFullListing(id,source,expectedCategory){
                   : ''
               }
 
+              <div data-professional-seller></div>
               <div class="austa-final-seller">
                 ${escapeHtml(
                   sellerOf(item)
@@ -32164,6 +32166,11 @@ async function openFullListing(id,source,expectedCategory){
   `;
 
   document.body.appendChild(page);
+  void sellerIdentityReady.then(()=>{
+    if(!page.isConnected)return;
+    const target=page.querySelector('[data-professional-seller]');
+    if(target)target.innerHTML=window.AUSTA_SELLER_INTENT?.detail(item)||'';
+  }).catch(()=>{});
 
   // V166: ownership visibility must not wait for gallery/similar-media requests.
   const ownerReady=ownerControls(item,page);
@@ -52745,7 +52752,7 @@ function rentalType(value) {
     return value;
 }
 
-async function saveVehicle(type, input, user, publishAttempt) {
+async function saveVehicle(type, input, user, publishAttempt, sellerIntent) {
 
     const isRent = type === "rent";
 
@@ -52849,6 +52856,10 @@ async function saveVehicle(type, input, user, publishAttempt) {
             new Date().toISOString()
     };
 
+    if(sellerIntent&&!window.AUSTA_SELLER_INTENT)throw new Error('Satıcı profili sistemi hazır deyil.');
+    Object.assign(row,window.AUSTA_SELLER_INTENT
+        ? await window.AUSTA_SELLER_INTENT.resolve(type,user,sellerIntent)
+        : {seller_profile_id:null});
     publishAttempt.insertStarted = true;
     const {
         data,
@@ -52869,7 +52880,7 @@ async function saveVehicle(type, input, user, publishAttempt) {
    9 CATEGORIES
    ============================================================ */
 
-async function saveMarketplace(type, input, user, publishAttempt) {
+async function saveMarketplace(type, input, user, publishAttempt, sellerIntent) {
 
     const title =
         buildTitle(type, input);
@@ -52947,6 +52958,10 @@ price:
             new Date().toISOString()
     };
 
+    if(sellerIntent&&!window.AUSTA_SELLER_INTENT)throw new Error('Satıcı profili sistemi hazır deyil.');
+    Object.assign(row,window.AUSTA_SELLER_INTENT
+        ? await window.AUSTA_SELLER_INTENT.resolve(type,user,sellerIntent)
+        : {seller_profile_id:null});
     publishAttempt.insertStarted = true;
     const {
         data,
@@ -52967,7 +52982,7 @@ price:
    USTA + AVTOSERVIS
    ============================================================ */
 
-async function saveProvider(type, input, user, publishAttempt) {
+async function saveProvider(type, input, user, publishAttempt, sellerIntent) {
 
     const title =
         buildTitle(type, input);
@@ -53051,6 +53066,10 @@ async function saveProvider(type, input, user, publishAttempt) {
             new Date().toISOString()
     };
 
+    if(sellerIntent&&!window.AUSTA_SELLER_INTENT)throw new Error('Satıcı profili sistemi hazır deyil.');
+    Object.assign(row,window.AUSTA_SELLER_INTENT
+        ? await window.AUSTA_SELLER_INTENT.resolve(type,user,sellerIntent)
+        : {seller_profile_id:null});
     publishAttempt.insertStarted = true;
     const {
         data,
@@ -53170,7 +53189,8 @@ async function preserveDetails(type, listingId, user, input) {
 async function updateListing(
     typeValue,
     listingId,
-    input = {}
+    input = {},
+    sellerIntent
 ) {
 
     const type =
@@ -53518,6 +53538,20 @@ async function updateListing(
         else row.details = details;
     }
 
+    // P1.2B: UPDATE OF provider_type fires the seller guard even for a same-value
+    // assignment. Omit an unchanged type so unrelated edits preserve stale links.
+    if(PROVIDER_TYPES.has(type)){
+        const current=await sb().from(table).select('provider_type')
+            .eq('id',listingId).eq('owner_id',user.id).single();
+        if(current.error||!current.data)throw new Error('Elanın növü təsdiqlənmədi. Yenidən cəhd edin.');
+        if(current.data.provider_type===type)delete row.provider_type;
+    }
+
+    if(sellerIntent&&!window.AUSTA_SELLER_INTENT)throw new Error('Satıcı profili sistemi hazır deyil.');
+    Object.assign(row,window.AUSTA_SELLER_INTENT
+        ? await window.AUSTA_SELLER_INTENT.resolve(type,user,sellerIntent,true,listingId)
+        : {});
+
     const {
         data,
         error
@@ -53579,11 +53613,11 @@ async function updateListing(
    MASTER SAVE ROUTER
    ============================================================ */
 
-async function saveListing(typeValue, input = {}, publishAttempt) {
+async function saveListing(typeValue, input = {}, publishAttempt, sellerIntent) {
     // Legacy lexical callers must use the same completed-publish boundary.
     if(!publishAttempt){
         const wrapped=window.AUSTA_V153?.saveListing;
-        if(wrapped && wrapped!==saveListing)return wrapped(typeValue,input);
+        if(wrapped && wrapped!==saveListing)return wrapped(typeValue,input,sellerIntent);
         throw new Error('Elan yerləşdirmə sistemi hazır deyil.');
     }
 
@@ -53614,7 +53648,8 @@ async function saveListing(typeValue, input = {}, publishAttempt) {
                 type,
                 input,
                 user,
-                publishAttempt
+                publishAttempt,
+                sellerIntent
             );
 
         source =
@@ -53629,7 +53664,8 @@ async function saveListing(typeValue, input = {}, publishAttempt) {
                 type,
                 input,
                 user,
-                publishAttempt
+                publishAttempt,
+                sellerIntent
             );
 
         source =
@@ -53644,7 +53680,8 @@ async function saveListing(typeValue, input = {}, publishAttempt) {
                 type,
                 input,
                 user,
-                publishAttempt
+                publishAttempt,
+                sellerIntent
             );
 
         source =
@@ -55219,6 +55256,8 @@ function renderFields(){
         if(type==='cars')window.AUSTA_MARKETPLACE_CARD_DATA.mount(container);
     }
 
+    void window.AUSTA_SELLER_INTENT?.mount(container,type,currentEdit);
+
 }
 
 
@@ -56143,6 +56182,8 @@ async function saveCurrentListing(){
             );
 
 
+      const sellerIntent=window.AUSTA_SELLER_INTENT?.capture(
+          document.getElementById('austaV153CFields'));
       let result;
 
 
@@ -56158,7 +56199,8 @@ if(currentEdit){
             .updateListing(
                 type,
                 currentEdit.id,
-                input
+                input,
+                sellerIntent
             );
 
 }else{
@@ -56167,7 +56209,8 @@ if(currentEdit){
         await window.AUSTA_V153
             .saveListing(
                 type,
-                input
+                input,
+                sellerIntent
             );
 
 }
@@ -56402,6 +56445,7 @@ if(
     currentEdit={
         id:item.id,
         table:item.__austa_table,
+        seller_profile_id:item.seller_profile_id,
         type
     };
 
@@ -57052,6 +57096,8 @@ async function editDealer(item){
             });
 
 
+        void window.AUSTA_SELLER_INTENT?.mount(
+            document.getElementById('austaV153CFields'),'dealer',item);
         const button=
             document.getElementById(
                 'austaV153CSave'
@@ -57081,7 +57127,7 @@ window.AUSTA_EDIT_DEALER_V156 =
    V156-G DEALER REAL UPDATE
    ========================================================= */
 
-async function updateDealer(item){
+async function updateDealer(item,sellerIntent){
 
     if(!item?.id){
 
@@ -57219,6 +57265,11 @@ async function updateDealer(item){
     if(preserved === undefined) delete payload.details;
     else payload.details = preserved;
 
+    if(sellerIntent&&!window.AUSTA_SELLER_INTENT)throw new Error('Satıcı profili sistemi hazır deyil.');
+    Object.assign(payload,window.AUSTA_SELLER_INTENT
+        ? await window.AUSTA_SELLER_INTENT.resolve('dealer',user,sellerIntent,true,item.id)
+        : {});
+
     const {
         data,
         error
@@ -57351,7 +57402,7 @@ function readCurrentFields(partialUpdate=false){
    DEALER SAVE
    ========================================================= */
 
-async function saveDealer(publishAttempt){
+async function saveDealer(publishAttempt,sellerIntent){
 
     const user =
         await currentUser();
@@ -57476,6 +57527,10 @@ async function saveDealer(publishAttempt){
     };
 
 
+    if(sellerIntent&&!window.AUSTA_SELLER_INTENT)throw new Error('Satıcı profili sistemi hazır deyil.');
+    Object.assign(payload,window.AUSTA_SELLER_INTENT
+        ? await window.AUSTA_SELLER_INTENT.resolve('dealer',user,sellerIntent)
+        : {seller_profile_id:null});
     publishAttempt.insertStarted = true;
     const {
         data,
@@ -58340,14 +58395,14 @@ function patchSave(){
             );
 
 
-    window.AUSTA_V153.saveListing = async function(type,input){
+    window.AUSTA_V153.saveListing = async function(type,input,sellerIntent){
         type=type===DEALER_TYPE?type:window.AUSTA_V153.normalizeCategory(type);
         const publish=window.AUSTA_LISTING_PUBLISH;
         if(!publish?.run)throw new Error('Elan yerləşdirmə sistemi hazır deyil.');
         const files=selectedFiles();
         const snapshot={images:[...files.images],videos:[...files.videos]};
         if(type===DEALER_TYPE && dealerEditItem){
-            const result=await updateDealer(dealerEditItem);
+            const result=await updateDealer(dealerEditItem,sellerIntent);
             await uploadMedia(type,result.id);
             dealerEditItem=null;
             return result;
@@ -58355,7 +58410,7 @@ function patchSave(){
         const user=await currentUser();
         const result=await publish.run({
             client:sb(),user,config:mediaConfig(type),files:snapshot,
-            create:attempt=>type===DEALER_TYPE?saveDealer(attempt):original(type,input,attempt),
+            create:attempt=>type===DEALER_TYPE?saveDealer(attempt,sellerIntent):original(type,input,attempt,sellerIntent),
             upload:attempt=>uploadMedia(type,attempt.listing.id,attempt)
         });
         // Only completed activation can emit create-success. Repeated calls that
@@ -58372,8 +58427,8 @@ function patchSave(){
 
     // Reuse the uploader for Vehicle/Rent and Marketplace edits.
     const originalUpdate = window.AUSTA_V153.updateListing.bind(window.AUSTA_V153);
-    window.AUSTA_V153.updateListing = async function(type, listingId, input){
-        const result = await originalUpdate(type, listingId, input);
+    window.AUSTA_V153.updateListing = async function(type, listingId, input, sellerIntent){
+        const result = await originalUpdate(type, listingId, input, sellerIntent);
         if(VEHICLE_TYPES.has(type) || MARKETPLACE_TYPES.has(type)){
             await uploadMedia(type, listingId);
         }
