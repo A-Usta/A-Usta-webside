@@ -18593,708 +18593,1261 @@ function fixVideos(){
    }
  });
 }
+
 function bindVideoActions(){
 
-  const grid=
+  const grid =
     document.getElementById('austaV22VideoGrid');
 
-  if(!grid)return;
+  if(!grid) return;
 
-  if(grid.dataset.v159Actions==='1'){
+  /*
+   * Eyni listener ikinci dəfə qurulmasın.
+   */
+  if(grid.dataset.austaV160Actions === '1'){
     return;
   }
 
-  grid.dataset.v159Actions='1';
+  grid.dataset.austaV160Actions = '1';
 
 
-  /* ==========================================
-     A-USTA V159 COMMENT SHEET
-     TikTok tipli aşağıdan açılan panel
-     ========================================== */
+  /* =====================================================
+     KÖMƏKÇİ FUNKSİYALAR
+     ===================================================== */
 
-  function openCommentSheet(card){
+  function getListingId(card){
+
+    return String(
+      card?.dataset?.listingId ||
+      card?.dataset?.listingid ||
+      ''
+    );
+
+  }
+
+
+  function getStorageArray(key){
+
+    try{
+
+      const value =
+        JSON.parse(
+          localStorage.getItem(key) || '[]'
+        );
+
+      return Array.isArray(value)
+        ? value.map(String)
+        : [];
+
+    }catch(error){
+
+      return [];
+
+    }
+
+  }
+
+
+  function saveStorageArray(key,value){
+
+    try{
+
+      localStorage.setItem(
+        key,
+        JSON.stringify(value)
+      );
+
+    }catch(error){
+
+      console.error(
+        '[A-USTA V160 STORAGE]',
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LIKE
+     ===================================================== */
+
+  function toggleLike(button,card){
+
+    const listingId =
+      getListingId(card);
+
+    const active =
+      button.dataset.liked === '1';
+
+    const count =
+      button.querySelector('.v34-count');
+
+    let number =
+      Number(
+        count?.textContent || 0
+      );
+
+    if(active){
+
+      /* LIKE LƏĞV EDİLDİ */
+
+      button.dataset.liked = '0';
+
+      number =
+        Math.max(
+          0,
+          number - 1
+        );
+
+      button.style.removeProperty(
+        'color'
+      );
+
+      button.style.removeProperty(
+        'border-color'
+      );
+
+      button.style.removeProperty(
+        'background'
+      );
+
+      button.style.removeProperty(
+        'box-shadow'
+      );
+
+      button.classList.remove(
+        'austa-v160-liked'
+      );
+
+    }else{
+
+      /* LIKE EDİLDİ */
+
+      button.dataset.liked = '1';
+
+      number++;
+
+      button.style.setProperty(
+        'color',
+        '#ff2448',
+        'important'
+      );
+
+      button.style.setProperty(
+        'border-color',
+        '#ff2448',
+        'important'
+      );
+
+      button.style.setProperty(
+        'background',
+        'rgba(255,36,72,.18)',
+        'important'
+      );
+
+      button.style.setProperty(
+        'box-shadow',
+        '0 0 0 1px rgba(255,36,72,.25)',
+        'important'
+      );
+
+      button.classList.add(
+        'austa-v160-liked'
+      );
+
+    }
+
+
+    if(count){
+
+      count.textContent =
+        String(number);
+
+      count.style.setProperty(
+        'color',
+        active ? '' : '#ff2448',
+        active ? '' : 'important'
+      );
+
+    }
+
+
+    /*
+     * Listing ID varsa browser-də
+     * like vəziyyətini yadda saxla.
+     */
+
+    if(listingId){
+
+      const key =
+        'austa-liked-video-listings';
+
+      let ids =
+        getStorageArray(key);
+
+      if(active){
+
+        ids =
+          ids.filter(
+            id => id !== listingId
+          );
+
+      }else if(
+        !ids.includes(listingId)
+      ){
+
+        ids.push(listingId);
+
+      }
+
+      saveStorageArray(
+        key,
+        ids
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     SAVE
+     ===================================================== */
+
+  function toggleSave(button,card){
+
+    const listingId =
+      getListingId(card);
+
+    const active =
+      button.dataset.saved === '1';
+
+
+    if(active){
+
+      /* SAVE LƏĞV */
+
+      button.dataset.saved = '0';
+
+      button.style.removeProperty(
+        'color'
+      );
+
+      button.style.removeProperty(
+        'border-color'
+      );
+
+      button.style.removeProperty(
+        'background'
+      );
+
+      button.style.removeProperty(
+        'box-shadow'
+      );
+
+      button.classList.remove(
+        'austa-v160-saved'
+      );
+
+    }else{
+
+      /* SAVE AKTİV */
+
+      button.dataset.saved = '1';
+
+      button.style.setProperty(
+        'color',
+        '#ff2448',
+        'important'
+      );
+
+      button.style.setProperty(
+        'border-color',
+        '#ff2448',
+        'important'
+      );
+
+      button.style.setProperty(
+        'background',
+        'rgba(255,36,72,.18)',
+        'important'
+      );
+
+      button.style.setProperty(
+        'box-shadow',
+        '0 0 0 1px rgba(255,36,72,.25)',
+        'important'
+      );
+
+      button.classList.add(
+        'austa-v160-saved'
+      );
+
+    }
+
+
+    if(listingId){
+
+      const key =
+        'austa-saved-video-listings';
+
+      let ids =
+        getStorageArray(key);
+
+      if(active){
+
+        ids =
+          ids.filter(
+            id => id !== listingId
+          );
+
+      }else if(
+        !ids.includes(listingId)
+      ){
+
+        ids.push(listingId);
+
+      }
+
+      saveStorageArray(
+        key,
+        ids
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     COMMENT — TIKTOK TİPLİ AĞ BOTTOM SHEET
+     ===================================================== */
+
+  function openComments(card){
+
+    /*
+     * Köhnə balaca comment qutusu
+     * qalıbsa sil.
+     */
 
     document
-      .getElementById('austaV159CommentSheet')
+      .querySelectorAll(
+        '.v34-comment-box'
+      )
+      .forEach(
+        element => element.remove()
+      );
+
+
+    /*
+     * Əvvəl açılmış V160 panelini sil.
+     */
+
+    document
+      .getElementById(
+        'austaV160Comments'
+      )
       ?.remove();
 
-    const listingId=
-      card?.dataset?.listingId || '';
 
-    const overlay=
+    const listingId =
+      getListingId(card);
+
+
+    /* ---------- OVERLAY ---------- */
+
+    const overlay =
       document.createElement('div');
 
-    overlay.id='austaV159CommentSheet';
+    overlay.id =
+      'austaV160Comments';
 
-    overlay.style.cssText=
-      'position:fixed;'+
-      'inset:0;'+
-      'z-index:3000000;'+
-      'background:rgba(0,0,0,.48);'+
-      'display:flex;'+
-      'align-items:flex-end;'+
+    overlay.style.cssText =
+      'position:fixed;' +
+      'inset:0;' +
+      'z-index:9999999;' +
+      'background:rgba(0,0,0,.48);' +
+      'display:flex;' +
+      'align-items:flex-end;' +
       'justify-content:center;';
 
-    const sheet=
-      document.createElement('div');
 
-    sheet.style.cssText=
-      'position:relative;'+
-      'width:min(560px,100%);'+
-      'height:min(72vh,650px);'+
-      'background:#fff;'+
-      'border-radius:22px 22px 0 0;'+
-      'display:flex;'+
-      'flex-direction:column;'+
-      'overflow:hidden;'+
-      'box-shadow:0 -10px 35px rgba(0,0,0,.20);'+
-      'font-family:Arial,sans-serif;';
+    /* ---------- WHITE SHEET ---------- */
+
+    const sheet =
+      document.createElement('section');
+
+    sheet.style.cssText =
+      'position:relative;' +
+      'width:min(600px,100%);' +
+      'height:min(72vh,680px);' +
+      'background:#fff;' +
+      'border-radius:22px 22px 0 0;' +
+      'overflow:hidden;' +
+      'display:flex;' +
+      'flex-direction:column;' +
+      'color:#111;' +
+      'font-family:Arial,sans-serif;' +
+      'box-shadow:0 -12px 40px rgba(0,0,0,.25);';
 
 
     /* ---------- HEADER ---------- */
 
-    const header=
-      document.createElement('div');
+    const header =
+      document.createElement('header');
 
-    header.style.cssText=
-      'position:relative;'+
-      'min-height:58px;'+
-      'display:flex;'+
-      'align-items:center;'+
-      'justify-content:center;'+
-      'border-bottom:1px solid #eee;'+
-      'flex:0 0 auto;';
+    header.style.cssText =
+      'position:relative;' +
+      'height:58px;' +
+      'min-height:58px;' +
+      'display:flex;' +
+      'align-items:center;' +
+      'justify-content:center;' +
+      'background:#fff;' +
+      'border-bottom:1px solid #ededed;';
 
-    header.innerHTML=
-      '<strong '+
-      'style="'+
-        'font-size:16px;'+
-        'color:#111;'+
-        'font-weight:800;'+
-      '">'+
-        'Şərhlər'+
-      '</strong>'+
-      '<button type="button" '+
-      'data-v159-comment-close '+
-      'aria-label="Bağla" '+
-      'style="'+
-        'position:absolute;'+
-        'right:14px;'+
-        'top:50%;'+
-        'transform:translateY(-50%);'+
-        'width:38px;'+
-        'height:38px;'+
-        'border:0;'+
-        'background:transparent;'+
-        'color:#555;'+
-        'font-size:30px;'+
-        'line-height:38px;'+
-        'cursor:pointer;'+
-      '">×</button>';
+
+    header.innerHTML =
+      '<strong ' +
+        'data-austa-comment-title ' +
+        'style="' +
+          'font-size:16px;' +
+          'font-weight:800;' +
+          'color:#111;' +
+        '">' +
+        'Şərhlər' +
+      '</strong>' +
+
+      '<button ' +
+        'type="button" ' +
+        'data-austa-comment-close ' +
+        'aria-label="Bağla" ' +
+        'style="' +
+          'position:absolute;' +
+          'right:14px;' +
+          'top:50%;' +
+          'transform:translateY(-50%);' +
+          'width:40px;' +
+          'height:40px;' +
+          'border:0;' +
+          'background:transparent;' +
+          'color:#555;' +
+          'font-size:31px;' +
+          'font-weight:300;' +
+          'line-height:40px;' +
+          'cursor:pointer;' +
+        '">' +
+        '×' +
+      '</button>';
 
 
     /* ---------- COMMENT LIST ---------- */
 
-    const list=
+    const list =
       document.createElement('div');
 
-    list.style.cssText=
-      'flex:1 1 auto;'+
-      'overflow-y:auto;'+
-      'padding:12px 16px 18px;'+
+    list.setAttribute(
+      'data-austa-comment-list',
+      '1'
+    );
+
+    list.style.cssText =
+      'flex:1 1 auto;' +
+      'min-height:0;' +
+      'overflow-y:auto;' +
+      'overscroll-behavior:contain;' +
+      'padding:10px 18px 20px;' +
       'background:#fff;';
 
-    /*
-     * Hələ Supabase comment sistemi
-     * qoşulmayıb.
-     * Ona görə saxta TikTok şərhləri
-     * göstərmirik.
-     */
 
-    list.innerHTML=
-      '<div data-v159-empty-comments '+
-      'style="'+
-        'height:100%;'+
-        'min-height:220px;'+
-        'display:flex;'+
-        'flex-direction:column;'+
-        'align-items:center;'+
-        'justify-content:center;'+
-        'text-align:center;'+
-        'padding:25px;'+
-        'box-sizing:border-box;'+
-        'color:#777;'+
-      '">'+
+    /* ---------- EMPTY STATE ---------- */
 
-        '<div style="'+
-          'width:58px;'+
-          'height:58px;'+
-          'border-radius:50%;'+
-          'background:#f3f3f3;'+
-          'display:flex;'+
-          'align-items:center;'+
-          'justify-content:center;'+
-          'font-size:25px;'+
-          'margin-bottom:12px;'+
-        '">💬</div>'+
+    const empty =
+      document.createElement('div');
 
-        '<strong style="'+
-          'font-size:16px;'+
-          'color:#222;'+
-        '">'+
-          'Hələ şərh yoxdur'+
-        '</strong>'+
+    empty.setAttribute(
+      'data-austa-comments-empty',
+      '1'
+    );
 
-        '<span style="'+
-          'font-size:13px;'+
-          'margin-top:5px;'+
-        '">'+
-          'İlk şərhi siz yazın'+
-        '</span>'+
+    empty.style.cssText =
+      'height:100%;' +
+      'min-height:230px;' +
+      'display:flex;' +
+      'flex-direction:column;' +
+      'align-items:center;' +
+      'justify-content:center;' +
+      'text-align:center;' +
+      'color:#777;';
+
+
+    empty.innerHTML =
+      '<div style="' +
+        'width:60px;' +
+        'height:60px;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'justify-content:center;' +
+        'border-radius:50%;' +
+        'background:#f3f3f3;' +
+        'font-size:27px;' +
+        'margin-bottom:12px;' +
+      '">' +
+        '💬' +
+      '</div>' +
+
+      '<strong style="' +
+        'font-size:16px;' +
+        'color:#222;' +
+      '">' +
+        'Hələ şərh yoxdur' +
+      '</strong>' +
+
+      '<span style="' +
+        'margin-top:5px;' +
+        'font-size:13px;' +
+        'color:#999;' +
+      '">' +
+        'İlk şərhi siz yazın' +
+      '</span>';
+
+
+    list.appendChild(empty);
+
+
+    /* ---------- INPUT AREA ---------- */
+
+    const composer =
+      document.createElement('footer');
+
+    composer.style.cssText =
+      'flex:0 0 auto;' +
+      'display:flex;' +
+      'align-items:center;' +
+      'gap:10px;' +
+      'padding:10px 12px;' +
+      'padding-bottom:max(10px,env(safe-area-inset-bottom));' +
+      'background:#fff;' +
+      'border-top:1px solid #ededed;';
+
+
+    composer.innerHTML =
+      '<div style="' +
+        'width:40px;' +
+        'height:40px;' +
+        'min-width:40px;' +
+        'border-radius:50%;' +
+        'background:#ededed;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'justify-content:center;' +
+        'font-size:19px;' +
+      '">' +
+        '👤' +
+      '</div>' +
+
+      '<div style="' +
+        'flex:1;' +
+        'min-width:0;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'background:#f2f2f2;' +
+        'border-radius:24px;' +
+        'padding:2px 4px 2px 15px;' +
+      '">' +
+
+        '<input ' +
+          'type="text" ' +
+          'data-austa-comment-input ' +
+          'placeholder="Şərh əlavə edin..." ' +
+          'autocomplete="off" ' +
+          'style="' +
+            'flex:1;' +
+            'min-width:0;' +
+            'height:42px;' +
+            'border:0;' +
+            'outline:0;' +
+            'background:transparent;' +
+            'color:#111;' +
+            'font-size:14px;' +
+          '"' +
+        '>' +
+
+        '<button ' +
+          'type="button" ' +
+          'data-austa-comment-send ' +
+          'aria-label="Göndər" ' +
+          'style="' +
+            'width:40px;' +
+            'height:40px;' +
+            'min-width:40px;' +
+            'border:0;' +
+            'border-radius:50%;' +
+            'background:transparent;' +
+            'color:#ff2448;' +
+            'font-size:23px;' +
+            'font-weight:900;' +
+            'cursor:pointer;' +
+          '"' +
+        '>' +
+          '↑' +
+        '</button>' +
 
       '</div>';
 
-
-    /* ---------- BOTTOM INPUT ---------- */
-
-    const bottom=
-      document.createElement('div');
-
-    bottom.style.cssText=
-      'flex:0 0 auto;'+
-      'display:flex;'+
-      'align-items:center;'+
-      'gap:9px;'+
-      'padding:10px 12px;'+
-      'padding-bottom:max(10px,env(safe-area-inset-bottom));'+
-      'border-top:1px solid #eee;'+
-      'background:#fff;';
-
-    bottom.innerHTML=
-      '<div style="'+
-        'width:38px;'+
-        'height:38px;'+
-        'min-width:38px;'+
-        'border-radius:50%;'+
-        'background:#ededed;'+
-        'display:flex;'+
-        'align-items:center;'+
-        'justify-content:center;'+
-        'font-size:18px;'+
-      '">👤</div>'+
-
-      '<div style="'+
-        'flex:1;'+
-        'display:flex;'+
-        'align-items:center;'+
-        'background:#f2f2f2;'+
-        'border-radius:22px;'+
-        'padding:3px 5px 3px 14px;'+
-      '">'+
-
-        '<input '+
-        'data-v159-comment-input '+
-        'type="text" '+
-        'placeholder="Şərh əlavə edin..." '+
-        'autocomplete="off" '+
-        'style="'+
-          'flex:1;'+
-          'min-width:0;'+
-          'height:38px;'+
-          'border:0;'+
-          'outline:0;'+
-          'background:transparent;'+
-          'color:#111;'+
-          'font-size:14px;'+
-        '">'+
-
-        '<button type="button" '+
-        'data-v159-comment-send '+
-        'style="'+
-          'width:38px;'+
-          'height:38px;'+
-          'min-width:38px;'+
-          'border:0;'+
-          'border-radius:50%;'+
-          'background:transparent;'+
-          'color:#e31b3d;'+
-          'font-size:22px;'+
-          'font-weight:900;'+
-          'cursor:pointer;'+
-        '">↑</button>'+
-
-      '</div>';
 
     sheet.appendChild(header);
     sheet.appendChild(list);
-    sheet.appendChild(bottom);
+    sheet.appendChild(composer);
 
     overlay.appendChild(sheet);
-    document.body.appendChild(overlay);
+
+    document.body.appendChild(
+      overlay
+    );
 
 
-    const close=()=>overlay.remove();
+    /* ---------- CLOSE ---------- */
 
-    header.querySelector(
-      '[data-v159-comment-close]'
-    ).onclick=close;
+    function closeComments(){
+
+      overlay.remove();
+
+    }
 
 
-    /*
-     * Qara sahəyə klik ediləndə bağlanır.
-     * Ağ panelə klik bağlamır.
-     */
+    header
+      .querySelector(
+        '[data-austa-comment-close]'
+      )
+      .addEventListener(
+        'click',
+        closeComments
+      );
+
 
     overlay.addEventListener(
       'click',
-      event=>{
-        if(event.target===overlay){
-          close();
+      event => {
+
+        if(event.target === overlay){
+
+          closeComments();
+
         }
+
       }
     );
 
 
-    const input=
-      bottom.querySelector(
-        '[data-v159-comment-input]'
+    /* ---------- ADD COMMENT ---------- */
+
+    const input =
+      composer.querySelector(
+        '[data-austa-comment-input]'
       );
 
-    const send=
-      bottom.querySelector(
-        '[data-v159-comment-send]'
+    const send =
+      composer.querySelector(
+        '[data-austa-comment-send]'
       );
 
 
-    function addLocalComment(){
+    function addComment(){
 
-      const text=
+      const text =
         input.value.trim();
 
-      if(!text)return;
+      if(!text){
 
-      list.querySelector(
-        '[data-v159-empty-comments]'
-      )?.remove();
+        input.focus();
+        return;
 
-      const comment=
+      }
+
+
+      list
+        .querySelector(
+          '[data-austa-comments-empty]'
+        )
+        ?.remove();
+
+
+      const row =
         document.createElement('div');
 
-      comment.style.cssText=
-        'display:flex;'+
-        'gap:10px;'+
-        'padding:10px 0;'+
-        'border-bottom:1px solid #f1f1f1;';
+      row.style.cssText =
+        'display:flex;' +
+        'align-items:flex-start;' +
+        'gap:10px;' +
+        'padding:12px 0;';
 
-      comment.innerHTML=
-        '<div style="'+
-          'width:38px;'+
-          'height:38px;'+
-          'min-width:38px;'+
-          'border-radius:50%;'+
-          'background:#ededed;'+
-          'display:flex;'+
-          'align-items:center;'+
-          'justify-content:center;'+
-        '">👤</div>'+
 
-        '<div style="'+
-          'flex:1;'+
-          'min-width:0;'+
-        '">'+
+      const avatar =
+        document.createElement('div');
 
-          '<div style="'+
-            'font-size:12px;'+
-            'font-weight:700;'+
-            'color:#888;'+
-            'margin-bottom:3px;'+
-          '">'+
-            'A-USTA istifadəçisi'+
-          '</div>'+
+      avatar.style.cssText =
+        'width:40px;' +
+        'height:40px;' +
+        'min-width:40px;' +
+        'border-radius:50%;' +
+        'background:#ededed;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'justify-content:center;' +
+        'font-size:18px;';
 
-          '<div style="'+
-            'font-size:14px;'+
-            'line-height:1.4;'+
-            'color:#111;'+
-            'word-break:break-word;'+
-          '"></div>'+
+      avatar.textContent = '👤';
 
-          '<div style="'+
-            'margin-top:6px;'+
-            'font-size:11px;'+
-            'color:#999;'+
-          '">'+
-            'indi'+
-            ' &nbsp; '+
-            '<b>Cavablandırın</b>'+
-          '</div>'+
 
-        '</div>'+
+      const body =
+        document.createElement('div');
 
-        '<button type="button" '+
-        'data-v159-comment-like '+
-        'style="'+
-          'align-self:center;'+
-          'border:0;'+
-          'background:transparent;'+
-          'font-size:21px;'+
-          'color:#777;'+
-          'cursor:pointer;'+
-        '">♡</button>';
+      body.style.cssText =
+        'flex:1;' +
+        'min-width:0;';
 
-      comment.querySelector(
-        'div > div:nth-child(2)'
+
+      const username =
+        document.createElement('div');
+
+      username.style.cssText =
+        'font-size:13px;' +
+        'font-weight:700;' +
+        'color:#8a8a8a;' +
+        'margin-bottom:4px;';
+
+      username.textContent =
+        'A-USTA istifadəçisi';
+
+
+      const commentText =
+        document.createElement('div');
+
+      commentText.style.cssText =
+        'font-size:15px;' +
+        'line-height:1.4;' +
+        'color:#111;' +
+        'word-break:break-word;';
+
+      commentText.textContent =
+        text;
+
+
+      const meta =
+        document.createElement('div');
+
+      meta.style.cssText =
+        'margin-top:6px;' +
+        'font-size:12px;' +
+        'color:#999;';
+
+      meta.innerHTML =
+        'indi &nbsp;&nbsp; ' +
+        '<strong>Cavablandırın</strong>';
+
+
+      body.appendChild(username);
+      body.appendChild(commentText);
+      body.appendChild(meta);
+
+
+      const commentLike =
+        document.createElement('button');
+
+      commentLike.type = 'button';
+
+      commentLike.textContent = '♡';
+
+      commentLike.style.cssText =
+        'width:38px;' +
+        'height:38px;' +
+        'border:0;' +
+        'background:transparent;' +
+        'font-size:24px;' +
+        'color:#777;' +
+        'cursor:pointer;';
+
+
+      commentLike.addEventListener(
+        'click',
+        event => {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          const liked =
+            commentLike.dataset.liked === '1';
+
+          commentLike.dataset.liked =
+            liked ? '0' : '1';
+
+          commentLike.textContent =
+            liked ? '♡' : '♥';
+
+          commentLike.style.color =
+            liked
+              ? '#777'
+              : '#ff2448';
+
+        }
       );
 
-      const textHost=
-        comment.children[1]
-          .children[1];
 
-      textHost.textContent=text;
+      row.appendChild(avatar);
+      row.appendChild(body);
+      row.appendChild(commentLike);
 
-      const commentLike=
-        comment.querySelector(
-          '[data-v159-comment-like]'
-        );
+      list.appendChild(row);
 
-      commentLike.onclick=event=>{
 
-        event.stopPropagation();
+      input.value = '';
 
-        const active=
-          commentLike.dataset.liked==='1';
-
-        commentLike.dataset.liked=
-          active ? '0' : '1';
-
-        commentLike.textContent=
-          active ? '♡' : '♥';
-
-        commentLike.style.color=
-          active ? '#777' : '#e31b3d';
-      };
-
-      list.appendChild(comment);
-
-      input.value='';
-
-      list.scrollTop=
+      list.scrollTop =
         list.scrollHeight;
 
-      /*
-       * Bu mərhələdə şərh yalnız UI-dadır.
-       * Supabase comment table qurulanda
-       * burada DB insert olacaq.
-       */
 
       console.log(
-        '[A-USTA V159 COMMENT]',
+        '[A-USTA V160 COMMENT]',
         {
           listingId,
           text
         }
       );
+
     }
 
 
-    send.onclick=event=>{
-      event.preventDefault();
-      event.stopPropagation();
-      addLocalComment();
-    };
+    send.addEventListener(
+      'click',
+      event => {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        addComment();
+
+      }
+    );
 
 
     input.addEventListener(
       'keydown',
-      event=>{
-        if(event.key==='Enter'){
+      event => {
+
+        if(event.key === 'Enter'){
+
           event.preventDefault();
-          addLocalComment();
+
+          addComment();
+
         }
+
       }
     );
 
+
     setTimeout(
-      ()=>input.focus(),
+      () => input.focus(),
       100
     );
+
   }
 
 
-  /* ==========================================
-     VIDEO ACTION CLICK
-     ========================================== */
+  /* =====================================================
+     SHARE
+     ===================================================== */
+
+  async function shareVideo(button,card){
+
+    const listingId =
+      getListingId(card);
+
+    const title =
+      card.querySelector('b')
+        ?.textContent
+        ?.trim() ||
+      'A-USTA video elan';
+
+
+    /*
+     * Real elanın ID-sini paylaşım
+     * URL-sinə əlavə et.
+     */
+
+    const url =
+      new URL(
+        window.location.href
+      );
+
+    if(listingId){
+
+      url.searchParams.set(
+        'listing',
+        listingId
+      );
+
+    }
+
+    const shareUrl =
+      url.toString();
+
+
+    try{
+
+      /*
+       * Telefon / browser native share
+       */
+
+      if(
+        typeof navigator.share ===
+        'function'
+      ){
+
+        await navigator.share({
+          title,
+          text:title,
+          url:shareUrl
+        });
+
+        return;
+
+      }
+
+
+      /*
+       * Clipboard fallback
+       */
+
+      if(
+        navigator.clipboard &&
+        window.isSecureContext
+      ){
+
+        await navigator.clipboard
+          .writeText(
+            shareUrl
+          );
+
+        showShareSuccess(button);
+
+        return;
+
+      }
+
+
+      /*
+       * Köhnə browser fallback
+       */
+
+      const area =
+        document.createElement(
+          'textarea'
+        );
+
+      area.value =
+        shareUrl;
+
+      area.style.cssText =
+        'position:fixed;' +
+        'left:-9999px;' +
+        'top:-9999px;';
+
+      document.body.appendChild(
+        area
+      );
+
+      area.focus();
+      area.select();
+
+      document.execCommand(
+        'copy'
+      );
+
+      area.remove();
+
+      showShareSuccess(button);
+
+
+    }catch(error){
+
+      /*
+       * İstifadəçi share pəncərəsini
+       * özü bağlayıbsa xəta deyil.
+       */
+
+      if(
+        error?.name !==
+        'AbortError'
+      ){
+
+        console.error(
+          '[A-USTA V160 SHARE]',
+          error
+        );
+
+      }
+
+    }
+
+  }
+
+
+  function showShareSuccess(button){
+
+    const old =
+      button.innerHTML;
+
+    button.textContent = '✓';
+
+    button.style.setProperty(
+      'color',
+      '#ff2448',
+      'important'
+    );
+
+    setTimeout(
+      () => {
+
+        button.innerHTML = old;
+
+        button.style.removeProperty(
+          'color'
+        );
+
+      },
+      1000
+    );
+
+  }
+
+
+  /* =====================================================
+     BÜTÜN VIDEO ACTION-LAR
+     ===================================================== */
 
   grid.addEventListener(
     'click',
-    async event=>{
+    async event => {
 
-      const button=
+      const button =
         event.target.closest(
           '[data-v34-video-action]'
         );
 
-      if(!button)return;
+      if(!button){
+        return;
+      }
+
+
+      /*
+       * Elana bax və video klik axınına
+       * keçməsin.
+       */
 
       event.preventDefault();
       event.stopPropagation();
+      event.stopImmediatePropagation();
 
-      const card=
+
+      const card =
         button.closest(
           '.austa-v22-video-card'
         );
 
-      if(!card)return;
+      if(!card){
+        return;
+      }
 
-      const action=
+
+      const action =
         button.dataset.v34VideoAction;
 
-      const listingId=
-        card.dataset.listingId || '';
 
+      if(action === 'like'){
 
-      /* ---------- LIKE ---------- */
-
-      if(action==='like'){
-
-        const count=
-          button.querySelector(
-            '.v34-count'
-          );
-
-        const liked=
-          button.dataset.liked==='1';
-
-        let number=
-          Number(
-            count?.textContent || 0
-          );
-
-        if(liked){
-
-          button.dataset.liked='0';
-
-          number=
-            Math.max(
-              0,
-              number-1
-            );
-
-          button.style.color='';
-          button.style.borderColor='';
-
-        }else{
-
-          button.dataset.liked='1';
-          number++;
-
-          button.style.color='#ff2448';
-          button.style.borderColor='#ff2448';
-        }
-
-        if(count){
-          count.textContent=
-            String(number);
-        }
+        toggleLike(
+          button,
+          card
+        );
 
         return;
+
       }
 
 
-      /* ---------- COMMENT ---------- */
+      if(action === 'comment'){
 
-      if(action==='comment'){
-
-        openCommentSheet(card);
+        openComments(
+          card
+        );
 
         return;
+
       }
 
 
-      /* ---------- SAVE ---------- */
+      if(action === 'save'){
 
-      if(action==='save'){
-
-        const saved=
-          button.dataset.saved==='1';
-
-        button.dataset.saved=
-          saved ? '0' : '1';
-
-        button.style.color=
-          saved ? '' : '#ff2448';
-
-        button.style.borderColor=
-          saved ? '' : '#ff2448';
-
-
-        if(listingId){
-
-          const key=
-            'austa-saved-video-listings';
-
-          let ids=[];
-
-          try{
-
-            ids=JSON.parse(
-              localStorage.getItem(key) ||
-              '[]'
-            );
-
-          }catch(error){
-
-            ids=[];
-          }
-
-          ids=
-            Array.isArray(ids)
-              ? ids.map(String)
-              : [];
-
-          if(saved){
-
-            ids=ids.filter(
-              id=>
-                id!==String(listingId)
-            );
-
-          }else if(
-            !ids.includes(
-              String(listingId)
-            )
-          ){
-
-            ids.push(
-              String(listingId)
-            );
-          }
-
-          localStorage.setItem(
-            key,
-            JSON.stringify(ids)
-          );
-        }
+        toggleSave(
+          button,
+          card
+        );
 
         return;
+
       }
 
 
-      /* ---------- SHARE ---------- */
+      if(action === 'share'){
 
-      if(action==='share'){
-
-        const title=
-          card.querySelector('b')
-            ?.textContent
-            ?.trim() ||
-          'A-USTA video elan';
-
-        const url=
-          new URL(location.href);
-
-        if(listingId){
-
-          url.searchParams.set(
-            'listing',
-            listingId
-          );
-        }
-
-        const shareUrl=
-          url.toString();
-
-        try{
-
-          if(navigator.share){
-
-            await navigator.share({
-              title,
-              text:title,
-              url:shareUrl
-            });
-
-          }else if(
-            navigator.clipboard &&
-            window.isSecureContext
-          ){
-
-            await navigator.clipboard
-              .writeText(
-                shareUrl
-              );
-
-            const old=
-              button.innerHTML;
-
-            button.textContent='✓';
-
-            setTimeout(
-              ()=>{
-                button.innerHTML=old;
-              },
-              1000
-            );
-
-          }else{
-
-            const area=
-              document.createElement(
-                'textarea'
-              );
-
-            area.value=shareUrl;
-
-            area.style.cssText=
-              'position:fixed;'+
-              'left:-9999px;'+
-              'top:-9999px;';
-
-            document.body.appendChild(
-              area
-            );
-
-            area.select();
-
-            document.execCommand(
-              'copy'
-            );
-
-            area.remove();
-
-            const old=
-              button.innerHTML;
-
-            button.textContent='✓';
-
-            setTimeout(
-              ()=>{
-                button.innerHTML=old;
-              },
-              1000
-            );
-          }
-
-        }catch(error){
-
-          if(
-            error?.name!=='AbortError'
-          ){
-
-            console.error(
-              '[A-USTA V159 SHARE]',
-              error
-            );
-          }
-        }
+        await shareVideo(
+          button,
+          card
+        );
 
         return;
+
       }
 
     },
     true
   );
+
+
+  /* =====================================================
+     REFRESH-DƏ LIKE / SAVE VƏZİYYƏTİNİ QAYTAR
+     ===================================================== */
+
+  function restoreStates(){
+
+    const liked =
+      getStorageArray(
+        'austa-liked-video-listings'
+      );
+
+    const saved =
+      getStorageArray(
+        'austa-saved-video-listings'
+      );
+
+
+    grid
+      .querySelectorAll(
+        '.austa-v22-video-card'
+      )
+      .forEach(card => {
+
+        const listingId =
+          getListingId(card);
+
+        if(!listingId){
+          return;
+        }
+
+
+        /* LIKE */
+
+        const likeButton =
+          card.querySelector(
+            '[data-v34-video-action="like"]'
+          );
+
+        if(
+          likeButton &&
+          liked.includes(listingId)
+        ){
+
+          likeButton.dataset.liked =
+            '1';
+
+          likeButton.style.setProperty(
+            'color',
+            '#ff2448',
+            'important'
+          );
+
+          likeButton.style.setProperty(
+            'border-color',
+            '#ff2448',
+            'important'
+          );
+
+          likeButton.style.setProperty(
+            'background',
+            'rgba(255,36,72,.18)',
+            'important'
+          );
+
+        }
+
+
+        /* SAVE */
+
+        const saveButton =
+          card.querySelector(
+            '[data-v34-video-action="save"]'
+          );
+
+        if(
+          saveButton &&
+          saved.includes(listingId)
+        ){
+
+          saveButton.dataset.saved =
+            '1';
+
+          saveButton.style.setProperty(
+            'color',
+            '#ff2448',
+            'important'
+          );
+
+          saveButton.style.setProperty(
+            'border-color',
+            '#ff2448',
+            'important'
+          );
+
+          saveButton.style.setProperty(
+            'background',
+            'rgba(255,36,72,.18)',
+            'important'
+          );
+
+        }
+
+      });
+
+  }
+
+
+  restoreStates();
+
+
+  /*
+   * V159 real kartları Supabase-dən
+   * sonradan render oluna bilər.
+   */
+
+  const observer =
+    new MutationObserver(
+      () => restoreStates()
+    );
+
+  observer.observe(
+    grid,
+    {
+      childList:true,
+      subtree:false
+    }
+  );
+
 }
+ 
 function init(){removeOldMarketFunctionGroup();moveFunctionItems();bindNewFunctionClicks();fixVideos();bindVideoActions();setTimeout(()=>{removeOldMarketFunctionGroup();moveFunctionItems();bindNewFunctionClicks();fixVideos();bindVideoActions();},300);setTimeout(()=>{removeOldMarketFunctionGroup();moveFunctionItems();bindNewFunctionClicks();fixVideos();bindVideoActions();},1200);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 window.AUSTA_V34={fixVideos,removeOldMarketFunctionGroup,moveFunctionItems};
