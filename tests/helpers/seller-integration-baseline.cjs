@@ -3,6 +3,8 @@
 exports.withoutSellerPresentation=html=>html
  .replace('<script src="assets/marketplace/seller-intent.js"></script>\n','')
  .replace('<script src="assets/marketplace/media-manager.js"></script>\n','')
+ .replace('<script src="assets/marketplace/listing-preview.js"></script>\n','')
+ .replace('window.AUSTA_LISTING_PRESENTATION=Object.freeze({vehicleSpecs:carSpecs,marketplaceSpecs});\n','')
  .replace('const sellerIdentityReady=Promise.resolve(window.AUSTA_SELLER_IDENTITY?.hydrate([item]));','void window.AUSTA_SELLER_IDENTITY?.hydrate([item]);')
  .replace('              <div data-professional-seller></div>\n','')
  .replace(`  void sellerIdentityReady.then(()=>{
@@ -22,5 +24,5 @@ exports.withBaselineOwnerDelete=(html,base)=>{
 // P1.3B's narrow cover-aware hydration correction is runtime-tested separately.
 exports.withBaselineMediaHydration=(html,base)=>{
  const section=text=>{const a=text.indexOf('async function hydrateSupabaseListingMedia(item)');const b=text.indexOf('\nfunction imagePaths(item)',a);if(a<0||b<0)throw new Error('media hydration baseline boundary missing');return text.slice(a,b);};
- return html.replace(section(html),()=>section(base));
+ return html.replace(section(html),()=>section(base)).replace('window.AUSTA_LISTING_PRESENTATION=Object.freeze({vehicleSpecs:carSpecs,marketplaceSpecs});\n','');
 };

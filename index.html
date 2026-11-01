@@ -9848,6 +9848,7 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 <script src="assets/marketplace/listing-publish.js"></script>
 <script src="assets/marketplace/seller-identity.js"></script>
 <script src="assets/marketplace/seller-intent.js"></script>
+<script src="assets/marketplace/listing-preview.js"></script>
 <link rel="stylesheet" href="assets/marketplace/listing-cards.css">
 <script src="assets/vehicle/vin.js"></script>
 <script src="assets/marketplace/listing-cards.js"></script>
@@ -30940,6 +30941,7 @@ function marketplaceSpecs(item){
 }
 
 
+window.AUSTA_LISTING_PRESENTATION=Object.freeze({vehicleSpecs:carSpecs,marketplaceSpecs});
 function genericSpecs(item){
 
   const ignored=new Set([
@@ -55043,7 +55045,7 @@ function buildModal(){
                         type="button"
                         id="austaV153CSave"
                     >
-                        ✓ Elanı yerləşdir
+                        Elana ön baxış
                     </button>
 
                 </div>
@@ -55124,6 +55126,7 @@ function buildModal(){
    ========================================================= */
 
 function renderFields(){
+    window.AUSTA_LISTING_PREVIEW?.cancel();
 
     const type=
         document.getElementById(
@@ -55719,7 +55722,7 @@ function fillEditFields(item,type){
 
 function buildRouterInput(type,data){
 
-    data=window.AUSTA_V153.validateListingInput(type,data,Boolean(currentEdit));
+    data=window.AUSTA_V153.validateListingInput(type,data,Boolean(currentEdit || type==='dealer' && window.AUSTA_LISTING_MEDIA?.isDealerEdit()));
 
     const location=
         splitLocation(
@@ -56113,6 +56116,7 @@ async function saveCurrentListing(){
     if(saveInFlight || saveCompleted)return;
     saveInFlight=true;
     const generation=formGeneration;
+    let previewApproval=null,editing=false;
 
     const status=
         document.getElementById(
@@ -56146,6 +56150,7 @@ async function saveCurrentListing(){
             )?.value;
 
 
+        editing=Boolean(currentEdit || type==='dealer' && window.AUSTA_LISTING_MEDIA?.isDealerEdit());
         const data=
             readFields();
 
@@ -56164,8 +56169,7 @@ async function saveCurrentListing(){
 
         status.style.color='#555';
 
-        status.textContent=
-            'Elan Supabase-a göndərilir...';
+        status.textContent=editing ? 'Dəyişikliklər saxlanılır...' : 'Ön baxış hazırlanır...';
 
 
         const input=
@@ -56175,8 +56179,26 @@ async function saveCurrentListing(){
             );
 
 
-      const sellerIntent=window.AUSTA_SELLER_INTENT?.capture(
-          document.getElementById('austaV153CFields'));
+      const root=document.getElementById('austaV153CFields');
+      const sellerView=window.AUSTA_SELLER_INTENT?.preview?.(root);
+      const sellerIntent=sellerView ? sellerView.intent : window.AUSTA_SELLER_INTENT?.capture(root);
+      // EDIT keeps its established save/media-manager path. CREATE stops here
+      // until explicit confirmation; no staging or upload has started.
+      if(!editing){
+          if(!window.AUSTA_LISTING_PREVIEW || !window.AUSTA_LISTING_MEDIA?.prepareCreate)throw new Error('Ön baxış sistemi hazır deyil.');
+          const prepared=window.AUSTA_LISTING_MEDIA.prepareCreate(type,input,data);
+          const fingerprint=JSON.stringify(readFields());
+          previewApproval=await window.AUSTA_LISTING_PREVIEW.review({
+              type,input:prepared.input,values:prepared.values,files:prepared.files,sellerIntent,
+              seller:sellerView?.presentation || null,root,fields:CATEGORIES[type]?.fields || [],
+              label:CATEGORIES[type]?.label || 'Elan',
+              isCurrent:()=>generation===formGeneration && !currentEdit && !window.AUSTA_LISTING_MEDIA.isDealerEdit() &&
+                  document.getElementById('austaV153CFields')===root &&
+                  document.getElementById('austaV153CCategory')?.value===type &&
+                  JSON.stringify(readFields())===fingerprint && (!sellerView || sellerView.isCurrent())
+          });
+          if(!previewApproval)return;
+      }
       let result;
 
 
@@ -56203,7 +56225,8 @@ if(currentEdit){
             .saveListing(
                 type,
                 input,
-                sellerIntent
+                sellerIntent,
+                previewApproval
             );
 
 }
@@ -56220,10 +56243,11 @@ if(currentEdit){
 
 
         saveCompleted=true;
+        if(previewApproval)window.AUSTA_LISTING_PREVIEW.success(previewApproval,result);
         status.style.color='#15803d';
 
        status.textContent=
-    currentEdit
+    editing
         ? '✓ Dəyişikliklər yadda saxlanıldı.'
         : '✓ Elan uğurla yerləşdirildi.';
 
@@ -56279,6 +56303,8 @@ if(currentEdit){
 
 
     }catch(error){
+        if(previewApproval)window.AUSTA_LISTING_PREVIEW.failure(previewApproval,error);
+        if(generation!==formGeneration)return;
 
         console.error(
             'A-USTA V153-C SAVE ERROR:',
@@ -56304,9 +56330,9 @@ if(currentEdit){
     }finally{
         saveInFlight=false;
         button.disabled=saveCompleted;
-        if(!saveCompleted)button.textContent=currentEdit
+        if(!saveCompleted)button.textContent=editing
             ? '✓ Dəyişiklikləri yadda saxla'
-            : '✓ Elanı yerləşdir';
+            : 'Elana ön baxış';
     }
 
 }
@@ -56506,6 +56532,7 @@ if(
 
 function closeModal(){
     if(saveInFlight)return;
+    window.AUSTA_LISTING_PREVIEW?.cancel();
     ++formGeneration;
     saveCompleted=false;
 
@@ -57400,12 +57427,12 @@ function readCurrentFields(partialUpdate=false){
    DEALER SAVE
    ========================================================= */
 
-async function saveDealer(publishAttempt,sellerIntent){
+async function saveDealer(publishAttempt,sellerIntent,createValues){
 
     const user =
         await currentUser();
 
-    const values = window.AUSTA_V153.validateListingInput('dealer',readCurrentFields(),false);
+    const values = window.AUSTA_V153.validateListingInput('dealer',createValues || readCurrentFields(),false);
 
 
     if(
@@ -58026,7 +58053,11 @@ function appendMedia(handle,files){
     const snapshot=mediaSnapshot(c.type,files);
     return managerMutation(handle,async()=>uploadMedia(c.type,c.id,null,snapshot,{client:c.client,user:c.user,check:()=>managerContext(handle)}));
 }
-window.AUSTA_LISTING_MEDIA=Object.freeze({deleteOwnedListing,open:openMediaManager,refresh:managerView,
+function prepareCreate(type,input,values){
+    return {input:type==='dealer'?input:window.AUSTA_V153.validateListingInput(type,input,false),
+        values:window.AUSTA_V153.validateListingInput(type,values,false),files:mediaSnapshot(type)};
+}
+window.AUSTA_LISTING_MEDIA=Object.freeze({isDealerEdit:()=>Boolean(dealerEditItem),prepareCreate,deleteOwnedListing,open:openMediaManager,refresh:managerView,
     close:closeMediaManager,remove:removeMedia,cover:coverMedia,reorder:reorderMedia,append:appendMedia});
 
 
@@ -58604,11 +58635,13 @@ function patchSave(){
             );
 
 
-    window.AUSTA_V153.saveListing = async function(type,input,sellerIntent){
+    window.AUSTA_V153.saveListing = async function(type,input,sellerIntent,previewApproval){
         type=type===DEALER_TYPE?type:window.AUSTA_V153.normalizeCategory(type);
         const publish=window.AUSTA_LISTING_PUBLISH;
         if(!publish?.run)throw new Error('Elan yerləşdirmə sistemi hazır deyil.');
-        const snapshot=mediaSnapshot(type);
+        const approved=previewApproval ? await window.AUSTA_LISTING_PREVIEW.consume(previewApproval,type) : null;
+        if(approved){input=approved.input;sellerIntent=approved.sellerIntent;}
+        const snapshot=mediaSnapshot(type,approved?.files || selectedFiles());
         if(type===DEALER_TYPE && dealerEditItem){
             const item=dealerEditItem;
             return mediaEdit(type,item.id,async()=>{
@@ -58619,7 +58652,7 @@ function patchSave(){
         const user=await currentUser();
         const result=await publish.run({
             client:sb(),user,config:mediaConfig(type),files:snapshot,
-            create:attempt=>type===DEALER_TYPE?saveDealer(attempt,sellerIntent):original(type,input,attempt,sellerIntent),
+            create:attempt=>type===DEALER_TYPE?saveDealer(attempt,sellerIntent,approved?.values):original(type,input,attempt,sellerIntent),
             upload:attempt=>uploadMedia(type,attempt.listing.id,attempt)
         });
         // Only completed activation can emit create-success. Repeated calls that
