@@ -28,7 +28,7 @@ test('Dealer legacy condition: real Chromium select, edit hydration and UPDATE',
  // Extract declarations by their following named boundary; no copied production logic.
  const installStart=media.indexOf('function installDealerCategory(){');
  const installEnd=media.indexOf('let dealerEditItem=',installStart);
- const code="const DEALER_TYPE='dealer';let dealerEditItem=null;\n"+prefix+media.slice(installStart,installEnd)+
+ const code="const DEALER_TYPE='dealer';let dealerEditItem=null;let mediaFormEpoch=0;\n"+prefix+media.slice(installStart,installEnd)+
   between(form,'function esc(value){','function numeric(')+
   between(form,'function renderFields(){','function readFields(){')+
   between(media,'async function editDealer(item){','window.AUSTA_EDIT_DEALER_V156')+
