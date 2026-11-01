@@ -6,7 +6,7 @@ const block=id=>html.match(new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>
 const ids={router:'austa-v153b-all-real-listing-router',media:'austa-v153d-14-category-media-js',form:'austa-v153c-real-listing-form-js'};
 const maps={cars:['vehicle_listings','listing_media','listing-media'],rent:['vehicle_listings','listing_media','listing-media'],parts:['marketplace_listings','marketplace_listing_media','marketplace-media'],service:['service_provider_listings','service_provider_media','provider-media'],usta:['service_provider_listings','service_provider_media','provider-media'],dealer:['auto_dealer_listings','auto_dealer_media','auto-dealer-media']};
 const input={title:'Listing',name:'Name',specialty:'Repair',brand:'BMW',model:'X5',year:2022,price:10,phone:'test',region:'Bakı',address:'Address',dealer_name:'Dealer'};
-const photo=name=>({name,type:'image/jpeg'}),video=name=>({name,type:'video/mp4'});
+const photo=name=>({name,type:'image/jpeg',size:128}),video=name=>({name,type:'video/mp4',size:256});
 function fixture(){
  const state={tables:{},objects:new Set(),events:[],ops:[],failures:[],owner:'owner-1',uploads:0,insertions:0,alerts:[],timers:[],removed:0};
  Object.values(maps).flatMap(x=>x.slice(0,2)).forEach(t=>state.tables[t]=[]);
@@ -16,6 +16,7 @@ function fixture(){
  const fail=op=>{const i=state.failures.findIndex(f=>f.match(op));if(i<0)return null;const rule=state.failures[i];if(rule.once!==false)state.failures.splice(i,1);return rule;};
  class Q{
   constructor(table){this.table=table;this.op='read';this.filters=[];this.one=false;}
+  order(){return this;}range(start,end){this.rangeN=[start,end];return this;}
   select(){return this;}eq(c,v){this.filters.push([c,v]);return this;}limit(n){this.limitN=n;return this;}
   insert(row){this.op='insert';this.row={...row};return this;}update(row){this.op='update';this.row={...row};return this;}
   delete(){this.op='delete';return this;}single(){this.one=true;return this;}maybeSingle(){this.one=true;return this;}
@@ -36,6 +37,7 @@ function fixture(){
    }
    if(rule?.after)return {data:null,error:Object.assign(new Error('response lost'),{code:rule.code||'NETWORK'})};
    if(this.limitN)selected=selected.slice(0,this.limitN);
+   if(this.rangeN)selected=selected.slice(this.rangeN[0],this.rangeN[1]+1);
    return {data:this.one?(selected[0]?{...selected[0]}:null):selected.map(r=>({...r})),error:null};
   }
  }

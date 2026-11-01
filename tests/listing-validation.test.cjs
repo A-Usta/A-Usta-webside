@@ -16,7 +16,7 @@ const managed=['owner_id','status','promotion_type','promotion_started_at','prom
 function setup(type='cars'){
  const f=publishFixture();
  for(const file of ['assets/vehicle/technical.js','assets/vehicle/vin.js','assets/marketplace/card-data.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),f.context);
- f.files.images=[{name:'photo.jpg',type:'image/jpeg'}];f.files.videos=[{name:'clip.mp4',type:'video/mp4'}];
+ f.files.images=[{name:'photo.jpg',type:'image/jpeg',size:128}];f.files.videos=type==='plate'?[]:[{name:'clip.mp4',type:'video/mp4',size:256}];
  const stored={id:'existing',owner_id:'owner-1',status:'active',listing_type:type==='rent'?'rent':'sale',...valid,mileage:123,deposit:150,rental_type:type==='rent'?'Aylıq':null,vin:'1HGCM82633A004352',rating:4.8,reviews_count:57,has_video:false,details:{legacy:{keep:[1,2]}}};
  return Object.assign(f,{stored,async createValid(patch={}){return f.create(type,{...valid,...patch});},async edit(patch={}){if(!f.state.tables[tableFor(type)].length)f.state.tables[tableFor(type)].push({...stored});return f.api.updateListing(type,'existing',patch);}});
 }
@@ -199,18 +199,14 @@ for(const patch of [{daily_price:null,dailyPrice:20,price:30},{daily_price:'',pr
 test('no invented listing text maximum',async()=>{
  const f=setup('parts'),description='x'.repeat(100001);await f.createValid({description});assert.equal(f.state.tables.marketplace_listings[0].description,description);
 });
-test('media uploader, source configuration, video sync and publish wrapper remain identical to main',()=>{
- const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
+test('P1.3A preserves source configuration, Vehicle video helper and P0.3 coordinator',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),main=cp.execFileSync('git',['show','origin/main:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  const block=s=>s.match(/<script id="austa-v153d-14-category-media-js">([\s\S]*?)<\/script>/)[1];
  const segments=s=>{const parts=[...block(s).matchAll(/\n(?:async )?function (\w+)\(/g)];return new Map(parts.map((m,i)=>[m[1],block(s).slice(m.index,parts[i+1]?.index||block(s).length)]));};
  const before=segments(main),after=segments(html);
- for(const name of ['mediaConfig','syncVehicleHasVideo','uploadMedia'])assert.equal(after.get(name),before.get(name),name);
- const patch=after.get('patchSave')
-  .replace('function(type,input,sellerIntent)','function(type,input)')
-  .replace('updateDealer(dealerEditItem,sellerIntent)','updateDealer(dealerEditItem)')
-  .replace('saveDealer(attempt,sellerIntent)','saveDealer(attempt)')
-  .replace('original(type,input,attempt,sellerIntent)','original(type,input,attempt)')
-  .replace('function(type, listingId, input, sellerIntent)','function(type, listingId, input)')
-  .replace('originalUpdate(type, listingId, input, sellerIntent)','originalUpdate(type, listingId, input)');
- assert.equal(patch,before.get('patchSave'));
+ for(const name of ['mediaConfig','syncVehicleHasVideo'])assert.equal(after.get(name),before.get(name),name);
+ const publish=s=>s.slice(s.indexOf('const user=await currentUser();',s.indexOf('window.AUSTA_V153.saveListing = async')),s.indexOf('// Only completed activation'));
+ assert.equal(publish(html),publish(main));
+ const file='assets/marketplace/listing-publish.js';
+ assert.equal(fs.readFileSync(path.join(root,file),'utf8'),cp.execFileSync('git',['show','origin/main:'+file],{cwd:root,encoding:'utf8'}));
 });
