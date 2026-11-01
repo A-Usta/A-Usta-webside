@@ -9,3 +9,11 @@ exports.withoutSellerPresentation=html=>html
     const target=page.querySelector('[data-professional-seller]');
     if(target)target.innerHTML=window.AUSTA_SELLER_INTENT?.detail(item)||'';
   }).catch(()=>{});\n`,'');
+
+// P1.3A changes only this owner-delete function in the older account script.
+// Its real runtime wiring/security is exercised by media-contract.test.cjs.
+exports.withBaselineOwnerDelete=(html,base)=>{
+ const start='async function austaMyDelete(item) {';
+ const section=text=>{const a=text.indexOf(start);const b=text.indexOf('/* ============================================================',a);if(a<0||b<0)throw new Error('owner delete baseline boundary missing');return text.slice(a,b);};
+ return html.replace(section(html),()=>section(base));
+};

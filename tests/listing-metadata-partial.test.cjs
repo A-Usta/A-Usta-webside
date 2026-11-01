@@ -76,7 +76,7 @@ for(const type of [...marketplace,'service','usta'])test(type+': create payload 
 test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
  const main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  const blocks=text=>[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
- const old=blocks(main),now=blocks(require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(html));assert.equal(now.length,old.length);
+ const old=blocks(main),now=blocks(require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(require('./helpers/seller-integration-baseline.cjs').withBaselineOwnerDelete(html,main)));assert.equal(now.length,old.length);
  for(let i=0;i<old.length;i++){
   if(['austa-v153b-all-real-listing-router','austa-v153c-real-listing-form-js','austa-v153d-14-category-media-js'].some(id=>now[i][1].includes(id)))continue;
   assert.equal(now[i][0],old[i][0]);

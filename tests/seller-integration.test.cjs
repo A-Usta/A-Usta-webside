@@ -67,7 +67,7 @@ for(const [type,business] of Object.entries(compatibility)){
  });
  test(`${type}: stale professional choice fails before staging/media, no downgrade`,async()=>{
   const f=fixture();f.state.profiles=[f.profile(business)];const r=await f.mount(type),token=f.choose(r,f.state.profiles[0].id);
-  f.files.images=[{name:'photo.jpg',type:'image/jpeg'}];f.state.profiles=[];await assert.rejects(f.save(type,token));noWrite(f);
+  f.files.images=[{name:'photo.jpg',type:'image/jpeg',size:128}];f.state.profiles=[];await assert.rejects(f.save(type,token));noWrite(f);
  });
  for(const [status,verification] of [['pending','verified'],['active','unverified'],['active','rejected'],['suspended','verified'],['active','revoked']])test(`${type}: revalidation rejects ${status}/${verification}`,async()=>{
   const f=fixture();f.state.profiles=[f.profile(business)];const r=await f.mount(type),token=f.choose(r,f.state.profiles[0].id);

@@ -11958,15 +11958,8 @@ async function austaMyDelete(item) {
       return;
     }
 
-    const {
-      error
-    } = await window.AUSTA_SUPABASE
-      .from(item.__austa_table)
-      .delete()
-      .eq('id', item.id)
-      .eq('owner_id', user.id);
-
-    if (error) throw error;
+    if(!window.AUSTA_LISTING_MEDIA)throw new Error('Media təmizləmə sistemi hazır deyil.');
+    await window.AUSTA_LISTING_MEDIA.deleteOwnedListing(item.__austa_table,item.id);
 
     await austaMyLoadListings();
 
@@ -11977,7 +11970,7 @@ async function austaMyDelete(item) {
     );
 
     alert(
-      'Elanı silmək mümkün olmadı.'
+      error?.code==='MEDIA_DELETE_FAILED' ? error.message : 'Elanı silmək mümkün olmadı.'
     );
   }
 }
@@ -57807,50 +57800,122 @@ function buildMediaBox(){
    ========================================================= */
 
 function selectedFiles(){
-
-    const images =
-        [
-            ...(
-                document
-                    .getElementById(
-                        'austaV153DImages'
-                    )
-                    ?.files || []
-            )
-        ]
-        .filter(
-            file =>
-                String(
-                    file.type || ''
-                )
-                .startsWith('image/')
-        );
-
-
-    const videos =
-        [
-            ...(
-                document
-                    .getElementById(
-                        'austaV153DVideo'
-                    )
-                    ?.files || []
-            )
-        ]
-        .filter(
-            file =>
-                String(
-                    file.type || ''
-                )
-                .startsWith('video/')
-        );
-
-
+    // Keep invalid supplied files visible to validation; never silently discard them.
     return {
-        images,
-        videos
+        images:[...(document.getElementById('austaV153DImages')?.files || [])],
+        videos:[...(document.getElementById('austaV153DVideo')?.files || [])]
     };
 }
+
+// P1.3A: application validation, not a replacement for Storage/DB authorization.
+const MAX_MEDIA_BYTES=50*1024*1024;
+function mediaSnapshot(type, files=selectedFiles()){
+    mediaConfig(type); // Only internal source/category mappings are accepted.
+    const snapshot={images:[...files.images],videos:[...files.videos]};
+    for(const [kind,items] of [['image',snapshot.images],['video',snapshot.videos]]){
+        if(kind==='video' && items.length && !videoAllowed(type))throw new Error('Bu kateqoriyada video əlavə edilmir.');
+        for(const file of items){
+            if(!file || !new RegExp('^'+kind+'/[a-z0-9][a-z0-9.+-]*$','i').test(String(file.type || '')))throw new Error('Şəkil/video faylının formatı uyğun deyil.');
+            if(!Number.isSafeInteger(file.size) || file.size<=0)throw new Error('Boş və ya ölçüsü bilinməyən media faylı qəbul edilmir.');
+            if(file.size>MAX_MEDIA_BYTES)throw new Error('Media faylı maksimum 50 MiB ola bilər.');
+        }
+    }
+    return snapshot;
+}
+async function mediaSession(client,user){
+    const auth=await client.auth.getUser();
+    if(sb()!==client || auth.error || !user?.id || auth.data?.user?.id!==user.id)throw new Error('Media əməliyyatı üçün hesabı yenidən yoxlayın.');
+}
+async function mediaParent(client,config,id,user){
+    await mediaSession(client,user);
+    const {data,error}=await client.from(config.parentTable).select('id,owner_id')
+        .eq('id',id).eq('owner_id',user.id).single();
+    if(error || !data || data.id!==id || data.owner_id!==user.id)throw new Error('Elanın sahibi təsdiqlənmədi.');
+}
+async function persistedMedia(client,config,id,user){
+    const rows=[];
+    for(let offset=0;;){
+        const {data,error}=await client.from(config.table)
+            .select('id,listing_id,owner_id,storage_path,media_type,sort_order,is_cover,created_at')
+            .eq('listing_id',id).eq('owner_id',user.id)
+            .order('sort_order',{ascending:true}).order('created_at',{ascending:true}).order('id',{ascending:true})
+            .range(offset,offset+999);
+        if(error || !Array.isArray(data))throw new Error('Mövcud media oxunmadı. Yenidən cəhd edin.');
+        if(data.some(row=>row.listing_id!==id || row.owner_id!==user.id))throw new Error('Media sahibliyi təsdiqlənmədi.');
+        if(!data.length)return rows;
+        rows.push(...data);
+        offset+=data.length;
+    }
+}
+const mediaEditFlights=new Map();
+function mediaEdit(type,id,action){
+    const key=mediaConfig(type).parentTable+':'+id;
+    if(mediaDeleteFlights.has(key))return Promise.reject(new Error('Elan silinir; əməliyyatın tamamlanmasını gözləyin.'));
+    if(mediaEditFlights.has(key))return mediaEditFlights.get(key);
+    const files=mediaSnapshot(type);
+    const work=Promise.resolve().then(async()=>{
+        const client=sb(),user=await currentUser();
+        await mediaParent(client,mediaConfig(type),id,user);
+        const result=await action();
+        await mediaSession(client,user);
+        await uploadMedia(type,id,null,files,{client,user});
+        return result;
+    }).finally(()=>mediaEditFlights.delete(key));
+    mediaEditFlights.set(key,work);
+    return work;
+}
+// Fixed source map: callers cannot select an arbitrary table or bucket.
+// Vehicle Storage UPDATE/DELETE policy hardening is intentionally deferred:
+// supplied production inspection found 10 parent-less objects among 12 objects.
+// Preserve owner-folder cleanup; this helper never touches that pre-existing debt.
+const deleteMediaSources=Object.freeze({
+    vehicle_listings:'cars',marketplace_listings:'parts',
+    service_provider_listings:'service',auto_dealer_listings:'dealer'
+});
+const mediaDeleteFlights=new Map();
+function deleteOwnedListing(source,id){
+    if(!Object.prototype.hasOwnProperty.call(deleteMediaSources,source) || !id)return Promise.reject(new Error('Elan mənbəyi uyğun deyil.'));
+    const key=source+':'+id;
+    if(mediaEditFlights.has(key))return Promise.reject(new Error('Media saxlanılır; əməliyyatın tamamlanmasını gözləyin.'));
+    if(mediaDeleteFlights.has(key))return mediaDeleteFlights.get(key);
+    const work=Promise.resolve().then(async()=>{
+        const config=mediaConfig(deleteMediaSources[source]),client=sb(),user=await currentUser();
+        await mediaParent(client,config,id,user);
+        const rows=await persistedMedia(client,config,id,user);
+        const paths=[...new Set(rows.map(row=>row.storage_path))];
+        if(paths.some(path=>typeof path!=='string' || !path.startsWith(user.id+'/'+id+'/') || path.split('/').length!==3 || !path.split('/')[2]))throw new Error('Media yolu təsdiqlənmədi; elan silinmədi.');
+        let storageTouched=false;
+        try{
+            for(let i=0;i<paths.length;i+=100){
+                await mediaParent(client,config,id,user);
+                const batch=paths.slice(i,i+100);
+                storageTouched=true;
+                const {data,error}=await client.storage.from(config.bucket).remove(batch);
+                if(error || !Array.isArray(data) || batch.some(path=>!data.some(object=>object.name===path)))throw new Error('cleanup');
+            }
+            await mediaParent(client,config,id,user);
+            // Re-read to catch media appended while cleanup was running. No DB/Storage atomicity is claimed.
+            const remaining=await persistedMedia(client,config,id,user);
+            if(remaining.some(row=>!paths.includes(row.storage_path)))throw new Error('media changed');
+            await mediaSession(client,user);
+            const {data,error}=await client.from(config.parentTable).delete()
+                .eq('id',id).eq('owner_id',user.id).select('id');
+            if(error || !Array.isArray(data) || data.length!==1 || data[0].id!==id)throw new Error('parent delete');
+            return true;
+        }catch{
+            throw new Error(storageTouched
+                ? 'Silmə tamamlanmadı. Media qismən və ya tam silinmiş ola bilər; elan silinməsi təsdiqlənmədi. Yenidən yoxlayın.'
+                : 'Elan silinmədi. Yenidən cəhd edin.');
+        }
+    }).catch(error=>{
+        const message=String(error?.message || '').startsWith('Silmə tamamlanmadı.')
+            ? error.message : 'Elan silinmədi. Sahibliyi və media bağlantısını yoxlayıb yenidən cəhd edin.';
+        throw Object.assign(new Error(message),{code:'MEDIA_DELETE_FAILED'});
+    }).finally(()=>mediaDeleteFlights.delete(key));
+    mediaDeleteFlights.set(key,work);
+    return work;
+}
+window.AUSTA_LISTING_MEDIA=Object.freeze({deleteOwnedListing});
 
 
 /* =========================================================
@@ -58068,8 +58133,11 @@ async function uploadOne(
     mediaType,
     sortOrder,
     isCover,
-    publishAttempt
+    publishAttempt,
+    operation
 ){
+    const client=operation.client;
+    await mediaParent(client,config,listingId,user);
 
     const randomId =
         window.crypto
@@ -58091,7 +58159,7 @@ async function uploadOne(
     const {
         error:uploadError
     } =
-        await sb()
+        await client
             .storage
             .from(
                 config.bucket
@@ -58116,10 +58184,12 @@ async function uploadOne(
 
     if(publishAttempt)publishAttempt.objects.push({path});
 
+    await mediaSession(client,user);
+
     const {
         error:mediaError
     } =
-        await sb()
+        await client
             .from(
                 config.table
             )
@@ -58150,7 +58220,7 @@ async function uploadOne(
         if(publishAttempt)throw mediaError;
         // Existing-listing append: clean only this new object, never the listing.
         try{
-            const {data,error}=await sb().storage.from(config.bucket).remove([path]);
+            const {data,error}=await client.storage.from(config.bucket).remove([path]);
             if(error||!Array.isArray(data)||!data.some(object=>object.name===path))throw new Error('cleanup');
         }catch{
             throw new Error('Media əlavə edilmədi; fayl təmizlənməsi təsdiqlənmədi.');
@@ -58191,10 +58261,12 @@ async function uploadOne(
 async function uploadMedia(
     type,
     listingId,
-    publishAttempt
+    publishAttempt,
+    fileSnapshot,
+    editOperation
 ){
 
-    const files = publishAttempt?.files || selectedFiles();
+    const files = mediaSnapshot(type,publishAttempt?.files || fileSnapshot || selectedFiles());
 
 
     if(
@@ -58228,7 +58300,17 @@ async function uploadMedia(
 
     const result = [];
 
-    let order = 0;
+    const operation=editOperation || {client:publishAttempt?.client || sb(),user};
+    await mediaParent(operation.client,config,listingId,user);
+    const existing=await persistedMedia(operation.client,config,listingId,user);
+    const maxOrder=existing.reduce((max,row)=>{
+        if(!Number.isInteger(row.sort_order))throw new Error('Media sırası oxunmadı.');
+        return Math.max(max,row.sort_order);
+    },-1);
+    let order=Math.max(0,maxOrder+1);
+    if(order+files.images.length+files.videos.length-1>2147483647)throw new Error('Media sırası limitə çatıb.');
+    // Legacy images without a cover remain untouched; explicit management belongs to P1.3B.
+    const allowCover=!existing.some(row=>row.is_cover || row.media_type==='image');
 
 
     for(
@@ -58261,9 +58343,10 @@ async function uploadMedia(
 
                 order++,
 
-                i === 0,
+                allowCover && i === 0,
 
-                publishAttempt
+                publishAttempt,
+                operation
 
             )
 
@@ -58303,7 +58386,8 @@ async function uploadMedia(
 
                 false,
 
-                publishAttempt
+                publishAttempt,
+                operation
 
             )
 
@@ -58399,13 +58483,13 @@ function patchSave(){
         type=type===DEALER_TYPE?type:window.AUSTA_V153.normalizeCategory(type);
         const publish=window.AUSTA_LISTING_PUBLISH;
         if(!publish?.run)throw new Error('Elan yerləşdirmə sistemi hazır deyil.');
-        const files=selectedFiles();
-        const snapshot={images:[...files.images],videos:[...files.videos]};
+        const snapshot=mediaSnapshot(type);
         if(type===DEALER_TYPE && dealerEditItem){
-            const result=await updateDealer(dealerEditItem,sellerIntent);
-            await uploadMedia(type,result.id);
-            dealerEditItem=null;
-            return result;
+            const item=dealerEditItem;
+            return mediaEdit(type,item.id,async()=>{
+                const result=await updateDealer(item,sellerIntent);
+                return result;
+            }).then(result=>{if(dealerEditItem===item)dealerEditItem=null;return result;});
         }
         const user=await currentUser();
         const result=await publish.run({
@@ -58428,11 +58512,10 @@ function patchSave(){
     // Reuse the uploader for Vehicle/Rent and Marketplace edits.
     const originalUpdate = window.AUSTA_V153.updateListing.bind(window.AUSTA_V153);
     window.AUSTA_V153.updateListing = async function(type, listingId, input, sellerIntent){
-        const result = await originalUpdate(type, listingId, input, sellerIntent);
         if(VEHICLE_TYPES.has(type) || MARKETPLACE_TYPES.has(type)){
-            await uploadMedia(type, listingId);
+            return mediaEdit(type,listingId,()=>originalUpdate(type,listingId,input,sellerIntent));
         }
-        return result;
+        return originalUpdate(type,listingId,input,sellerIntent);
     };
 
     window.AUSTA_V153

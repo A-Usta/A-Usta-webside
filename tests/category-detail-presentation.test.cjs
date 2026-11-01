@@ -91,12 +91,14 @@ test('inherited JSON values and prototype category names are not public metadata
  const f=fixture();f.c.__item={category:'__proto__',details:{oem:'PRIVATE'}};assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(marketplaceSpecs(__item))',f.c)),[]);
 });
 test('P1.1F presentation preserved outside three P1.1G listing boundaries',()=>{
- let normalized=require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(html);
+ const baseline=require('./helpers/seller-integration-baseline.cjs');
+ const normalizedBase=baseline.withoutSellerPresentation(base);
+ let normalized=baseline.withoutSellerPresentation(baseline.withBaselineOwnerDelete(html,base));
  for(const id of ['austa-v153b-all-real-listing-router','austa-v153c-real-listing-form-js','austa-v153d-14-category-media-js']){
   const pattern=new RegExp('<script id="'+id+'">[\\s\\S]*?</script>');
-  assert.ok(pattern.test(base));normalized=normalized.replace(pattern,()=>base.match(pattern)[0]);
+  assert.ok(pattern.test(base));normalized=normalized.replace(pattern,()=>normalizedBase.match(pattern)[0]);
  }
- assert.equal(normalized,base);
+ assert.equal(normalized,normalizedBase);
 });
 test('Cars/Rent professional specs, contact and non-Marketplace fallback stay identical',()=>{
  const f=fixture(),old=vm.createContext({window:{}});vm.runInContext(technical,old);vm.runInContext(between(base,'function escapeHtml(value){','function maskedPhone(phone){'),old);

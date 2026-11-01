@@ -16,12 +16,13 @@ const categories = ['parts','accessories','moto','special','bus','water','carava
 
 function fixture({flag=false, videos=0, images=0, fail, failUploadAt=0, failRelationAt=0, failFlagUpdate=false, foreignOwner=false}={}) {
   const state = {listing:{id:'listing-1',owner_id:foreignOwner?'other':'owner-1',has_video:flag}, media:[],calls:[],writes:[],uploads:0,relationInserts:0,mediaBuilds:0,failFlagUpdate};
-  for(let i=0;i<videos;i++) state.media.push({id:'video-'+i,listing_id:'listing-1',owner_id:'owner-1',media_type:'video'});
-  for(let i=0;i<images;i++) state.media.push({id:'image-'+i,listing_id:'listing-1',owner_id:'owner-1',media_type:'image'});
+  for(let i=0;i<videos;i++) state.media.push({id:'video-'+i,listing_id:'listing-1',owner_id:'owner-1',media_type:'video',sort_order:i,is_cover:false});
+  for(let i=0;i<images;i++) state.media.push({id:'image-'+i,listing_id:'listing-1',owner_id:'owner-1',media_type:'image',sort_order:i,is_cover:i===0});
   const files = {images:[], videos:[]};
   class Query {
     constructor(table){this.table=table;this.filters=[];this.op='read';}
-    select(){return this;}
+    order(){return this;}range(start,end){this.rangeN=[start,end];return this;}
+    select(projection){this.projection=projection;return this;}
     eq(column,value){this.filters.push([column,value]);return this;}
     limit(){return this;}
     insert(row){this.op='insert';this.row=row;return this;}
@@ -39,7 +40,8 @@ function fixture({flag=false, videos=0, images=0, fail, failUploadAt=0, failRela
         }
         assert.equal(this.op,'read');
         assert.ok(this.filters.some(([c,v])=>c==='listing_id'&&v==='listing-1'));
-        assert.ok(this.filters.some(([c,v])=>c==='media_type'&&v==='video'));
+        const videoOnly=this.filters.some(([c,v])=>c==='media_type'&&v==='video');
+        if(!videoOnly){const rows=state.media.filter(r=>this.filters.every(([c,v])=>r[c]===v));return {data:this.rangeN?rows.slice(this.rangeN[0],this.rangeN[1]+1):rows,error:null};}
         if(fail==='read')return error('media query failed');
         if(fail==='format')return {data:null,error:null};
         return {data:state.media.filter(r=>this.filters.every(([c,v])=>r[c]===v)).slice(0,1),error:null};
@@ -49,6 +51,7 @@ function fixture({flag=false, videos=0, images=0, fail, failUploadAt=0, failRela
         state.writes.push(this.row);state.listing={id:'listing-1',...this.row};
         return {data:{...state.listing},error:null};
       }
+      if(this.op==='read')return {data:this.filters.every(([c,v])=>state.listing[c]===v)?{...state.listing}:null,error:null};
       assert.equal(this.op,'update');
       assert.ok(this.filters.some(([c,v])=>c==='owner_id'&&v==='owner-1'));
       assert.ok(this.filters.some(([c,v])=>c==='id'&&v==='listing-1'));
@@ -88,8 +91,8 @@ function fixture({flag=false, videos=0, images=0, fail, failUploadAt=0, failRela
   const metadata=(type='parts',extra={})=>api.updateListing(type,'listing-1',{title:'Updated',price:25,description:'Text',...extra});
   return {state,files,window,api,metadata,media:window.__mediaTest};
 }
-const video = name => ({name,type:'video/mp4'});
-const image = name => ({name,type:'image/jpeg'});
+const video = name => ({name,type:'video/mp4',size:256});
+const image = name => ({name,type:'image/jpeg',size:128});
 
 for(const type of categories){
   test(`${type}: create ignores optimistic form flag, starts false`,async()=>{
@@ -119,7 +122,7 @@ test('first video upload confirms relation then synchronizes true',async()=>{
   assert.equal(f.state.listing.has_video,true);
   assert.equal(f.state.media.filter(r=>r.media_type==='video').length,1);
   const ops=f.state.calls.map(r=>r.table+':'+r.op);
-  assert.deepEqual(ops,['marketplace_listing_media:insert','marketplace_listing_media:read','marketplace_listings:update']);
+  assert.deepEqual(ops,['marketplace_listings:read','marketplace_listing_media:read','marketplace_listings:read','marketplace_listing_media:insert','marketplace_listing_media:read','marketplace_listings:update']);
 });
 test('create wrapper with successful video produces real true',async()=>{
   const f=fixture();f.media.patchSave();f.files.videos=[video('clip.mp4')];
@@ -201,7 +204,7 @@ test('no files means no upload or sync work',async()=>{
 test('unrelated inline scripts and five pre-existing syntax issues remain unchanged',()=>{
   const base=cp.execFileSync('git',['show','origin/main:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
   const scripts=text=>[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
-  const old=scripts(base),current=scripts(require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(html));assert.equal(old.length,current.length);let legacy=0;
+  const old=scripts(require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(base)),current=scripts(require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(require('./helpers/seller-integration-baseline.cjs').withBaselineOwnerDelete(html,base)));assert.equal(old.length,current.length);let legacy=0;
   for(let i=0;i<old.length;i++){
     const id=current[i][1];let before,after;
     try{new vm.Script(old[i][2]);}catch(e){before=e.message;legacy++;}
