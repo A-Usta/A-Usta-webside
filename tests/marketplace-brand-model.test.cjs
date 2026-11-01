@@ -38,7 +38,7 @@ function fixture(type='moto',brand='Land Rover',model='Range Rover'){
  let media=script('austa-v153d-14-category-media-js');end=media.lastIndexOf('})();');vm.runInContext(media.slice(0,end)+'window.__patch=patchSave;'+media.slice(end),context);window.__patch();
  for(const file of ['assets/marketplace/category-filters.js','assets/marketplace/listing-cards.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
  let fetch=script('austa-v154e-global-promotion-pagination');end=fetch.lastIndexOf('})();');vm.runInContext(fetch.slice(0,end)+'window.__fetch=fetchCategoryV154E;'+fetch.slice(end),context);
- vm.runInContext(html.slice(html.indexOf('function genericSpecs(item){'),html.indexOf('function specsFor(item){')),context);
+ vm.runInContext(html.slice(html.indexOf('function escapeHtml(value){'),html.indexOf('function maskedPhone(phone){')),context);
  const fields=window.AUSTA_V153C.categories[type].fields;
  const defaults={phone:'123',price:'25',part_name:'Part',accessory_name:'Accessory',special_type:'Crane',water_type:'Qayıq',trailer_type:'Trailer',plate_number:'10-AA-100',name:'Seller'};
  const setNodes=()=>{state.nodes=fields.map(([key,label])=>({dataset:{v153cKey:key,v153cLabel:label},value:defaults[key]??''}));};
@@ -47,7 +47,7 @@ function fixture(type='moto',brand='Land Rover',model='Range Rover'){
   create:extra=>window.AUSTA_V153.saveListing(type,window.__form.buildRouterInput(type,data(extra))),
   update:input=>window.AUSTA_V153.updateListing(type,'listing',input),
   query:filters=>window.__fetch(type,1,filters),
-  specs:()=>json(context.genericSpecs(state.row))};
+  specs:()=>json(context.marketplaceSpecs({...state.row,category:type}))};
 }
 for(const type of types){
  for(const [brand,model] of pairs)test(type+': explicit create '+brand+' / '+model,async()=>{
@@ -101,7 +101,7 @@ test('multi-word values match real V170 top-level filters, card and detail outpu
  assert.equal((await f.query({brand:'Land Rover',model:'Range Rover'})).total,1);assert.equal((await f.query({brand:'Alfa Romeo'})).total,0);
  assert.ok(f.state.ops.some(o=>o.filters.some(([op,k])=>op==='ilike'&&k==='brand')));
  const content=f.window.AUSTA_LISTING_CARDS.content('accessories',f.state.row);assert.ok(content.summary.includes('Land Rover Range Rover'));
- assert.deepEqual(f.specs().find(([k])=>k==='brand'),['brand','Land Rover']);assert.deepEqual(f.specs().find(([k])=>k==='model'),['model','Range Rover']);
+ assert.deepEqual(f.specs().find(([k])=>k==='Marka'),['Marka','Land Rover']);assert.deepEqual(f.specs().find(([k])=>k==='Model'),['Model','Range Rover']);
 });
 test('old combined incoming text cannot overwrite explicit boundaries or infer missing ones',()=>{
  const f=fixture();const data={phone:'123',price:25,brand_model:'Land Rover Range Rover',details:{}};
