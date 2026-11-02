@@ -155,10 +155,43 @@ test('migration is functions-only; reviewed SQL, managed fields and protected ru
  assert.ok(!/\b(?:DROP\s+(?:TRIGGER|FUNCTION|TABLE)|ALTER\s+(?:TABLE|POLICY)|GRANT\b|REVOKE\b|CREATE\s+TRIGGER)/i.test(reviewedMigration.replace(/--[^\n]*/g,'')));
  const base='3a4d0f0138ff8b6d30341dfa0ab3dd007a349a9c';
  assert.equal(reviewedMigration,cp.execFileSync('git',['show',base+':supabase/migrations/20261101000000_p12a_seller_eligibility_guard.sql'],{cwd:root,encoding:'utf8'}));
- const protectedPaths=['backend','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
+ // The reviewed P1.6 backend test/mock update is not production implementation.
+ // Keep all backend production/config/dependency paths protected; exclude only
+ // the one immutable reviewed test delta, not the whole tests directory.
+ const protectedPaths=['backend',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
  assert.equal(cp.execFileSync('git',['diff',base,'--',...protectedPaths],{cwd:root,encoding:'utf8'}),'');
+ for(const file of cp.execFileSync('git',['ls-files','-z','--',...protectedPaths],{cwd:root,encoding:'utf8'}).split('\0').filter(Boolean)){
+  assert.deepEqual(fs.readFileSync(path.join(root,file)),cp.execFileSync('git',['show',base+':'+file],{cwd:root}),file);
+ }
+ const approvedTest='backend/a-usta56/tests/listing-media.test.ts';
+ assert.equal(fs.readFileSync(path.join(root,approvedTest),'utf8'),cp.execFileSync('git',['show','745d6ee87813a83003731ee2026e9814bd510e57:'+approvedTest],{cwd:root,encoding:'utf8'}));
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');assert.match(html,/MANAGED_LISTING_FIELDS = Object\.freeze\(\[[\s\S]*?'seller_profile_id'/);
 });
+if(!process.env.P2A_CHILD){
+ const matrix=[
+  ['ownership',"      AND sp.owner_id = NEW.owner_id\n",'','Auto Dealer: foreign seller owner rejected'],
+  ['active',"      AND sp.status = 'active'\n",'','Auto Dealer: ineligible pending/verified INSERT rejected'],
+  ['verified',"\n      AND sp.verification_status = 'verified'",'','Auto Dealer: ineligible active/unverified INSERT rejected'],
+  ['business compatibility',"IF v_business_type <> 'dealer' THEN",'IF false THEN','Auto Dealer: incompatible store rejected'],
+  ['protected backend production path','const token = authorization.slice("Bearer ".length).trim();','const token = "unverified";','migration is functions-only']
+ ];
+ for(const [name,from,to,pattern] of matrix)test('P2.A mutation: seller '+name,()=>{
+  const target=name==='protected backend production path'?path.join(root,'backend/a-usta56/src/middleware/auth.ts'):migrationPath;
+  assert.ok(fs.readFileSync(target,'utf8').includes(from),'mutation target exists');
+  const bootstrap=[
+   "const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');",
+   'const read=fs.readFileSync,target='+JSON.stringify(target)+',from='+JSON.stringify(from)+',to='+JSON.stringify(to)+';let hits=0;',
+   "fs.readFileSync=function(file){const data=read.apply(this,arguments);if(path.resolve(String(file))!==target)return data;assert.ok(String(data).includes(from),'mutation target disappeared');hits++;const changed=String(data).replace(from,to);return typeof data==='string'?changed:Buffer.from(changed);};",
+   "process.on('beforeExit',()=>assert.ok(hits>0,'mutation was not exercised'));",
+   'require('+JSON.stringify(__filename)+');'
+  ].join('\n');
+  const env={...process.env,P2A_CHILD:'1'};delete env.NODE_TEST_CONTEXT;
+  const run=cp.spawnSync(process.execPath,['--test-reporter=tap','--test-name-pattern='+pattern,'-e',bootstrap],{cwd:root,env,encoding:'utf8',maxBuffer:2e6});
+  assert.equal(run.signal,null);assert.notEqual(run.status,0,'mutant escaped '+name);
+  assert.match(run.stdout,/not ok /);assert.match(run.stdout,/AssertionError/);
+  assert.doesNotMatch(run.stdout+run.stderr,/Cannot find (?:module|package)|mutation target disappeared|mutation was not exercised/);
+ });
+}
 test('missing JWT on authenticated role fails before privileged seller lookup',()=>scenario(async()=>{
  const id=await seller(groups[0]);await user('');const e=await rejected(()=>insert(groups[0],id),'P0001');assert.match(e.message,/Giriş tələb olunur/);
 }));
