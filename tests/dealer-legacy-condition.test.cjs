@@ -2,13 +2,21 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const {chromium}=require('/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {chromium}=require('playwright');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const block=id=>html.match(new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>'))[1];
 const media=block('austa-v153d-14-category-media-js'),form=block('austa-v153c-real-listing-form-js');
-const between=(s,a,b)=>s.slice(s.indexOf(a),s.indexOf(b,s.indexOf(a)));
+const between=(s,a,b)=>{
+ const start=s.indexOf(a),end=s.indexOf(b);
+ assert.ok(start>=0,'Dealer fixture start boundary missing: '+a);
+ assert.ok(end>=0,'Dealer fixture end boundary missing: '+b);
+ assert.ok(end>start,'Dealer fixture boundaries out of order: '+a+' → '+b);
+ const extracted=s.slice(start,end);
+ assert.ok(extracted.startsWith(a),'Dealer fixture declaration missing: '+a);
+ return extracted;
+};
 test('Dealer legacy condition: real Chromium select, edit hydration and UPDATE',async t=>{
- const browser=await chromium.launch({executablePath:'/tmp/category-chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
  try{
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.setContent('<select id="austaV153CCategory"><option value="dealer">Dealer</option></select><div id="austaV153CFields"></div><button id="austaV153CSave"></button>');
@@ -21,9 +29,22 @@ test('Dealer legacy condition: real Chromium select, edit hydration and UPDATE',
     Object.assign(row,this.payload);return {data:{...row},error:null};
    }};return q;
   }};
-  window.AUSTA_V153={detailsFromForm:()=>({}),preserveDetails:async()=>undefined};
+  window.AUSTA_V153={
+   listingBoolean(value){
+    const choices=new Map([[undefined,undefined],['',false],['Bəli',true],['Xeyr',false]]);
+    if(!choices.has(value))throw new Error('Unsupported Dealer fixture boolean input');
+    return choices.get(value);
+   },
+   validateListingInput(type,input,editing){
+    if(type!=='dealer'||editing!==true||!input||typeof input!=='object'||Array.isArray(input))throw new Error('Dealer fixture validator call contract mismatch');
+    return {...input};
+   },
+   detailsFromForm:()=>({}),preserveDetails:async()=>undefined
+  };
   window.AUSTA_V153C={categories:{}};
  });
+ assert.equal(await page.evaluate(()=>typeof window.AUSTA_V153.validateListingInput),'function','Dealer fixture validation API must exist');
+ assert.equal(await page.evaluate(()=>typeof window.AUSTA_V153.listingBoolean),'function','Dealer fixture boolean API must exist');
  const prefix=between(media,'function sb(){','/* =========================================================\n   ADD AUTO DEALER');
  // Extract declarations by their following named boundary; no copied production logic.
  const installStart=media.indexOf('function installDealerCategory(){');
@@ -32,7 +53,7 @@ test('Dealer legacy condition: real Chromium select, edit hydration and UPDATE',
   between(form,'function esc(value){','function numeric(')+
   between(form,'function renderFields(){','function readFields(){')+
   between(media,'async function editDealer(item){','window.AUSTA_EDIT_DEALER_V156')+
-  between(media,'async function updateDealer(item){','function ensureDealerOption(){')+
+  between(media,'async function updateDealer(item,sellerIntent){','function ensureDealerOption(){')+
   between(media,'function yesNo(value){','async function saveDealer(')+
   `installDealerCategory();const CATEGORIES=window.AUSTA_V153C.categories;
   window.AUSTA_V153C.open=()=>renderFields();

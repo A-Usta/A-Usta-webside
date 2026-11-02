@@ -1,0 +1,12 @@
+{
+  "name": "austa-frontend-regression",
+  "private": true,
+  "scripts": {
+    "test": "node --test --test-concurrency=2 --test-reporter=tap *.test.cjs",
+    "browser:install": "playwright install --with-deps chromium --only-shell",
+    "check:static": "node helpers/check-static.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

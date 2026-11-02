@@ -296,10 +296,8 @@ if(!process.env.P2A_CHILD){
  });
 }
 test('Chromium: actual full detail DOM for all nine categories keeps malicious JSON inert',async()=>{
- const {chromium}=require('/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
- const executablePath=process.env.AUSTA_TEST_CHROMIUM || '/tmp/category-chromium';
- if(!fs.existsSync(executablePath))throw new Error('ENVIRONMENT BLOCKED — test not executed: Chromium executable does not exist at '+executablePath);
- const browser=await chromium.launch({executablePath,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+ const {chromium}=require('playwright');
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
  try{
   const page=await browser.newPage();await page.setContent('<main></main>');
   const runtime=require('./helpers/listing-detail-fixture.cjs');
@@ -313,7 +311,7 @@ test('Chromium: actual full detail DOM for all nine categories keeps malicious J
     globalThis.__item={id:'listing',status:'active',title:'Public listing',category,details:{[key]:value,legacy_internal_note:'PRIVATE'}};
     await window.AUSTA_LISTING_DETAIL.open('listing','marketplace',category);
    },{category,key:fields[0][0],value});
-   assert.equal(await page.locator('.austa-final-spec strong').first().textContent(),value);
+   assert.equal((await page.locator('.austa-final-spec strong').first().textContent()).trim(),value);
    assert.equal(await page.locator('#austaFinalListingPage img, #austaFinalListingPage script').count(),0);
    assert.equal(await page.evaluate(()=>window.attacked),undefined);
    assert.ok(!(await page.locator('#austaFinalListingPage').textContent()).includes('PRIVATE'));
