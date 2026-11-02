@@ -74,6 +74,7 @@ for(const type of [...marketplace,'service','usta'])test(type+': create payload 
  const normalize=f=>{const row=f.state.writes.at(-1).row;delete row.published_at;delete row.rating;delete row.reviews_count;row.seller_profile_id??=null;return row;};assert.deepEqual(normalize(current),normalize(old));
 });
 test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
+ assertP2D1Configuration();
  const main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  const blocks=text=>[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
  const old=blocks(main),now=blocks(require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(require('./helpers/seller-integration-baseline.cjs').withBaselineOwnerDelete(html,main)));assert.equal(now.length,old.length);
@@ -82,7 +83,7 @@ test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
   assert.equal(now[i][0],old[i][0]);
  }
  const changed=cp.execFileSync('git',['diff','--name-only','19c91a76502dad439811fa86d95af0fac922c88a','--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts'].includes(p)),[]);
+ assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts','backend/a-usta56/package.json','backend/a-usta56/package-lock.json','backend/a-usta56/.gitignore'].includes(p)),[]);
 });
 for(const type of ['cars','rent'])test(type+': existing Vehicle technical partial update retained',async()=>{
  const f=fixture();await f.api.updateListing(type,'listing',{phone:'123',mileage:0});const r=f.state.writes.at(-1).row;
@@ -92,3 +93,18 @@ test('213-brand / 822-model shared catalog retained',()=>{
  const c=vm.createContext({window:{}});vm.runInContext(fs.readFileSync(path.join(root,'assets/vehicle/catalog.js'),'utf8'),c);
  const catalog=c.window.AUSTA_VEHICLE_CATALOG;assert.equal(catalog.brands.length,213);assert.equal(Object.values(catalog.models).reduce((n,m)=>n+m.length,0),822);
 });
+
+// P2.D.1 exact reviewed configuration, including newly introduced files.
+function assertP2D1Configuration(){
+ const reviewed={
+  "backend/a-usta56/package.json": "cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802",
+  "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
+  "backend/a-usta56/.gitignore": "a459038af144bb649dd32c98f20e160838ec500ed5580fb1669ed0860196e140",
+  ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
+  ".github/workflows/main.yml": "02b06c6aa0e0ce0933e23926bede3d8d13c9bba2cf615e9bce6425e2f3f682be"
+};
+ for(const [file,sha256] of Object.entries(reviewed)){
+  assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);
+ }
+}
+test('P2.D.1 approved dependency/runtime files retain exact reviewed contents',assertP2D1Configuration);

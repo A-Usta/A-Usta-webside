@@ -147,13 +147,14 @@ test('Dealer create condition canonical only; untouched legacy update retained',
  for(const value of ['Yeni','Sürülmüş','Yeni və sürülmüş']){const f=dealer();f.setFields({...dealerRequired,vehicle_condition:value});await f.dealer.saveDealer({});assert.equal(f.state.row.vehicle_condition,value);}
 });
 test('P0.3.1 helper, visibility, public queries and protected runtime assets remain byte-identical',()=>{
+ assertP2D1Configuration();
  const base='19c91a76502dad439811fa86d95af0fac922c88a',html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const main=cp.execFileSync('git',['show',base+':index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  for(const id of ['austa-v154e-global-promotion-pagination']){
   const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');assert.equal(html.match(re)[0],main.match(re)[0]);
  }
  const changed=cp.execFileSync('git',['diff','--name-only',base,'--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts'].includes(p)),[]);
+ assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts','backend/a-usta56/package.json','backend/a-usta56/package-lock.json','backend/a-usta56/.gitignore'].includes(p)),[]);
  // Permit only the reviewed supplemental seller block; all original detail logic remains exact.
  const detail=s=>s.match(/<script id="austa-final-full-listing-js">([\s\S]*?)<\/script>/)[1];
  const normalized=detail(require('./helpers/seller-integration-baseline.cjs').withBaselineMediaHydration(require('./helpers/seller-integration-baseline.cjs').withBaselineDetail(html,main),main))
@@ -211,3 +212,18 @@ test('P1.3A preserves source configuration, Vehicle video helper and P0.3 coordi
  const file='assets/marketplace/listing-publish.js';
  assert.equal(fs.readFileSync(path.join(root,file),'utf8'),cp.execFileSync('git',['show','origin/main:'+file],{cwd:root,encoding:'utf8'}));
 });
+
+// P2.D.1 exact reviewed configuration, including newly introduced files.
+function assertP2D1Configuration(){
+ const reviewed={
+  "backend/a-usta56/package.json": "cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802",
+  "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
+  "backend/a-usta56/.gitignore": "a459038af144bb649dd32c98f20e160838ec500ed5580fb1669ed0860196e140",
+  ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
+  ".github/workflows/main.yml": "02b06c6aa0e0ce0933e23926bede3d8d13c9bba2cf615e9bce6425e2f3f682be"
+};
+ for(const [file,sha256] of Object.entries(reviewed)){
+  assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);
+ }
+}
+test('P2.D.1 approved dependency/runtime files retain exact reviewed contents',assertP2D1Configuration);

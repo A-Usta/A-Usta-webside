@@ -100,7 +100,10 @@ if(!process.env.P2C_MUTATION)for(const [name,m] of Object.entries(mutations))tes
 const approvedPaths=['backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts'];
 const protectedPaths=['backend/a-usta56/src/middleware/auth.ts','backend/a-usta56/src/config/supabase.ts','backend/a-usta56/package.json','backend/a-usta56/tests/p2c-unauthorized-probe.test.ts'];
 if(!process.env.P2C_MUTATION)for(const candidate of [...approvedPaths,...protectedPaths])test('P2.C exact tracked-path guard proof: '+candidate,()=>{
- const accepted=approvedPaths.includes(candidate);
+ // P2.D.1 authorizes only this exact manifest; child guards also fingerprint it.
+ const reviewedManifest=candidate==='backend/a-usta56/package.json';
+ if(reviewedManifest)assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,candidate))).digest('hex'),'cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802');
+ const accepted=approvedPaths.includes(candidate)||reviewedManifest;
  const bootstrap=`const cp=require('node:child_process'),old=cp.execFileSync;
  cp.execFileSync=function(cmd,args,opts){
    if(cmd==='git'&&args[0]==='diff'&&args.includes('backend')){
