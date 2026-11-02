@@ -13,8 +13,8 @@ const reviewedFiles = {
   "tests/package.json": "156d49124509a070a0e05f5a067da746a6ad52bb1339a4111f89ed378f9deba1",
   "tests/package-lock.json": "a8c0592f8094f5eec64e3f2ddd1e626083339c99d41c763d6f407c7c732033d1",
   "tests/db/package.json": "6ba43139036db3440a1222832c6db9fc3254693c7031cb61b12f0170dc60c1a2",
-  "tests/category-detail-presentation.test.cjs": "90a807d409965726fddee68c49cd5e6d4dae12fd49da539dc62b59eadafab47e",
-  "tests/dealer-legacy-condition.test.cjs": "646e45bbb006757af70dcb971b187117e94cd7c357d4b4d9795d623f690a6a00"
+  "tests/category-detail-presentation.test.cjs": "a7382a6ede8bbc9ad1b13a4b57c1bcb9ecce3437eb6d6ae7175d93630d52826e",
+  "tests/dealer-legacy-condition.test.cjs": "b668ac9e668ecb8f04c6a9a4cbf1450466e35a487bb6c1f096b2d87152397c14"
 };
 const legacy = [
   ['austa-v16-professional-flow-patch', '5fba6d8088946960717f19ae9af9847665df46939c52cc6e756d5e72cf83a752'],

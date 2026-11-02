@@ -311,7 +311,7 @@ test('Chromium: actual full detail DOM for all nine categories keeps malicious J
     globalThis.__item={id:'listing',status:'active',title:'Public listing',category,details:{[key]:value,legacy_internal_note:'PRIVATE'}};
     await window.AUSTA_LISTING_DETAIL.open('listing','marketplace',category);
    },{category,key:fields[0][0],value});
-   assert.equal(await page.locator('.austa-final-spec strong').first().textContent(),value);
+   assert.equal((await page.locator('.austa-final-spec strong').first().textContent()).trim(),value);
    assert.equal(await page.locator('#austaFinalListingPage img, #austaFinalListingPage script').count(),0);
    assert.equal(await page.evaluate(()=>window.attacked),undefined);
    assert.ok(!(await page.locator('#austaFinalListingPage').textContent()).includes('PRIVATE'));
