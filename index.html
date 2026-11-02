@@ -9850,6 +9850,7 @@ window.addEventListener("austa:servicerequest:ready",()=>{});
 <script src="assets/marketplace/seller-intent.js"></script>
 <script src="assets/marketplace/listing-preview.js"></script>
 <script src="assets/marketplace/listing-lifecycle.js"></script>
+<script src="assets/marketplace/listing-detail.js"></script>
 <link rel="stylesheet" href="assets/marketplace/listing-cards.css">
 <script src="assets/vehicle/vin.js"></script>
 <script src="assets/marketplace/listing-cards.js"></script>
@@ -11513,62 +11514,9 @@ function austaMyGetItem(card) {
    ------------------------------------------------------------ */
 
 async function austaMyView(item) {
-  if (!item) return;
-
-  /*
-   * Prefer the existing unified listing APIs.
-   * We do not create a second listing detail system.
-   */
-
-  if (
-    window.AUSTA_LISTING_V153?.open
-  ) {
-    try {
-      await window.AUSTA_LISTING_V153.open(
-        item.id,
-        item.__austa_source
-      );
-
-      return;
-    } catch (e) {
-      console.warn(
-        '[A-USTA V156-B] V153 open:',
-        e
-      );
-    }
-  }
-
- const publicCard = document.querySelector(
-  '[data-v146-listing-id="' +
-  CSS.escape(String(item.id)) +
-  '"]'
-);
-
-if (publicCard) {
-  publicCard.click();
-  return;
+  if(!item?.id)return;
+  return window.AUSTA_LISTING_DETAIL?.open(item.id,item.__austa_source);
 }
-
-  /*
-   * Existing cards/details can also react
-   * to this event without coupling this
-   * account module to their implementation.
-   */
-
-  window.dispatchEvent(
-    new CustomEvent(
-      'austa:v156:view-listing',
-      {
-        detail: {
-          id: item.id,
-          table: item.__austa_table,
-          source: item.__austa_source
-        }
-      }
-    )
-  );
-}
-
 
 /* ------------------------------------------------------------
    EDIT
@@ -14417,6 +14365,7 @@ function closeListingDetail(){
 }
 
 function openListingDetail(id){
+  return window.AUSTA_LISTING_DETAIL?.open(id,'vehicle') || false;
 
   const item=findListing(id);
 
@@ -14721,6 +14670,8 @@ window.AUSTA_OWNER_PROMOTION=function(
   listingId,
   packageType
 ){
+  return window.AUSTA_LISTING_DETAIL?.promote(listingId,'vehicle',packageType);
+
 
   const allowed=[
     'boost',
@@ -15621,6 +15572,7 @@ function bindAll(){
    ========================================================= */
 
 function openHashListing(){
+  return window.AUSTA_LISTING_DETAIL?.openLink();
 
   const match=
     String(window.location.hash || "")
@@ -29686,6 +29638,20 @@ const estimateText =
 
 </style>
 
+<style id="austa-p16-detail-css">
+#austaFinalListingPage{overflow-wrap:anywhere;outline:0}
+#austaFinalListingPage [hidden]{display:none!important}
+#austaFinalListingPage .austa-p16-status{display:inline-block;padding:5px 10px;border-radius:6px;background:#176244;color:white;margin-bottom:12px}
+#austaFinalListingPage .austa-p16-information{display:grid;gap:8px;margin:0}
+#austaFinalListingPage .austa-p16-information>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px}
+#austaFinalListingPage dd{margin:0}
+#austaFinalListingPage .austa-p16-business{font-weight:700;margin:8px 0}
+#austaFinalListingPage .austa-p16-lifecycle{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+#austaFinalListingPage .austa-p16-lifecycle button{padding:10px;border-radius:8px;border:1px solid #176244;background:#fff;color:#176244}
+#austaFinalListingPage .austa-p16-unavailable{max-width:700px;margin:10vh auto;padding:24px}
+@media(max-width:650px){#austaFinalListingPage .austa-final-wrap,#austaFinalListingPage .austa-final-spec-grid{grid-template-columns:minmax(0,1fr)}#austaFinalListingPage .austa-final-title{overflow-wrap:anywhere}#austaFinalListingPage .austa-final-thumbs{max-width:100%;box-sizing:border-box}}
+</style>
+
 <script id="austa-final-full-listing-js">
 (function(){
 'use strict';
@@ -30006,7 +29972,7 @@ function priceOf(item){
     return '';
   }
 
-  return String(value).trim()+' AZN';
+  return String(value).trim()+' '+(['cars','rent'].includes(categoryOf(item))?'AZN':vehicleText(item.currency)||'AZN');
 }
 
 
@@ -30028,13 +29994,16 @@ function sellerOf(item){
     return String(item.contact_name ?? '').trim() || 'Elan sahibi';
   }
 
-  return String(
-    item?.['Ad / soyad'] ||
-    item?.name ||
-    'Elan sahibi'
-  ).trim();
+  const category=categoryOf(item);
+  if(category==='dealer')return vehicleText(item.contact_name) || 'Elan sahibi';
+  if(category==='service')return vehicleText(item.details?.owner_name) || 'Əlaqələndirici';
+  return vehicleText(item.name) || 'Elan sahibi';
 }
 
+function businessOf(item){
+  const category=categoryOf(item);
+  return category==='dealer'?vehicleText(item.dealer_name):category==='service'?vehicleText(item.name):'';
+}
 
 function locationOf(item){
 
@@ -30146,6 +30115,7 @@ async function signedUrl(path){
   
 async function hydrateSupabaseListingMedia(item){
   if(!item || !item._austaSupabase || !item.id)return item;
+  item={...item,image_paths:[],cover_image_path:'',video_path:''};
   const sb=window.AUSTA_SUPABASE;
   item._austaMediaError=false;
   if(!sb){item._austaMediaError=true;return item;}
@@ -30283,10 +30253,11 @@ function carSpecs(item){
     ['Marka',value('brand','Marka')],
     ['Model',value('model','Model')],
     ['İcarə növü',item.listing_type==='rent' ? vehicleText(item.rental_type) : ''],
+    ['Depozit',item.listing_type==='rent' && item.deposit!=null && vehicleText(item.deposit)!=='' ? vehicleText(item.deposit)+' AZN' : ''],
     ['Buraxılış ili',value('year','Buraxılış ili')],
     ['Ban növü',vehicleTechnical(value('body_type','Ban tipi'),'body')],
     ['Rəng',vehicleTechnical(value('color','Rəng'),'color')],
-    ['Mühərrik',engine.text || value('engine','Mühərrik həcmi')],
+    ['Mühərrik',vehicleText(engine.text) || value('engine','Mühərrik həcmi')],
     ['Yanacaq növü',engine.fuelIncluded ? '' : fuel],
     ['Yürüş',mileage ? (/^[\d\s.,]+$/.test(mileage) ? mileage.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+' km' : mileage) : ''],
     ['Sürətlər qutusu',vehicleTechnical(value('transmission','Sürətlər qutusu'),'transmission')],
@@ -30371,7 +30342,7 @@ function marketplaceSpecs(item){
   // description retain their existing sidebar and description presentation.
   return [
     ...[['brand','Marka'],['model','Model'],['year','Buraxılış ili'],['condition','Vəziyyət'],
-      ['region','Şəhər'],['district','Rayon']].map(([key,label])=>[label,text(item[key])]),
+      ['region','Şəhər'],['district','Rayon']].map(([key,label])=>[label,key==='condition'?(item[key]==='new'?'Yeni':item[key]==='used'?'İşlənmiş':text(item[key])):text(item[key])]),
     ...fields[category].map(([key,label])=>[label,
       Object.prototype.hasOwnProperty.call(details,key) ? text(details[key]) : ''])
   ].filter(([,value])=>value!=='');
@@ -30380,59 +30351,29 @@ function marketplaceSpecs(item){
 
 window.AUSTA_LISTING_PRESENTATION=Object.freeze({vehicleSpecs:carSpecs,marketplaceSpecs});
 function genericSpecs(item){
+  // P1.6 explicit provider/dealer presentation: never enumerate a DB row.
+  const type=categoryOf(item);
+  const fields=type==='dealer'?[['brands','Markalar'],['working_hours','İş saatları'],['vehicle_condition','Avtomobillərin vəziyyəti']]
+    :['service','usta'].includes(type)?[['specialty','İxtisas'],['services','Xidmətlər'],['experience','İş təcrübəsi'],['working_hours','İş saatları']]:[];
+  const rows=fields.map(([key,label])=>[label,vehicleText(item[key])]).filter(([,value])=>value!=='');
+  if(type==='service')for(const [key,label] of [['brands','Xidmət göstərilən markalar'],['price_policy','Qiymət qaydası']]){
+    const value=vehicleText(item.details?.[key]);if(value)rows.push([label,value]);
+  }
+  if(type==='dealer')for(const [key,label] of [['credit_available','Kredit'],['leasing_available','Lizinq'],['barter_available','Barter'],['delivery_available','Çatdırılma']]){
+    if(typeof item[key]==='boolean')rows.push([label,item[key]?'Mövcuddur':'Mövcud deyil']);
+  }
+  return rows;
+}
 
-  const ignored=new Set([
-    'id',
-    'owner_id',
-    'seller_profile_id',
-    '__austa_table',
-    '__austa_source',
-    '_austaSupabase',
-    'category',
-    'createdAt',
-    'created_at',
-    'cover_image_path',
-    'image_paths',
-    'video_path',
-    'vip',
-    'premium',
-    'promoted',
-    'promotedAt',
-    'promotedUntil'
-  ]);
-
-  return Object.entries(item || {})
-    .filter(([key,value])=>{
-
-      if(ignored.has(key)){
-        return false;
-      }
-
-      if(
-        value===null ||
-        value===undefined ||
-        value==='' ||
-        typeof value==='object'
-      ){
-        return false;
-      }
-
-      const k=normalize(key);
-
-      if(
-        k.includes('sekil') ||
-        k.includes('video') ||
-        k.includes('foto') ||
-        k.includes('media') ||
-        k.includes('elave melumat') ||
-        k.includes('haqqinda')
-      ){
-        return false;
-      }
-
-      return true;
-    })
-    .slice(0,30);
+function detailInformation(item){
+  const status=window.AUSTA_MY_LIFECYCLE?.statusLabel(item.status) || 'Status əlçatan deyil';
+  const promotion=window.AUSTA_V153?.effectivePromotion?.(item) || 'standard';
+  const date=createdTime({...item,createdAt:item.published_at || item.created_at});
+  return `<section class="austa-final-info-section"><h3 class="austa-final-section-title">ELAN MƏLUMATI</h3><dl class="austa-p16-information">
+    <div><dt>Elan №</dt><dd>${escapeHtml(item.id)}</dd></div>
+    ${date?`<div><dt>Yerləşdirildi</dt><dd>${escapeHtml(date)}</dd></div>`:''}
+    <div><dt>Status</dt><dd>${escapeHtml(status)}</dd></div>
+    <div><dt>Paket</dt><dd>${escapeHtml(({standard:'Standart',vip:'VIP',premium:'Premium',boost:'İrəli çək'})[promotion]||'Standart')}</dd></div></dl></section>`;
 }
 
 
@@ -30481,7 +30422,7 @@ function removeOldListingOverlays(){
 }
 
 
-function closePage(event){
+function teardownDetail(event){
 
   if(event){
 
@@ -30513,6 +30454,8 @@ function closePage(event){
   }
 }
 
+
+function closePage(event){return window.AUSTA_LISTING_DETAIL.close(event);}
 
 async function mediaGallery(item,page){
 
@@ -30968,6 +30911,7 @@ async function hydrateSimilarImages(page){
 
 
 function similarListings(item){
+  if(item?._austaSupabase)return [];
 
   const all=listings();
   const category=categoryOf(item);
@@ -31126,118 +31070,27 @@ function similarHtml(item){
 }
 
 
-async function ownerControls(
-  item,
-  page
-){
-
-  const box=
-    page.querySelector(
-      '[data-austa-final-owner]'
-    );
-
-  if(!box){
-    return;
-  }
-
-  try{
-
-    const sb=
-      window.AUSTA_SUPABASE;
-
-    if(!sb || !item.owner_id){
-      box.remove();
-      return;
-    }
-
-    const {
-      data
-    }=await sb.auth.getSession();
-
-    const user=
-      data?.session?.user;
-
-    if(
-      !user ||
-      user.id!==item.owner_id
-    ){
-      box.remove();
-      return;
-    }
-
-    box.hidden=false;
-
-  }catch(error){
-
-    box.remove();
-  }
+async function ownerControls(item,page,context){
+  const box=page.querySelector('[data-austa-final-owner]');
+  if(!box)return;
+  if(!context.owner || !context.isCurrent()){box.remove();return;}
+  box.hidden=false;
 }
 
 
 /* V166: reuse V156 management rows without requiring the account cache to be open. */
 function ownerManagementItem(item){
-  const table=item.__austa_table ||
-    (item._austaSupabase ? 'vehicle_listings' : '');
-  const cached=(window.AUSTA_MY_LISTINGS_V156?.getAll?.() || []).find(listing=>
-    String(listing?.id || '')===String(item.id) &&
-    (!table || listing.__austa_table===table)
-  );
-  if(cached)return cached;
-  const sources={vehicle_listings:'vehicle',marketplace_listings:'marketplace',service_provider_listings:'provider',auto_dealer_listings:'dealer'};
-  if(!item._austaSupabase || !Object.prototype.hasOwnProperty.call(sources,table))return null;
-  return {
-    ...item,
-    __austa_table:table,
-    __austa_source:sources[table],
-    __austa_label:table==='vehicle_listings'?'Avtomobil':categoryTitle(categoryOf(item)),
-    __austa_title:titleOf(item),
-    __austa_price:priceOf(item)
-  };
+  if(!item?._austaSupabase || !['vehicle','marketplace','service_provider','auto_dealer'].includes(item.__austa_source))return null;
+  return {...item,__austa_title:titleOf(item),__austa_price:priceOf(item)};
 }
 
-
 async function openFullListing(id,source,expectedCategory){
+  return window.AUSTA_LISTING_DETAIL.open(id,source,expectedCategory);
+}
 
-  let item;
-  if(source){
-    if(!['vehicle_listings','marketplace_listings','service_provider_listings','auto_dealer_listings'].includes(source))return false;
-    try{
-      const sb=window.AUSTA_SUPABASE;
-      if(!sb)return false;
-      const {data,error}=await sb.from(source).select('*').eq('id',id).maybeSingle();
-      if(error || !data || String(data.id)!==String(id))return false;
-      item=mapSupabaseListing({...data,__austa_table:source});
-      if(expectedCategory && categoryOf(item)!==expectedCategory)return false;
-    }catch(error){console.warn('A-USTA category detail:',error);return false;}
-  }else{
-    item=findListing(id);
-  }
-
-  // P0.3.1: Vehicle staging is private even for direct/cached detail opens.
-  if(item?.status==='draft' && (item.__austa_table==='vehicle_listings' ||
-      item.listing_type==='sale' || item.listing_type==='rent'))return false;
-
-  if(!item){
-    return false;
-  }
-
-
-  /*
-   * Real Supabase elanıdırsa,
-   * onun şəkil və videosunu listing_media-dan gətir.
-   */
-
-  if(item._austaSupabase){
-
-    item=
-      await hydrateSupabaseListingMedia(
-        item
-      );
-  }
-
-
-  const sellerIdentityReady=Promise.resolve(window.AUSTA_SELLER_IDENTITY?.hydrate([item]));
-
+async function renderResolvedListing(item,detailContext){
+  if(!detailContext.isCurrent())return false;
+  item=mapSupabaseListing(item);
   removeOldListingOverlays();
   
   const category=
@@ -31253,7 +31106,7 @@ async function openFullListing(id,source,expectedCategory){
       ? vehicleText(item.description) || vehicleText(item['Avtomobil haqqında əlavə məlumat'])
       : descriptionOf(item);
 
-  const detailLocation=isVehicle ? vehicleExtraLocation(item) : locationOf(item);
+  const detailLocation=isVehicle ? vehicleExtraLocation(item) : ['parts','accessories','special','moto','plate','bus','water','caravan','trailer'].includes(category)?vehicleText(item.address):[item.region,item.district,item.address].map(vehicleText).filter(Boolean).filter((value,index,all)=>all.indexOf(value)===index).join(', ');
 
   const phone=
     phoneOf(item);
@@ -31304,7 +31157,7 @@ async function openFullListing(id,source,expectedCategory){
             )}
           </h1>
 
-          ${isVehicle ? vehicleMetadata(item) : ''}
+          <span class="austa-p16-status">${escapeHtml(window.AUSTA_MY_LIFECYCLE?.statusLabel(item.status)||'Status əlçatan deyil')}</span>
 
           <section class="austa-final-gallery">
 
@@ -31326,7 +31179,7 @@ async function openFullListing(id,source,expectedCategory){
 
          
 
-          ${isVehicle ? vehicleSection('Avtomobil haqqında',specs) : `
+          ${isVehicle ? vehicleSection('AVTOMOBİL HAQQINDA',specs) : `
           <section class="austa-final-info-section">
 
             <h3 class="austa-final-section-title">
@@ -31363,7 +31216,7 @@ async function openFullListing(id,source,expectedCategory){
 
           ${
             description
-              ? (isVehicle ? `<div class="austa-compact-description">${escapeHtml(description)}</div>` : `
+              ? (isVehicle ? `<section class="austa-final-info-section"><h3 class="austa-final-section-title">TƏSVİR</h3><div class="austa-compact-description">${escapeHtml(description)}</div></section>` : `
                 <section class="austa-final-description">
 
                   <h3 class="austa-final-section-title">
@@ -31379,6 +31232,8 @@ async function openFullListing(id,source,expectedCategory){
               : ''
           }
 
+          ${detailLocation?`<section class="austa-final-info-section"><h3 class="austa-final-section-title">YERLƏŞMƏ</h3><p>${escapeHtml(detailLocation)}</p></section>`:''}
+          ${detailInformation(item)}
           ${similarHtml(item)}
 
         </main>
@@ -31402,37 +31257,14 @@ async function openFullListing(id,source,expectedCategory){
                   : ''
               }
 
+              <h2 class="austa-final-section-title">Satıcı və əlaqə</h2>
+              ${businessOf(item)?`<div class="austa-p16-business">${escapeHtml(businessOf(item))}</div>`:''}
               <div data-professional-seller></div>
               <div class="austa-final-seller">
                 ${escapeHtml(
                   sellerOf(item)
                 )}
               </div>
-
-              ${
-                detailLocation
-                  ? `
-                    <div class="austa-final-location">
-                      📍 ${escapeHtml(
-                        detailLocation
-                      )}
-                    </div>
-                  `
-                  : ''
-              }
-
-              ${
-                !isVehicle && createdTime(item)
-                  ? `
-                    <div class="austa-final-time">
-                      🕒 Elan yerləşdirildi:
-                      ${escapeHtml(
-                        createdTime(item)
-                      )}
-                    </div>
-                  `
-                  : ''
-              }
 
               ${
                 phone
@@ -31452,13 +31284,7 @@ async function openFullListing(id,source,expectedCategory){
                   : ''
               }
 
-              <button
-                type="button"
-                class="austa-final-message"
-                data-austa-message
-              >
-                💬 Mesaj yaz
-              </button>
+              <button type="button" class="austa-final-message" data-austa-detail-share>Paylaş</button>
 
             </div>
 
@@ -31477,6 +31303,7 @@ async function openFullListing(id,source,expectedCategory){
               </div>
 
             
+              <div class="austa-p16-lifecycle">${window.AUSTA_MY_LIFECYCLE.actions(ownerManagementItem(item)).map(action=>`<button type="button" data-owner-lifecycle="${escapeHtml(action)}">${escapeHtml(({mark_sold:'Satılıb kimi işarələ',mark_rented:'İcarəyə verilib',archive:'Arxivlə',reactivate:'Yenidən aktiv et'})[action])}</button>`).join('')}</div>
               <div class="austa-final-owner-actions austa-v158-promotion-actions">
 
   <button
@@ -31498,7 +31325,7 @@ async function openFullListing(id,source,expectedCategory){
   <button
     type="button"
     class="austa-v158-promo austa-v158-boost"
-    data-owner-boost
+    data-owner-boost ${item.status==='active'?'':'hidden'}
   >
     <span class="austa-v158-promo-icon">
       🚀
@@ -31520,7 +31347,7 @@ async function openFullListing(id,source,expectedCategory){
   <button
     type="button"
     class="austa-v158-promo austa-v158-vip"
-    data-owner-vip
+    data-owner-vip ${item.status==='active'?'':'hidden'}
   >
     <span class="austa-v158-promo-icon">
       ♛
@@ -31542,7 +31369,7 @@ async function openFullListing(id,source,expectedCategory){
   <button
     type="button"
     class="austa-v158-promo austa-v158-premium"
-    data-owner-premium
+    data-owner-premium ${item.status==='active'?'':'hidden'}
   >
     <span class="austa-v158-promo-icon">
       ◆
@@ -31597,25 +31424,20 @@ async function openFullListing(id,source,expectedCategory){
     </div>
   `;
 
-  document.body.appendChild(page);
-  void sellerIdentityReady.then(()=>{
-    if(!page.isConnected)return;
-    const target=page.querySelector('[data-professional-seller]');
-    if(target)target.innerHTML=window.AUSTA_SELLER_INTENT?.detail(item)||'';
-  }).catch(()=>{});
-
-  // V166: ownership visibility must not wait for gallery/similar-media requests.
-  const ownerReady=ownerControls(item,page);
-
-  document.body.style.overflow='hidden';
-
-  history.replaceState(
-    null,
-    '',
-    '#listing='+
-    encodeURIComponent(item.id)
-  );
-
+  if(!detailContext.isCurrent())return false;
+  detailContext.mount(page);
+  const seller=page.querySelector('[data-professional-seller]');
+  if(seller){
+    seller.innerHTML=window.AUSTA_SELLER_INTENT?.detail(item)||'';
+    const profile=window.AUSTA_SELLER_IDENTITY?.getForListing(item);
+    // Existing seller page supports verified active dealers and sale Vehicles only.
+    if(profile?.business_type==='dealer' && profile.status==='active' && profile.verification_status==='verified' && window.AUSTA_SELLER_PAGE){
+      const link=document.createElement('button');link.type='button';link.textContent='Satıcının səhifəsi';
+      link.addEventListener('click',()=>{if(detailContext.isCurrent()){closePage();void window.AUSTA_SELLER_PAGE.open(profile.id);}});
+      seller.appendChild(link);
+    }
+  }
+  const ownerReady=ownerControls(item,page,detailContext);
 
   /*
    * CLOSE — capture mərhələsində saxla ki
@@ -31623,7 +31445,17 @@ async function openFullListing(id,source,expectedCategory){
    */
   page.addEventListener(
     'click',
-    event=>{
+    async event=>{
+      if(!detailContext.isCurrent())return;
+      if(event.target.closest('[data-austa-detail-share]')){event.preventDefault();return window.AUSTA_LISTING_DETAIL.share(item.id,item.__austa_source,titleOf(item));}
+      const lifecycle=event.target.closest('[data-owner-lifecycle]');
+      if(lifecycle){
+        event.preventDefault();
+        try{await window.AUSTA_MY_LIFECYCLE.transition(ownerManagementItem(item),lifecycle.dataset.ownerLifecycle);}
+        catch(error){if(detailContext.isCurrent()&&!error.silent)alert(error.message);}
+        if(detailContext.isCurrent())return openFullListing(item.id,item.__austa_source,category);
+        return;
+      }
 
       const close=
         event.target.closest(
@@ -31840,9 +31672,8 @@ if(deleteButton){
     return;
   }
 
-  window.AUSTA_MY_LISTINGS_V156.delete(
-    realItem
-  );
+  await window.AUSTA_MY_LISTINGS_V156.delete(realItem);
+  if(detailContext.isCurrent())await openFullListing(item.id,item.__austa_source,category);
 
   return;
 }
@@ -31964,7 +31795,7 @@ document.addEventListener(
   card.dataset.austaHomeListing ||
   '';
 
-    if(!id || !findListing(id)){
+    if(!id){
       return;
     }
 
@@ -31984,6 +31815,8 @@ document.addEventListener(
    Köhnə video/listing kodu bunu çağıranda
    yeni tam səhifə açılsın.
    ========================================================= */
+
+window.AUSTA_LISTING_DETAIL.install({hydrate:hydrateSupabaseListingMedia,render:renderResolvedListing,close:teardownDetail});
 
 window.AUSTA_OPEN_LISTING=
   openFullListing;
@@ -32016,7 +31849,7 @@ window.addEventListener(
     const opened=
       await openFullListing(
         realListing.id,
-        realListing.__austa_table || 'vehicle_listings'
+        event.detail?.source || 'vehicle'
       );
 
     console.log(
@@ -47601,6 +47434,7 @@ function cardHtml(item){
 
 
 async function openListing(id){
+  return window.AUSTA_LISTING_DETAIL.open(id,'vehicle');
 
   const supabase =
     window.AUSTA_SUPABASE;
@@ -50177,6 +50011,7 @@ function observeHomePremium(){
 async function openRealListing(
     listingId
 ){
+    return window.AUSTA_LISTING_DETAIL.open(listingId,'vehicle');
 
     if(!listingId){
         return;
@@ -51366,7 +51201,7 @@ document.addEventListener(
             if(id && tables[source] && typeof window.AUSTA_OPEN_FULL_LISTING==='function'){
                 event.preventDefault();
                 event.stopPropagation();
-                void window.AUSTA_OPEN_FULL_LISTING(id,tables[source],type==='mechanic'?'usta':type);
+                void window.AUSTA_OPEN_FULL_LISTING(id,source,type==='mechanic'?'usta':type);
             }
             return;
         }
@@ -53440,7 +53275,8 @@ async function fetchCategory(
    searches all 3 listing systems
    ============================================================ */
 
-async function findListingById(id) {
+async function findListingById(id,source='vehicle') {
+    return window.AUSTA_LISTING_DETAIL.lookup(id,source);
 
     if (!id) return null;
 
@@ -58583,7 +58419,8 @@ if(
         api.findListingById;
 
     api.findListingById =
-        async function (id) {
+        async function (id,source='vehicle') {
+            return window.AUSTA_LISTING_DETAIL.lookup(id,source);
 
             if (!id) {
                 return null;
@@ -59646,7 +59483,7 @@ if(
     backdrop.querySelector('input').focus({preventScroll:true});
   }
   async function shareCard(card,button){
-    const url=new URL(location.href);url.searchParams.set('listing',card.dataset.listingId);url.hash='';
+    const url=new URL(location.href);url.searchParams.set('listing',card.dataset.listingId);url.searchParams.set('source','vehicle');url.hash='';
     const title=card.querySelector('.austa-v159-info b')?.textContent || 'A-USTA elanı';
     try{
       if(navigator.share){
@@ -59661,6 +59498,7 @@ if(
     }catch(error){console.error('[A-USTA V164] Share:',error);}
   }
   async function openRealListing(id){
+    return window.AUSTA_LISTING_DETAIL.open(id,'vehicle');
     const open=window.AUSTA_OPEN_FULL_LISTING || window.AUSTA_OPEN_LISTING;
     if(typeof open==='function'){
       try{
@@ -60122,8 +59960,7 @@ if(
 
         clearInterval(timer);
         loadRealHomeVideos();
-        const sharedId=new URL(location.href).searchParams.get('listing');
-        if(sharedId)openRealListing(sharedId);
+        // P1.6 canonical source-aware router owns shared listing links.
         return;
       }
 

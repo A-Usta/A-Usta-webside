@@ -108,7 +108,7 @@ test('real detail hydration honors is_cover without changing video selection',as
  const f=fixture();const a=f.add({is_cover:false}),b=f.add({is_cover:true});f.add({media_type:'video',is_cover:false});
  const start=html.indexOf('async function hydrateSupabaseListingMedia(item)'),end=html.indexOf('\nfunction imagePaths(item)',start);
  vm.runInContext(html.slice(start,end),f.context);f.context.item={id:f.id,_austaSupabase:true,__austa_table:f.parent};
- await vm.runInContext('hydrateSupabaseListingMedia(item)',f.context);assert.ok(f.context.item.image_paths[0].endsWith(b.storage_path));assert.ok(f.context.item.image_paths[1].endsWith(a.storage_path));assert.ok(f.context.item.video_path.endsWith('file-2'));
+ f.context.item=await vm.runInContext('hydrateSupabaseListingMedia(item)',f.context);assert.ok(f.context.item.image_paths[0].endsWith(b.storage_path));assert.ok(f.context.item.image_paths[1].endsWith(a.storage_path));assert.ok(f.context.item.video_path.endsWith('file-2'));
 });
 function uiFixture(type='cars'){
  const f=fixture(type),observers=[],listeners=[];let serial=0;

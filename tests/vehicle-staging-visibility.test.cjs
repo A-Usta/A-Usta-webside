@@ -29,14 +29,10 @@ test('public seller actual query excludes draft and preserves explicit seller/sa
 });
 for(const listing_type of ['sale','rent'])for(const mode of ['direct','cached']){
  test(`${listing_type} ${mode} public detail refuses draft before rendering/media`,async()=>{
-  const start=html.indexOf('async function openFullListing('),end=html.indexOf('  /*\n   * Real Supabase elanıdırsa,',start);
-  assert.ok(start>=0&&end>start);
-  const prefix=html.slice(start,end),ops=[];
-  const row={id:'draft',status:'draft',owner_id:'owner',listing_type};
-  const c=vm.createContext({window:{AUSTA_SUPABASE:client([row],ops)},console,
-   mapSupabaseListing:item=>item,findListing:()=>row,categoryOf:()=>listing_type==='rent'?'rent':'cars'});
-  vm.runInContext(prefix+'return true;}',c);
-  assert.equal(await c.openFullListing('draft',mode==='direct'?'vehicle_listings':undefined),false);
-  row.status='active';assert.equal(await c.openFullListing('draft',mode==='direct'?'vehicle_listings':undefined),true);
+  const f=require('./helpers/listing-detail-fixture.cjs').fixture();
+  if(mode==='cached')f.window.AUSTA_MY_REAL_LISTINGS=[{id:'draft',status:'active',owner_id:'owner',listing_type}];
+  assert.equal(await f.open('vehicle',{id:'draft',status:'draft',listing_type}),false);
+  assert.equal(f.state.ops.length,1,'no private media query');
+  assert.equal(await f.open('vehicle',{id:'draft',status:'active',listing_type}),true);
  });
 }

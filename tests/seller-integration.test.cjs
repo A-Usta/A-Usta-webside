@@ -125,8 +125,8 @@ for(const [business,label] of Object.entries({dealer:'Avtosalon',store:'Mağaza'
 });
 test('personal/stale public identity leaves existing detail contact untouched',()=>{
  const f=fixture();f.window.AUSTA_SELLER_IDENTITY={getForListing:()=>null};const item={contact_name:'Contact',phone:'123',region:'Bakı',district:'Nəsimi',address:'Listing address'};const before=plain(item);assert.equal(f.intent.detail(item),'');assert.deepEqual(item,before);
- assert.ok(html.includes("if(target)target.innerHTML=window.AUSTA_SELLER_INTENT?.detail(item)||''"));
- assert.ok(html.includes('sellerOf(item)'));assert.ok(html.includes('const sellerIdentityReady=Promise.resolve(window.AUSTA_SELLER_IDENTITY?.hydrate([item]))'));
+ assert.ok(html.includes("seller.innerHTML=window.AUSTA_SELLER_INTENT?.detail(item)||''"));
+ assert.ok(html.includes('sellerOf(item)'));assert.match(fs.readFileSync(path.join(root,'assets/marketplace/listing-detail.js'),'utf8'),/resolveFresh\(row.seller_profile_id\)/);
 });
 test('browser ownership discovery uses only no-argument RPC, never owner-column/application/cache lookup',()=>{
  assert.match(moduleSource,/\.rpc\('get_my_seller_profiles'\)/);assert.ok(!/\.from\(|localStorage|seller_verification_applications/.test(moduleSource));
@@ -156,18 +156,14 @@ test('same-user session change invalidates pending intent as well as discovery c
  const sb=f.window.AUSTA_SUPABASE;sb.auth.getSession=async()=>({data:{session:{user:{id:f.state.owner},access_token:'renewed'}},error:null});
  const token=f.intent.capture(r);await assert.rejects(f.save('cars',token));assert.throws(()=>f.intent.capture(r));noWrite(f);
 });
-const detailFile=path.join(__dirname,'category-detail-presentation.test.cjs'),detailModule=new Module(detailFile,module);detailModule.filename=detailFile;detailModule.paths=module.paths;
-const detailCode=fs.readFileSync(detailFile,'utf8').split('for(const [category,fields] of Object.entries(definitions)){')[0]
- .replace('appendChild(page){this.page=page}',"appendChild(page){this.page=page;page.isConnected=true;this.sellerTarget={innerHTML:''};page.querySelector=selector=>selector==='[data-professional-seller]'?this.sellerTarget:null;}")
- .replace('return {c,rows(item)', 'return {c,document,rows(item)');
-detailModule._compile(detailCode+'\nmodule.exports=fixture;',detailFile);
+const detailFixture=require('./helpers/listing-detail-fixture.cjs').fixture;
 for(const [category,business] of Object.entries({cars:'dealer',rent:'dealer',parts:'store',service:'service',usta:'usta',dealer:'dealer'}))test(`${category}: actual full-detail entry renders public professional identity without replacing listing contact`,async()=>{
- const detail=detailModule.exports();detail.document.addEventListener=()=>{};vm.runInContext(fs.readFileSync(path.join(root,'assets/vehicle/vin.js'),'utf8'),detail.c);vm.runInContext(moduleSource,detail.c);
+ const detail=detailFixture();
  const publicProfile={id:'seller',business_type:business,display_name:'Professional name',status:'active',verification_status:'verified',official_status:'none',owner_id:'PRIVATE',phone:'PRIVATE'};
- detail.c.window.AUSTA_SELLER_IDENTITY.getForListing=()=>publicProfile;
- await detail.render({category,seller_profile_id:'seller',contact_name:'Listing Contact',phone:'123',region:'Bakı',status:'active'});
- assert.ok(detail.document.body.sellerTarget.innerHTML.includes('Professional name'));assert.ok(detail.document.body.sellerTarget.innerHTML.includes('Təsdiqlənmiş'));assert.ok(!detail.document.body.sellerTarget.innerHTML.includes('PRIVATE'));
- assert.ok(detail.document.body.page.innerHTML.includes('123'));
+ detail.state.profile=publicProfile;
+ await detail.open(['cars','rent'].includes(category)?'vehicle':['service','usta'].includes(category)?'service_provider':category==='dealer'?'auto_dealer':'marketplace',{category,listing_type:category==='rent'?'rent':category==='cars'?'sale':undefined,provider_type:category,seller_profile_id:'seller',contact_name:'Listing Contact',phone:'123',region:'Bakı',status:'active'});
+ assert.ok(detail.page().querySelector('[data-professional-seller]').innerHTML.includes('Professional name'));assert.ok(detail.page().querySelector('[data-professional-seller]').innerHTML.includes('Təsdiqlənmiş'));assert.ok(!detail.page().querySelector('[data-professional-seller]').innerHTML.includes('PRIVATE'));
+ assert.ok(detail.markup().includes('123'));
 });
 
 for(const type of ['service','usta'])test(`${type}: same-type sparse update avoids seller trigger columns, explicit type switch remains guarded`,async()=>{

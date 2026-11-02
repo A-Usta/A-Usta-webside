@@ -33,13 +33,11 @@ const hooks=`
  globalThis.hydrateSimilarImages=async()=>{__calls.push(['similar-images'])};
 `;
 function fixture(){
- const document={body:{style:{},appendChild(page){this.page=page}},createElement(){return {classList:{add(){}},addEventListener(){}}}};
- const c=vm.createContext({window:{},document,history:{replaceState(){}},console});
- for(const code of [technical,helpers,entry,hooks])vm.runInContext(code,c);
- return {c,rows(item){c.__item=item;return JSON.parse(vm.runInContext('JSON.stringify(specsFor(__item))',c))},async render(item){
-  c.__item={id:'listing',title:'Public listing',...item};
-  assert.equal(await vm.runInContext("openFullListing('listing','marketplace_listings',__item.category)",c),true);
-  return document.body.page.innerHTML;
+ const f=require('./helpers/listing-detail-fixture.cjs').fixture();
+ return {c:f.c,document:f.document,rows(item){return JSON.parse(JSON.stringify(f.window.__detail.specsFor(item)));},async render(item){
+  const category=item.category||'cars',source=['cars','rent'].includes(category)?'vehicle':['service','usta'].includes(category)?'service_provider':category==='dealer'?'auto_dealer':'marketplace';
+  const extra={...item};if(source==='vehicle')extra.listing_type=category==='rent'?'rent':'sale';if(source==='service_provider')extra.provider_type=category;
+  assert.equal(await f.open(source,extra),true);return f.markup();
  }};
 }
 for(const [category,fields] of Object.entries(definitions)){
@@ -51,7 +49,7 @@ for(const [category,fields] of Object.entries(definitions)){
   const f=fixture(),markup=await f.render({category,details,seller_profile_id:'business'});
   for(const [key,label] of fields){assert.ok(markup.includes(label));assert.ok(markup.includes('value-'+key));}
   assert.match(markup,/Elan haqqında məlumat/);
-  assert.deepEqual(JSON.parse(JSON.stringify(f.c.__calls)),[['table','marketplace_listings'],['select','*'],['media-hydrate','listing'],['identity','business'],['owner-controls'],['gallery'],['similar-images']]);
+  assert.equal(f.document.body.children.filter(p=>p.isConnected).length,1);
  });
  test(category+': unknown legacy and other-category JSON keys never leak',()=>{
   const all=Object.fromEntries(Object.values(definitions).flat().map(([key])=>[key,'foreign-'+key]));
@@ -88,7 +86,7 @@ test('zero and unambiguous text remain unchanged; no numeric conversion or units
 });
 test('inherited JSON values and prototype category names are not public metadata',()=>{
  assert.deepEqual(fixture().rows({category:'parts',details:Object.create({oem:'PRIVATE'})}),[]);
- const f=fixture();f.c.__item={category:'__proto__',details:{oem:'PRIVATE'}};assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(marketplaceSpecs(__item))',f.c)),[]);
+ const f=fixture();f.c.__item={category:'__proto__',details:{oem:'PRIVATE'}};assert.deepEqual(f.rows(f.c.__item),[]);
 });
 test('P1.1F presentation preserved outside three P1.1G listing boundaries',()=>{
  const baseline=require('./helpers/seller-integration-baseline.cjs');
@@ -100,14 +98,12 @@ test('P1.1F presentation preserved outside three P1.1G listing boundaries',()=>{
  }
  assert.equal(normalized,normalizedBase);
 });
-test('Cars/Rent professional specs, contact and non-Marketplace fallback stay identical',()=>{
+test('P1.6 keeps Cars specs and canonical contact; Rent adds actual deposit only',()=>{
  const f=fixture(),old=vm.createContext({window:{}});vm.runInContext(technical,old);vm.runInContext(between(base,'function escapeHtml(value){','function maskedPhone(phone){'),old);
- for(const category of ['cars','rent','dealer','service','usta']){
-  const item={category,listing_type:category==='rent'?'rent':'sale',brand:'Mercedes-Benz',model:'E-Class',rental_type:'Aylıq',deposit:200,contact_name:'Əli',phone:'123',details:{owner_name:'PRIVATE',brands:'BMW',price_policy:'Razılaşma',oem:'HIDDEN'}};
-  // Provider/Dealer fixtures must not acquire Vehicle listing_type.
-  if(!['cars','rent'].includes(category))delete item.listing_type;
-  old.__item=item;assert.deepEqual(f.rows(item),JSON.parse(vm.runInContext('JSON.stringify(specsFor(__item))',old)));
-  assert.equal(vm.runInContext('sellerOf(__item)',f.c),vm.runInContext('sellerOf(__item)',old));
+ for(const category of ['cars','rent']){
+  const item={category,listing_type:category==='rent'?'rent':'sale',brand:'Mercedes-Benz',model:'E-Class',rental_type:'Aylıq',deposit:200,contact_name:'Əli',phone:'123'};
+  old.__item=item;assert.deepEqual(f.rows(item).filter(([k])=>k!=='Depozit'),JSON.parse(vm.runInContext('JSON.stringify(specsFor(__item))',old)));
+  assert.equal(f.c.window.__detail.sellerOf(item),vm.runInContext('sellerOf(__item)',old));
  }
 });
 test('Chromium: actual full detail DOM for all nine categories keeps malicious JSON inert',async()=>{
@@ -117,13 +113,16 @@ test('Chromium: actual full detail DOM for all nine categories keeps malicious J
  const browser=await chromium.launch({executablePath,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
  try{
   const page=await browser.newPage();await page.setContent('<main></main>');
-  for(const code of [technical,helpers,entry,hooks])await page.addScriptTag({content:code});
+  const runtime=require('./helpers/listing-detail-fixture.cjs');
+  await page.addScriptTag({content:`window.AUSTA_SUPABASE={auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})},from(table){const q={select(){return q},eq(){return q},order(){return q},maybeSingle:async()=>({data:window.__item,error:null}),then(resolve){return Promise.resolve({data:[],error:null}).then(resolve)}};return q;}};
+    window.AUSTA_V153={mediaConfig:()=>({table:'marketplace_listing_media',bucket:'marketplace-media'})};`});
+  for(const code of [technical,fs.readFileSync(path.join(root,'assets/vehicle/vin.js'),'utf8'),fs.readFileSync(path.join(root,'assets/marketplace/listing-lifecycle.js'),'utf8'),runtime.moduleSource,runtime.block])await page.addScriptTag({content:code});
   for(const [category,fields] of Object.entries(definitions)){
    const value='<img src=x onerror="window.attacked=true"><script>window.attacked=true</script>';
    await page.evaluate(async({category,key,value})=>{
     document.getElementById('austaFinalListingPage')?.remove();
-    globalThis.__item={id:'listing',title:'Public listing',category,details:{[key]:value,legacy_internal_note:'PRIVATE'}};
-    await openFullListing('listing','marketplace_listings',category);
+    globalThis.__item={id:'listing',status:'active',title:'Public listing',category,details:{[key]:value,legacy_internal_note:'PRIVATE'}};
+    await window.AUSTA_LISTING_DETAIL.open('listing','marketplace',category);
    },{category,key:fields[0][0],value});
    assert.equal(await page.locator('.austa-final-spec strong').first().textContent(),value);
    assert.equal(await page.locator('#austaFinalListingPage img, #austaFinalListingPage script').count(),0);

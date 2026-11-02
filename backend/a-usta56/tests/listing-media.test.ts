@@ -230,7 +230,9 @@ test("frontend direct media consumers and owner detail adapter remain present", 
   const html = readFileSync(new URL("../../../index.html", import.meta.url), "utf8");
   const seller = readFileSync(new URL("../../../assets/marketplace/seller-page.js", import.meta.url), "utf8");
   assert.ok(html.includes("async function hydrateSupabaseListingMedia(item)"));
-  assert.ok(html.includes("await hydrateSupabaseListingMedia("));
+  const detail = readFileSync(new URL("../../../assets/marketplace/listing-detail.js", import.meta.url), "utf8");
+  assert.ok(html.includes("install({hydrate:hydrateSupabaseListingMedia,render:renderResolvedListing"));
+  assert.ok(detail.includes("row=await hooks.hydrate(row);check(c);"));
   assert.ok(html.includes(".createSignedUrl(row.storage_path,3600)"));
   assert.ok(html.includes("hydrateVehicleCardMedia: listings => attachImages(window.AUSTA_SUPABASE, listings)"));
   assert.ok(seller.includes("await api.hydrateVehicleCardMedia(eligible)"));

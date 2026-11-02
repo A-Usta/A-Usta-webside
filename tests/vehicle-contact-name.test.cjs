@@ -74,7 +74,7 @@ for(const type of ['cars','rent']){
   f.form.setEdit();await f.form.saveCurrentListing();assert.equal(f.state.row.contact_name,'Vüqar');assert.equal(f.state.row.phone,'123');
  });
  test(type+': detail canonical source, generic fallback and escaped output',()=>{
-  const f=fixture({type});vm.runInContext(html.slice(html.indexOf('function sellerOf(item){'),html.indexOf('function locationOf(item){')),f.context);
+  const f=fixture({type});vm.runInContext("function categoryOf(item){return item.category;}"+html.slice(html.indexOf('function sellerOf(item){'),html.indexOf('function locationOf(item){')),f.context);
   f.context.item={category:type,contact_name:'Əli',name:'WRONG','Ad / soyad':'WRONG'};
   assert.equal(vm.runInContext('sellerOf(item)',f.context),'Əli');f.context.item.contact_name=null;assert.equal(vm.runInContext('sellerOf(item)',f.context),'Elan sahibi');
   f.context.item.contact_name='<img src=x onerror="window.attacked=true">';
@@ -85,10 +85,10 @@ for(const type of ['cars','rent']){
 }
 
 test('non-Vehicle seller identity and router remain isolated',()=>{
- const f=fixture();vm.runInContext(html.slice(html.indexOf('function sellerOf(item){'),html.indexOf('function locationOf(item){')),f.context);
+ const f=fixture();vm.runInContext("function categoryOf(item){return item.category;}"+html.slice(html.indexOf('function sellerOf(item){'),html.indexOf('function locationOf(item){')),f.context);
  for(const category of ['dealer','service','usta','parts']){
   f.context.item={category,name:'Existing identity',contact_name:'Vehicle only'};
-  assert.equal(vm.runInContext('sellerOf(item)',f.context),'Existing identity');
+  assert.equal(vm.runInContext('sellerOf(item)',f.context),category==='dealer'?'Vehicle only':category==='service'?'Əlaqələndirici':'Existing identity');
   const input=f.form.buildRouterInput(category,{name:'Existing identity',service_name:'Existing service',specialty:'Repair',phone:'123',brand:'Brand',model:'Model',dealer_name:'Dealer',region:'Bakı',address:'Street'});
   assert.ok(!Object.hasOwn(input,'contact_name'));
  }
@@ -97,5 +97,5 @@ test('Vehicle detail/edit DB loads and mappers retain canonical contact column',
  for(const start of [html.indexOf('function mapSupabaseListing(item){'),html.indexOf('function mapSupabaseListing(item){',html.indexOf('function mapSupabaseListing(item){')+1)]){
   const end=html.indexOf('\nfunction ',start+1);assert.match(html.slice(start,end),/\.\.\.item/);
  }
- assert.match(html,/from\(source\)\.select\('\*'\)\.eq\('id',id\)/);
+ assert.match(fs.readFileSync(path.join(root,'assets/marketplace/listing-detail.js'),'utf8'),/from\(c.config.table\)\.select\('\*'\)\.eq\('id',c.id\)/);
 });
