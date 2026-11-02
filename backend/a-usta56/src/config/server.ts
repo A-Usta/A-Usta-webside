@@ -7,10 +7,10 @@ import multipart from "@fastify/multipart";
 import { serviceOrderRoutes } from "../routes/service-orders.js";
 import { authRoutes } from "../routes/auth.js";
 import { listingMediaRoutes } from "../routes/listing-media.js";
+import { diagnosticsOptions, installDiagnostics } from "../diagnostics/foundation.js";
 
-const app = Fastify({
-  logger: true,
-});
+const app = Fastify(diagnosticsOptions);
+installDiagnostics(app);
 
 await app.register(cors, {
   origin: [
@@ -18,6 +18,7 @@ await app.register(cors, {
     "https://a-usta-webside.onrender.com",
   ],
   credentials: true,
+  exposedHeaders: ["x-request-id"],
 });
 
 await app.register(helmet);
