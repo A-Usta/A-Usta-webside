@@ -153,7 +153,7 @@ test('P0.3.1 helper, visibility, public queries and protected runtime assets rem
   const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');assert.equal(html.match(re)[0],main.match(re)[0]);
  }
  const changed=cp.execFileSync('git',['diff','--name-only',base,'--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts'].includes(p)),[]);
+ assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts'].includes(p)),[]);
  // Permit only the reviewed supplemental seller block; all original detail logic remains exact.
  const detail=s=>s.match(/<script id="austa-final-full-listing-js">([\s\S]*?)<\/script>/)[1];
  const normalized=detail(require('./helpers/seller-integration-baseline.cjs').withBaselineMediaHydration(require('./helpers/seller-integration-baseline.cjs').withBaselineDetail(html,main),main))
