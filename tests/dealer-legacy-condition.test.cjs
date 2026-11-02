@@ -2,13 +2,13 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const {chromium}=require('/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {chromium}=require('playwright');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const block=id=>html.match(new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>'))[1];
 const media=block('austa-v153d-14-category-media-js'),form=block('austa-v153c-real-listing-form-js');
 const between=(s,a,b)=>s.slice(s.indexOf(a),s.indexOf(b,s.indexOf(a)));
 test('Dealer legacy condition: real Chromium select, edit hydration and UPDATE',async t=>{
- const browser=await chromium.launch({executablePath:'/tmp/category-chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
  try{
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.setContent('<select id="austaV153CCategory"><option value="dealer">Dealer</option></select><div id="austaV153CFields"></div><button id="austaV153CSave"></button>');

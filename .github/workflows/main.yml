@@ -1,38 +1,33 @@
-name: A-USTA Backend CI
+name: A-USTA Full Regression CI
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "backend/a-usta56/**"
-      - ".github/workflows/main.yml"
-      - ".node-version"
   pull_request:
-    branches:
-      - main
-    paths:
-      - "backend/a-usta56/**"
-      - ".github/workflows/main.yml"
-      - ".node-version"
+    branches: [main]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
-jobs:
-  backend-ci:
-    name: Backend Build
-    runs-on: ubuntu-latest
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+jobs:
+  backend-static:
+    name: Backend Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     defaults:
       run:
-        working-directory: backend/a-usta56
-
+        shell: bash
     steps:
-      - name: Checkout repository
+      - name: Checkout event commit with full history
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -41,26 +36,218 @@ jobs:
           cache: npm
           cache-dependency-path: backend/a-usta56/package-lock.json
 
+      - name: Establish event Git authority and check whitespace
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SHA: ${{ github.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base="$PR_BASE"
+            head="$PR_HEAD"
+            authority="$PR_BASE"
+          elif [[ "$EVENT_NAME" == "push" ]]; then
+            base="$PUSH_BEFORE"
+            head="$EVENT_SHA"
+            authority="$EVENT_SHA"
+          else
+            echo "Unsupported event: $EVENT_NAME" >&2
+            exit 1
+          fi
+          for sha in "$base" "$head" "$authority"; do
+            [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          done
+          [[ "$(git rev-parse HEAD)" == "$head" ]]
+          git cat-file -e "$authority^{commit}"
+          git update-ref refs/remotes/origin/main "$authority"
+          if [[ "$base" == "0000000000000000000000000000000000000000" ]]; then
+            base="$(git hash-object -t tree /dev/null)"
+          else
+            git cat-file -e "$base^{commit}"
+          fi
+          git diff --check "$base" "$head"
 
-      - name: Install dependencies
+      - name: Static catalog, syntax and browser-contract gate
+        run: node tests/helpers/check-static.cjs
+
+      - name: Install backend dependencies
+        working-directory: backend/a-usta56
         run: npm ci
 
       - name: Build backend
+        working-directory: backend/a-usta56
         run: npm run build
 
       - name: Typecheck backend
+        working-directory: backend/a-usta56
         run: npm run typecheck
 
       - name: Test service orders
-        run: node --import tsx --test tests/service-orders.test.ts
+        working-directory: backend/a-usta56
+        run: node --import tsx --test --test-reporter=tap tests/service-orders.test.ts
 
       - name: Test media and access
-        run: node --import tsx --test tests/listing-media.test.ts
+        working-directory: backend/a-usta56
+        run: node --import tsx --test --test-reporter=tap tests/listing-media.test.ts
 
       - name: Audit production dependencies
+        working-directory: backend/a-usta56
         run: npm audit --omit=dev --audit-level=high
 
       - name: Report complete dependency audit
         if: always()
         continue-on-error: true
+        working-directory: backend/a-usta56
         run: npm audit
+
+      - name: Assert repository cleanliness
+        if: always()
+        run: |
+          git status --short
+          test -z "$(git status --porcelain)"
+
+  db-contract:
+    name: DB contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout event commit with full history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.22.2
+          cache: npm
+          cache-dependency-path: tests/db/package-lock.json
+
+      - name: Establish event Git authority and check whitespace
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SHA: ${{ github.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base="$PR_BASE"
+            head="$PR_HEAD"
+            authority="$PR_BASE"
+          elif [[ "$EVENT_NAME" == "push" ]]; then
+            base="$PUSH_BEFORE"
+            head="$EVENT_SHA"
+            authority="$EVENT_SHA"
+          else
+            echo "Unsupported event: $EVENT_NAME" >&2
+            exit 1
+          fi
+          for sha in "$base" "$head" "$authority"; do
+            [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          done
+          [[ "$(git rev-parse HEAD)" == "$head" ]]
+          git cat-file -e "$authority^{commit}"
+          git update-ref refs/remotes/origin/main "$authority"
+          if [[ "$base" == "0000000000000000000000000000000000000000" ]]; then
+            base="$(git hash-object -t tree /dev/null)"
+          else
+            git cat-file -e "$base^{commit}"
+          fi
+          git diff --check "$base" "$head"
+
+      - name: Install DB test dependencies
+        run: npm ci --prefix tests/db --ignore-scripts
+
+      - name: Complete DB contracts including P2.C and P2.A
+        run: |
+          set -euo pipefail
+          npm test --prefix tests/db | tee "$RUNNER_TEMP/db-contract.tap"
+
+      - name: Assert repository cleanliness
+        if: always()
+        run: |
+          git status --short
+          test -z "$(git status --porcelain)"
+
+  frontend-regression:
+    name: Frontend regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout event commit with full history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.22.2
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
+
+      - name: Establish event Git authority and check whitespace
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SHA: ${{ github.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base="$PR_BASE"
+            head="$PR_HEAD"
+            authority="$PR_BASE"
+          elif [[ "$EVENT_NAME" == "push" ]]; then
+            base="$PUSH_BEFORE"
+            head="$EVENT_SHA"
+            authority="$EVENT_SHA"
+          else
+            echo "Unsupported event: $EVENT_NAME" >&2
+            exit 1
+          fi
+          for sha in "$base" "$head" "$authority"; do
+            [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          done
+          [[ "$(git rev-parse HEAD)" == "$head" ]]
+          git cat-file -e "$authority^{commit}"
+          git update-ref refs/remotes/origin/main "$authority"
+          if [[ "$base" == "0000000000000000000000000000000000000000" ]]; then
+            base="$(git hash-object -t tree /dev/null)"
+          else
+            git cat-file -e "$base^{commit}"
+          fi
+          git diff --check "$base" "$head"
+
+      - name: Install frontend test dependencies
+        run: npm ci --prefix tests --ignore-scripts
+
+      - name: Install pinned Playwright Chromium
+        run: npm run browser:install --prefix tests
+
+      - name: Complete frontend including real Chromium and P2.A
+        run: |
+          set -euo pipefail
+          npm test --prefix tests | tee "$RUNNER_TEMP/frontend-regression.tap"
+
+      - name: Assert repository cleanliness
+        if: always()
+        run: |
+          git status --short
+          test -z "$(git status --porcelain)"
