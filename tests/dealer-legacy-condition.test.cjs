@@ -29,9 +29,16 @@ test('Dealer legacy condition: real Chromium select, edit hydration and UPDATE',
     Object.assign(row,this.payload);return {data:{...row},error:null};
    }};return q;
   }};
-  window.AUSTA_V153={detailsFromForm:()=>({}),preserveDetails:async()=>undefined};
+  window.AUSTA_V153={
+   validateListingInput(type,input,editing){
+    if(type!=='dealer'||editing!==true||!input||typeof input!=='object'||Array.isArray(input))throw new Error('Dealer fixture validator call contract mismatch');
+    return {...input};
+   },
+   detailsFromForm:()=>({}),preserveDetails:async()=>undefined
+  };
   window.AUSTA_V153C={categories:{}};
  });
+ assert.equal(await page.evaluate(()=>typeof window.AUSTA_V153.validateListingInput),'function','Dealer fixture validation API must exist');
  const prefix=between(media,'function sb(){','/* =========================================================\n   ADD AUTO DEALER');
  // Extract declarations by their following named boundary; no copied production logic.
  const installStart=media.indexOf('function installDealerCategory(){');
