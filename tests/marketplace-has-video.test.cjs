@@ -202,7 +202,7 @@ test('no files means no upload or sync work',async()=>{
   assert.equal(f.state.calls.length,0);assert.equal(f.state.listing.has_video,true);
 });
 test('unrelated inline scripts and five pre-existing syntax issues remain unchanged',()=>{
-  const base=cp.execFileSync('git',['show','origin/main:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
+  const base=cp.execFileSync('git',['show','b79d65485cad6ad27b5bbfb62536e0d728907936:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
   const scripts=text=>[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
   const old=scripts(require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(base)),current=scripts(require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(require('./helpers/seller-integration-baseline.cjs').withBaselineOwnerDelete(html,base)));assert.equal(old.length,current.length);let legacy=0;
   for(let i=0;i<old.length;i++){
