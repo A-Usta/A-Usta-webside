@@ -1,3 +1,4 @@
+import { logDiagnostic } from "../diagnostics/foundation.js";
 import { serviceNumber, validateServiceOrderRequest } from "../validation/service-orders.js";
 import type { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
@@ -479,7 +480,7 @@ export async function serviceOrderRoutes(
         });
 
       if (error) {
-        app.log.error(error);
+        logDiagnostic(request, "database_or_rpc", error);
 
         return sendServerError(
           reply,
@@ -515,9 +516,7 @@ export async function serviceOrderRoutes(
         ]);
 
       if (assignmentsError) {
-        app.log.error(
-          assignmentsError,
-        );
+        logDiagnostic(request, "database_or_rpc", assignmentsError);
 
         return sendServerError(
           reply,
@@ -554,9 +553,7 @@ export async function serviceOrderRoutes(
           .in("id", providerIds);
 
         if (providersError) {
-          app.log.error(
-            providersError,
-          );
+          logDiagnostic(request, "database_or_rpc", providersError);
 
           return sendServerError(
             reply,
@@ -985,7 +982,7 @@ if (evidenceFiles === null) {
           .single();
 
    if (error) {
-  app.log.error(error);
+  logDiagnostic(request, "database_or_rpc", error);
 
   if (
     error.code === "23505" &&
@@ -1243,9 +1240,7 @@ if (evidenceFiles === null) {
       );
 
       if (discoveryError) {
-        app.log.error(
-          discoveryError,
-        );
+        logDiagnostic(request, "database_or_rpc", discoveryError);
 
         return sendServerError(
           reply,
@@ -1542,9 +1537,7 @@ if (evidenceFiles === null) {
       );
 
       if (discoveryError) {
-        app.log.error(
-          discoveryError,
-        );
+        logDiagnostic(request, "database_or_rpc", discoveryError);
 
         return sendServerError(
           reply,
@@ -1653,9 +1646,7 @@ if (evidenceFiles === null) {
             continue;
           }
 
-          app.log.error(
-            assignmentError,
-          );
+          logDiagnostic(request, "database_or_rpc", assignmentError);
 
           return rpcFailure(reply, assignmentError, "Provider assignment could not be created during dispatch");
         }
@@ -1944,9 +1935,7 @@ if (evidenceFiles === null) {
         .maybeSingle();
 
       if (existingError) {
-        app.log.error(
-          existingError,
-        );
+        logDiagnostic(request, "database_or_rpc", existingError);
 
         return sendServerError(
           reply,
@@ -1988,9 +1977,7 @@ if (evidenceFiles === null) {
         .single();
 
       if (assignmentError) {
-        app.log.error(
-          assignmentError,
-        );
+        logDiagnostic(request, "database_or_rpc", assignmentError);
 
         return rpcFailure(reply, assignmentError, "Service order assignment could not be created");
       }
@@ -2249,13 +2236,7 @@ if (evidenceFiles === null) {
         updateError ||
         !updatedProvider
       ) {
-        app.log.error(
-          {
-            updateError,
-            providerUserId,
-          },
-          "Provider location update failed",
-        );
+        logDiagnostic(request, "database_or_rpc", updateError);
 
         return sendServerError(
           reply,
@@ -2343,9 +2324,7 @@ if (evidenceFiles === null) {
       );
 
       if (acceptError) {
-        app.log.error(
-          acceptError,
-        );
+        logDiagnostic(request, "database_or_rpc", acceptError);
 
         return sendServerError(
           reply,
@@ -2406,12 +2385,7 @@ if (evidenceFiles === null) {
           break;
 
         default:
-          app.log.error(
-            {
-              acceptResult,
-            },
-            "Unexpected atomic accept result",
-          );
+          logDiagnostic(request, "unexpected_internal", undefined);
 
           return sendServerError(
             reply,
@@ -2457,9 +2431,7 @@ if (evidenceFiles === null) {
         orderResult.error ||
         !orderResult.data
       ) {
-        app.log.error(
-          orderResult.error,
-        );
+        logDiagnostic(request, "database_or_rpc", orderResult.error);
 
         return sendServerError(
           reply,
@@ -2471,9 +2443,7 @@ if (evidenceFiles === null) {
         assignmentResult.error ||
         !assignmentResult.data
       ) {
-        app.log.error(
-          assignmentResult.error,
-        );
+        logDiagnostic(request, "database_or_rpc", assignmentResult.error);
 
         return sendServerError(
           reply,
@@ -2657,9 +2627,7 @@ app.patch(
       updateError ||
       !updatedOrder
     ) {
-      app.log.error(
-        updateError,
-      );
+      logDiagnostic(request, "database_or_rpc", updateError);
 
       return rpcFailure(reply, updateError, "Provider price offer could not be saved");
     }
@@ -2801,9 +2769,7 @@ app.patch(
         rejectError ||
         !rejectedAssignment
       ) {
-        app.log.error(
-          rejectError,
-        );
+        logDiagnostic(request, "database_or_rpc", rejectError);
 
         return sendConflict(
           reply,
@@ -2853,7 +2819,7 @@ app.patch(
         });
 
       if (assignmentsError) {
-        app.log.error(assignmentsError);
+        logDiagnostic(request, "database_or_rpc", assignmentsError);
 
         return sendServerError(
           reply,
@@ -2887,7 +2853,7 @@ app.patch(
         .in("id", orderIds);
 
       if (ordersError) {
-        app.log.error(ordersError);
+        logDiagnostic(request, "database_or_rpc", ordersError);
 
         return sendServerError(
           reply,
@@ -3084,7 +3050,7 @@ if (
       try {
         file = await request.file();
       } catch (error) {
-        app.log.error(error);
+        logDiagnostic(request, "storage", error);
 
         return sendBadRequest(
           reply,
@@ -3117,7 +3083,7 @@ if (
         buffer =
           await file.toBuffer();
       } catch (error) {
-        app.log.error(error);
+        logDiagnostic(request, "storage", error);
 
         return sendBadRequest(
           reply,
@@ -3172,9 +3138,7 @@ if (
         );
 
       if (uploadError) {
-        app.log.error(
-          uploadError,
-        );
+        logDiagnostic(request, "storage", uploadError);
 
         return sendServerError(
           reply,
@@ -3201,10 +3165,10 @@ if (
       // Freeze identity across retries: a network failure may follow a committed append.
       const attachment = await appendEvidenceSafely(args);
       if (attachment.error || !attachment.data) {
-        app.log.error(attachment.error);
+        logDiagnostic(request, "database_or_rpc", attachment.error);
         if (attachment.definiteAbort) {
           const cleanup = await supabase.storage.from("service-evidence").remove([storagePath]);
-          if (cleanup.error) app.log.error(cleanup.error);
+          if (cleanup.error) logDiagnostic(request, "storage", cleanup.error);
         }
         return sendConflict(reply, attachment.definiteAbort
           ? "Service order changed before the photo could be attached"
@@ -3839,9 +3803,7 @@ app.patch(
       updateError ||
       !updatedOrder
     ) {
-      app.log.error(
-        updateError,
-      );
+      logDiagnostic(request, "database_or_rpc", updateError);
 
       return rpcFailure(reply, updateError, "Price offer could not be approved");
     }
@@ -3977,9 +3939,7 @@ app.patch(
       updateError ||
       !updatedOrder
     ) {
-      app.log.error(
-        updateError,
-      );
+      logDiagnostic(request, "database_or_rpc", updateError);
 
       return rpcFailure(reply, updateError, "Price offer could not be rejected");
     }
