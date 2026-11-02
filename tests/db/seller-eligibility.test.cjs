@@ -151,15 +151,16 @@ for(const drift of ['missing-trigger','wrong-update-columns','unprivileged-funct
  }finally{await isolated.close();}
 });
 test('migration is functions-only; reviewed SQL, managed fields and protected runtime remain intact',()=>{
+ assertP2D1Configuration();
  const definitions=[...reviewedMigration.matchAll(/CREATE OR REPLACE FUNCTION public\.(\w+)\(/g)].map(m=>m[1]).sort();assert.deepEqual(definitions,[...guarded].sort());
  assert.ok(!/\b(?:DROP\s+(?:TRIGGER|FUNCTION|TABLE)|ALTER\s+(?:TABLE|POLICY)|GRANT\b|REVOKE\b|CREATE\s+TRIGGER)/i.test(reviewedMigration.replace(/--[^\n]*/g,'')));
  const base='3a4d0f0138ff8b6d30341dfa0ab3dd007a349a9c';
  assert.equal(reviewedMigration,cp.execFileSync('git',['show',base+':supabase/migrations/20261101000000_p12a_seller_eligibility_guard.sql'],{cwd:root,encoding:'utf8'}));
  // The reviewed P1.6 backend test/mock update is not production implementation.
- // Keep all backend production/config/dependency paths protected; exclude only
- // the one immutable reviewed test delta, not the whole tests directory.
+ // Keep unrelated backend paths protected; the exact P2.D.1 config files
+ // excluded below are independently fingerprinted, never directory-exempted.
  // P2.C: two exact production paths and one exact dedicated test path.
- const protectedPaths=['backend',':(exclude)backend/a-usta56/src/routes/service-orders.ts',':(exclude)backend/a-usta56/src/validation/service-orders.ts',':(exclude)backend/a-usta56/tests/service-orders.test.ts',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
+ const protectedPaths=['backend',':(exclude)backend/a-usta56/package.json',':(exclude)backend/a-usta56/package-lock.json',':(exclude)backend/a-usta56/.gitignore',':(exclude)backend/a-usta56/src/routes/service-orders.ts',':(exclude)backend/a-usta56/src/validation/service-orders.ts',':(exclude)backend/a-usta56/tests/service-orders.test.ts',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
  assert.equal(cp.execFileSync('git',['diff',base,'--',...protectedPaths],{cwd:root,encoding:'utf8'}),'');
  for(const file of cp.execFileSync('git',['ls-files','-z','--',...protectedPaths],{cwd:root,encoding:'utf8'}).split('\0').filter(Boolean)){
   assert.deepEqual(fs.readFileSync(path.join(root,file)),cp.execFileSync('git',['show',base+':'+file],{cwd:root}),file);
@@ -204,3 +205,18 @@ test('custom untrusted no-JWT role cannot use a temporary trigger as a private o
 test('trusted SQL with no JWT retains eligible attachment without broadening public grants',()=>scenario(async()=>{
  const id=await seller(groups[0]);const row=await insert(groups[0],id);assert.equal(row.seller_profile_id,id);
 }));
+
+// P2.D.1 exact reviewed configuration, including newly introduced files.
+function assertP2D1Configuration(){
+ const reviewed={
+  "backend/a-usta56/package.json": "cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802",
+  "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
+  "backend/a-usta56/.gitignore": "a459038af144bb649dd32c98f20e160838ec500ed5580fb1669ed0860196e140",
+  ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
+  ".github/workflows/main.yml": "02b06c6aa0e0ce0933e23926bede3d8d13c9bba2cf615e9bce6425e2f3f682be"
+};
+ for(const [file,sha256] of Object.entries(reviewed)){
+  assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);
+ }
+}
+test('P2.D.1 approved dependency/runtime files retain exact reviewed contents',assertP2D1Configuration);

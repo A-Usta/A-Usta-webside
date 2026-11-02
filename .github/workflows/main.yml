@@ -7,12 +7,17 @@ on:
     paths:
       - "backend/a-usta56/**"
       - ".github/workflows/main.yml"
+      - ".node-version"
   pull_request:
     branches:
       - main
     paths:
       - "backend/a-usta56/**"
       - ".github/workflows/main.yml"
+      - ".node-version"
+
+permissions:
+  contents: read
 
 jobs:
   backend-ci:
@@ -25,16 +30,37 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 20
-         
+          node-version: 24.22.2
+          cache: npm
+          cache-dependency-path: backend/a-usta56/package-lock.json
+
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build backend
         run: npm run build
+
+      - name: Typecheck backend
+        run: npm run typecheck
+
+      - name: Test service orders
+        run: node --import tsx --test tests/service-orders.test.ts
+
+      - name: Test media and access
+        run: node --import tsx --test tests/listing-media.test.ts
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Report complete dependency audit
+        if: always()
+        continue-on-error: true
+        run: npm audit
