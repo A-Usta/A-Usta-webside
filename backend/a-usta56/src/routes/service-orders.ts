@@ -1,3 +1,4 @@
+import { serviceNumber, validateServiceOrderRequest } from "../validation/service-orders.js";
 import type { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import { supabase } from "../config/supabase.js";
@@ -5,6 +6,36 @@ import {
   requireAuth,
   type AuthenticatedRequest,
 } from "../middleware/auth.js";
+
+type RpcError = { code?: string; message?: string } | null;
+function priceSnapshot(order: Record<string, unknown>) {
+  return Object.fromEntries(["price_status","proposed_price","final_price","price_offered_at","price_responded_at"].map(k => [k, order[k] ?? null]));
+}
+function rpcFailure(reply: import("fastify").FastifyReply, error: RpcError, message: string) {
+  if (error?.code === "22003" || error?.code === "22023") return sendBadRequest(reply, message);
+  if (error?.code === "42501") return sendForbidden(reply, message);
+  return sendConflict(reply, message);
+}
+function definiteRpcAbort(error: RpcError) {
+  // Only SQLSTATE errors prove PostgreSQL aborted the statement. HTTP/transport
+  // errors and thrown promises are ambiguous, including a lost success response.
+  return !!error?.code && /^(?:22|23|40|42|55|P0)[0-9A-Z]{3}$/.test(error.code);
+}
+export async function appendEvidenceSafely(args: Record<string, unknown>) {
+  let ambiguous = false;
+  let lastError: RpcError = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const result = await supabase.rpc("austa_p2c_append_evidence", args);
+      if (!result.error && result.data) return { data: result.data, error: null, definiteAbort: false };
+      lastError = result.error;
+      if (!definiteRpcAbort(result.error)) ambiguous = true;
+      if (definiteRpcAbort(result.error) && result.error?.code !== "55P03")
+        return { data: null, error: result.error, definiteAbort: !ambiguous };
+    } catch { ambiguous = true; lastError = { message: "Unconfirmed evidence transport outcome" }; }
+  }
+  return { data: null, error: lastError, definiteAbort: !ambiguous };
+}
 
 /*
  * ============================================================
@@ -138,27 +169,8 @@ function optionalString(
   return value.trim();
 }
 
-function optionalNumber(
-  value: unknown,
-): number | null {
-  if (
-    value === undefined ||
-    value === null ||
-    value === ""
-  ) {
-    return null;
-  }
-
-  const numberValue =
-    typeof value === "number"
-      ? value
-      : Number(value);
-
-  if (!Number.isFinite(numberValue)) {
-    return null;
-  }
-
-  return numberValue;
+function optionalNumber(value: unknown): number | null {
+  return serviceNumber(value);
 }
 
 function optionalJsonArray(
@@ -451,6 +463,7 @@ export async function serviceOrderRoutes(
   app.get(
     "/service-orders",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -637,6 +650,7 @@ export async function serviceOrderRoutes(
   app.post(
     "/service-orders",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -983,10 +997,8 @@ if (evidenceFiles === null) {
     );
   }
 
-  return sendServerError(
-    reply,
-    "Service order could not be created",
-  );
+  if (error.code === "22003") return sendBadRequest(reply, "Service order numeric value is out of range");
+  return sendServerError(reply, "Service order could not be created");
 }
 
       return reply.code(201).send({
@@ -1010,6 +1022,7 @@ if (evidenceFiles === null) {
   app.post(
     "/service-orders/:orderId/discover-providers",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -1315,6 +1328,7 @@ if (evidenceFiles === null) {
   app.post(
     "/service-orders/:orderId/dispatch",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -1643,10 +1657,7 @@ if (evidenceFiles === null) {
             assignmentError,
           );
 
-          return sendServerError(
-            reply,
-            "Provider assignment could not be created during dispatch",
-          );
+          return rpcFailure(reply, assignmentError, "Provider assignment could not be created during dispatch");
         }
 
         if (assignment) {
@@ -1698,6 +1709,7 @@ if (evidenceFiles === null) {
   app.post(
     "/service-orders/:orderId/assignments",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -1980,10 +1992,7 @@ if (evidenceFiles === null) {
           assignmentError,
         );
 
-        return sendServerError(
-          reply,
-          "Service order assignment could not be created",
-        );
+        return rpcFailure(reply, assignmentError, "Service order assignment could not be created");
       }
 
       return reply.code(201).send({
@@ -2012,6 +2021,7 @@ if (evidenceFiles === null) {
   app.patch(
     "/provider/location",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -2284,6 +2294,7 @@ if (evidenceFiles === null) {
   app.patch(
     "/service-order-assignments/:assignmentId/accept",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -2501,7 +2512,8 @@ if (evidenceFiles === null) {
 app.patch(
   "/service-order-assignments/:assignmentId/price-offer",
   {
-    preHandler: requireAuth,
+    preValidation: validateServiceOrderRequest,
+      preHandler: requireAuth,
   },
   async (request, reply) => {
     const providerUserId =
@@ -2635,34 +2647,11 @@ app.patch(
       );
     }
 
-    const offeredAt =
-      new Date().toISOString();
-
-    const {
-      data: updatedOrder,
-      error: updateError,
-    } = await supabase
-      .from("service_orders")
-      .update({
-        proposed_price:
-          proposedPrice,
-        price_status:
-          "offered",
-        price_offered_at:
-          offeredAt,
-        price_responded_at:
-          null,
-      })
-      .eq(
-        "id",
-        assignment.order_id,
-      )
-      .eq(
-        "status",
-        "accepted",
-      )
-      .select("*")
-      .single();
+    const { data: updatedOrder, error: updateError } = await supabase.rpc(
+      "austa_p2c_price_transition", {
+        p_order_id: order.id, p_assignment_id: assignment.id, p_actor_id: providerUserId,
+        p_action: "offer", p_price: proposedPrice, p_expected: priceSnapshot(order),
+      });
 
     if (
       updateError ||
@@ -2672,10 +2661,7 @@ app.patch(
         updateError,
       );
 
-      return sendConflict(
-        reply,
-        "Provider price offer could not be saved",
-      );
+      return rpcFailure(reply, updateError, "Provider price offer could not be saved");
     }
 
     return reply.send({
@@ -2715,6 +2701,7 @@ app.patch(
   app.patch(
     "/service-order-assignments/:assignmentId/reject",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -2845,6 +2832,7 @@ app.patch(
   app.get(
     "/service-order-assignments",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -2943,6 +2931,7 @@ app.patch(
   app.post(
     "/service-order-assignments/:assignmentId/evidence/:stage",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -3207,72 +3196,21 @@ if (
           assignment.id,
       };
 
-      const existingEvidence =
-        Array.isArray(
-          order.evidence_files,
-        )
-          ? order.evidence_files
-          : [];
-
-      const nextEvidence = [
-        ...existingEvidence,
-        evidenceRecord,
-      ];
-
-      const expectedStatus =
-        stage === "before"
-          ? "accepted"
-          : "in_progress";
-
-      const {
-        data: updatedOrder,
-        error: evidenceUpdateError,
-      } = await supabase
-        .from("service_orders")
-        .update({
-          evidence_files:
-            nextEvidence,
-        })
-        .eq(
-          "id",
-          order.id,
-        )
-        .eq(
-          "status",
-          expectedStatus,
-        )
-        .select("*")
-        .single();
-
-      if (
-        evidenceUpdateError ||
-        !updatedOrder
-      ) {
-        app.log.error(
-          evidenceUpdateError,
-        );
-
-        const {
-          error: removeError,
-        } = await supabase.storage
-          .from(
-            "service-evidence",
-          )
-          .remove([
-            storagePath,
-          ]);
-
-        if (removeError) {
-          app.log.error(
-            removeError,
-          );
+      const args = { p_order_id: order.id, p_assignment_id: assignment.id,
+        p_actor_id: providerUserId, p_record: evidenceRecord };
+      // Freeze identity across retries: a network failure may follow a committed append.
+      const attachment = await appendEvidenceSafely(args);
+      if (attachment.error || !attachment.data) {
+        app.log.error(attachment.error);
+        if (attachment.definiteAbort) {
+          const cleanup = await supabase.storage.from("service-evidence").remove([storagePath]);
+          if (cleanup.error) app.log.error(cleanup.error);
         }
-
-        return sendConflict(
-          reply,
-          "Service order changed before the photo could be attached",
-        );
+        return sendConflict(reply, attachment.definiteAbort
+          ? "Service order changed before the photo could be attached"
+          : "Photo attachment could not be confirmed; retry/reconciliation is required");
       }
+      const updatedOrder = attachment.data;
 
       return reply.code(201).send({
         message:
@@ -3297,7 +3235,8 @@ if (
 app.patch(
   "/service-order-assignments/:assignmentId/start",
   {
-    preHandler: requireAuth,
+    preValidation: validateServiceOrderRequest,
+      preHandler: requireAuth,
   },
   async (request, reply) => {
     const providerUserId =
@@ -3455,125 +3394,13 @@ app.patch(
       );
     }
 
-    const startedAt =
-      new Date().toISOString();
-
-    /*
-     * Əvvəl order statusunu
-     * in_progress edirik.
-     */
-    const {
-      data: startedOrder,
-      error: startOrderError,
-    } = await supabase
-      .from("service_orders")
-      .update({
-        status: "in_progress",
-        started_at:
-          startedAt,
-      })
-      .eq(
-        "id",
-        assignment.order_id,
-      )
-      .eq(
-        "status",
-        "accepted",
-      )
-      .select("*")
-      .single();
-
-    if (
-      startOrderError ||
-      !startedOrder
-    ) {
-      app.log.error(
-        startOrderError,
-      );
-
-      return sendConflict(
-        reply,
-        "Service order could not be started",
-      );
-    }
-
-    /*
-     * Sonra assignment statusunu da
-     * in_progress edirik.
-     */
-    const {
-      data: startedAssignment,
-      error: startAssignmentError,
-    } = await supabase
-      .from(
-        "service_order_assignments",
-      )
-      .update({
-        status: "in_progress",
-        updated_at:
-          startedAt,
-      })
-      .eq(
-        "id",
-        assignment.id,
-      )
-      .eq(
-        "provider_id",
-        providerUserId,
-      )
-      .eq(
-        "status",
-        "accepted",
-      )
-      .select("*")
-      .single();
-
-    if (
-      startAssignmentError ||
-      !startedAssignment
-    ) {
-      app.log.error(
-        startAssignmentError,
-      );
-
-      /*
-       * Assignment yenilənməzsə,
-       * order-i accepted vəziyyətinə
-       * geri qaytarırıq ki statuslar
-       * bir-birindən ayrılmasın.
-       */
-      const {
-        error: rollbackError,
-      } = await supabase
-        .from("service_orders")
-        .update({
-          status: "accepted",
-          started_at: null,
-        })
-        .eq(
-          "id",
-          assignment.order_id,
-        )
-        .eq(
-          "status",
-          "in_progress",
-        );
-
-      if (rollbackError) {
-        app.log.error(
-          rollbackError,
-        );
-      }
-
-      return reply
-        .code(500)
-        .send({
-          error:
-            "Internal Server Error",
-          message:
-            "Assignment could not be started",
-        });
-    }
+    const transition = await supabase.rpc("austa_p2c_order_transition", {
+      p_order_id: order.id, p_assignment_id: assignment.id, p_actor_id: providerUserId,
+      p_action: "start", p_final_price: null, p_price_status: null,
+    });
+    if (transition.error || !transition.data?.order || !transition.data?.assignment)
+      return rpcFailure(reply, transition.error, "Service order could not be started");
+    const { order: startedOrder, assignment: startedAssignment } = transition.data;
 
     return reply.send({
       message:
@@ -3595,6 +3422,7 @@ app.patch(
   app.patch(
     "/service-order-assignments/:assignmentId/complete",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -3777,117 +3605,13 @@ app.patch(
         );
       }
 
-      const completedAt =
-        new Date().toISOString();
-
-      const {
-        data: completedAssignment,
-        error:
-          assignmentCompleteError,
-      } = await supabase
-        .from(
-          "service_order_assignments",
-        )
-        .update({
-          status: "completed",
-          completed_at:
-            completedAt,
-        })
-        .eq(
-          "id",
-          params.assignmentId,
-        )
-        .eq(
-          "provider_id",
-          providerUserId,
-        )
-         .eq(
-            "status",
-           "in_progress"
-        )
-        .select("*")
-        .single();
-
-      if (
-        assignmentCompleteError ||
-        !completedAssignment
-      ) {
-        app.log.error(
-          assignmentCompleteError,
-        );
-
-        return sendConflict(
-          reply,
-          "Service order assignment could not be completed",
-        );
-      }
-
-      const orderUpdate:
-        Record<string, unknown> = {
-        status: "completed",
-        completed_at:
-          completedAt,
-        price_status:
-          priceStatus,
-      };
-
-      if (finalPrice !== null) {
-        orderUpdate.final_price =
-          finalPrice;
-      }
-
-      const {
-        data: completedOrder,
-        error:
-          orderCompleteError,
-      } = await supabase
-        .from("service_orders")
-        .update(orderUpdate)
-        .eq(
-          "id",
-          assignment.order_id,
-        )
-        .eq(
-          "status",
-          "in_progress",
-        )
-        .select("*")
-        .single();
-
-      if (
-        orderCompleteError ||
-        !completedOrder
-      ) {
-        app.log.error(
-          orderCompleteError,
-        );
-
-        await supabase
-          .from(
-            "service_order_assignments",
-          )
-        .update({
-           status: "in_progress",
-           completed_at: null,
-         })
-          .eq(
-            "id",
-            params.assignmentId,
-          )
-          .eq(
-            "provider_id",
-            providerUserId,
-          )
-          .eq(
-            "status",
-            "completed",
-          );
-
-        return sendConflict(
-          reply,
-          "Service order could not be completed",
-        );
-      }
+      const transition = await supabase.rpc("austa_p2c_order_transition", {
+        p_order_id: order.id, p_assignment_id: assignment.id, p_actor_id: providerUserId,
+        p_action: "complete", p_final_price: finalPrice, p_price_status: priceStatus,
+      });
+      if (transition.error || !transition.data?.order || !transition.data?.assignment)
+        return rpcFailure(reply, transition.error, "Service order could not be completed");
+      const { order: completedOrder, assignment: completedAssignment } = transition.data;
 
       return reply.send({
         message:
@@ -3909,6 +3633,7 @@ app.patch(
   app.patch(
     "/service-orders/:orderId/cancel",
     {
+      preValidation: validateServiceOrderRequest,
       preHandler: requireAuth,
     },
     async (request, reply) => {
@@ -3985,78 +3710,13 @@ app.patch(
         );
       }
 
-      const {
-        data: cancelledOrder,
-        error: cancelError,
-      } = await supabase
-        .from("service_orders")
-        .update({
-          status: "cancelled",
-        })
-        .eq(
-          "id",
-          params.orderId,
-        )
-        .eq(
-          "customer_id",
-          customerId,
-        )
-        .not(
-          "status",
-          "in",
-          "(completed,cancelled)",
-        )
-        .select("*")
-        .single();
-
-      if (
-        cancelError ||
-        !cancelledOrder
-      ) {
-        app.log.error(
-          cancelError,
-        );
-
-        return sendConflict(
-          reply,
-          "Service order could not be cancelled",
-        );
-      }
-
-      const {
-        error: assignmentCancelError,
-      } = await supabase
-        .from(
-          "service_order_assignments",
-        )
-        .update({
-          status: "cancelled",
-        })
-        .eq(
-          "order_id",
-          params.orderId,
-        )
-        .in(
-          "status",
-          ["offered", "accepted"],
-        );
-
-      if (
-        assignmentCancelError
-      ) {
-        app.log.error(
-          assignmentCancelError,
-        );
-
-        return reply.code(500).send({
-          error:
-            "Internal Server Error",
-          message:
-            "Service order was cancelled, but assignments could not be fully cancelled",
-          order:
-            cancelledOrder,
-        });
-      }
+      const transition = await supabase.rpc("austa_p2c_order_transition", {
+        p_order_id: order.id, p_assignment_id: null, p_actor_id: customerId,
+        p_action: "cancel", p_final_price: null, p_price_status: null,
+      });
+      if (transition.error || !transition.data?.order)
+        return rpcFailure(reply, transition.error, "Service order could not be cancelled");
+      const cancelledOrder = transition.data.order;
 
       return reply.send({
         message:
@@ -4080,7 +3740,8 @@ app.patch(
 app.patch(
   "/service-orders/:orderId/price/approve",
   {
-    preHandler: requireAuth,
+    preValidation: validateServiceOrderRequest,
+      preHandler: requireAuth,
   },
   async (request, reply) => {
     const customerId =
@@ -4168,42 +3829,11 @@ app.patch(
       );
     }
 
-    const respondedAt =
-      new Date().toISOString();
-
-    const {
-      data: updatedOrder,
-      error: updateError,
-    } = await supabase
-      .from("service_orders")
-      .update({
-        final_price:
-          order.proposed_price,
-
-        price_status:
-          "confirmed",
-
-        price_responded_at:
-          respondedAt,
-      })
-      .eq(
-        "id",
-        params.orderId,
-      )
-      .eq(
-        "customer_id",
-        customerId,
-      )
-      .eq(
-        "status",
-        "accepted",
-      )
-      .eq(
-        "price_status",
-        "offered",
-      )
-      .select("*")
-      .single();
+    const { data: updatedOrder, error: updateError } = await supabase.rpc(
+      "austa_p2c_price_transition", {
+        p_order_id: order.id, p_assignment_id: null, p_actor_id: customerId,
+        p_action: "approve", p_price: null, p_expected: priceSnapshot(order),
+      });
 
     if (
       updateError ||
@@ -4213,10 +3843,7 @@ app.patch(
         updateError,
       );
 
-      return sendConflict(
-        reply,
-        "Price offer could not be approved",
-      );
+      return rpcFailure(reply, updateError, "Price offer could not be approved");
     }
 
     return reply.send({
@@ -4263,7 +3890,8 @@ app.patch(
 app.patch(
   "/service-orders/:orderId/price/reject",
   {
-    preHandler: requireAuth,
+    preValidation: validateServiceOrderRequest,
+      preHandler: requireAuth,
   },
   async (request, reply) => {
     const customerId =
@@ -4339,42 +3967,11 @@ app.patch(
       );
     }
 
-    const respondedAt =
-      new Date().toISOString();
-
-    const {
-      data: updatedOrder,
-      error: updateError,
-    } = await supabase
-      .from("service_orders")
-      .update({
-        price_status:
-          "rejected",
-
-        final_price:
-          null,
-
-        price_responded_at:
-          respondedAt,
-      })
-      .eq(
-        "id",
-        params.orderId,
-      )
-      .eq(
-        "customer_id",
-        customerId,
-      )
-      .eq(
-        "status",
-        "accepted",
-      )
-      .eq(
-        "price_status",
-        "offered",
-      )
-      .select("*")
-      .single();
+    const { data: updatedOrder, error: updateError } = await supabase.rpc(
+      "austa_p2c_price_transition", {
+        p_order_id: order.id, p_assignment_id: null, p_actor_id: customerId,
+        p_action: "reject", p_price: null, p_expected: priceSnapshot(order),
+      });
 
     if (
       updateError ||
@@ -4384,10 +3981,7 @@ app.patch(
         updateError,
       );
 
-      return sendConflict(
-        reply,
-        "Price offer could not be rejected",
-      );
+      return rpcFailure(reply, updateError, "Price offer could not be rejected");
     }
 
     return reply.send({

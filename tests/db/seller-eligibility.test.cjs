@@ -158,7 +158,8 @@ test('migration is functions-only; reviewed SQL, managed fields and protected ru
  // The reviewed P1.6 backend test/mock update is not production implementation.
  // Keep all backend production/config/dependency paths protected; exclude only
  // the one immutable reviewed test delta, not the whole tests directory.
- const protectedPaths=['backend',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
+ // P2.C: two exact production paths and one exact dedicated test path.
+ const protectedPaths=['backend',':(exclude)backend/a-usta56/src/routes/service-orders.ts',':(exclude)backend/a-usta56/src/validation/service-orders.ts',':(exclude)backend/a-usta56/tests/service-orders.test.ts',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
  assert.equal(cp.execFileSync('git',['diff',base,'--',...protectedPaths],{cwd:root,encoding:'utf8'}),'');
  for(const file of cp.execFileSync('git',['ls-files','-z','--',...protectedPaths],{cwd:root,encoding:'utf8'}).split('\0').filter(Boolean)){
   assert.deepEqual(fs.readFileSync(path.join(root,file)),cp.execFileSync('git',['show',base+':'+file],{cwd:root}),file);

@@ -141,3 +141,72 @@ in proconfig as `search_path=""`; missing settings and nonempty paths are reject
 Security metadata drift is never silently repaired. Isolated drift tests commit
 the incompatible state before migration, then verify its full pg_proc row remains
 unchanged after the failed migration transaction is rolled back.
+
+## P2.C service-order integrity (local review candidate)
+
+`20261102000000_p2c_service_order_integrity.sql` is transactional: it adds the
+P2.C objects and narrowly replaces the reviewed acceptance function body.
+It creates three narrowly scoped RPCs and one pending-parent assignment INSERT
+trigger. It also narrowly remediates the existing acceptance RPC lock order.
+Updated-at triggers, RLS, FK/CHECK constraints, Storage and data are unchanged. New-object collisions abort before DDL;
+repeat execution deliberately fails closed rather than replacing an unknown
+object. The preflight verifies supplied columns, constraints, updated-at bindings,
+acceptance body/owner/ACL/security and authoritative deployment ownership.
+
+- `austa_p2c_price_transition(uuid,uuid,uuid,text,numeric,jsonb)`: locked parent,
+  provider/customer binding, null-safe five-field CAS, SQL-generated monotonic
+  price timestamps. Decimal/ISO timestamp representations are compared by type.
+- `austa_p2c_append_evidence(uuid,uuid,uuid,jsonb)`: locked current JSONB append,
+  exact DTO/path/stage/assignment validation and full-record retry identity.
+- `austa_p2c_order_transition(uuid,uuid,uuid,text,numeric,text)`: atomic
+  start/complete/cancel including in-progress children and required evidence.
+- `austa_p2c_assignment_pending_guard()`: invoker INSERT trigger takes a parent
+  SHARE NOWAIT lock and refuses non-pending parents.
+
+RPCs are owned by postgres, SECURITY DEFINER, empty search_path; only service_role
+receives EXECUTE. Browser roles/PUBLIC do not. Actor IDs come from the existing
+backend `requireAuth` path, never request-body identity. The trusted service role
+can supply actor identity by design. The existing acceptance signature, owner,
+ACL, security and return contract are preserved exactly. Its body intentionally
+changes from assignment-first locking to parent-first locking followed by the
+requested/competing offered assignment set in ID order. Discovery is non-locking
+and is revalidated against locked relationship/provider/status before writes.
+Missing/NULL provider authority cannot pass. Row-count/invariant failures abort
+all acceptance writes. The original production fingerprint remains the preflight
+input; the exact reviewed replacement body has a separate postcondition hash.
+
+New calls lock parent first, then child NOWAIT. Cancellation locks children in
+ID order NOWAIT. Acceptance takes its parent first, then locks its assignment set
+in ID order using blocking locks. A second acceptance waits on the parent without
+holding an assignment lock, removing the identified accept-vs-accept cycle.
+Other P2.C child locks retain NOWAIT; lock/stale conflicts never report success.
+This is not a claim of absolute deadlock freedom for every implicit lock interaction.
+PGlite SQL tests are not real multi-session row-lock evidence.
+
+Evidence uploads retain the existing service-evidence path and record contract.
+Only a definite SQL abort with no earlier ambiguous response permits deletion of
+the exact attempt's uploaded object. Unknown/transport outcomes retry the same
+frozen record, and leave a possibly committed object intact if unresolved.
+Storage and PostgreSQL do not form a transaction. Such unresolved outcomes need
+operator/user reconciliation; no new evidence-delete API is introduced.
+
+Manual rollout requires a separate authorization: quiesce/drain service-order
+writers (including existing acceptance calls), apply reviewed DB migration first,
+verify acceptance/RPC contracts and ACL, cut over backend, verify, then resume.
+Do not run old and new evidence writers concurrently. For rollback, quiesce
+writers first and retire new callers before considering removal of only these
+new objects. Do not revert user data. Restoring the original acceptance body is
+a separate reviewed rollback decision because it reintroduces the known cycle.
+Old backend rollback reintroduces the original integrity risks.
+
+Local tests (existing dependencies; no production connection):
+
+```sh
+P12A_PGLITE_MODULE=/absolute/path/to/@electric-sql/pglite node --test tests/db/service-order-integrity.test.cjs
+```
+
+The fixture transcribes supplied table columns/constraints and acceptance body;
+profiles/vehicles are minimal FK stubs, not production user data or a full RLS dump.
+Behavioral SQL mutation tests run in isolated child databases and never alter the
+migration file. Backend tests use actual Fastify injection with mocked Supabase
+and Storage boundaries; no network, credentials or production writes are used.
