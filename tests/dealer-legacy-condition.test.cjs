@@ -30,6 +30,11 @@ test('Dealer legacy condition: real Chromium select, edit hydration and UPDATE',
    }};return q;
   }};
   window.AUSTA_V153={
+   listingBoolean(value){
+    const choices=new Map([[undefined,undefined],['',false],['Bəli',true],['Xeyr',false]]);
+    if(!choices.has(value))throw new Error('Unsupported Dealer fixture boolean input');
+    return choices.get(value);
+   },
    validateListingInput(type,input,editing){
     if(type!=='dealer'||editing!==true||!input||typeof input!=='object'||Array.isArray(input))throw new Error('Dealer fixture validator call contract mismatch');
     return {...input};
@@ -39,6 +44,7 @@ test('Dealer legacy condition: real Chromium select, edit hydration and UPDATE',
   window.AUSTA_V153C={categories:{}};
  });
  assert.equal(await page.evaluate(()=>typeof window.AUSTA_V153.validateListingInput),'function','Dealer fixture validation API must exist');
+ assert.equal(await page.evaluate(()=>typeof window.AUSTA_V153.listingBoolean),'function','Dealer fixture boolean API must exist');
  const prefix=between(media,'function sb(){','/* =========================================================\n   ADD AUTO DEALER');
  // Extract declarations by their following named boundary; no copied production logic.
  const installStart=media.indexOf('function installDealerCategory(){');
