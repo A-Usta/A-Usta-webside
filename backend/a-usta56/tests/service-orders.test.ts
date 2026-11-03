@@ -16,6 +16,8 @@ import { serviceNumber, serviceOrderInputError } from "../src/validation/service
 process.env.SUPABASE_URL="https://example.invalid";
 process.env.SUPABASE_SERVICE_ROLE_KEY="test-only-not-a-secret";
 const {supabase}=await import("../src/config/supabase.js");
+const durableAPI=await import("../src/authority/durable-quotas.js");
+const uploadAPI=await import("../src/authority/upload-reservations.js");
 const {serviceOrderRoutes,appendEvidenceSafely}=await import("../src/routes/service-orders.js");
 const {authRoutes}=await import("../src/routes/auth.js");
 const authAPI=await import("../src/middleware/auth.js");
@@ -61,6 +63,7 @@ async function fixture(s:Scenario={}, state=new Admission(), installer=installAd
   return q;
  };
  (supabase as any).rpc=async(name:string,args:any)=>{
+  if(name.startsWith('austa_e2b_'))return {data:{enabled:false},error:null};
   calls.push(['rpc',name,structuredClone(args)]);
   if(s.rpcThrows)throw diagnosticException();
   if(s.rpcResults?.length){const result=s.rpcResults.shift();if(result instanceof Error)throw result;return result;}
@@ -363,7 +366,7 @@ async function uploadRejectedContract(installer=installAdmission){
 test('E2A upload global rejection precedes multipart parser and every DB/Storage call',()=>uploadRejectedContract());
 function loadRoutes(change:(s:string)=>string){
  const source=change(readFileSync(new URL('../src/routes/service-orders.ts',import.meta.url),'utf8'));
- const exports:any={};const imports:any={'../diagnostics/admission.js':admissionAPI,'../diagnostics/foundation.js':foundationAPI,'../validation/service-orders.js':validationAPI,'node:crypto':{randomUUID},'../config/supabase.js':{supabase},'../middleware/auth.js':authAPI};
+ const exports:any={};const imports:any={'../authority/durable-quotas.js':durableAPI,'../authority/upload-reservations.js':uploadAPI,'../diagnostics/admission.js':admissionAPI,'../diagnostics/foundation.js':foundationAPI,'../validation/service-orders.js':validationAPI,'node:crypto':{randomUUID},'../config/supabase.js':{supabase},'../middleware/auth.js':authAPI};
  runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports,Buffer,require:(name:string)=>{assert.ok(imports[name],name);return imports[name];}});return exports.serviceOrderRoutes;
 }
 async function resourceAuthorizationContract(routes=serviceOrderRoutes){
@@ -406,3 +409,6 @@ async function actorPrivacyContract(installer=installAdmission){
   for(const secret of [provider,aid,'TEST_BEARER_SECRET'])assert.ok(!f.logs.join('').includes(secret));
  }finally{await f.app.close();}
 }
+
+// Run the durable boundary suite in the existing backend CI entrypoint.
+await import("./durable-uploads.test.js");

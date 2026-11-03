@@ -154,7 +154,7 @@ test('P0.3.1 helper, visibility, public queries and protected runtime assets rem
   const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');assert.equal(html.match(re)[0],main.match(re)[0]);
  }
  const changed=cp.execFileSync('git',['diff','--name-only',base,'--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/config/server.ts','backend/a-usta56/src/diagnostics/foundation.ts','backend/a-usta56/src/diagnostics/admission.ts','backend/a-usta56/src/routes/listing-media.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts','backend/a-usta56/package.json','backend/a-usta56/package-lock.json','backend/a-usta56/.gitignore'].includes(p)),[]);
+ assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/config/server.ts','backend/a-usta56/src/diagnostics/foundation.ts','backend/a-usta56/src/diagnostics/admission.ts','backend/a-usta56/src/authority/worker.ts','backend/a-usta56/tests/durable-uploads.test.ts','backend/a-usta56/src/authority/reconcile-uploads.ts','backend/a-usta56/src/authority/upload-reservations.ts','backend/a-usta56/src/authority/durable-quotas.ts','backend/a-usta56/src/routes/listing-media.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts','backend/a-usta56/package.json','backend/a-usta56/package-lock.json','backend/a-usta56/.gitignore'].includes(p)),[]);
  // Permit only the reviewed supplemental seller block; all original detail logic remains exact.
  const detail=s=>s.match(/<script id="austa-final-full-listing-js">([\s\S]*?)<\/script>/)[1];
  const normalized=detail(require('./helpers/seller-integration-baseline.cjs').withBaselineMediaHydration(require('./helpers/seller-integration-baseline.cjs').withBaselineDetail(html,main),main))
@@ -215,8 +215,9 @@ test('P1.3A preserves source configuration, Vehicle video helper and P0.3 coordi
 
 // P2.D.1 exact reviewed configuration, including newly introduced files.
 function assertP2D1Configuration(){
+ require('./helpers/e2b-baseline.cjs').assertScope();
  const reviewed={
-  "backend/a-usta56/src/diagnostics/admission.ts": "86dd575b8b04c64b16572ecc6a295857474726d8a0a4bd0564b94c1f987ab61d",
+  "backend/a-usta56/src/diagnostics/admission.ts": "36b8b740be70381182abe322ed197b24a1db7ed19ba48da6b8c0f544082a5666",
   "backend/a-usta56/src/routes/listing-media.ts": "c5856ed33bac19d6f0a30b4cb4dc30e0a8831712af949350a1fc61021b9bdbe8",
   "backend/a-usta56/src/config/server.ts": "8c6d5be8bb376ee3c8e360c6ffb4e6592bcefcda922f7d06ee7b6e9a2ebbc9e9",
   "backend/a-usta56/src/diagnostics/foundation.ts": "fc6a6cdeda3f510326baf785c3c779d3ccc1719f52e1f1bdffde73437700acee",

@@ -73,6 +73,7 @@ export class Admission {
 declare module "fastify" { interface FastifyInstance { localAdmission: Admission } }
 function policy(method: string, route: string): Policy | undefined {
   if (route === "/health") return;
+  if (route === "/service-order-uploads/:reservationId" || route === "/service-order-upload-operations/:key") return "read";
   if (route === "/listing-media/signed-url") return "sign";
   if (route === "/auth/me") return "auth";
   if (route === "/provider/location") return "location";

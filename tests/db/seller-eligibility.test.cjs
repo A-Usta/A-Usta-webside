@@ -160,7 +160,7 @@ test('migration is functions-only; reviewed SQL, managed fields and protected ru
  // Keep unrelated backend paths protected; the exact P2.D.1 config files
  // excluded below are independently fingerprinted, never directory-exempted.
  // P2.C: two exact production paths and one exact dedicated test path.
- const protectedPaths=['backend',':(exclude)backend/a-usta56/src/config/server.ts',':(exclude)backend/a-usta56/src/diagnostics/foundation.ts',':(exclude)backend/a-usta56/src/diagnostics/admission.ts',':(exclude)backend/a-usta56/src/routes/listing-media.ts',':(exclude)backend/a-usta56/package.json',':(exclude)backend/a-usta56/package-lock.json',':(exclude)backend/a-usta56/.gitignore',':(exclude)backend/a-usta56/src/routes/service-orders.ts',':(exclude)backend/a-usta56/src/validation/service-orders.ts',':(exclude)backend/a-usta56/tests/service-orders.test.ts',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
+ const protectedPaths=['backend',':(exclude)backend/a-usta56/src/authority/worker.ts',':(exclude)backend/a-usta56/tests/durable-uploads.test.ts',':(exclude)backend/a-usta56/src/authority/reconcile-uploads.ts',':(exclude)backend/a-usta56/src/authority/upload-reservations.ts',':(exclude)backend/a-usta56/src/authority/durable-quotas.ts',':(exclude)backend/a-usta56/src/config/server.ts',':(exclude)backend/a-usta56/src/diagnostics/foundation.ts',':(exclude)backend/a-usta56/src/diagnostics/admission.ts',':(exclude)backend/a-usta56/src/routes/listing-media.ts',':(exclude)backend/a-usta56/package.json',':(exclude)backend/a-usta56/package-lock.json',':(exclude)backend/a-usta56/.gitignore',':(exclude)backend/a-usta56/src/routes/service-orders.ts',':(exclude)backend/a-usta56/src/validation/service-orders.ts',':(exclude)backend/a-usta56/tests/service-orders.test.ts',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
  assert.equal(cp.execFileSync('git',['diff',base,'--',...protectedPaths],{cwd:root,encoding:'utf8'}),'');
  for(const file of cp.execFileSync('git',['ls-files','-z','--',...protectedPaths],{cwd:root,encoding:'utf8'}).split('\0').filter(Boolean)){
   assert.deepEqual(fs.readFileSync(path.join(root,file)),cp.execFileSync('git',['show',base+':'+file],{cwd:root}),file);
@@ -209,8 +209,9 @@ test('trusted SQL with no JWT retains eligible attachment without broadening pub
 
 // P2.D.1 exact reviewed configuration, including newly introduced files.
 function assertP2D1Configuration(){
+ require('../helpers/e2b-baseline.cjs').assertScope();
  const reviewed={
-  "backend/a-usta56/src/diagnostics/admission.ts": "86dd575b8b04c64b16572ecc6a295857474726d8a0a4bd0564b94c1f987ab61d",
+  "backend/a-usta56/src/diagnostics/admission.ts": "36b8b740be70381182abe322ed197b24a1db7ed19ba48da6b8c0f544082a5666",
   "backend/a-usta56/src/routes/listing-media.ts": "c5856ed33bac19d6f0a30b4cb4dc30e0a8831712af949350a1fc61021b9bdbe8",
   "backend/a-usta56/src/config/server.ts": "8c6d5be8bb376ee3c8e360c6ffb4e6592bcefcda922f7d06ee7b6e9a2ebbc9e9",
   "backend/a-usta56/src/diagnostics/foundation.ts": "fc6a6cdeda3f510326baf785c3c779d3ccc1719f52e1f1bdffde73437700acee",

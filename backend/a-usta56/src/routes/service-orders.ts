@@ -1,3 +1,5 @@
+import { authority, authorityFailure, decision, uploadResponse, type Upload } from "../authority/durable-quotas.js";
+import { managedUpload } from "../authority/upload-reservations.js";
 import { installAdmission, admitResource, admissionPolicy } from "../diagnostics/admission.js";
 import { logDiagnostic } from "../diagnostics/foundation.js";
 import { serviceNumber, validateServiceOrderRequest } from "../validation/service-orders.js";
@@ -456,6 +458,20 @@ export async function serviceOrderRoutes(
   app: FastifyInstance,
 ) {
   installAdmission(app);
+  app.get("/service-order-uploads/:reservationId", {preHandler:requireAuth}, async(request,reply)=>{
+    const actor=getAuthenticatedUserId(request),id=(request.params as {reservationId:string}).reservationId;
+    if(!/^[0-9a-f-]{36}$/.test(id))return reply.code(400).send({error:"Bad Request"});
+    try {const r=await authority<Upload>("austa_e2b_get_upload",{p_actor_id:actor,p_id:id});
+      if(!decision(request,reply,r))return uploadResponse(reply,r,true);
+    }catch(error){return authorityFailure(request,reply,error);}
+  });
+  app.get("/service-order-upload-operations/:key", {preHandler:requireAuth}, async(request,reply)=>{
+    const actor=getAuthenticatedUserId(request),key=(request.params as {key:string}).key;
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(key))return reply.code(400).send({error:"Bad Request"});
+    try {const r=await authority<Upload>("austa_e2b_get_upload",{p_actor_id:actor,p_key:key});
+      if(!decision(request,reply,r))return uploadResponse(reply,r,true);
+    }catch(error){return authorityFailure(request,reply,error);}
+  });
   /*
    * ==========================================================
    * GET /service-orders
@@ -655,6 +671,11 @@ export async function serviceOrderRoutes(
     async (request, reply) => {
       const customerId =
         getAuthenticatedUserId(request);
+
+      try {
+        const admitted=await authority<{enabled?:boolean;code?:string;retry_after_seconds?:number}>("austa_e2b_admit_order_create",{p_actor_id:customerId});
+        if(decision(request,reply,admitted))return;
+      } catch(error) {return authorityFailure(request,reply,error);}
 
       const body =
         (request.body ?? {}) as CreateServiceOrderBody;
@@ -2987,6 +3008,7 @@ app.patch(
       }
 
       if (!admitResource(app, request, reply, "upload", assignment.id)) return;
+      if (await managedUpload(request,reply,providerUserId,assignment.id,stage)) return;
 
     if (
   stage === "before" &&
