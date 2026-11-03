@@ -27661,27 +27661,15 @@ const estimateText =
     assignmentId
   ) {
 
-    // One key per selected File/assignment/stage, retained across network retries.
-    const pending=uploadEvidence.operations || (uploadEvidence.operations=new Map());
-    const slot=assignmentId+':'+stage;
-    let operation=pending.get(slot);
-    if(!operation || operation.file!==file){operation={file,key:crypto.randomUUID()};pending.set(slot,operation);}
-    let result;
-    try {
-      result=await apiRequest(`/service-order-assignments/${encodeURIComponent(assignmentId)}/evidence/${stage}`,{
-        method:"POST",body:formData,headers:{"Idempotency-Key":operation.key,"X-Evidence-Content-Type":file.type}
-      });
-    } catch(error) {
-      try {result=await apiRequest('/service-order-upload-operations/'+encodeURIComponent(operation.key));}
-      catch {throw error;}
-    }
-    if(["released","expired"].includes(result?.state)){
-      pending.delete(slot);showStatus("Foto yüklənmədi. Yenidən cəhd edə bilərsiniz.","info");return;
-    }
-    if(result?.state && result.state!=="finalized"){
-      showStatus("Foto əməliyyatı yoxlanılır. Eyni faylla yenidən yoxlayın.","info");return;
-    }
-    pending.delete(slot);
+    await apiRequest(
+      `/service-order-assignments/${encodeURIComponent(
+        assignmentId
+      )}/accept`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({})
+      }
+    );
 
     showStatus(
       "✓ Sifariş qəbul edildi. İndi BEFORE foto yükləyin.",
