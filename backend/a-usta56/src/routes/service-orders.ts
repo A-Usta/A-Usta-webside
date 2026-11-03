@@ -1,3 +1,4 @@
+import { installAdmission, admitResource, admissionPolicy } from "../diagnostics/admission.js";
 import { logDiagnostic } from "../diagnostics/foundation.js";
 import { serviceNumber, validateServiceOrderRequest } from "../validation/service-orders.js";
 import type { FastifyInstance } from "fastify";
@@ -454,6 +455,7 @@ function sendServerError(
 export async function serviceOrderRoutes(
   app: FastifyInstance,
 ) {
+  installAdmission(app);
   /*
    * ==========================================================
    * GET /service-orders
@@ -1082,6 +1084,8 @@ if (evidenceFiles === null) {
         );
       }
 
+      if (!admitResource(app, request, reply, "discover", order.id)) return;
+
       /*
        * --------------------------------------------------------
        * Discovery yalnız pending sifariş üçündür.
@@ -1391,6 +1395,8 @@ if (evidenceFiles === null) {
           "You are not allowed to dispatch this service order",
         );
       }
+
+      if (!admitResource(app, request, reply, "dispatch", order.id)) return;
 
       /*
        * --------------------------------------------------------
@@ -1817,6 +1823,8 @@ if (evidenceFiles === null) {
         );
       }
 
+      if (!admitResource(app, request, reply, "assignment", order.id)) return;
+
       if (
         order.status !==
         "pending"
@@ -2193,6 +2201,8 @@ if (evidenceFiles === null) {
         );
       }
 
+      if (!admitResource(app, request, reply, "location", provider.id)) return;
+
       /*
        * --------------------------------------------------------
        * GPS freshness vaxtı server tərəfindən yaradılır.
@@ -2563,6 +2573,8 @@ app.patch(
       );
     }
 
+      if (!admitResource(app, request, reply, "pricing", assignment.id)) return;
+
     if (
       assignment.status !==
       "accepted"
@@ -2727,6 +2739,8 @@ app.patch(
           "You are not allowed to reject this assignment",
         );
       }
+
+      if (!admitResource(app, request, reply, "lifecycle", assignment.id)) return;
 
       if (
         assignment.status !==
@@ -2972,6 +2986,8 @@ app.patch(
         );
       }
 
+      if (!admitResource(app, request, reply, "upload", assignment.id)) return;
+
     if (
   stage === "before" &&
   assignment.status !==
@@ -3039,57 +3055,25 @@ if (
         );
       }
 
-      let file:
-        | Awaited<
-            ReturnType<
-              typeof request.file
-            >
-          >
-        | undefined;
-
+      let file: import("@fastify/multipart").MultipartFile | undefined;
+      let buffer: Buffer | undefined;
+      let extension: string | null = null;
       try {
-        file = await request.file();
+        // Consume the complete bounded multipart envelope before Storage work.
+        // request.file() alone returns its first file without validating trailing
+        // parts/fields. Admission slots are already held before this iterator.
+        for await (const part of request.parts({ limits: admissionPolicy.multipart })) {
+          if (part.type !== "file" || file) return sendBadRequest(reply, "Only one photo file is allowed");
+          file = part;
+          extension = safeFileExtension(file.mimetype);
+          if (!extension) return sendBadRequest(reply, "Only JPEG, PNG, or WEBP photos are allowed");
+          buffer = await file.toBuffer();
+        }
       } catch (error) {
         logDiagnostic(request, "storage", error);
-
-        return sendBadRequest(
-          reply,
-          "Photo upload could not be read",
-        );
+        return sendBadRequest(reply, "Photo could not be read or exceeds the upload limit");
       }
-
-      if (!file) {
-        return sendBadRequest(
-          reply,
-          "Photo file is required",
-        );
-      }
-
-      const extension =
-        safeFileExtension(
-          file.mimetype,
-        );
-
-      if (!extension) {
-        return sendBadRequest(
-          reply,
-          "Only JPEG, PNG, or WEBP photos are allowed",
-        );
-      }
-
-      let buffer: Buffer;
-
-      try {
-        buffer =
-          await file.toBuffer();
-      } catch (error) {
-        logDiagnostic(request, "storage", error);
-
-        return sendBadRequest(
-          reply,
-          "Photo could not be read or exceeds the upload limit",
-        );
-      }
+      if (!file || !buffer || !extension) return sendBadRequest(reply, "Photo file is required");
 
       if (buffer.length === 0) {
         return sendBadRequest(
@@ -3257,6 +3241,8 @@ app.patch(
         "You are not allowed to start this assignment",
       );
     }
+
+      if (!admitResource(app, request, reply, "lifecycle", assignment.id)) return;
 
     if (
       assignment.status !==
@@ -3447,6 +3433,8 @@ app.patch(
           "You are not allowed to complete this assignment",
         );
       }
+
+      if (!admitResource(app, request, reply, "lifecycle", assignment.id)) return;
 
      if (
   assignment.status !==
@@ -3654,6 +3642,8 @@ app.patch(
         );
       }
 
+      if (!admitResource(app, request, reply, "lifecycle", order.id)) return;
+
       if (
         order.status ===
         "completed"
@@ -3760,6 +3750,8 @@ app.patch(
         "You are not allowed to approve the price for this service order",
       );
     }
+
+      if (!admitResource(app, request, reply, "pricing", order.id)) return;
 
     if (
       order.status !==
@@ -3908,6 +3900,8 @@ app.patch(
         "You are not allowed to reject the price for this service order",
       );
     }
+
+      if (!admitResource(app, request, reply, "pricing", order.id)) return;
 
     if (
       order.status !==

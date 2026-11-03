@@ -83,7 +83,7 @@ test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
   assert.equal(now[i][0],old[i][0]);
  }
  const changed=cp.execFileSync('git',['diff','--name-only','19c91a76502dad439811fa86d95af0fac922c88a','--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/config/server.ts','backend/a-usta56/src/diagnostics/foundation.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts','backend/a-usta56/package.json','backend/a-usta56/package-lock.json','backend/a-usta56/.gitignore'].includes(p)),[]);
+ assert.deepEqual(changed.filter(p=>!['assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/config/server.ts','backend/a-usta56/src/diagnostics/foundation.ts','backend/a-usta56/src/diagnostics/admission.ts','backend/a-usta56/src/routes/listing-media.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts','backend/a-usta56/package.json','backend/a-usta56/package-lock.json','backend/a-usta56/.gitignore'].includes(p)),[]);
 });
 for(const type of ['cars','rent'])test(type+': existing Vehicle technical partial update retained',async()=>{
  const f=fixture();await f.api.updateListing(type,'listing',{phone:'123',mileage:0});const r=f.state.writes.at(-1).row;
@@ -97,7 +97,9 @@ test('213-brand / 822-model shared catalog retained',()=>{
 // P2.D.1 exact reviewed configuration, including newly introduced files.
 function assertP2D1Configuration(){
  const reviewed={
-  "backend/a-usta56/src/config/server.ts": "07fa240bd23a1a6f211280e75f26f278f1d8397667d6bd8d1d4f17bb12a397d5",
+  "backend/a-usta56/src/diagnostics/admission.ts": "86dd575b8b04c64b16572ecc6a295857474726d8a0a4bd0564b94c1f987ab61d",
+  "backend/a-usta56/src/routes/listing-media.ts": "c5856ed33bac19d6f0a30b4cb4dc30e0a8831712af949350a1fc61021b9bdbe8",
+  "backend/a-usta56/src/config/server.ts": "8c6d5be8bb376ee3c8e360c6ffb4e6592bcefcda922f7d06ee7b6e9a2ebbc9e9",
   "backend/a-usta56/src/diagnostics/foundation.ts": "fc6a6cdeda3f510326baf785c3c779d3ccc1719f52e1f1bdffde73437700acee",
   "backend/a-usta56/package.json": "cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802",
   "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",

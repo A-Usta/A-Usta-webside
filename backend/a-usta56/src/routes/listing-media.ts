@@ -1,3 +1,4 @@
+import { installAdmission, authSlot, admitActor } from "../diagnostics/admission.js";
 import type { FastifyInstance } from "fastify";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "../config/supabase.js";
@@ -23,6 +24,7 @@ export async function registerListingMediaRoutes(
   app: FastifyInstance,
   client: SupabaseClient,
 ) {
+  installAdmission(app);
   app.get<{ Querystring: { path?: unknown } }>(
     "/listing-media/signed-url",
     {
@@ -80,8 +82,13 @@ export async function registerListingMediaRoutes(
             : null;
           if (!bearer) return deny();
           // Explicit-token verification does not setSession or mutate this client.
-          const { data, error } = await client.auth.getUser(bearer[1]);
-          if (error || !data.user || data.user.id !== parent.owner_id) return deny();
+          const release = authSlot(app, request, reply, "sign");
+          if (!release) return;
+          try {
+            const { data, error } = await client.auth.getUser(bearer[1]);
+            if (error || !data.user || data.user.id !== parent.owner_id) return deny();
+            if (!admitActor(app, request, reply, "sign", data.user.id)) return;
+          } finally { release(); }
         }
 
         const { data, error } = await client.storage
