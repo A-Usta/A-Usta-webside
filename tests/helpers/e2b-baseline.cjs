@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const root=path.resolve(__dirname,'../..');
 // F1 restores the original acceptance function; preserve its exact historical guard.
 const acceptance="  async function acceptAssignment(\n    assignmentId\n  ) {\n\n    await apiRequest(\n      `/service-order-assignments/${encodeURIComponent(\n        assignmentId\n      )}/accept`,\n      {\n        method: \"PATCH\",\n        body: JSON.stringify({})\n      }\n    );\n\n    showStatus(\n      \"\u2713 Sifari\u015f q\u0259bul edildi. \u0130ndi BEFORE foto y\u00fckl\u0259yin.\",\n      \"success\"\n    );\n\n  }\n\n\n";
-exports.normalize=s=>{const start=s.indexOf('  async function acceptAssignment('),end=s.indexOf('  async function rejectAssignment(',start);assert.ok(start>=0&&end>start,'acceptance boundaries');assert.equal(s.slice(start,end),acceptance,'exact restored acceptance contract');return s;};
+exports.normalize=s=>{const start=s.indexOf('  async function acceptAssignment('),end=s.indexOf('  async function rejectAssignment(',start);assert.ok(start>=0&&end>start,'acceptance boundaries');assert.equal(s.slice(start,end),acceptance,'exact restored acceptance contract');return require('./p2f1-baseline.cjs').normalize(s);};
 const reviewed={
   "backend/a-usta56/src/authority/worker.ts": "7a14768af5c7637ebfc40882bf98ce389c4b576b215ab7b6db89d1c8c3825d8b",
   "backend/a-usta56/src/authority/reconcile-uploads.ts": "9e5ddaed9b7b6bda8950b69e9db4a7f622a619e55c01652c86006c17a4d4e5ba",
