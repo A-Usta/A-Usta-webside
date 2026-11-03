@@ -2931,6 +2931,7 @@ exports.withBaselineLifecycle=(html,base)=>recent(base)?html:apply(partitionLife
 exports.withBaselineMediaHydration=(html,base)=>{assert.equal(recent(base),false,'P2.A media historical generation');return apply(html,'media');};
 const presentationInputs=new Map();
 exports.withBaselineOwnerDelete=(html,base)=>{
+ if(html.includes("// One key per selected File/assignment/stage,"))html=require("./e2b-baseline.cjs").normalize(html);
  html=exports.withBaselineDetail(html,base);
  html=exports.withBaselineLifecycle(html,base);
  html=apply(html,recent(base)?'ownerRecent':'ownerOld');
