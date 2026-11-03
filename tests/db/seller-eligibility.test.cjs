@@ -160,13 +160,14 @@ test('migration is functions-only; reviewed SQL, managed fields and protected ru
  // Keep unrelated backend paths protected; the exact P2.D.1 config files
  // excluded below are independently fingerprinted, never directory-exempted.
  // P2.C: two exact production paths and one exact dedicated test path.
- const protectedPaths=['backend',':(exclude)backend/a-usta56/src/config/server.ts',':(exclude)backend/a-usta56/src/diagnostics/foundation.ts',':(exclude)backend/a-usta56/package.json',':(exclude)backend/a-usta56/package-lock.json',':(exclude)backend/a-usta56/.gitignore',':(exclude)backend/a-usta56/src/routes/service-orders.ts',':(exclude)backend/a-usta56/src/validation/service-orders.ts',':(exclude)backend/a-usta56/tests/service-orders.test.ts',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
+ const protectedPaths=['backend',':(exclude)backend/a-usta56/src/config/server.ts',':(exclude)backend/a-usta56/src/diagnostics/foundation.ts',':(exclude)backend/a-usta56/src/diagnostics/admission.ts',':(exclude)backend/a-usta56/src/routes/listing-media.ts',':(exclude)backend/a-usta56/package.json',':(exclude)backend/a-usta56/package-lock.json',':(exclude)backend/a-usta56/.gitignore',':(exclude)backend/a-usta56/src/routes/service-orders.ts',':(exclude)backend/a-usta56/src/validation/service-orders.ts',':(exclude)backend/a-usta56/tests/service-orders.test.ts',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js','assets/marketplace/seller-page.js','assets/marketplace/listing-cards.js','assets/marketplace/category-filters.js'];
  assert.equal(cp.execFileSync('git',['diff',base,'--',...protectedPaths],{cwd:root,encoding:'utf8'}),'');
  for(const file of cp.execFileSync('git',['ls-files','-z','--',...protectedPaths],{cwd:root,encoding:'utf8'}).split('\0').filter(Boolean)){
   assert.deepEqual(fs.readFileSync(path.join(root,file)),cp.execFileSync('git',['show',base+':'+file],{cwd:root}),file);
  }
  const approvedTest='backend/a-usta56/tests/listing-media.test.ts';
- assert.equal(fs.readFileSync(path.join(root,approvedTest),'utf8'),cp.execFileSync('git',['show','745d6ee87813a83003731ee2026e9814bd510e57:'+approvedTest],{cwd:root,encoding:'utf8'}));
+ // E.2A extends this exact reviewed test; retain byte authority rather than dropping the guard.
+ assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,approvedTest))).digest('hex'),'c201de5d6ccbfc41303acb398313b1b44f6c32a711b82f55903f51c0471f4555');
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');assert.match(html,/MANAGED_LISTING_FIELDS = Object\.freeze\(\[[\s\S]*?'seller_profile_id'/);
 });
 if(!process.env.P2A_CHILD){
@@ -209,7 +210,9 @@ test('trusted SQL with no JWT retains eligible attachment without broadening pub
 // P2.D.1 exact reviewed configuration, including newly introduced files.
 function assertP2D1Configuration(){
  const reviewed={
-  "backend/a-usta56/src/config/server.ts": "07fa240bd23a1a6f211280e75f26f278f1d8397667d6bd8d1d4f17bb12a397d5",
+  "backend/a-usta56/src/diagnostics/admission.ts": "86dd575b8b04c64b16572ecc6a295857474726d8a0a4bd0564b94c1f987ab61d",
+  "backend/a-usta56/src/routes/listing-media.ts": "c5856ed33bac19d6f0a30b4cb4dc30e0a8831712af949350a1fc61021b9bdbe8",
+  "backend/a-usta56/src/config/server.ts": "8c6d5be8bb376ee3c8e360c6ffb4e6592bcefcda922f7d06ee7b6e9a2ebbc9e9",
   "backend/a-usta56/src/diagnostics/foundation.ts": "fc6a6cdeda3f510326baf785c3c779d3ccc1719f52e1f1bdffde73437700acee",
   "backend/a-usta56/package.json": "cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802",
   "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
@@ -222,3 +225,36 @@ function assertP2D1Configuration(){
  }
 }
 test('P2.D.1 approved dependency/runtime files retain exact reviewed contents',assertP2D1Configuration);
+
+// E.2A exact-path/content authorization. Exercise the actual three historical
+// guards with synthetic tracked-candidate discovery; no source/index mutation.
+for(const candidate of [
+ 'backend/a-usta56/src/config/server.ts',
+ 'backend/a-usta56/src/diagnostics/admission.ts',
+ 'backend/a-usta56/src/routes/listing-media.ts',
+ 'backend/a-usta56/src/diagnostics/unapproved-neighbor.ts',
+ 'backend/a-usta56/src/config/unapproved-neighbor.ts',
+ 'backend/a-usta56/src/middleware/auth.ts',
+ 'backend/a-usta56/package.json',
+ 'backend/a-usta56/package-lock.json',
+])test('E2A historical guard exact candidate: '+candidate,()=>{
+ const approved=['backend/a-usta56/src/config/server.ts','backend/a-usta56/src/diagnostics/admission.ts','backend/a-usta56/src/routes/listing-media.ts'];
+ const protectedBytes=['backend/a-usta56/src/middleware/auth.ts','backend/a-usta56/package.json','backend/a-usta56/package-lock.json'].includes(candidate);
+ const bootstrap=`const cp=require('node:child_process'),fs=require('node:fs'),path=require('node:path'),old=cp.execFileSync,read=fs.readFileSync;
+ cp.execFileSync=function(cmd,args,opts){if(cmd==='git'&&args[0]==='diff'&&args.includes('backend')){if(args.includes('--name-only'))return ${JSON.stringify(candidate+'\n')};if(!args.includes(':(exclude)'+${JSON.stringify(candidate)}))return 'unauthorized tracked diff';}return old.apply(this,arguments);};
+ ${protectedBytes?`fs.readFileSync=function(file){const data=read.apply(this,arguments);if(path.resolve(String(file))!==${JSON.stringify(path.join(root,candidate))})return data;const changed=String(data)+'\\n/* unauthorized */\\n';return typeof data==='string'?changed:Buffer.from(changed);};`:''}
+ require(${JSON.stringify(path.join(root,'tests/listing-validation.test.cjs'))});require(${JSON.stringify(path.join(root,'tests/listing-metadata-partial.test.cjs'))});require(${JSON.stringify(path.join(root,'tests/db/seller-eligibility.test.cjs'))});`;
+ const env={...process.env,P2A_CHILD:'1'};delete env.NODE_TEST_CONTEXT;
+ const run=cp.spawnSync(process.execPath,['--test-reporter=tap','--test-name-pattern=protected runtime assets|protected scripts and modules|migration is functions-only','-e',bootstrap],{cwd:root,env,encoding:'utf8',maxBuffer:2e6});
+ if(approved.includes(candidate)){assert.equal(run.status,0,run.stdout+run.stderr);assert.match(run.stdout,/# pass 3/);}else{assert.notEqual(run.status,0);assert.match(run.stdout,/AssertionError/);}
+ assert.doesNotMatch(run.stdout+run.stderr,/SyntaxError|Cannot find (?:module|package)/);
+});
+for(const candidate of ['backend/a-usta56/src/config/server.ts','backend/a-usta56/src/diagnostics/admission.ts','backend/a-usta56/src/routes/listing-media.ts'])test('E2A newly reviewed content remains fingerprint protected: '+candidate,()=>{
+ const bootstrap=`const fs=require('node:fs'),path=require('node:path'),read=fs.readFileSync;let hits=0;
+ fs.readFileSync=function(file){const data=read.apply(this,arguments);if(path.resolve(String(file))!==${JSON.stringify(path.join(root,candidate))})return data;hits++;const changed=String(data)+'\\n/* unreviewed change */\\n';return typeof data==='string'?changed:Buffer.from(changed);};
+ process.on('beforeExit',()=>require('node:assert/strict').ok(hits>0,'mutation not exercised'));
+ require(${JSON.stringify(path.join(root,'tests/listing-validation.test.cjs'))});require(${JSON.stringify(path.join(root,'tests/listing-metadata-partial.test.cjs'))});require(${JSON.stringify(path.join(root,'tests/db/seller-eligibility.test.cjs'))});`;
+ const env={...process.env,P2A_CHILD:'1'};delete env.NODE_TEST_CONTEXT;
+ const run=cp.spawnSync(process.execPath,['--test-reporter=tap','--test-name-pattern=protected runtime assets|protected scripts and modules|migration is functions-only','-e',bootstrap],{cwd:root,env,encoding:'utf8',maxBuffer:2e6});
+ assert.notEqual(run.status,0);assert.match(run.stdout,/# fail 3/);assert.match(run.stdout,/AssertionError/);assert.doesNotMatch(run.stdout+run.stderr,/SyntaxError|Cannot find (?:module|package)|mutation not exercised/);
+});

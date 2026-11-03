@@ -1,4 +1,36 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { admissionPolicy } from "../diagnostics/admission.js";
+
+function jsonBytes(value: unknown): number {
+  try { return Buffer.byteLength(JSON.stringify(value), "utf8"); } catch { return Infinity; }
+}
+
+function resourceBounds(b: Record<string, unknown>): string | null {
+  for (const [key, limit] of Object.entries(admissionPolicy.text)) {
+    if (typeof b[key] === "string" && Buffer.byteLength(b[key] as string, "utf8") > limit) return key + " is too long";
+  }
+  if (typeof b.form_version === "string" && b.form_version.length > 120) return "form_version is too long";
+  if (Array.isArray(b.answers)) {
+    const limits = admissionPolicy.answers;
+    if (b.answers.length > limits.items || jsonBytes(b.answers) > limits.bytes || b.answers.some(a => jsonBytes(a) > limits.itemBytes)) return "answers exceeds the input limit";
+  }
+  if (Array.isArray(b.evidence_files)) {
+    const limits = admissionPolicy.evidence;
+    if (b.evidence_files.length > limits.items || jsonBytes(b.evidence_files) > limits.bytes) return "evidence_files exceeds the input limit";
+    for (const item of b.evidence_files) {
+      if (!item || typeof item !== "object" || Array.isArray(item) || jsonBytes(item) > limits.itemBytes) return "Invalid evidence metadata";
+      const record = item as Record<string, unknown>;
+      // Owner binding and initial-stage checks still run in the route. Metadata
+      // bounds are not proof of object existence, content or Storage byte quota.
+      if (typeof record.path !== "string" || Buffer.byteLength(record.path, "utf8") > limits.pathBytes ||
+          !/^[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+\/(?:problem|before|after)\/[A-Za-z0-9_-][A-Za-z0-9._-]*$/.test(record.path)) return "Invalid evidence path";
+      for (const [key, limit] of Object.entries({ bucket: 64, category: 32, content_type: 128, name: 1024, type: 128 })) {
+        if (record[key] !== undefined && (typeof record[key] !== "string" || Buffer.byteLength(record[key] as string, "utf8") > limit)) return "Invalid evidence metadata";
+      }
+    }
+  }
+  return null;
+}
 
 // Scoped to service-order routes; legacy numeric helpers elsewhere are unchanged.
 export function serviceNumber(value: unknown): number | null {
@@ -33,6 +65,8 @@ export function serviceOrderInputError(route: string, method: string, body: unkn
     if (typeof b.client_order_id === "string" && b.client_order_id.trim().length > 120) return "client_order_id is too long";
     if (!absent(b.vehicle_id) && (typeof b.vehicle_id !== "string" || !uuid.test(b.vehicle_id))) return "vehicle_id must be a UUID";
     for (const key of ["answers","evidence_files"]) if (!absent(b[key]) && !Array.isArray(b[key])) return key + " must be an array";
+    const bounds = resourceBounds(b);
+    if (bounds) return bounds;
     const min=serviceNumber(b.estimated_price_min), max=serviceNumber(b.estimated_price_max);
     if (min !== null && max !== null && min > max) return "estimated_price_min exceeds estimated_price_max";
   }

@@ -4,6 +4,9 @@ import { Writable } from "node:stream";
 import { runInNewContext } from "node:vm";
 import { readFileSync } from "node:fs";
 import Fastify from "fastify";
+import { Admission, installAdmission, admissionPolicy } from "../src/diagnostics/admission.js";
+import { diagnosticsOptions, installDiagnostics } from "../src/diagnostics/foundation.js";
+import ts from "typescript";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // No production clients/credentials or network operations are used by these tests.
@@ -17,6 +20,7 @@ const signedUrl = "https://example.invalid/authorized-object";
 const secret = "never-log-this-token";
 
 type Scenario = {
+  signGate?: Promise<void>;
   status?: string;
   relation?: Record<string, unknown>[];
   parent?: Record<string, unknown> | null;
@@ -26,7 +30,7 @@ type Scenario = {
   emptySignedUrl?: boolean;
 };
 
-async function fixture(scenario: Scenario = {}) {
+async function fixture(scenario: Scenario = {}, state = new Admission(), installer = installAdmission) {
   const calls: string[] = [], logs: string[] = [];
   const error = { message: `private SDK error ${secret} ${path}` };
   const client = {
@@ -73,7 +77,7 @@ async function fixture(scenario: Scenario = {}) {
         calls.push("storage"); assert.equal(bucket, "listing-media");
         return {
           async createSignedUrl(object: string, ttl: number) {
-            calls.push("sign"); assert.equal(object, path); assert.equal(ttl, 3600);
+            calls.push("sign"); await scenario.signGate; assert.equal(object, path); assert.equal(ttl, 3600);
             if (scenario.throwAt === "sign") throw error;
             return { data: { signedUrl: scenario.emptySignedUrl ? "" : signedUrl },
               error: scenario.failure === "sign" ? error : null };
@@ -83,10 +87,11 @@ async function fixture(scenario: Scenario = {}) {
     },
   } as unknown as SupabaseClient;
   const stream = new Writable({ write(chunk, _encoding, done) { logs.push(String(chunk)); done(); } });
-  const app = Fastify({ logger: { stream } });
+  const app = Fastify({ ...diagnosticsOptions, logger: { ...diagnosticsOptions.logger, stream } });
+  installDiagnostics(app);installer(app,state);
   await registerListingMediaRoutes(app, client);
   await app.ready();
-  return { app, calls, logs };
+  return { app, calls, logs, state };
 }
 
 async function request(scenario: Scenario = {}, authorization?: string) {
@@ -294,3 +299,39 @@ for (const [name, status, listingType] of [
     assert.ok(result.video_path.endsWith("clip.mp4"));
   });
 }
+
+function latch(){let resolve!:()=>void;const promise=new Promise<void>(r=>{resolve=r});return {promise,resolve};}
+const turn=()=>new Promise<void>(r=>setImmediate(r));
+function assertAdmission(r:any){assert.equal(r.statusCode,429);const b=r.body?r.json():{request_id:r.headers['x-request-id'],retry_after_seconds:Number(r.headers['retry-after'])};assert.equal(b.request_id,r.headers['x-request-id']);assert.equal(String(b.retry_after_seconds),r.headers['retry-after']);assert.equal(r.headers['cache-control'],'no-store');}
+test('E2A signer process rejection has zero metadata/Auth/Storage calls and no private diagnostic',async()=>{
+ const state=new Admission(()=>0);for(let i=0;i<admissionPolicy.global.sign;i++)state.spend('process:sign','process',[[admissionPolicy.global.sign,60000]]);
+ const f=await fixture({},state);try{
+  const r=await f.app.inject({url:`/listing-media/signed-url?path=${encodeURIComponent(path)}&token=TEST_SIGNED_CAPABILITY`,headers:{authorization:'Bearer TEST_BEARER_SECRET'}});assertAdmission(r);assert.deepEqual(f.calls,[]);
+  for(const value of [owner,path,'TEST_SIGNED_CAPABILITY','TEST_BEARER_SECRET'])assert.ok(!f.logs.join('').includes(value));
+ }finally{await f.app.close();}
+});
+async function signerSlotContract(installer=installAdmission, method: "GET" | "HEAD" = "GET"){
+ const gate=latch(),f=await fixture({signGate:gate.promise},new Admission(()=>0),installer);const pending:any[]=[];
+ try{
+  for(let i=0;i<8;i++){pending.push(f.app.inject({method,url:`/listing-media/signed-url?path=${encodeURIComponent(path)}`}));await turn();}
+  assert.equal(f.calls.filter(c=>c==='sign').length,8);
+  pending.push(f.app.inject({method,url:`/listing-media/signed-url?path=${encodeURIComponent(path)}`}));await turn();
+  assert.equal(f.calls.filter(c=>c==='sign').length,8,'ninth rejected before metadata/storage');
+  assert.equal(f.calls.filter(c=>c==='relation').length,8);
+  gate.resolve();const responses=await Promise.all(pending);assertAdmission(responses.at(-1));assert.equal(f.state.sizes.active,0);
+ }finally{gate.resolve();await Promise.all(pending);await f.app.close();}
+}
+test('E2A parallel signer slots reject before metadata/signing and release',()=>signerSlotContract());
+test('E2A automatic HEAD retains the same signer capacity boundary',()=>signerSlotContract(installAdmission,'HEAD'));
+test('E2A signer owner budget applies only after verification and never signs rejected owner',async()=>{
+ const state=new Admission(()=>0);for(let i=0;i<60;i++)state.spend('actor:sign',owner,admissionPolicy.actor.sign);
+ const f=await fixture({status:'draft',user:owner},state);try{
+  const r=await f.app.inject({url:`/listing-media/signed-url?path=${encodeURIComponent(path)}`,headers:{authorization:`Bearer ${secret}`}});assertAdmission(r);assert.ok(f.calls.includes('auth'));assert.ok(!f.calls.includes('sign'));assert.equal(f.state.sizes.active,0);
+ }finally{await f.app.close();}
+});
+test('E2A signer slot mutation detected before Storage, without source edits',async()=>{
+ const source=readFileSync(new URL('../src/diagnostics/admission.ts',import.meta.url),'utf8');
+ const from='const release = state.slot(kind, "process", admissionPolicy.slots[kind]);';assert.equal(source.split(from).length,2);
+ const exports:any={};runInNewContext(ts.transpileModule(source.replace(from,'const release = kind === "sign" ? (() => {}) : state.slot(kind, "process", admissionPolicy.slots[kind]);').replace('return await handler.call(this, request, reply);','const result = await handler.call(this, request, reply); if (kind === "sign") { const late = state.slot(kind, "process", admissionPolicy.slots[kind]); late?.(); } return result;'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports,require:()=>({performance:{now:()=>0}})});
+ await signerSlotContract();await assert.rejects(()=>signerSlotContract(exports.installAdmission),(e:any)=>e?.name==='AssertionError');
+});

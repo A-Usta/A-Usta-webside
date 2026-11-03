@@ -9,8 +9,11 @@ import { authRoutes } from "../routes/auth.js";
 import { listingMediaRoutes } from "../routes/listing-media.js";
 import { diagnosticsOptions, installDiagnostics } from "../diagnostics/foundation.js";
 
+import { installAdmission, admissionPolicy } from "../diagnostics/admission.js";
+
 const app = Fastify(diagnosticsOptions);
 installDiagnostics(app);
+installAdmission(app);
 
 await app.register(cors, {
   origin: [
@@ -26,10 +29,7 @@ await app.register(helmet);
 await app.register(sensible);
 
 await app.register(multipart, {
-  limits: {
-    files: 1,
-    fileSize: 10 * 1024 * 1024,
-  },
+  limits: admissionPolicy.multipart,
 });
 
 app.get("/health", async () => {
