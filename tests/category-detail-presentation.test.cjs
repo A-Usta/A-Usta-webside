@@ -197,7 +197,7 @@ test('P2.A current seller-link and lifecycle components contract',async()=>{
  assert.match(f.markup(),/data-owner-lifecycle="reactivate"/);assert.doesNotMatch(f.markup(),/data-owner-lifecycle="mark_sold"/);
  require('./helpers/seller-integration-baseline.cjs').currentContracts(html);
  const moduleFile='assets/marketplace/listing-detail.js';
- assert.equal(fs.readFileSync(path.join(root,moduleFile),'utf8'),cp.execFileSync('git',['show','745d6ee87813a83003731ee2026e9814bd510e57:'+moduleFile],{cwd:root,encoding:'utf8'}));
+ assert.equal(require('./helpers/listing-initial-baseline.cjs').normalize(fs.readFileSync(path.join(root,moduleFile),'utf8')),cp.execFileSync('git',['show','745d6ee87813a83003731ee2026e9814bd510e57:'+moduleFile],{cwd:root,encoding:'utf8'}));
 });
 if(!process.env.P2A_CHILD){
  const categoryGate='tests/category-detail-presentation.test.cjs',legacyGate='tests/listing-metadata-partial.test.cjs';

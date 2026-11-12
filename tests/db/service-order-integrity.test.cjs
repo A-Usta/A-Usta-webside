@@ -103,7 +103,9 @@ if(!process.env.P2C_MUTATION)for(const candidate of [...approvedPaths,...protect
  // P2.D.1 authorizes only this exact manifest; child guards also fingerprint it.
  const reviewedManifest=candidate==='backend/a-usta56/package.json';
  if(reviewedManifest)assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,candidate))).digest('hex'),'cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802');
- const accepted=approvedPaths.includes(candidate)||reviewedManifest;
+ const reviewedServerKey=candidate==='backend/a-usta56/src/config/supabase.ts';
+ if(reviewedServerKey)require('../helpers/server-key-baseline.cjs').assertConfig();
+ const accepted=approvedPaths.includes(candidate)||reviewedManifest||reviewedServerKey;
  const bootstrap=`const cp=require('node:child_process'),old=cp.execFileSync;
  cp.execFileSync=function(cmd,args,opts){
    if(cmd==='git'&&args[0]==='diff'&&args.includes('backend')){

@@ -13419,7 +13419,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 window.addEventListener("austa:listing:created",()=>setTimeout(()=>{moveAccountTools();bindListingLocation();},50));
 })();
 </script>\n</html>
-<script id="austa-v16-professional-flow-patch">
+<script id="austa-v16-professional-flow-patch" type="application/x-austa-legacy" data-austa-obsolete="parse-failed-superseded">
 (function(){
 "use strict";
 const esc2=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -15645,11 +15645,8 @@ if(
    PUBLIC API
    ========================================================= */
 
-window.AUSTA_LISTING_DETAIL={
-  open:openListingDetail,
-  close:closeListingDetail,
-  bind:bindAll
-};
+// The source-aware module owns this API. Legacy wrappers above delegate to it;
+// replacing it here removes install/openLink and makes open recursively call itself.
 
 })();
 </script>
@@ -17933,7 +17930,7 @@ window.AUSTA_V32={directTransport,openListingV32};
 @media(max-width:1000px){#austaV22VideoGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:600px){#austaV22VideoGrid{grid-template-columns:1fr!important}#austaV22VideoGrid>.austa-v22-video-card .austa-v22-video-thumb{aspect-ratio:16/7!important}}
 </style>
-<script id="austa-v34-final-js">
+<script id="austa-v34-final-js" type="application/x-austa-legacy" data-austa-obsolete="parse-failed-superseded">
 (function(){
 'use strict';
 const q=s=>document.querySelector(s), qa=s=>[...document.querySelectorAll(s)];
@@ -19135,6 +19132,10 @@ body.austa-account-open{overflow:hidden!important}
 @media(max-width:900px){.austa-v39-body{grid-template-columns:1fr}.austa-v39-nav{border-right:0;border-bottom:1px solid #123a53;display:flex;gap:7px;overflow:auto;padding:10px}.austa-v39-nav button{min-width:max-content;margin:0}.austa-v39-nav button span:not(.role-icon){display:none}.austa-v39-video-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){#austaAccountModal .austa-account-shell{width:100vw!important;border-radius:0!important}.austa-v39-head{padding:15px}.austa-v39-main{padding:16px}.austa-v39-grid,.austa-v39-form,.austa-v39-video-row{grid-template-columns:1fr}.austa-v39-role{grid-template-columns:1fr 1fr}.austa-v39-listing{grid-template-columns:1fr}.austa-v39-provider-profile{grid-template-columns:70px 1fr}}
 </style>
+<script src="assets/account/maintenance-reminders.js"></script>
+<script src="assets/account/vehicle-data.js"></script>
+<script src="assets/account/my-vehicles.js"></script>
+<script src="assets/account/personal-account.js"></script>
 <script id="austa-v39-account-js">
 (function(){
 'use strict';
@@ -19147,9 +19148,11 @@ function init(){
  let modal=$('#austaAccountModal');
  if(!modal){modal=document.createElement('div');modal.id='austaAccountModal';modal.innerHTML='<div class="austa-account-shell"></div>';document.body.appendChild(modal)}
  const shell=$('.austa-account-shell',modal); if(!shell)return;
+ const personal=window.AUSTA_PERSONAL_ACCOUNT;
+ modal.dataset.personalAccount='v33d2';
+ modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Şəxsi kabinet');
  document.body.classList.remove('austa-account-open');
- shell.innerHTML=`<div class="austa-v39-head"><div><h2>👤 A-USTA Hesabım</h2><p>Müştəri • Usta • Mağaza • Tərəfdaş — hər rol öz qeydiyyat və idarəetmə səhifəsi ilə</p></div><button class="austa-v39-close" type="button" aria-label="Bağla">×</button></div>
- <div class="austa-v39-body"><nav class="austa-v39-nav" id="austaV39Nav"></nav><main class="austa-v39-main" id="austaV39Main"></main></div>`;
+ shell.innerHTML=`<div class="austa-v39-head"><button class="austa-v39-close" type="button" aria-label="Bağla">×</button></div><div class="austa-v39-body"><nav class="austa-v39-nav" id="austaV39Nav" aria-label="Şəxsi kabinet menyusu"></nav><main class="austa-v39-main" id="austaV39Main"></main></div>`;
  const nav=$('#austaV39Nav'), main=$('#austaV39Main');
 const roles=[
   ['customer','👤','Müştəri'],
@@ -19185,118 +19188,9 @@ const rolePages={
   }
 };
 function buildNav(role) {
-  nav.innerHTML = '';
-
-  roles.forEach(([id, ic, name]) => {
-    const b = document.createElement('button');
-
-    b.dataset.role = id;
-
-    b.innerHTML =
-      '<span class="role-icon">' +
-      ic +
-      '</span><span>' +
-      name +
-      '</span>';
-
-    b.className =
-      id === role
-        ? 'active'
-        : '';
-
-    b.onclick = () =>
-      showRole(id);
-
-    nav.appendChild(b);
-  });
-
-  const extra = [
-    [
-      'home',
-      '⌂',
-      'Hesabın ana səhifəsi'
-    ],
-    [
-      'listings',
-      '📋',
-      'Elanlarım'
-    ],
-    [
-      'orders',
-      '📦',
-      'Sifarişlərim'
-    ],
-    [
-      'ratings',
-      '⭐',
-      'Reytinq və rəylər'
-    ]
-  ];
-
-  extra.forEach(
-    ([id, ic, name]) => {
-      const b =
-        document.createElement(
-          'button'
-        );
-
-      b.dataset.page = id;
-
-      b.innerHTML =
-        '<span class="role-icon">' +
-        ic +
-        '</span><span>' +
-        name +
-        '</span>';
-
-      b.onclick = () =>
-        showPage(
-          id,
-          currentRole
-        );
-
-      nav.appendChild(b);
-    }
-  );
-    /*
-   * ========================================================
-   * ADMIN KYC
-   * ========================================================
-   */
-
-  if (
-    role === 'admin'
-  ) {
-    const kycButton =
-      document.createElement(
-        'button'
-      );
-
-    kycButton.dataset.page =
-      'admin-kyc';
-
-    kycButton.innerHTML =
-      '<span class="role-icon">🛡️</span>' +
-      '<span>KYC Paneli</span>';
-
-    kycButton.onclick =
-      () =>
-        showPage(
-          'admin-kyc',
-          'admin'
-        );
-
-    nav.appendChild(
-      kycButton
-    );
-  }
-
-  /*
-   * ========================================================
-   * LOGOUT
-   * ========================================================
-   */
-
+  nav.innerHTML=personal.sidebar();
+  nav.querySelectorAll('[data-page]').forEach(button=>{button.onclick=()=>showPage(button.dataset.page,currentRole);});
+  if(role==='admin'){const button=document.createElement('button');button.dataset.page='admin-kyc';button.innerHTML=personal.icon('orders')+'<span>KYC Paneli</span>';button.onclick=()=>showPage('admin-kyc','admin');nav.appendChild(button);}
   const logoutButton =
     document.createElement(
       'button'
@@ -19305,10 +19199,7 @@ function buildNav(role) {
   logoutButton.dataset.action =
     'logout';
 
-  logoutButton.innerHTML =
-    '<span class="role-icon">↪</span>' +
-    '<span>Hesabdan çıxış</span>';
-
+  logoutButton.innerHTML=personal.icon('logout')+'<span>Çıxış</span>';
   logoutButton.onclick =
     async () => {
       logoutButton.disabled =
@@ -19390,8 +19281,8 @@ localStorage.removeItem(
     logoutButton
   );
 }
- let currentRole=localStorage.getItem('austa-account-role-v39')||'customer';
- function showRole(role){currentRole=role;localStorage.setItem('austa-account-role-v39',role);buildNav(role);showPage('home',role)}
+ let currentRole=personal.normalizeRole(localStorage.getItem('austa-account-role-v39'));
+ function showRole(role){role=personal.normalizeRole(role);currentRole=role;localStorage.setItem('austa-account-role-v39',role);buildNav(role);showPage('home',role)}
  window.AUSTA_V39_SHOW_ROLE=showRole;
   /*
  * ============================================================
@@ -20043,6 +19934,7 @@ async function loadAdminKyc() {
   }
 }
  function showPage(page,role=currentRole){
+   role=personal.normalizeRole(role);
     [
     'austaRealCustomerOrders',
     'austaRealProviderOrders'
@@ -20065,12 +19957,15 @@ async function loadAdminKyc() {
     }
   });
    
-   currentRole=role; $$('.austa-v39-nav button').forEach(b=>b.classList.toggle('active',b.dataset.role===role&&b.dataset.page==null));
-   const base=rolePages[role];
+   currentRole=role; nav.querySelectorAll('[data-page]').forEach(button=>{button.classList.toggle('active',button.dataset.page===page);if(button.dataset.page===page)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');});
+   const base=rolePages[role]||rolePages.customer;
    if(page==='home') main.innerHTML=homePage(role,base);
    else if(page==='listings') main.innerHTML=listingsPage(role);
    else if(page==='orders') main.innerHTML=ordersPage(role);
    else if(page==='ratings') main.innerHTML=ratingsPage(role);
+   else if(page==='vehicles') main.innerHTML=personal.vehicles();
+   else if(page==='business') main.innerHTML='<section class="austa-v39-page active"><h1>Biznes profili</h1><p class="pa-subtitle">Biznes müraciətlərinizi və təsdiq vəziyyətini idarə edin.</p><div data-pa-business-host></div>'+((role==='store'||role==='partner')?'<details class="pa-vehicle-preview"><summary>Əvvəlki '+(role==='store'?'mağaza':'tərəfdaş')+' məlumatları</summary><p>Bu məlumatlar yalnız bu brauzerdə saxlanır və biznes təsdiqi vermir.</p>'+(role==='store'?storeRegister():partnerRegister())+'</details>':'')+'<div data-pa-auth-entry><button class="austa-v39-btn" data-action="login">Giriş / qeydiyyat</button></div></section>';
+   else if(page==='registration') main.innerHTML='<section class="austa-v39-page active"><h1>Usta qeydiyyatı</h1><p class="pa-subtitle">Usta müraciətinizi göndərin və fəaliyyətə başlayın.</p>'+providerRegister()+'</section>';
    else if(page==='videos') main.innerHTML=videosPage();
    else if(page==='admin-kyc'){
     if(role!=='admin'){
@@ -20087,18 +19982,12 @@ async function loadAdminKyc() {
     }
   }
    bindPage(page,role);
+   personal.bindAuth();
+   window.AUSTA_SELLER_VERIFICATION?.mountAccount?.();
+   main.scrollTop=0;
  }
- function homePage(role,base){
-   const k=role==='customer'?'Müştəri':role==='provider'?'Usta':role==='store'?'Mağaza':'Tərəfdaş';
-   return `<section class="austa-v39-page active"><div class="austa-v39-role">${roles.map(r=>`<button data-role-switch="${r[0]}" class="${r[0]===role?'active':''}">${r[1]} ${r[2]}</button>`).join('')}</div><h3>${base.title}</h3><p>${base.desc}</p>
-   <div class="austa-v39-grid">${role==='customer'?`<article class="austa-v39-card"><h4>🔐 Giriş / qeydiyyat</h4><p>Gmail və ya telefonla davam edin.</p><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="login">Giriş / qeydiyyat</button></div></article>`:''}
-   ${role==='provider'?providerRegister():''}${role==='store'?storeRegister():''}${role==='partner'?partnerRegister():''}
-   <article class="austa-v39-card"><h4>📋 Elan yerləşdirmə</h4><p>Hər yeni elan üçün ilk <span class="austa-v39-free">1 ay ödənişsiz</span>. Ödənişli xidmət yalnız sonrakı mərhələdə, ayrıca qaydada tətbiq olunur.</p><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="new-listing">＋ Elan yerləşdir</button><button class="austa-v39-btn" data-page-open="listings">Elanlarımı aç</button></div></article>
-   <article class="austa-v39-card"><h4>⭐ Reytinq və rəy</h4><p>Rəy konkret elan və ya xidmət göstərən usta profilinə bağlanır. Reytinq tarixçəsi hesabda saxlanır.</p><div class="austa-v39-actions"><button class="austa-v39-btn" data-page-open="ratings">Rəylərə bax</button></div></article>
-
-   </div></section>`;
- }
- function providerRegister(){return `<article class="austa-v39-card full"><h4>🛠 Usta qeydiyyatı</h4><div class="austa-v39-form"><label>Ad, soyad<input id="v39pName" placeholder="Ad Soyad"></label><label>Telefon<input id="v39pPhone" placeholder="Telefon"></label><label>Gmail<input id="v39pMail" type="email" placeholder="Gmail"></label><label>Şəxsiyyət vəsiqəsi seriyası<input id="v39pId" placeholder="Seriya"></label><label>FIN<input id="v39pFin" placeholder="FIN"></label><label class="full">Şəxsiyyət vəsiqəsinin şəkli<input id="v39pIdPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small style="color:#7f98a9">Vəsiqənin ön tərəfinin aydın fotosu. Demo versiyada fayl serverə göndərilmir.</small></label><label>İş təcrübəsi<input id="v39pExp" placeholder="Məsələn: 8 il"></label><label>Sektor / xidmət sahəsi<input id="v39pSector" placeholder="Mühərrik, elektrik, kuzov..." ></label><label>Region / şəhər<input id="v39pRegion" placeholder="Bakı, Gəncə və s."></label><label class="full">İş ünvanı<input id="v39pAddr" placeholder="Servis / iş məkanı"></label></div><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="provider-save">Usta qeydiyyatını göndər</button></div><div class="austa-v39-note">KYC məlumatları demo frontend-də localStorage-a yazılmır. İstehsalatda təhlükəsiz server/KYC xidməti tələb olunur.</div></article>`}
+ function homePage(){return personal.dashboard();}
+ function providerRegister(){return `<article class="austa-v39-card full"><h4>🛠 Usta qeydiyyatı</h4><div class="austa-v39-form"><label>Ad, soyad<input id="v39pName" placeholder="Ad Soyad"></label><label>Telefon<input id="v39pPhone" placeholder="Telefon"></label><label>Gmail<input id="v39pMail" type="email" placeholder="Gmail"></label><label>Şəxsiyyət vəsiqəsi seriyası<input id="v39pId" placeholder="Seriya"></label><label>FIN<input id="v39pFin" placeholder="FIN"></label><label class="full">Şəxsiyyət vəsiqəsinin şəkli<input id="v39pIdPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small style="color:#7f98a9">Vəsiqənin ön tərəfinin aydın fotosu. Sənəd təhlükəsiz KYC yaddaşına yüklənir.</small></label><label>İş təcrübəsi<input id="v39pExp" placeholder="Məsələn: 8 il"></label><label>Sektor / xidmət sahəsi<input id="v39pSector" placeholder="Mühərrik, elektrik, kuzov..." ></label><label>Region / şəhər<input id="v39pRegion" placeholder="Bakı, Gəncə və s."></label><label class="full">İş ünvanı<input id="v39pAddr" placeholder="Servis / iş məkanı"></label></div><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="provider-save">Usta qeydiyyatını göndər</button></div><div class="austa-v39-note">Müraciətiniz yoxlamaya göndərilir. Texniki yoxlama rəsmi təsdiq statusu vermir.</div></article>`}
  function storeRegister(){return `<article class="austa-v39-card full"><h4>🏪 Mağaza qeydiyyatı</h4><div class="austa-v39-form"><label>Mağaza adı<input id="v39sName" placeholder="Mağaza adı"></label><label>Telefon<input id="v39sPhone" placeholder="Telefon"></label><label>Gmail<input id="v39sMail" type="email" placeholder="Gmail"></label><label>Region<input id="v39sRegion" placeholder="Şəhər / rayon"></label><label class="full">Ünvan<input id="v39sAddr" placeholder="Tam ünvan"></label><label class="full">Kateqoriyalar<input id="v39sCats" placeholder="Ehtiyat hissələri, aksesuarlar..."></label></div><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="store-save">Mağazanı qeydiyyatdan keçir</button></div></article>`}
  function partnerRegister(){return `<article class="austa-v39-card full"><h4>🤝 Tərəfdaş qeydiyyatı</h4><div class="austa-v39-form"><label>Şirkət / tərəfdaş adı<input id="v39tName" placeholder="Ad"></label><label>Telefon<input id="v39tPhone" placeholder="Telefon"></label><label>Gmail<input id="v39tMail" type="email" placeholder="Gmail"></label><label>Region<input id="v39tRegion" placeholder="Şəhər / rayon"></label><label>Sektor<input id="v39tSector" placeholder="Logistika, servis, hissə və s."></label><label class="full">Ünvan<input id="v39tAddr" placeholder="Tam ünvan"></label></div><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="partner-save">Tərəfdaş qeydiyyatını göndər</button></div></article>`}
 function listingsPage(role) {
@@ -20263,13 +20152,13 @@ function bindPage(page, role) {
   }, 0);
 }
 
-    $$('[data-role-switch]').forEach((b) => {
+    $$('[data-role-switch]',modal).forEach((b) => {
     b.onclick = () => {
       showRole(b.dataset.role);
     };
   });
 
-  $$('[data-page-open]').forEach((b) => {
+  $$('[data-page-open]',modal).forEach((b) => {
     b.onclick = () => {
       showPage(
         b.dataset.pageOpen,
@@ -20278,7 +20167,7 @@ function bindPage(page, role) {
     };
   });
 
-  $$('[data-action="new-listing"]').forEach((b) => {
+  $$('[data-action="new-listing"]',modal).forEach((b) => {
     b.onclick = newListing;
   });
 
@@ -20317,7 +20206,7 @@ function bindPage(page, role) {
     window.AUSTA_SUPABASE;
 
   const loginButtons =
-    $$('[data-action="login"]');
+    $$('[data-action="login"]',modal);
 
   loginButtons.forEach((button) => {
     button.onclick = async () => {
@@ -20335,21 +20224,31 @@ function bindPage(page, role) {
         );
 
       if (existing) {
+        existing.close();
         existing.remove();
       }
 
       const authModal =
         document.createElement(
-          'div'
+          'dialog'
         );
 
       authModal.id =
         'austa-v39-auth-modal';
 
+      authModal.setAttribute('aria-label','A-USTA hesabına giriş');
+      authModal.setAttribute('aria-modal','true');
+
       authModal.style.cssText = `
         position:fixed;
         inset:0;
-        z-index:999999;
+        margin:0;
+        width:100%;
+        height:100%;
+        max-width:none;
+        max-height:none;
+        border:0;
+        box-sizing:border-box;
         display:flex;
         align-items:center;
         justify-content:center;
@@ -20855,16 +20754,30 @@ function bindPage(page, role) {
           'new-password';
       };
 
-      closeButton.onclick = () => {
+      // Native top layer makes the Account and page inert without z-index races.
+      function closeAuth(){
+        if(!authModal.isConnected)return;
+        authModal.close();
         authModal.remove();
-      };
+        const target=button.isConnected&&button.getClientRects().length?button:$('.austa-v39-close',modal);
+        target?.focus({preventScroll:true});
+      }
+      authModal.addEventListener('cancel',event=>{event.preventDefault();closeAuth();});
+      authModal.addEventListener('keydown',event=>{
+        if(event.key!=='Tab')return;
+        const controls=[...authModal.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled)')].filter(el=>el.getClientRects().length);
+        const first=controls[0],last=controls.at(-1);
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+      });
+      closeButton.onclick = closeAuth;
 
       authModal.onclick = (event) => {
         if (
           event.target ===
           authModal
         ) {
-          authModal.remove();
+          closeAuth();
         }
       };
 
@@ -21063,11 +20976,11 @@ if (
             );
 
             setTimeout(() => {
-              authModal.remove();
-
+              if(!authModal.isConnected)return;
               showRole(
                 savedRole
               );
+              closeAuth();
             }, 700);
 
             return;
@@ -21135,11 +21048,11 @@ if (
           }
 
           setTimeout(() => {
-            authModal.remove();
-
+            if(!authModal.isConnected)return;
             showRole(
               selectedRole
             );
+            closeAuth();
           }, 1000);
         } catch (error) {
           console.error(
@@ -21166,6 +21079,7 @@ if (
 
       setMode('login');
 
+      authModal.showModal();
       emailInput.focus();
     };
   });
@@ -21858,10 +21772,13 @@ if (p) {
   );
  }
   
- // Close/open: clicking Hesab always opens the account center, never scrolls to the old account block.
- const link=$('#headerAccountLink'); if(link&&!link.dataset.v39Bound){link.dataset.v39Bound='1';link.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();modal.classList.add('open');document.body.classList.add('austa-account-open');showRole(localStorage.getItem('austa-account-role-v39')||'customer');},true)}
- $('.austa-v39-close',modal).onclick=()=>{modal.classList.remove('open');document.body.classList.remove('austa-account-open')};
- modal.addEventListener('click',e=>{if(e.target===modal){modal.classList.remove('open');document.body.classList.remove('austa-account-open')}});
+ // Retain V39 as the single Account entry; restore focus on every close path.
+ let opener=null;
+ function closeAccount(){modal.classList.remove('open');modal.style.removeProperty('display');document.body.classList.remove('austa-account-open');opener?.focus?.();}
+ const link=$('#headerAccountLink'); if(link&&!link.dataset.v39Bound){link.dataset.v39Bound='1';link.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();opener=document.activeElement;modal.classList.add('open');document.body.classList.add('austa-account-open');showRole(localStorage.getItem('austa-account-role-v39'));$('.austa-v39-close',modal).focus();},true)}
+ $('.austa-v39-close',modal).onclick=closeAccount;
+ modal.addEventListener('click',e=>{if(e.target===modal)closeAccount();});
+ modal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();closeAccount();}if(e.key==='Tab'){const controls=[...modal.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary')].filter(el=>el.getClientRects().length);const first=controls[0],last=controls.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}});
  // Keep the legacy account content out of the main page entirely.
  const oldAccount=$('#account');if(oldAccount){oldAccount.style.display='none';}
  buildNav(currentRole);showPage('home',currentRole);
@@ -22476,7 +22393,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .austa-v47-overlay{position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:18px}.austa-v47-card{width:min(760px,96vw);max-height:92vh;overflow:auto;background:#101419;color:#fff;border:1px solid #333;border-radius:18px;padding:22px;box-shadow:0 20px 70px #000}.austa-v47-card h2{margin:0 0 16px}.austa-v47-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.austa-v47-grid label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#ddd}.austa-v47-grid input,.austa-v47-grid select,.austa-v47-grid textarea{background:#171d23;color:#fff;border:1px solid #3a424b;border-radius:9px;padding:11px}.austa-v47-grid .full{grid-column:1/-1}.austa-v47-actions{display:flex;gap:10px;margin-top:16px}.austa-v47-actions button{padding:11px 18px;border:0;border-radius:9px;cursor:pointer}.austa-v47-send{background:#d71920;color:#fff}.austa-v47-close{background:#30363d;color:#fff}.austa-v47-rent-badge{position:absolute;left:7px;top:7px;z-index:4;background:rgba(215,25,32,.92);color:#fff!important;font-size:10px!important;font-weight:800;padding:4px 7px;border-radius:5px;letter-spacing:.4px}.austa-v22-video-thumb{position:relative}
 @media(max-width:700px){.austa-v47-grid{grid-template-columns:1fr}}
 </style>
-<script id="austa-v47-fix">
+<script id="austa-v47-fix" type="application/x-austa-legacy" data-austa-obsolete="parse-failed-superseded">
 (function(){
 const Q={
  avtoyuma:['Ad / soyad','Telefon','Avtomobil marka / modeli','Yuma xidməti','Paket','Tarix','Saat','Ünvan','GPS / xəritə ünvanı','Xüsusi qeyd'],
@@ -32508,7 +32425,7 @@ setTimeout(
 }
 
 </style>
-<script id="austa-market-v106-js">
+<script id="austa-market-v106-js" type="application/x-austa-legacy" data-austa-obsolete="parse-failed-superseded">
 (function(){
 'use strict';
 
@@ -36724,7 +36641,7 @@ document.addEventListener(
 }
   </style>
 
-<script>
+<script type="application/x-austa-legacy" data-austa-obsolete="parse-failed-superseded">
   /*
  * =========================================================
  * SİZİN ÜÇÜN VİDEOLAR
@@ -51362,7 +51279,7 @@ document.addEventListener(
             event.stopImmediatePropagation();
 
             openCategory(
-                "sale"
+                "cars"
             );
 
         }
@@ -60214,3 +60131,7 @@ if(
 #austaV159RealViewer #austaV164CommentForm{gap:7px}
 #austaV159RealViewer #austaV164CommentForm button{flex-basis:34px;width:34px;height:34px}
 </style>
+
+<link rel="stylesheet" href="assets/account/personal-account.css">
+
+<link rel="stylesheet" href="assets/account/my-vehicles.css">

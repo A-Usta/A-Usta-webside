@@ -1,0 +1,38 @@
+/* Only new garage content; the approved Account shell/sidebar/dashboard CSS is untouched. */
+#austaAccountModal .vg-root{margin-top:30px;font-size:16px;color:#252629;line-height:1.5}
+#austaAccountModal .vg-root h2{font-size:22px;letter-spacing:-.3px;margin:0 0 12px}
+#austaAccountModal .vg-root p{color:#60636b}
+#austaAccountModal .vg-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:20px 0}
+#austaAccountModal .vg-toolbar h2{margin:0 auto 0 0}
+#austaAccountModal .vg-root button{min-height:44px;padding:10px 15px;border:1px solid #d9dbe0;border-radius:9px;background:#fff;color:#202124;font:inherit;cursor:pointer}
+#austaAccountModal .vg-root button:hover{background:#f3f4f6}
+#austaAccountModal .vg-root button:disabled{opacity:.6;cursor:wait}
+#austaAccountModal .vg-root input,#austaAccountModal .vg-root select,#austaAccountModal .vg-root textarea{width:100%;min-height:44px;padding:11px;border:1px solid #d9dbe0;border-radius:8px;background:#fff;color:#24262a;font:inherit;box-sizing:border-box}
+#austaAccountModal .vg-root input[type=file]{max-width:100%}
+#austaAccountModal .vg-root label{display:grid;gap:6px;color:#53565e}
+#austaAccountModal .vg-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+#austaAccountModal .vg-full{grid-column:1/-1}
+#austaAccountModal .vg-form textarea{min-height:100px;resize:vertical}
+#austaAccountModal .vg-vehicle-list{display:grid;gap:16px}
+#austaAccountModal .vg-vehicle,#austaAccountModal .vg-summary,#austaAccountModal .vg-reminders,#austaAccountModal .vg-files li{border:1px solid #e1e3e8;border-radius:14px;padding:22px;background:#fff;overflow-wrap:anywhere}
+#austaAccountModal .vg-vehicle{display:flex;align-items:center;gap:18px;justify-content:space-between}
+#austaAccountModal .vg-vehicle p{margin:6px 0}
+#austaAccountModal .vg-vehicle small{color:#72757e}
+#austaAccountModal .vg-summary dl{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#austaAccountModal .vg-summary dt{font-size:13px;color:#747780}
+#austaAccountModal .vg-summary dd{margin:3px 0 0;white-space:pre-wrap}
+#austaAccountModal .vg-reminders{margin-top:24px}
+#austaAccountModal .vg-reminder{border-top:1px solid #e6e7ea;padding:15px 0}
+#austaAccountModal .vg-badge{display:inline-block;padding:3px 9px;border:1px solid #d9dbe0;border-radius:20px;margin-left:10px;font-size:13px;color:#4a4d55}
+#austaAccountModal .vg-timeline{list-style:none;padding:0 0 0 22px;border-left:2px solid #e4e5e8;margin:24px 0}
+#austaAccountModal .vg-timeline li{position:relative;border:1px solid #e1e3e8;border-radius:12px;padding:20px;margin:0 0 20px;background:#fff;overflow-wrap:anywhere}
+#austaAccountModal .vg-timeline li:before{content:'';position:absolute;left:-30px;top:26px;width:12px;height:12px;border:2px solid #aaaeb7;border-radius:50%;background:#fff}
+#austaAccountModal .vg-timeline header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+#austaAccountModal .vg-timeline small{display:block;margin-top:10px;color:#686b74}
+#austaAccountModal .vg-preserve{white-space:pre-wrap}
+#austaAccountModal .vg-files{list-style:none;padding:0;display:grid;gap:14px}
+#austaAccountModal .vg-files li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px}
+#austaAccountModal .vg-files small{display:block;color:#72757e;margin-top:6px}
+#austaAccountModal .vg-message{border:1px solid #c5c8cf;background:#f6f6f8;border-radius:10px;padding:15px;overflow-wrap:anywhere}
+#austaAccountModal .vg-empty{padding:28px;border:1px dashed #dddfe4;border-radius:12px;text-align:center}
+@media(max-width:650px){#austaAccountModal .vg-form,#austaAccountModal .vg-summary dl{grid-template-columns:1fr}#austaAccountModal .vg-vehicle{align-items:flex-start;flex-direction:column}#austaAccountModal .vg-root{font-size:15px}#austaAccountModal .vg-root h2{font-size:21px}#austaAccountModal .vg-summary,#austaAccountModal .vg-reminders,#austaAccountModal .vg-vehicle{padding:18px}#austaAccountModal .vg-toolbar>label{width:100%}}

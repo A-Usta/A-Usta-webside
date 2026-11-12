@@ -1,0 +1,9 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {createClient} from '@supabase/supabase-js';
+import {privilegedFetch} from '../src/config/privileged-fetch.js';
+const synthetic='sb_secret_OFFLINE_SYNTHETIC_NOT_A_CREDENTIAL';
+test('new secret fallback is removed while API key is retained',async()=>{let observed:Headers|undefined;const f=privilegedFetch(synthetic,async(_input,init)=>{observed=new Headers(init?.headers);return new Response('[]',{headers:{'content-type':'application/json'}})});const sb=createClient('https://example.invalid',synthetic,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:f}});assert.equal((await sb.from('offline').select('id')).error,null);assert.equal(observed?.get('apikey'),synthetic);assert.equal(observed?.has('authorization'),false)});
+test('explicit caller JWT is preserved for auth verification',async()=>{let observed:Headers|undefined;await privilegedFetch(synthetic,async(_u,i)=>{observed=new Headers(i?.headers);return new Response('{}')})('https://example.invalid',{headers:{apikey:synthetic,Authorization:'Bearer synthetic-user-token'}});assert.equal(observed?.get('authorization'),'Bearer synthetic-user-token')});
+test('legacy JWT transport stays byte-for-byte unchanged',()=>{const f:typeof fetch=async()=>new Response('{}');assert.equal(privilegedFetch('synthetic-legacy-key',f),f)});
+test('Request headers and unrelated options preserved without mutating original',async()=>{const req=new Request('https://example.invalid',{headers:{apikey:synthetic,Authorization:`Bearer ${synthetic}`,'x-test':'present'}});let h:Headers|undefined;await privilegedFetch(synthetic,async(_u,i)=>{h=new Headers(i?.headers);assert.equal(i?.cache,'no-store');return new Response('{}')})(req,{cache:'no-store'});assert.equal(h?.get('x-test'),'present');assert.equal(h?.has('authorization'),false);assert(req.headers.has('authorization'))});

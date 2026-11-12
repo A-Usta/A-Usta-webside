@@ -33,7 +33,8 @@ function bind(){
  subscription=client?.auth?.onAuthStateChange?.((_event,session)=>{
   if(client!==observed||window.AUSTA_SUPABASE!==observed)return;
   const nextKey=key(session);
-  if(authKey!==nextKey){authEpoch++;close();}
+  // Initial delivery establishes identity; later changes invalidate in-flight reads.
+  if(authKey!==nextKey&&!(_event==='INITIAL_SESSION'&&authKey===undefined)){authEpoch++;close();}
   authKey=nextKey;
  })?.data?.subscription;
 }

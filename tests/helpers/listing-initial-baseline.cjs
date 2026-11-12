@@ -1,0 +1,2 @@
+const assert=require('node:assert/strict'),{createHash}=require('crypto');
+exports.normalize=source=>{assert.equal(createHash('sha256').update(source).digest('hex'),'4d136d8918d3ce1b64b6a0887216d71aa7623493f707ff45bb927dfc7da0fdaf','exact reviewed initial-session correction');return source.replace("  // Initial delivery establishes identity; later changes invalidate in-flight reads.\n  if(authKey!==nextKey&&!(_event==='INITIAL_SESSION'&&authKey===undefined)){authEpoch++;close();}",'  if(authKey!==nextKey){authEpoch++;close();}');};

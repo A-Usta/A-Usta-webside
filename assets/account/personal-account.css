@@ -1,0 +1,80 @@
+/* V3.3D.2 — every rule is restricted to Personal Account. */
+#austaAccountModal[data-personal-account]{background:#f7f8fa!important;backdrop-filter:none!important;align-items:center!important;justify-content:center!important;padding:4.5vh 20px!important;box-sizing:border-box;color:#111;font-family:Arial,Helvetica,sans-serif}
+#austaAccountModal[data-personal-account] *{box-sizing:border-box}
+#austaAccountModal[data-personal-account] .austa-account-shell{width:min(1496px,100%)!important;height:min(882px,91vh)!important;max-height:91vh!important;margin:0!important;border:1px solid #e5e6e9!important;border-radius:26px!important;background:#fff!important;box-shadow:0 8px 32px #00000009!important;color:#111;display:flex!important;flex-direction:column;position:relative!important}
+#austaAccountModal .austa-v39-head{position:absolute;right:36px;top:34px;padding:0;border:0;background:none;z-index:2}
+#austaAccountModal .austa-v39-close{width:42px;height:42px;border:0;background:transparent;color:#303033;font-size:40px;font-weight:300;line-height:1;border-radius:8px}
+#austaAccountModal .austa-v39-body{display:grid;grid-template-columns:26% minmax(0,1fr);height:100%;min-height:0;flex:1}
+#austaAccountModal .austa-v39-nav{display:flex;flex-direction:column;gap:0;padding:40px 18px 16px 22px;background:#fcfcfc;border-right:1px solid #efeff1;overflow:auto}
+#austaAccountModal svg{display:block;flex-shrink:0;width:30px;height:30px}
+#austaAccountModal .pa-brand{display:flex;align-items:center;gap:13px;padding:0 32px;font-weight:800;font-size:38px;letter-spacing:-1.3px;line-height:48px}
+#austaAccountModal .pa-brand svg{width:48px;height:44px}
+#austaAccountModal .pa-user{display:flex;align-items:center;gap:18px;margin:49px 21px 46px;min-width:0}
+#austaAccountModal .pa-avatar{width:66px;height:66px;flex-shrink:0;background:#ededee;border-radius:50%;overflow:hidden}
+#austaAccountModal .pa-avatar svg,#austaAccountModal .pa-avatar img{width:100%;height:100%;object-fit:cover}
+#austaAccountModal .pa-user>div:last-child{min-width:0}
+#austaAccountModal .pa-user strong{display:block;font-size:24px;font-weight:600;overflow-wrap:anywhere}
+#austaAccountModal .pa-user span{display:block;font-size:20px;color:#61636c;line-height:1.4;margin-top:5px;overflow-wrap:anywhere}
+#austaAccountModal .austa-v39-nav button{display:flex;align-items:center;gap:24px;min-width:0;width:100%;text-align:left;color:#151515;border:0;background:transparent;border-radius:11px;margin:0;padding:14px 32px;font:inherit;font-size:24px;line-height:1.35;cursor:pointer}
+#austaAccountModal .austa-v39-nav button span{display:block}
+#austaAccountModal .austa-v39-nav button svg{color:#5b5d63}
+#austaAccountModal .austa-v39-nav button:hover,#austaAccountModal .austa-v39-nav button.active{background:#f0f1f3;border:0}
+#austaAccountModal .austa-v39-nav button.active svg{color:#111}
+#austaAccountModal .austa-v39-nav [data-action=logout]{margin:22px 20px 0;padding:25px 12px 10px;width:calc(100% - 40px);border-top:1px solid #ebebee;border-radius:0;gap:28px}
+#austaAccountModal .austa-v39-main{padding:116px 34px 44px 48px;overflow:auto;color:#111;background:#fff;min-width:0}
+#austaAccountModal h1{font-size:44px;line-height:1.15;letter-spacing:-1.2px;margin:0 0 8px;font-weight:700;color:#111}
+#austaAccountModal .pa-subtitle{font-size:24px;line-height:1.4;color:#64666f;margin:0}
+#austaAccountModal .pa-dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:27px 28px;margin-top:62px}
+#austaAccountModal .pa-dashboard-card{display:flex;align-items:center;gap:40px;min-height:124px;padding:25px 30px;border:1px solid #e4e5e9;box-shadow:0 0 0 1px #f7f7f8;border-radius:19px;background:#fff;color:#111;text-align:left;font:inherit;cursor:pointer;transition:background .15s,border-color .15s}
+#austaAccountModal .pa-dashboard-card:hover{background:#fafafa;border-color:#bcbec4}
+#austaAccountModal .pa-dashboard-card>svg:first-child{width:48px;height:48px;color:#393a3d}
+#austaAccountModal .pa-dashboard-card>svg:last-child{width:22px;height:22px;color:#90939a;margin-left:auto}
+#austaAccountModal .pa-dashboard-card>span{min-width:0}
+#austaAccountModal .pa-dashboard-card strong{display:block;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-.5px}
+#austaAccountModal .pa-dashboard-card small{display:block;font-size:21px;line-height:1.35;color:#64666d;margin-top:9px}
+#austaAccountModal .pa-auth-entry{margin-top:26px}
+#austaAccountModal [hidden]{display:none!important}
+#austaAccountModal .austa-v39-card,#austaAccountModal .austa-v39-form,#austaAccountModal .austa-v39-listing,#austaAccountModal .austa-v39-note,#austaAccountModal .austa-business-entry{background:#fff;color:#242424;border:1px solid #e3e4e8;border-radius:14px;padding:20px}
+#austaAccountModal .austa-v39-page h3,#austaAccountModal .austa-v39-card h4{color:#171717}
+#austaAccountModal .austa-v39-page>p,#austaAccountModal .austa-v39-card p,#austaAccountModal .austa-v39-listing p,#austaAccountModal .austa-v39-form label{color:#60626a;font-size:15px}
+#austaAccountModal .austa-v39-page>h3{font-size:30px}
+#austaAccountModal .austa-v39-form{margin-top:24px;gap:18px}
+#austaAccountModal .austa-v39-form input,#austaAccountModal .austa-v39-form textarea,#austaAccountModal .austa-v39-form select{background:#fff;color:#202124;border:1px solid #d6d8dd;font-size:16px}
+#austaAccountModal .austa-v39-btn,#austaAccountModal .austa-business-entry button{background:#fff;color:#252525;border:1px solid #d6d7dc;padding:11px 16px;font-size:15px;border-radius:9px;cursor:pointer}
+#austaAccountModal .austa-v39-btn.primary{background:#202124;color:#fff;border-color:#202124}
+#austaAccountModal .austa-business-entry{margin:30px 0}
+#austaAccountModal .austa-business-entry h3{margin-top:0}
+#austaAccountModal .austa-v39-free{color:#303238}
+#austaAccountModal button:focus-visible,#austaAccountModal input:focus-visible,#austaAccountModal summary:focus-visible{outline:2px solid #51545a;outline-offset:4px}
+#austaAccountModal .pa-empty{text-align:center;border:1px solid #e5e6e9;border-radius:18px;padding:45px 24px;margin-top:40px}
+#austaAccountModal .pa-empty>svg{width:52px;height:52px;margin:0 auto 20px;color:#686b72}
+#austaAccountModal .pa-empty h2{font-size:23px;margin:10px 0}
+#austaAccountModal .pa-empty p,#austaAccountModal .pa-vehicle-preview p{color:#63666e;font-size:16px;line-height:1.6}
+#austaAccountModal .pa-empty button{padding:12px 20px;border:1px solid #dedfe3;background:#f3f3f5;color:#797b81;border-radius:10px;font:inherit}
+#austaAccountModal .pa-vehicle-preview{margin-top:24px;border:1px solid #e6e7eb;padding:20px;border-radius:14px}
+#austaAccountModal .pa-vehicle-preview summary{cursor:pointer;font-weight:600}
+#austaAccountModal .pa-vehicle-preview fieldset{border:0;margin:20px 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+#austaAccountModal .pa-vehicle-preview legend{margin-bottom:16px;font-weight:600}
+#austaAccountModal .pa-vehicle-preview label{display:grid;gap:8px;font-size:15px;color:#5f626a}
+#austaAccountModal .pa-vehicle-preview input{width:100%;padding:12px;border:1px solid #e1e2e7;border-radius:8px;background:#f8f8f9;color:#71747a;font:inherit}
+@media(max-width:1450px){#austaAccountModal .austa-v39-nav{padding:32px 14px}#austaAccountModal .pa-brand{font-size:30px;padding:0 16px}#austaAccountModal .pa-brand svg{width:40px}#austaAccountModal .pa-user{margin:35px 12px;gap:12px}#austaAccountModal .pa-user strong{font-size:20px}#austaAccountModal .pa-user span{font-size:15px}#austaAccountModal .pa-avatar{width:52px;height:52px}#austaAccountModal .austa-v39-nav button{padding:15px 18px;font-size:19px;gap:18px}#austaAccountModal .austa-v39-main{padding:100px 30px 36px}#austaAccountModal h1{font-size:38px}#austaAccountModal .pa-subtitle{font-size:20px}#austaAccountModal .pa-dashboard-card{gap:22px;padding:24px;min-height:118px}#austaAccountModal .pa-dashboard-card strong{font-size:22px}#austaAccountModal .pa-dashboard-card small{font-size:17px}#austaAccountModal .pa-dashboard-card>svg:first-child{width:38px;height:38px}}
+@media(max-width:1000px){#austaAccountModal .austa-v39-body{grid-template-columns:245px minmax(0,1fr)}#austaAccountModal .pa-dashboard-grid{grid-template-columns:1fr;gap:16px;margin-top:32px}#austaAccountModal .pa-dashboard-card{min-height:100px}#austaAccountModal .austa-v39-main{padding:88px 24px 32px}#austaAccountModal .pa-user{margin:25px 8px}#austaAccountModal .pa-brand{font-size:27px}#austaAccountModal .austa-v39-nav button{font-size:17px;padding:14px 12px;gap:14px}#austaAccountModal .austa-v39-nav button svg{width:25px;height:25px}#austaAccountModal .pa-user span{font-size:13px}}
+@media(max-width:650px){#austaAccountModal[data-personal-account]{padding:0!important}#austaAccountModal[data-personal-account] .austa-account-shell{width:100%!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important;border:0!important;overflow:auto!important}#austaAccountModal .austa-v39-body{display:flex;flex-direction:column;height:auto;overflow:visible}#austaAccountModal .austa-v39-head{top:14px;right:13px}#austaAccountModal .austa-v39-nav{overflow:visible;border-right:0;border-bottom:1px solid #e7e8ec;padding:22px 18px 16px;flex:none}#austaAccountModal .pa-brand{padding:0;font-size:27px;gap:9px}#austaAccountModal .pa-brand svg{width:34px;height:34px}#austaAccountModal .pa-user{margin:18px 0;gap:12px}#austaAccountModal .pa-user strong{font-size:18px}#austaAccountModal .pa-user span{font-size:14px}#austaAccountModal .pa-avatar{width:46px;height:46px}#austaAccountModal .pa-navigation{display:grid;grid-template-columns:1fr 1fr;gap:4px}#austaAccountModal .austa-v39-nav button{font-size:14px;gap:9px;padding:11px 9px;min-width:0}#austaAccountModal .austa-v39-nav button svg{width:21px;height:21px}#austaAccountModal .austa-v39-nav [data-action=logout]{margin:10px 0 0;width:100%;padding:13px 9px 0;gap:9px}#austaAccountModal .austa-v39-main{padding:28px 18px 40px;overflow:visible;flex:none}#austaAccountModal h1{font-size:30px;letter-spacing:-.7px}#austaAccountModal .pa-subtitle{font-size:16px}#austaAccountModal .pa-dashboard-grid{gap:14px;margin-top:28px}#austaAccountModal .pa-dashboard-card{padding:20px;gap:20px;min-height:103px;border-radius:14px}#austaAccountModal .pa-dashboard-card strong{font-size:21px}#austaAccountModal .pa-dashboard-card small{font-size:16px}#austaAccountModal .pa-dashboard-card>svg:first-child{width:36px;height:36px}#austaAccountModal .pa-vehicle-preview fieldset{grid-template-columns:1fr}#austaAccountModal .austa-v39-form{grid-template-columns:1fr}}
+
+#austaAccountModal .austa-v39-page>.pa-subtitle{font-size:24px;line-height:1.4;color:#64666f}
+@media(max-width:1450px){#austaAccountModal .austa-v39-page>.pa-subtitle{font-size:20px}}
+@media(max-width:650px){#austaAccountModal .austa-v39-page>.pa-subtitle{font-size:16px}}
+
+/* Mobile menu disclosure keeps labels available without consuming the viewport. */
+#austaAccountModal .austa-v39-nav .pa-menu-toggle{display:none}
+@media(max-width:650px){
+ #austaAccountModal .austa-v39-nav{padding:18px 18px 12px}
+ #austaAccountModal .pa-user{margin:12px 0}
+ #austaAccountModal .austa-v39-nav .pa-menu-toggle{display:flex;justify-content:space-between;min-height:44px;padding:10px 12px;background:#f0f1f3;font-size:15px}
+ #austaAccountModal .austa-v39-nav .pa-navigation,#austaAccountModal .austa-v39-nav [data-action=logout]{display:none}
+ #austaAccountModal .austa-v39-nav.pa-nav-expanded .pa-navigation{display:grid;margin-top:8px}
+ #austaAccountModal .austa-v39-nav.pa-nav-expanded [data-action=logout]{display:flex}
+ #austaAccountModal .austa-v39-nav .pa-navigation button{min-height:44px}
+}
+
+@media(min-width:1451px){#austaAccountModal .pa-dashboard-card:nth-child(-n+2){min-height:130px}}
