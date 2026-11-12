@@ -50,14 +50,14 @@ test('validation performs no requests and reenables submit',async()=>{const f=fi
 test('legacy form and F1 acceptance/evidence region stay byte-identical',()=>{
   const base=cp.execFileSync('git',['show','b36badbc5e4535975915bd0450435aa4fdb4b3d4:index.html'],{cwd:root,encoding:'utf8',maxBuffer:6e6});
   const prefix=s=>s.slice(0,s.indexOf('<script id="austa-v55-protected-service-forms">'));
-  assert.equal(prefix(html),prefix(base));
+  assert.equal(prefix(require('./helpers/personal-account-baseline.cjs').normalize(html)),prefix(base));
   const tail=s=>s.slice(s.indexOf('<!-- =========================================================\n     A-USTA REAL PROVIDER SERVICE ORDER FLOW'));
-  assert.equal(tail(html),tail(base));
+  assert.equal(tail(require('./helpers/personal-account-baseline.cjs').normalize(html)),tail(base));
 });
 
 test('historical normalization allows exact hotfix only; removed dispatch is detected',()=>{
   const normalize=require('./helpers/p2f1-baseline.cjs').normalize;
   const base=cp.execFileSync('git',['show','b36badbc5e4535975915bd0450435aa4fdb4b3d4:index.html'],{cwd:root,encoding:'utf8',maxBuffer:6e6});
-  assert.equal(normalize(html),base);
+  assert.equal(normalize(require('./helpers/personal-account-baseline.cjs').normalize(html)),base);
   assert.throws(()=>normalize(html.replace('const dispatchOutcome=await dispatchProtectedServiceOrder(backendResult.order.id);',"const dispatchOutcome='none';")),/exact P2.F1 protected-form scope/);
 });

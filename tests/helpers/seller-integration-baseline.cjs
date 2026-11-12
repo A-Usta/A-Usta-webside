@@ -2931,6 +2931,7 @@ exports.withBaselineLifecycle=(html,base)=>recent(base)?html:apply(partitionLife
 exports.withBaselineMediaHydration=(html,base)=>{assert.equal(recent(base),false,'P2.A media historical generation');return apply(html,'media');};
 const presentationInputs=new Map();
 exports.withBaselineOwnerDelete=(html,base)=>{
+ html=require('./personal-account-baseline.cjs').normalize(html);
  html=require('./p2f1-baseline.cjs').normalize(html);
  if(html.includes("// One key per selected File/assignment/stage,"))html=require("./e2b-baseline.cjs").normalize(html);
  html=exports.withBaselineDetail(html,base);
@@ -2940,6 +2941,7 @@ exports.withBaselineOwnerDelete=(html,base)=>{
  return html;
 };
 exports.withoutSellerPresentation=html=>{
+ html=require('./personal-account-baseline.cjs').normalize(html);
  const known=presentationInputs.get(html);
  if(known)return apply(html,known);
  if(!recent(html))return html;

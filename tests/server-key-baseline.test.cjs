@@ -1,0 +1,3 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),path=require('path');const {assertConfig}=require('./helpers/server-key-baseline.cjs'),root=path.resolve(__dirname,'..');
+test('historical scope permits only exact server key transport correction',()=>assertConfig());
+test('unknown privileged client or transport mutation fails historical gate',()=>{for(const target of ['backend/a-usta56/src/config/supabase.ts','backend/a-usta56/src/config/privileged-fetch.ts'])assert.throws(()=>assertConfig(f=>{const b=fs.readFileSync(path.join(root,f));return f===target?Buffer.concat([b,Buffer.from('\n/* unintended change */')]):b}),/exact server-key/)});
