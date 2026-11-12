@@ -263,3 +263,12 @@ for(const candidate of ['backend/a-usta56/src/config/server.ts','backend/a-usta5
  const run=cp.spawnSync(process.execPath,['--test-reporter=tap','--test-name-pattern=protected runtime assets|protected scripts and modules|migration is functions-only','-e',bootstrap],{cwd:root,env,encoding:'utf8',maxBuffer:2e6});
  assert.notEqual(run.status,0);assert.match(run.stdout,/# fail 3/);assert.match(run.stdout,/AssertionError/);assert.doesNotMatch(run.stdout+run.stderr,/SyntaxError|Cannot find (?:module|package)|mutation not exercised/);
 });
+
+if(!process.env.P2A_CHILD)for(const target of ['backend/a-usta56/src/config/privileged-fetch.ts','backend/a-usta56/tests/privileged-fetch.test.ts'])test('reviewed server-key mutation rejected by all historical guards: '+target,()=>{
+  const bootstrap=`const fs=require('node:fs'),path=require('node:path'),read=fs.readFileSync;
+  fs.readFileSync=function(file,...args){const value=read.call(this,file,...args);if(path.resolve(String(file))===path.resolve(${JSON.stringify(target)})){return typeof value==='string'?value+'\\n/* unauthorized */':Buffer.concat([value,Buffer.from('\\n/* unauthorized */')]);}return value;};
+  require('./tests/listing-validation.test.cjs');require('./tests/listing-metadata-partial.test.cjs');require('./tests/db/seller-eligibility.test.cjs');`;
+  const env={...process.env,P2A_CHILD:'1'};delete env.NODE_TEST_CONTEXT;
+  const run=cp.spawnSync(process.execPath,['--test-reporter=tap','--test-name-pattern=protected runtime assets|protected scripts and modules|migration is functions-only','-e',bootstrap],{cwd:root,env,encoding:'utf8',maxBuffer:2e6});
+  assert.equal(run.signal,null,run.stderr);assert.notEqual(run.status,0);assert.match(run.stdout,/# fail 3/,run.stdout+run.stderr);assert.match(run.stdout,/exact server-key compatibility correction/);assert.doesNotMatch(run.stdout+run.stderr,/Cannot find (?:module|package)|SyntaxError/);
+});
