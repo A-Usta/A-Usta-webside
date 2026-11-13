@@ -1,6 +1,7 @@
 // Only Phase 2 module references are excluded from historical page equality.
 const assert=require('node:assert/strict');
 exports.normalize=html=>{
+ html=require('./homepage-baseline.cjs').normalize(html);
  html=require('./account-polish-baseline.cjs').normalize(html);
  html=require('./category-route-baseline.cjs').normalize(html);
  html=require('./legacy-archive-baseline.cjs').normalize(html);
