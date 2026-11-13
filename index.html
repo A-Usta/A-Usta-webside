@@ -25730,7 +25730,7 @@ function addCategoryImages(){const cats=[['cars','🚗 Avtomobil','Avtomobil ela
 function plusClick(e){const b=e.target.closest?.('#austaV33HeaderAddListing,#v32HeaderAddListing,button,a');if(!b)return;if(!/elan yerlesdir/i.test(N(b.textContent)))return;e.preventDefault();e.stopImmediatePropagation();if(window.AUSTA_V53?.openListing)window.AUSTA_V53.openListing()}
 window.addEventListener('click',plusClick,true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(addCategoryImages,100));else setTimeout(addCategoryImages,100);setTimeout(addCategoryImages,800);setTimeout(addCategoryImages,1800);
-window.AUSTA_V54={openService,addCategoryImages};
+window.AUSTA_V54={openService,addCategoryImages,categories:Object.freeze(Object.keys(Q))};
 })();
 </script>
 
@@ -26245,7 +26245,7 @@ function protectedClick(e){const b=e.target.closest?.('button,a,.austa-function-
 window.addEventListener('click',protectedClick,true);
 function boot(){lockOldUstaUI();setTimeout(lockOldUstaUI,100);setTimeout(lockOldUstaUI,500);setTimeout(lockOldUstaUI,1200)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();window.addEventListener('load',boot);
-window.AUSTA_V55_PROTECTED={openProtected,lockOldUstaUI};
+window.AUSTA_V55_PROTECTED={openProtected,lockOldUstaUI,categories:Object.freeze(Object.keys(FORMS))};
 })();
 </script> 
 
@@ -60156,3 +60156,6 @@ if(
 <!-- V3.5.2 header/search presentation; existing contracts retained. -->
 <link rel="stylesheet" href="assets/homepage/header-search-polish.css">
 <script src="assets/homepage/header-search-polish.js"></script>
+<!-- V3.5.3 service presentation and Home cleanup only. -->
+<link rel="stylesheet" href="assets/homepage/service-experience.css">
+<script src="assets/homepage/service-experience.js"></script>
