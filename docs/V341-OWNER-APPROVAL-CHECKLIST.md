@@ -1,10 +1,10 @@
 # V3.4.1 owner approval checklist — not release authorization
 
-All fields below are awaiting explicit owner confirmation. Do not infer them from a proposed domain, old placeholders, personal contacts or another marketplace. Public information pages identify pending legal sections; they are not binding terms. No submission form or support SLA is claimed.
+V3.4.3 update: official name, public email address, WhatsApp number and WhatsApp-only support copy are owner-approved in the canonical public configuration. Email delivery/domain ownership remain unverified. Other fields below still require owner confirmation. Do not infer them from a proposed domain, old placeholders, personal contacts or another marketplace. Public information pages identify pending legal sections; they are not binding terms. No submission form or support SLA is claimed.
 
 ## Legal identity
 - [ ] Exact registered operator/company name and legal form, in approved spelling.
-- [ ] Company registration identifier and VÖEN, if owner approves public display.
+- [ ] Company registration information for internal legal review only. Never display the company VÖEN; the public configuration has no tax-ID field.
 - [ ] Registered office and public correspondence address, if different.
 - [ ] Authorized legal/privacy contact and who reviews/approves final document wording.
 - [ ] Effective date, version, jurisdiction/dispute procedure and acceptance mechanism for final terms.
@@ -12,7 +12,7 @@ All fields below are awaiting explicit owner confirmation. Do not infer them fro
 - [ ] Listing/payment/refund/cancellation terms for any actual paid feature. No unapproved prices or free-period claims.
 
 ## Official contacts and support
-- [ ] Verified public support email, phone and/or contact form destination.
+- [ ] Owner-approved public email and WhatsApp are recorded in assets/homepage/mobile-links.js. Confirm inbox operation separately after domain/email verification. No telephone-call button.
 - [ ] Advertising/business contact, if separate.
 - [ ] Service hours and supported languages; publish response-time promises only if approved.
 - [ ] Complaint intake channel, handling/appeal process and evidence requirements.
