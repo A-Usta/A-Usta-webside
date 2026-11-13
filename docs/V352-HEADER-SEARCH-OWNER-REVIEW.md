@@ -38,7 +38,7 @@ Aktiv remote kampaniya setup-ı yoxdur; setCampaigns yalnız mövcud engine/test
 
 ## Elan girişi auditi
 
-Original header Add handler → `AUSTA_V153C.open` → original `austaV153COverlay`/`austaV153CCategory` → CATEGORIES tərəfindən mövcud fields render-i → validation/preview və mövcud Auth/seller yoxlamaları → staged persistence/media/activation. V3.5.2 original select-i və seçimlərini saxlayır; yalnız əlaqəli kömək mətni/aria-describedby və header/category-label/select CSS əlavə edir. `austaV153CFields`, seller-intent/verification, upload, preview, save və publish handler-lərinə toxunulmur. Yeni category picker/flow yaradılmır.
+Original header Add handler → `AUSTA_V153C.open` → original `austaV153COverlay`/`austaV153CCategory` → CATEGORIES tərəfindən mövcud fields render-i → validation/preview və mövcud Auth/seller yoxlamaları → staged persistence/media/activation. V3.5.2 original select-i və seçimlərini saxlayır; yalnız əlaqəli kömək mətni/aria-describedby və header/category-label/select CSS əlavə edir. `austaV153CFields`, seller-intent/verification, upload, preview, save və publish handler-lərinə toxunulmur. Yeni category picker/flow yaradılmır. Disabled kateqoriya seçimi olan redaktə rejimi adapter tərəfindən dəyişdirilmir; bunun üçün ayrıca regressiya assertion-u var.
 
 ## Yoxlama sərhədləri
 
