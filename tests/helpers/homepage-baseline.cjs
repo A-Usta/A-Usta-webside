@@ -6,7 +6,7 @@ const footer="<footer class=\"footer\" id=\"austaProfessionalFooter\"><div class
 const v35suffix="<!-- V3.5 compact Home composition; original loaders and contracts retained. -->\n<link rel=\"stylesheet\" href=\"assets/homepage/premium-homepage.css\">\n<script src=\"assets/homepage/premium-homepage.js\"></script>\n";
 exports.normalize=html=>{if(html.includes('<!-- V3.5 compact Home')){assert(html.endsWith(v35suffix),'final suffix: exact V3.5 suffix');assert.equal(html.split(v35suffix).length,2);html=html.slice(0,-v35suffix.length);}if(!html.includes('<!-- V3.4 Home presentation;'))return html;assert.equal(html.split(suffix).length,2,'exact unique V3.4 bootstrap');assert(html.endsWith(suffix),'V3.4 bootstrap is final suffix');assert.equal(html.split(footer).length,2,'exact unique V3.4 fallback footer');return html.slice(0,-suffix.length).replace(footer,()=>oldFooter);};
 const files={
-  "assets/homepage/premium-homepage.css": "61125e5b64d793075b962a67f09e261c8365383308a08e4c577e8b50844d21b7",
+  "assets/homepage/premium-homepage.css": "fc55a06349ce701e9368eca14ebb2cd2fbb53fedbfe1583aa9c16b81592dfbfa",
   "assets/homepage/premium-homepage.js": "8dffa44c2e41a1b4e87d13bdcf930a51143cee4c68188278e577323653bbd7ad",
 
   "assets/homepage/company-contact.js": "20f454b6a3dc8ac6eeff2f9d70d563b8e5430d1961a723d98048f8ca2260cc9f",
