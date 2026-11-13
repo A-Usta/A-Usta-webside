@@ -78,3 +78,52 @@
 }
 
 @media(min-width:1451px){#austaAccountModal .pa-dashboard-card:nth-child(-n+2){min-height:130px}}
+
+/* V3.3D.3: right-panel polish; existing sidebar rules remain unchanged. */
+#austaAccountModal[data-personal-account]{overflow:hidden!important;isolation:isolate;overscroll-behavior:contain}
+#austaAccountModal .austa-account-shell,#austaAccountModal .austa-v39-main{overflow-anchor:none;overscroll-behavior:contain}
+#austaAccountModal .austa-v39-main{min-height:0;scroll-behavior:auto}
+#austaAccountModal .pa-auth-entry{margin:28px 0 0;padding:22px 24px;border:1px solid #e1e3e7;border-radius:16px;background:#f8f9fa;color:#202124}
+#austaAccountModal .pa-auth-entry h2{margin:0 0 8px;font-size:22px;line-height:1.3;letter-spacing:-.4px;color:#17181a}
+#austaAccountModal .pa-auth-entry p{margin:0;max-width:62ch;font-size:16px;line-height:1.55;color:#575b63}
+#austaAccountModal .pa-auth-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+#austaAccountModal .pa-auth-actions button{min-height:44px;font-weight:600;padding:11px 20px}
+#austaAccountModal .pa-auth-entry:not([hidden])+.pa-dashboard-grid{margin-top:28px}
+#austaAccountModal #austaV39RealListingsHost,#austaAccountModal #austaV39RealOrdersHost{color:#24262b}
+#austaAccountModal #austaV39RealListingsHost *,#austaAccountModal #austaV39RealOrdersHost *{color:inherit!important}
+#austaAccountModal #austaV39RealListingsHost article,#austaAccountModal #austaV39RealListingsHost .austa-v39-empty{background:#fff!important;color:#24262b!important;border-color:#dfe2e7!important;border-radius:14px}
+#austaAccountModal #austaV39RealListingsHost h3,#austaAccountModal #austaV39RealListingsHost h4,#austaAccountModal #austaV39RealListingsHost strong{color:#202124!important}
+#austaAccountModal #austaV39RealListingsHost p,#austaAccountModal #austaV39RealListingsHost small{color:#575b63!important}
+#austaAccountModal #austaV39RealListingsHost button{background:#f8f9fa!important;color:#24262b!important;border:1px solid #c9cdd4!important;min-height:44px}
+#austaAccountModal #austaV39RealListingsHost .austa-p15-status{display:inline-block;background:#f1f2f4!important;color:#3f434b!important;border:1px solid #d5d8de;border-radius:6px;padding:4px 8px}
+#austaAccountModal #austaV39RealOrdersHost section,#austaAccountModal #austaV39RealOrdersHost article,#austaAccountModal #austaV39RealOrdersHost [class$="-order-card"]{background:#fff!important;color:#24262b!important;border-color:#dfe2e7!important}
+#austaAccountModal #austaV39RealOrdersHost h3,#austaAccountModal #austaV39RealOrdersHost strong,#austaAccountModal #austaV39RealOrdersHost [class$="-order-title"]{color:#202124!important}
+#austaAccountModal #austaV39RealOrdersHost p,#austaAccountModal #austaV39RealOrdersHost [class$="-empty"],#austaAccountModal #austaV39RealOrdersHost [class$="-order-info"] div,#austaAccountModal #austaV39RealOrdersHost .austa-customer-provider-data div{color:#575b63!important;border-color:#d5d8de!important}
+#austaAccountModal #austaV39RealOrdersHost button{background:#f8f9fa!important;color:#24262b!important;border-color:#c9cdd4!important;min-height:44px}
+#austaAccountModal #austaV39RealOrdersHost [class*="badge"],#austaAccountModal #austaV39RealOrdersHost .austa-customer-provider,#austaAccountModal #austaV39RealOrdersHost .austa-customer-provider-avatar,#austaAccountModal #austaV39RealOrdersHost .austa-provider-description,#austaAccountModal #austaV39RealOrdersHost .austa-provider-stage,#austaAccountModal #austaV39RealOrdersHost .austa-customer-waiting,#austaAccountModal #austaV39RealOrdersHost [id$="OrderStatus"]{background:#f5f6f8!important;color:#42464e!important;border-color:#d5d8de!important}
+#austaAccountModal #austaV39RealOrdersHost input,#austaAccountModal #austaV39RealOrdersHost select,#austaAccountModal #austaV39RealOrdersHost textarea{background:#fff!important;color:#202124!important;border:1px solid #c9cdd4!important}
+#austaAccountModal #austaV39RealListingsHost button:hover,#austaAccountModal #austaV39RealOrdersHost button:hover{background:#eceef1!important;border-color:#858c97!important}
+#austa-v39-auth-modal[data-account-auth]{background:rgba(245,246,248,.94)!important;backdrop-filter:none!important;color:#202124;color-scheme:light;font-family:Arial,Helvetica,sans-serif;overflow:auto;overscroll-behavior:contain}
+#austa-v39-auth-modal[data-account-auth]::backdrop{background:rgba(100,105,115,.2)}
+#austa-v39-auth-modal[data-account-auth] *{box-sizing:border-box}
+#austa-v39-auth-modal[data-account-auth]>div{background:#fff!important;color:#202124!important;border:1px solid #dfe2e7!important;box-shadow:0 14px 60px #20212414!important;padding:28px!important;max-height:calc(100dvh - 40px)!important}
+#austa-v39-auth-modal[data-account-auth] label span,#austa-v39-auth-modal[data-account-auth] #austa-v39-auth-subtitle,#austa-v39-auth-modal[data-account-auth]>div>div:last-child{color:#565c66!important;border-color:#e1e3e7!important}
+#austa-v39-auth-modal[data-account-auth] label span{font-size:14px!important;font-weight:600}
+#austa-v39-auth-modal[data-account-auth] input,#austa-v39-auth-modal[data-account-auth] select{background:#f8f9fa!important;color:#202124!important;border:1px solid #c9cdd4!important;font:inherit!important;font-size:16px!important;min-height:46px}
+#austa-v39-auth-modal[data-account-auth] input::placeholder{color:#6a707a}
+#austa-v39-auth-modal[data-account-auth] button{background:#f3f4f6!important;color:#24262b!important;border:1px solid #d1d5dc!important;min-height:44px;font-size:15px!important}
+#austa-v39-auth-modal[data-account-auth] button[aria-pressed=true]{background:#e7e9ed!important;color:#17181a!important;border-color:#aeb5c0!important}
+#austa-v39-auth-modal[data-account-auth] #austa-v39-auth-submit{background:#25272b!important;color:#fff!important;border-color:#25272b!important}
+#austa-v39-auth-modal[data-account-auth] #austa-v39-auth-message{background:#f5f6f8!important;color:#30343b!important;border:1px solid #c9cdd4!important}
+#austa-v39-auth-modal[data-account-auth] #austa-v39-auth-message[data-kind=error]{color:#282a30!important;border:2px solid #555d6a!important;font-weight:600}
+#austa-v39-auth-modal[data-account-auth] input:focus-visible,#austa-v39-auth-modal[data-account-auth] select:focus-visible,#austa-v39-auth-modal[data-account-auth] button:focus-visible{outline:2px solid #555d6a!important;outline-offset:3px}
+#austa-v39-auth-modal[data-account-auth] button:disabled{cursor:wait}
+@media(max-width:650px){
+ #austaAccountModal .pa-auth-entry{padding:18px;margin-top:22px}
+ #austaAccountModal .pa-auth-entry h2{font-size:20px}
+ #austaAccountModal .pa-auth-entry p{font-size:15px}
+ #austaAccountModal .pa-auth-actions{gap:8px;margin-top:14px}
+ #austaAccountModal .pa-auth-actions button{flex:1;padding:11px 12px;white-space:nowrap}
+ #austa-v39-auth-modal[data-account-auth]{padding:12px!important}
+ #austa-v39-auth-modal[data-account-auth]>div{padding:22px!important;max-height:calc(100dvh - 24px)!important}
+}

@@ -39,7 +39,7 @@ test('logout clears identity immediately before pending work completes',async()=
 });
 test('all CSS selectors are scoped to Account',()=>{
  const css=fs.readFileSync(path.join(root,'assets/account/personal-account.css'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'');
- for(const match of css.matchAll(/([^{}]+)\{/g)){const selector=match[1].trim();if(selector.startsWith('@media'))continue;for(const part of selector.split(','))assert.match(part.trim(),/^#austaAccountModal\b/);}
+ for(const match of css.matchAll(/([^{}]+)\{/g)){const selector=match[1].trim();if(selector.startsWith('@media'))continue;for(const part of selector.split(','))assert.match(part.trim(),/^(?:#austaAccountModal\b|#austa-v39-auth-modal\[data-account-auth\])/);}
 });
 test('index outside approved V39 controller and new asset references is byte-identical to approved baseline',()=>{
  const body=require('./helpers/vehicle-history-baseline.cjs').normalize(html).replace(/<script id="austa-v39-account-js">[\s\S]*?<\/script>/,'ACCOUNT_CONTROLLER').replace('<script src="assets/account/personal-account.js"></script>\n','').replace('<link rel="stylesheet" href="assets/account/personal-account.css">\n','').trim();
@@ -53,7 +53,7 @@ test('Seller Verification only changes Account mount target and exposes mount li
 });
 test('historical compatibility rejects unknown Account edits and preserves unrelated mutations',()=>{
  const normalize=require('./helpers/personal-account-baseline.cjs').normalize;
- assert.throws(()=>normalize(html.replace("modal.dataset.personalAccount='v33d2'","modal.dataset.personalAccount='changed'")),/exact V33D2/);
+ assert.throws(()=>normalize(html.replace("modal.dataset.personalAccount='v33d2'","modal.dataset.personalAccount='changed'")),/exact (?:reviewed V33D3|V33D2)/);
  const changed=html.replace('Bütün avtomobil xidmətləri bir platformada','UNRELATED MUTATION');
  assert.match(normalize(changed),/UNRELATED MUTATION/);
  const seller=fs.readFileSync(path.join(root,'assets/marketplace/seller-verification.js'),'utf8');
@@ -66,4 +66,17 @@ test('mobile menu exposes labels, collapses after navigation and resets on rebui
  const window={matchMedia:()=>({matches:true})},document={getElementById:id=>id==='austaV39Nav'?nav:null,querySelector:()=>null};vm.runInNewContext(source,{window,document,URL,setTimeout(){}});
  const api=window.AUSTA_PERSONAL_ACCOUNT;api.bindAuth();toggle.onclick();assert.equal(expanded,true);assert.equal(toggle.attrs['aria-expanded'],'true');clicked({target:{closest:()=>({})}});assert.equal(expanded,false);assert.equal(focused,1);assert.equal(toggle.attrs['aria-expanded'],'false');
  toggle.onclick();toggle=button();api.bindAuth();assert.equal(expanded,false);assert.equal(toggle.attrs['aria-expanded'],'false');
+});
+
+test('signed-out auth entry precedes cards, begins hidden, and has two existing-system actions',()=>{
+ const d=fixture().api.dashboard();assert(d.indexOf('data-pa-auth-entry')<d.indexOf('pa-dashboard-grid'));assert.match(d,/data-pa-auth-entry hidden/);assert.match(d,/Hesabınıza daxil olun/);assert.match(d,/data-pa-auth-mode="register"/);assert.equal([...d.matchAll(/data-action="login"/g)].length,2);
+});
+test('auth resolution and account-switch loading never flash signed-out entry',async()=>{
+ const f=fixture();let resolve,listener;
+ f.window.AUSTA_SUPABASE={auth:{getUser:()=>new Promise(r=>resolve=r),onAuthStateChange:fn=>(listener=fn,{data:{subscription:{unsubscribe(){}}}})}};
+ f.api.bindAuth();assert.equal(f.entry.hidden,true);resolve({data:{user:null}});await tick();assert.equal(f.entry.hidden,false);listener('SIGNED_IN',{user:{id:'b'}});assert.equal(f.entry.hidden,true);
+});
+test('reviewed polish normalization rejects unknown controller, CSS and JS mutations',()=>{
+ const helper=require('./helpers/account-polish-baseline.cjs');assert.throws(()=>helper.normalize(html.replace("authModal.dataset.mode=mode;","authModal.dataset.mode='other';")),/exact reviewed V33D3/);
+ for(const name of ['personal-account.js','personal-account.css'])assert.throws(()=>helper.normalizeAsset(name,fs.readFileSync(path.join(root,'assets/account',name),'utf8')+'\n/* unknown */'),/exact V33D3/);
 });

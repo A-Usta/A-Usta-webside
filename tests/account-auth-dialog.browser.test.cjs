@@ -11,7 +11,7 @@ for(const width of [1536,390])test(`Account native Auth dialog: pointer, keyboar
  // Only a capability marker allows opening UI; submit is never invoked in this test.
  await p.evaluate(()=>{ window.AUSTA_SUPABASE={auth:{getUser:async()=>({data:{user:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})}}; });
  for(const name of ['maintenance-reminders','vehicle-data','my-vehicles','personal-account'])await p.addScriptTag({content:fs.readFileSync(root+'/assets/account/'+name+'.js','utf8')});
- await p.addScriptTag({content:script('austa-v39-account-js')});await p.waitForFunction(()=>document.querySelector('#headerAccountLink').dataset.v39Bound==='1');await p.locator('#headerAccountLink').click();const opener=p.locator('[data-action=login]');await opener.click();
+ await p.addScriptTag({content:script('austa-v39-account-js')});await p.waitForFunction(()=>document.querySelector('#headerAccountLink').dataset.v39Bound==='1');await p.locator('#headerAccountLink').click();const opener=p.locator('[data-action=login]').first();await opener.click();
  assert.equal(await p.locator('#austa-v39-auth-modal').evaluate(e=>e.matches(':modal')),true);
  const email=p.locator('#austa-v39-auth-email'),password=p.locator('#austa-v39-auth-password');await email.click();await email.fill('synthetic@example.invalid');await password.click();await password.fill('UI-only-no-submit');assert.equal(await password.inputValue(),'UI-only-no-submit');
  await p.evaluate(()=>document.querySelector('.austa-v39-close').focus());assert.equal(await p.evaluate(()=>document.querySelector('#austa-v39-auth-modal').contains(document.activeElement)),true);

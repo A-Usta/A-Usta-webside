@@ -19984,7 +19984,7 @@ async function loadAdminKyc() {
    bindPage(page,role);
    personal.bindAuth();
    window.AUSTA_SELLER_VERIFICATION?.mountAccount?.();
-   main.scrollTop=0;
+   main.scrollTop=0;modal.scrollTop=0;shell.scrollTop=0;
  }
  function homePage(){return personal.dashboard();}
  function providerRegister(){return `<article class="austa-v39-card full"><h4>🛠 Usta qeydiyyatı</h4><div class="austa-v39-form"><label>Ad, soyad<input id="v39pName" placeholder="Ad Soyad"></label><label>Telefon<input id="v39pPhone" placeholder="Telefon"></label><label>Gmail<input id="v39pMail" type="email" placeholder="Gmail"></label><label>Şəxsiyyət vəsiqəsi seriyası<input id="v39pId" placeholder="Seriya"></label><label>FIN<input id="v39pFin" placeholder="FIN"></label><label class="full">Şəxsiyyət vəsiqəsinin şəkli<input id="v39pIdPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small style="color:#7f98a9">Vəsiqənin ön tərəfinin aydın fotosu. Sənəd təhlükəsiz KYC yaddaşına yüklənir.</small></label><label>İş təcrübəsi<input id="v39pExp" placeholder="Məsələn: 8 il"></label><label>Sektor / xidmət sahəsi<input id="v39pSector" placeholder="Mühərrik, elektrik, kuzov..." ></label><label>Region / şəhər<input id="v39pRegion" placeholder="Bakı, Gəncə və s."></label><label class="full">İş ünvanı<input id="v39pAddr" placeholder="Servis / iş məkanı"></label></div><div class="austa-v39-actions"><button class="austa-v39-btn primary" data-action="provider-save">Usta qeydiyyatını göndər</button></div><div class="austa-v39-note">Müraciətiniz yoxlamaya göndərilir. Texniki yoxlama rəsmi təsdiq statusu vermir.</div></article>`}
@@ -20236,6 +20236,7 @@ function bindPage(page, role) {
       authModal.id =
         'austa-v39-auth-modal';
 
+      authModal.dataset.accountAuth='v33d3';
       authModal.setAttribute('aria-label','A-USTA hesabına giriş');
       authModal.setAttribute('aria-modal','true');
 
@@ -20660,6 +20661,8 @@ function bindPage(page, role) {
         messageBox.style.display =
           'block';
 
+        messageBox.dataset.kind=type;
+        messageBox.setAttribute('role',type==='error'?'alert':'status');
         messageBox.textContent =
           text;
 
@@ -20692,6 +20695,9 @@ function bindPage(page, role) {
         nextMode
       ) => {
         mode = nextMode;
+        authModal.dataset.mode=mode;
+        loginTab.setAttribute('aria-pressed',String(mode==='login'));
+        registerTab.setAttribute('aria-pressed',String(mode==='register'));
 
         clearMessage();
 
@@ -21077,7 +21083,7 @@ if (
         }
       };
 
-      setMode('login');
+      setMode(button.dataset.paAuthMode==='register'?'register':'login');
 
       authModal.showModal();
       emailInput.focus();
@@ -21775,7 +21781,7 @@ if (p) {
  // Retain V39 as the single Account entry; restore focus on every close path.
  let opener=null;
  function closeAccount(){modal.classList.remove('open');modal.style.removeProperty('display');document.body.classList.remove('austa-account-open');opener?.focus?.();}
- const link=$('#headerAccountLink'); if(link&&!link.dataset.v39Bound){link.dataset.v39Bound='1';link.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();opener=document.activeElement;modal.classList.add('open');document.body.classList.add('austa-account-open');showRole(localStorage.getItem('austa-account-role-v39'));$('.austa-v39-close',modal).focus();},true)}
+ const link=$('#headerAccountLink'); if(link&&!link.dataset.v39Bound){link.dataset.v39Bound='1';link.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();opener=document.activeElement;modal.classList.add('open');document.body.classList.add('austa-account-open');showRole(localStorage.getItem('austa-account-role-v39'));$('.austa-v39-close',modal).focus({preventScroll:true});},true)}
  $('.austa-v39-close',modal).onclick=closeAccount;
  modal.addEventListener('click',e=>{if(e.target===modal)closeAccount();});
  modal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();closeAccount();}if(e.key==='Tab'){const controls=[...modal.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary')].filter(el=>el.getClientRects().length);const first=controls[0],last=controls.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}});

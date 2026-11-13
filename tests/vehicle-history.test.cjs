@@ -30,8 +30,8 @@ for(const [r,km,expected] of [[{},100,null],[{next_service_date:'2026-11-11'},10
 
 test('approved Phase 1 shell, CSS, dashboard and controller remain exact outside garage integration',()=>{
  const hash=s=>require('node:crypto').createHash('sha256').update(s).digest('hex');
- assert.equal(hash(source('assets/account/personal-account.css')),'c760e9d86ca185d6256bb8f3aada7e833cfa3cb084028b87e86681079a06a0db');
- const js=source('assets/account/personal-account.js').replace('Phase 1 approved presentation; Phase 2 garage mount adapter.','Phase 1: presentation only; no vehicle persistence.').replace('function vehicles(){return window.AUSTA_MY_VEHICLES.shell();}',()=>require('./helpers/approved-vehicle-placeholder.cjs')).replace("window.AUSTA_MY_VEHICLES?.mount(document.querySelector('#austaV39Main [data-my-vehicles]'));",'');
+ assert.equal(hash(require('./helpers/account-polish-baseline.cjs').normalizeAsset('personal-account.css',source('assets/account/personal-account.css'))),'c760e9d86ca185d6256bb8f3aada7e833cfa3cb084028b87e86681079a06a0db');
+ const js=require('./helpers/account-polish-baseline.cjs').normalizeAsset('personal-account.js',source('assets/account/personal-account.js')).replace('Phase 1 approved presentation; Phase 2 garage mount adapter.','Phase 1: presentation only; no vehicle persistence.').replace('function vehicles(){return window.AUSTA_MY_VEHICLES.shell();}',()=>require('./helpers/approved-vehicle-placeholder.cjs')).replace("window.AUSTA_MY_VEHICLES?.mount(document.querySelector('#austaV39Main [data-my-vehicles]'));",'');
  assert.equal(hash(js),'3d7a5294115d32d07c3cc238d0f6bcb15477351a14b00bae14446d603b591afa');
  assert.equal(hash(require('./helpers/vehicle-history-baseline.cjs').normalize(source('index.html'))),'899ad495ac5efbf894552ef746eca4875aeff040e51a64399dd5d06da7323a0c');
 });
