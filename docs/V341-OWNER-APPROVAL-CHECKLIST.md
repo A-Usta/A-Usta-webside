@@ -2,9 +2,11 @@
 
 V3.4.3 update: official name, public email address, WhatsApp number and WhatsApp-only support copy are owner-approved in the canonical public configuration. Email delivery/domain ownership remain unverified. Other fields below still require owner confirmation. Do not infer them from a proposed domain, old placeholders, personal contacts or another marketplace. Public information pages identify pending legal sections; they are not binding terms. No submission form or support SLA is claimed.
 
+V3.4.4: original full draft content and code-based privacy inventory are prepared. See [V344-LEGAL-PRIVACY-REVIEW.md](V344-LEGAL-PRIVACY-REVIEW.md) for material L1–L8 publication gates. They cannot be closed by tests or owner wording alone.
+
 ## Legal identity
-- [ ] Exact registered operator/company name and legal form, in approved spelling.
-- [ ] Company registration information for internal legal review only. Never display the company VÖEN; the public configuration has no tax-ID field.
+- [x] Owner-approved public spelling: A-USTA MMC. Registered-document/legal disclosure review remains separate.
+- [ ] Company registration/disclosure applicability review. The owner prohibits displaying the company VÖEN and none is added. Do not assume this overrides any applicable statutory disclosure requirement; resolve the material L2 legal gate before publication.
 - [ ] Registered office and public correspondence address, if different.
 - [ ] Authorized legal/privacy contact and who reviews/approves final document wording.
 - [ ] Effective date, version, jurisdiction/dispute procedure and acceptance mechanism for final terms.
@@ -12,7 +14,8 @@ V3.4.3 update: official name, public email address, WhatsApp number and WhatsApp
 - [ ] Listing/payment/refund/cancellation terms for any actual paid feature. No unapproved prices or free-period claims.
 
 ## Official contacts and support
-- [ ] Owner-approved public email and WhatsApp are recorded in assets/homepage/mobile-links.js. Confirm inbox operation separately after domain/email verification. No telephone-call button.
+- [x] Owner-approved public email and WhatsApp are recorded in assets/homepage/mobile-links.js; no telephone-call button.
+- [ ] Confirm WhatsApp intake operations; inbox operation separately after domain/email verification.
 - [ ] Advertising/business contact, if separate.
 - [ ] Service hours and supported languages; publish response-time promises only if approved.
 - [ ] Complaint intake channel, handling/appeal process and evidence requirements.
