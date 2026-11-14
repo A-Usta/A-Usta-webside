@@ -1,6 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {execFileSync}=require('node:child_process'),fs=require('node:fs');
+const {execFileSync}=require('node:child_process'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
 const {createNetworkGate,runOfflineProbe}=require('./helpers/geoapify-browser-probe.cjs');
 const key='syntheticBrowserCredentialOnly12345';
 const usage=async()=>({credits:0,observedAt:Date.now()});
@@ -31,8 +32,8 @@ test('cancelled request cannot dispatch',async()=>{const c=new AbortController()
 for(const value of [undefined,'','short','sb_secret_syntheticCredential123456789'])test('invalid/missing key rejected '+String(value).slice(0,9),()=>{assert.throws(()=>createNetworkGate({...settings,runtimeKey:value}),/^Error: Invalid runtime browser key$/);});
 for(const [name,options,reason] of [['live',{mode:'live'},'live-not-authorized'],['manual',{manualReconciliation:true},'manual-policy-not-approved'],['missing reader',{},'restriction-or-credit-reader-missing'],['missing key',{readUsage:usage,restrictionsVerified:true},'runtime-key-missing']])test('runner precondition '+name,async()=>{const r=await runOfflineProbe(options);assert.equal(r.status,'BLOCKED');assert.equal(r.reason,reason);assert.equal(r.providerRequests,0);assert.equal(r.network.admitted,0);safe(r);});
 for(const scenario of ['success','preflight','http-error','network-failure','redirect'])test('real Chromium entirely offline '+scenario,async()=>{const r=await runOfflineProbe({keyProvider:()=>key,readUsage:usage,restrictionsVerified:true,scenario});assert.equal(r.providerRequests,0);assert.equal(r.realNetworkForwarding,false);assert.equal(r.providerCreditUsage,null);assert.equal(r.egressFuseDenials,0);assert.equal(r.credentialsDisposed,true);assert.equal(r.network.get,1);assert.equal(r.network.options,scenario==='preflight'?1:0);assert(r.network.reservedCredits<=2);assert.equal(r.status,['success','preflight'].includes(scenario)?'PASS':'BLOCKED');if(r.status==='PASS'){assert(r.parsed);assert(r.selectedArea);}safe(r);});
-test('original browser assertions remain byte identical after fixture extraction',()=>{const file='tests/automotive-map.browser.test.cjs',before=execFileSync('git',['show','HEAD:'+file],{encoding:'utf8'}),after=fs.readFileSync(file,'utf8');const marker='for(const width of';assert.equal(after.slice(after.indexOf(marker)),before.slice(before.indexOf(marker)));});
-test('probe has no live forwarding, persistence, screenshots, HAR or tracing API',()=>{const source=fs.readFileSync('tests/helpers/geoapify-browser-probe.cjs','utf8');for(const forbidden of ['Fetch.continueRequest','route.continue(','writeFile','storageState(','screenshot(','recordHar:','tracing.start(','console.log('])assert(!source.includes(forbidden),forbidden);assert(source.includes('Fetch.enable'));assert(source.includes('Fetch.fulfillRequest'));assert(source.includes('Fetch.failRequest'));assert(source.includes('serviceWorkers:\'block\''));});
+test('original browser assertions remain byte identical after fixture extraction',()=>{const file='tests/automotive-map.browser.test.cjs',before=execFileSync('git',['show','HEAD:'+file],{encoding:'utf8',cwd:root}),after=fs.readFileSync(path.join(root,file),'utf8');const marker='for(const width of';assert.equal(after.slice(after.indexOf(marker)),before.slice(before.indexOf(marker)));});
+test('probe has no live forwarding, persistence, screenshots, HAR or tracing API',()=>{const source=fs.readFileSync(path.join(__dirname,'helpers/geoapify-browser-probe.cjs'),'utf8');for(const forbidden of ['Fetch.continueRequest','route.continue(','writeFile','storageState(','screenshot(','recordHar:','tracing.start(','console.log('])assert(!source.includes(forbidden),forbidden);assert(source.includes('Fetch.enable'));assert(source.includes('Fetch.fulfillRequest'));assert(source.includes('Fetch.failRequest'));assert(source.includes('serviceWorkers:\'block\''));});
 // Separate child processes keep fault injection isolated from real browser tests.
 for(const mode of ['context','both','browser','timeout','cancel'])test('independent cleanup and sanitized original failure: '+mode,()=>{
  const script=`
@@ -49,7 +50,7 @@ for(const mode of ['context','both','browser','timeout','cancel'])test('independ
  const {runOfflineProbe}=require('./tests/helpers/geoapify-browser-probe.cjs');
  (async()=>{const result=await runOfflineProbe({keyProvider:()=>${JSON.stringify(key)},readUsage:async()=>({credits:0,observedAt:Date.now()}),restrictionsVerified:true,signal:controller.signal});process.stdout.write(JSON.stringify({result,contextCloseCalls,browserCloseCalls}));})().catch(()=>{process.exitCode=1;});
  `;
- const output=execFileSync(process.execPath,['-e',script],{encoding:'utf8',timeout:10000});
+ const output=execFileSync(process.execPath,['-e',script],{encoding:'utf8',timeout:10000,cwd:root});
  const {result:r,contextCloseCalls,browserCloseCalls}=JSON.parse(output);
  assert.equal(contextCloseCalls,1);assert.equal(browserCloseCalls,1);
  assert.equal(r.status,'BLOCKED');assert.equal(r.reason,'cleanup-or-accounting-uncertain');
