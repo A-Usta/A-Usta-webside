@@ -10,7 +10,7 @@ Baseline: feat/v355-automotive-map /67fa102df4c80785caa423779018b19f12176406 /tr
 | data.js → window.AUSTA_MAP_DATA | No duplicate-load guard;repeat script could create a second queue/cache behind the existing map closure | Preserve the same adapter API identity on repeat load |
 | request() completed cache | Parallel identical calls before completion each attempted an external request | One in-flight operation per canonical Geoapify query;per-subscriber cancellation;completed60s/max30cache retained |
 | internal public discovery RPC | Simultaneous identical queries could call twice | Share only the in-flight RPC for the same arguments/client;no completed authorization-result cache |
-| auth/close/query cancellation | Existing epochs removed stale UI but lacked shared consumer lifecycle | Last-subscriber cancellation aborts parent;clear() aborts all pending work;epoch/client checks retained |
+| auth/close/query cancellation | Existing epochs removed stale UI but lacked shared consumer lifecycle | Last-subscriber cancellation aborts parent;clear() aborts all pending work and settles consumers even when an older RPC transport lacks abort support;epoch/client checks retained |
 | publication.js global export | Re-execution replaced API identity | Singleton guard;existing owner form/write/consent logic unchanged |
 | network failure path | Redirect behavior/default cache not explicit;RPC thrown exceptions could escape | redirect:error,cache:no-store,credentials:omit;fixed sanitized errors,not raw URLs/server text |
 | map.js / Leaflet / entry / markers | Existing singleton,epoch/list synchronization and dedup groups already present | Retained unchanged;no extra initialization/listeners/DOM/card |
