@@ -53138,7 +53138,7 @@ async function fetchCategory(
 
         query = sb()
             .from(
-                "service_provider_listings"
+                "public_service_provider_listings"
             )
             .select("*", {
                 count: "exact"
@@ -58920,7 +58920,7 @@ if(
             query =
                 supabase
                     .from(
-                        "service_provider_listings"
+                        "public_service_provider_listings"
                     )
                     .select("*")
                     .eq(
