@@ -1,6 +1,7 @@
 /* Explicit owner publication. Never imports private profile coordinates/contact. */
 (function(){
 'use strict';
+if(window.AUSTA_MAP_PUBLICATION)return;
 function node(tag,text){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;}
 async function open(host,context){
  host.replaceChildren();const root=node('section');root.className='am-publication';host.append(root);root.append(node('h2','Məntəqəmi xəritədə göstər'),node('p','Öz dərc olunmuş elanınızı seçin. Yalnız aktiv provider və təsdiqlənmiş biznes uyğun olduqda görünəcək. Şəxsi ev ünvanı və şəxsi nömrə dərc etməyin. Açıq elan profilinizə keçid veriləcək.'));
