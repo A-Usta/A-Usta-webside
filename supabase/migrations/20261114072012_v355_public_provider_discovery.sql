@@ -45,11 +45,12 @@ CREATE TRIGGER v355_map_publication_guard BEFORE INSERT OR UPDATE ON public.prov
 CREATE INDEX v355_map_public_bounds ON public.provider_map_publications(latitude,longitude) WHERE enabled AND consent AND location_kind='business';
 CREATE INDEX v355_map_public_area ON public.provider_map_publications(public_area) WHERE enabled AND consent AND location_kind='service_area';
 -- Narrow read-only definer DTO: callers cannot read private profiles or opt-in rows.
-CREATE FUNCTION public.discover_public_providers(south double precision,west double precision,north double precision,east double precision,query text DEFAULT '',area text DEFAULT '')
+CREATE FUNCTION public.discover_public_providers(south double precision,west double precision,north double precision,east double precision,query text DEFAULT '',area text DEFAULT '',countrywide boolean DEFAULT false,result_offset integer DEFAULT 0,category text DEFAULT 'all')
 RETURNS TABLE(listing_id uuid,provider_type text,public_name text,public_area text,public_address text,public_phone text,latitude double precision,longitude double precision,location_kind text,services text[])
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path='' SET statement_timeout='1000ms' AS $$
 BEGIN
- IF south IS NULL OR west IS NULL OR north IS NULL OR east IS NULL OR NOT(south BETWEEN -90 AND 90 AND north BETWEEN -90 AND 90 AND west BETWEEN -180 AND 180 AND east BETWEEN -180 AND 180 AND north>south AND east>west AND north-south<=0.5 AND east-west<=0.5) OR length(COALESCE(query,''))>120 OR length(COALESCE(area,''))>100 THEN RAISE EXCEPTION 'Invalid map query' USING ERRCODE='22023'; END IF;
+ IF countrywide IS NULL OR result_offset IS NULL OR result_offset NOT IN (0,40,80) OR category IS NULL OR category NOT IN ('all','usta','service','repair','wash','tyre','alignment','charging','fuel') OR (countrywide AND length(trim(COALESCE(query,'')))<2) THEN RAISE EXCEPTION 'Invalid map scope' USING ERRCODE='22023'; END IF;
+ IF south IS NULL OR west IS NULL OR north IS NULL OR east IS NULL OR NOT(south BETWEEN -90 AND 90 AND north BETWEEN -90 AND 90 AND west BETWEEN -180 AND 180 AND east BETWEEN -180 AND 180 AND north>south AND east>west AND (countrywide OR (north-south<=0.5 AND east-west<=0.5))) OR length(COALESCE(query,''))>120 OR length(COALESCE(area,''))>100 THEN RAISE EXCEPTION 'Invalid map query' USING ERRCODE='22023'; END IF;
  RETURN QUERY SELECT m.listing_id,l.provider_type,m.public_name,m.public_area,m.public_address,m.public_phone,m.latitude,m.longitude,m.location_kind,m.services
  FROM public.provider_map_publications m
  JOIN public.service_provider_listings l ON l.id=m.listing_id AND l.owner_id=m.consenting_owner
@@ -59,11 +60,12 @@ BEGIN
  AND l.status='active' AND sp.status='active' AND sp.verification_status='verified' AND p.is_active
  AND ((l.provider_type='usta' AND p.role='mechanic') OR (l.provider_type='service' AND p.role='shop'))
  AND (COALESCE(query,'')='' OR position(lower(query) IN lower(m.public_name))>0)
- AND ((m.location_kind='business' AND m.latitude BETWEEN south AND north AND m.longitude BETWEEN west AND east)
- OR (m.location_kind='service_area' AND length(trim(COALESCE(area,'')))>=2 AND lower(m.public_area)=lower(trim(area))))
- ORDER BY m.listing_id LIMIT 40;
+ AND (category='all' OR l.provider_type=category OR category=ANY(m.services))
+ AND ((countrywide AND (m.location_kind='service_area' OR (m.latitude BETWEEN 38.3 AND 41.95 AND m.longitude BETWEEN 44.7 AND 50.8))) OR (NOT countrywide AND ((m.location_kind='business' AND m.latitude BETWEEN south AND north AND m.longitude BETWEEN west AND east)
+ OR (m.location_kind='service_area' AND length(trim(COALESCE(area,'')))>=2 AND lower(m.public_area)=lower(trim(area))))))
+ ORDER BY m.listing_id LIMIT 40 OFFSET result_offset;
 END $$;
-REVOKE ALL ON FUNCTION public.discover_public_providers(double precision,double precision,double precision,double precision,text,text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.discover_public_providers(double precision,double precision,double precision,double precision,text,text) TO anon,authenticated;
-COMMENT ON FUNCTION public.discover_public_providers(double precision,double precision,double precision,double precision,text,text) IS 'V355 opt-in public DTO only; never profiles GPS/contact; bounded; no automatic assignment';
+REVOKE ALL ON FUNCTION public.discover_public_providers(double precision,double precision,double precision,double precision,text,text,boolean,integer,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.discover_public_providers(double precision,double precision,double precision,double precision,text,text,boolean,integer,text) TO anon,authenticated;
+COMMENT ON FUNCTION public.discover_public_providers(double precision,double precision,double precision,double precision,text,text,boolean,integer,text) IS 'V355 opt-in public DTO only; never profiles GPS/contact; bounded; no automatic assignment';
 COMMIT;

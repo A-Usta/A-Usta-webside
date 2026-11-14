@@ -7,3 +7,5 @@ Map supports sources, city/business search, category controls, manual coordinate
 Default external key is empty; no service activated. Public-provider migration is a proposal, not deployed. Therefore real external discovery and live new Supabase HTTP integration are BLOCKED; screenshots without a key show the actual unavailable state. Synthetic marker tests are labeled isolated fixtures and are not live-data evidence. Production remains NO-GO until owner approval and the gates in the two companion audits are completed.
 
 Review package contains exact source/migration hashes, diff, complete local test/CI logs and six-width native screenshots. Do not merge or deploy automatically.
+
+Nationwide continuation: see V355-NATIONWIDE-COVERAGE.md, V355-LIVE-TEST-PLAN.md and V355-TEST-MIGRATION-AUTHORIZATION.md. The unapplied migration proposal now has a nine-argument RPC (three optional defaults), capped countrywide provider-name paging, and category filtering before limit. Earlier six-argument-only rollout instructions are superseded. No migration applied.
