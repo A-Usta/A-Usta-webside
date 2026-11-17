@@ -1,0 +1,66 @@
+name: V355 approved TEST CAS withdrawal
+on:
+  workflow_dispatch:
+    inputs:
+      approved_sha:
+        description: Exact reviewed commit SHA on feat/v355-automotive-map
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: v355-hosted-cas-xnhxneziasqthkhhntkv
+  cancel-in-progress: false
+jobs:
+  review:
+    permissions:
+      contents: read
+      actions: read
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.repository == 'A-Usta/A-Usta-webside' &&
+      github.ref == 'refs/heads/feat/v355-automotive-map' &&
+      inputs.approved_sha == github.sha
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.approved_sha }}
+          persist-credentials: false
+      - name: Verify protected TEST environment exists before credential use
+        env:
+          AUSTA_GITHUB_METADATA_TOKEN: ${{ github.token }}
+        run: python3 -I -B tests/hosted/check_environment.py
+      - name: Install pinned test-only PostgreSQL driver
+        run: |
+          python3 -m venv "$RUNNER_TEMP/austa-hosted-venv"
+          "$RUNNER_TEMP/austa-hosted-venv/bin/python" -m pip install psycopg2-binary==2.9.13
+      - name: Offline security contracts, no credentials
+        run: '"$RUNNER_TEMP/austa-hosted-venv/bin/python" -I -B -m unittest discover -s tests/hosted -p test_security.py -v'
+  hosted:
+    needs: review
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.repository == 'A-Usta/A-Usta-webside' &&
+      github.ref == 'refs/heads/feat/v355-automotive-map' &&
+      inputs.approved_sha == github.sha
+    environment: austa-test-only
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.approved_sha }}
+          persist-credentials: false
+      - name: Install pinned PostgreSQL driver before secrets enter a process
+        run: |
+          python3 -m venv "$RUNNER_TEMP/austa-hosted-venv"
+          "$RUNNER_TEMP/austa-hosted-venv/bin/python" -m pip install psycopg2-binary==2.9.13
+      - name: One approved withdrawal, preserve all records
+        env:
+          AUSTA_TEST_ENVIRONMENT: austa-test-only
+          AUSTA_APPROVED_SHA: ${{ inputs.approved_sha }}
+          AUSTA_TEST_DB_PASSWORD: ${{ secrets.AUSTA_TEST_DB_PASSWORD }}
+          AUSTA_TEST_DB_CA_PEM: ${{ secrets.AUSTA_TEST_DB_CA_PEM }}
+        run: '"$RUNNER_TEMP/austa-hosted-venv/bin/python" -I -B tests/hosted/run_cas.py'
