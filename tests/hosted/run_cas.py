@@ -114,6 +114,8 @@ def protocol(connect, baseline=BASELINE):
     pending=None
     committed=False
     stage='preflight'
+    diagnostic='UNCLASSIFIED'
+    observed_wait='NOT_OBSERVED'
     try:
         a=connect();b=connect();observer=connect()
         pids=[c.get_backend_pid() for c in (a,b,observer)]
@@ -151,6 +153,10 @@ def protocol(connect, baseline=BASELINE):
                      WHERE w.pid=%s AND NOT w.granted AND w.locktype IN ('transactionid','tuple'))
                     FROM pg_stat_activity s WHERE s.pid=%s""",(pids[0],pids[1],pids[1],pids[1]))
                 row=q.fetchone()
+            if row:
+                observed_wait = ('LOCK_BLOCKER_AND_WAIT' if row[0]=='Lock' and row[2] and row[3]
+                    else 'LOCK_WITHOUT_BOTH_PROOFS' if row[0]=='Lock'
+                    else 'OTHER_WAIT' if row[0] else 'NO_WAIT')
             if row and row[0]=='Lock' and row[2] and row[3]: proof=row;break
             require(not pending.done(),'B_FINISHED_WITHOUT_PROOF')
             time.sleep(0.05)
@@ -171,9 +177,17 @@ def protocol(connect, baseline=BASELINE):
                     wait_event_type=proof[0],wait_event=proof[1],pg_blocking_pids=True,pg_locks=True,
                     release_after_proof=True,b_sqlstate='40001',revision=4,receipts=4,
                     enabled=False,consent=False,discovery=0,fingerprints_unchanged=True,cleanup=False)
-    except BaseException:
-        # No exception body, DSN, URL, token, password or provider message is output.
-        return dict(status='BLOCKED',stage=stage,commit_returned=committed,
+    except BaseException as error:
+        # Emit only allowlisted diagnostic categories, never exception text or SQL.
+        if isinstance(error, Blocked):
+            diagnostic = str(error) if str(error) in ('B_FINISHED_WITHOUT_PROOF','LOCK_PROOF_MISSING','DISTINCT_BACKENDS','FINGERPRINT_BASELINE','A_OUTCOME','B_CONFLICT','POSTFLIGHT_FINGERPRINTS') else 'GUARD_BLOCKED'
+        elif isinstance(error, psycopg2.Error):
+            diagnostic = 'POSTGRES_SQLSTATE_' + (error.pgcode if error.pgcode and re.fullmatch(r'[A-Z0-9]{5}',error.pgcode) else 'UNKNOWN')
+        elif isinstance(error, concurrent.futures.TimeoutError):
+            diagnostic = 'FUTURE_TIMEOUT'
+        else:
+            diagnostic = 'UNEXPECTED_EXCEPTION'
+        return dict(status='BLOCKED',stage=stage,diagnostic=diagnostic,observed_wait=observed_wait,commit_returned=committed,
                     commit_may_have_occurred=stage in ('commit_A_once','B_conflict','independent_postflight'),
                     automatic_retry=False,cleanup=False)
     finally:
