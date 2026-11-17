@@ -140,7 +140,9 @@ def protocol(connect, baseline=BASELINE):
                 b.rollback()
         pending=pool.submit(contender)
         observer.autocommit=True
-        # PostgreSQL may expose a tuple wait or transaction-id wait; require both\n        # the server-reported blocker PID and a real ungranted row-lock-related wait.\n        deadline=time.monotonic()+6
+        # PostgreSQL may expose a tuple wait or transaction-id wait; require both
+        # the server-reported blocker PID and a real ungranted row-lock-related wait.
+        deadline=time.monotonic()+6
         proof=None
         while time.monotonic()<deadline:
             with observer.cursor() as q:
