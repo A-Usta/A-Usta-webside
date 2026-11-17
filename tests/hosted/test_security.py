@@ -81,6 +81,22 @@ class Security(unittest.TestCase):
             protocol.assert_called_once()
             self.assertNotIn('AUSTA_TEST_DB_PASSWORD',os.environ)
         self.assertNotIn(env['AUSTA_TEST_DB_PASSWORD'],output.getvalue())
+    def test_server_backend_pid_uses_sql_not_pooler_protocol_pid(self):
+        class Cursor:
+            def __enter__(self): return self
+            def __exit__(self,*args): pass
+            def execute(self,sql):
+                self.sql=sql
+            def fetchone(self): return (43210,)
+        class Conn:
+            def __init__(self): self.q=Cursor()
+            def cursor(self): return self.q
+            def get_backend_pid(self):
+                raise AssertionError('pooler protocol PID must not be used')
+        c=Conn()
+        self.assertEqual(r.server_backend_pid(c),43210)
+        self.assertEqual(c.q.sql,'SELECT pg_backend_pid()')
+
     def test_database_attestation_requires_exact_database_and_seed(self):
         class Cursor:
             def __init__(self,row):self.row=row
