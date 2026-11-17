@@ -24,7 +24,7 @@ function fixture(){
   exec(){
    const op={table:this.table,op:this.op,row:this.row,filters:this.filters};state.ops.push(op);
    const rule=fail(op);if(rule&&!rule.after)return {data:null,error:Object.assign(new Error('SDK private path/token must not escape'),{code:rule.code||'42501'})};
-   let rows=state.tables[this.table];assert.ok(rows,this.table);
+   if(this.table==='public_service_provider_listings')assert.equal(this.op,'read','public projection never accepts writes');let rows=state.tables[this.table==='public_service_provider_listings'?'service_provider_listings':this.table];assert.ok(rows,this.table);
    let selected=rows.filter(r=>this.filters.every(([c,v])=>r[c]===v));
    if(this.op==='insert'){
     const r={id:'row-'+(++serial),...this.row};rows.push(r);selected=[r];

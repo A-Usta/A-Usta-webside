@@ -50,7 +50,7 @@ async function actor(c){
 }
 async function read(c){
  await actor(c);
- const {data,error}=await c.client.from(c.config.table).select('*').eq('id',c.id).maybeSingle();check(c);
+ const {data,error}=await c.client.from(c.source==='service_provider'?'public_service_provider_listings':c.config.table).select('*').eq('id',c.id).maybeSingle();check(c);
  if(error||!data||String(data.id)!==c.id)return null;
  const type=c.config.field?c.config.types[data[c.config.field]]:'dealer';
  if(!type||c.config.field&&!own(c.config.types,data[c.config.field])||c.expected&&type!==c.expected)return null;

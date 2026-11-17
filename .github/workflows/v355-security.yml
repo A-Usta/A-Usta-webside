@@ -1,0 +1,78 @@
+name: V355 real PostgreSQL security
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: v355-security-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  postgres:
+    name: PostgreSQL 17 CAS and isolation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17.11
+        env:
+          POSTGRES_USER: austa_local_test
+          POSTGRES_PASSWORD: ephemeral-ci-only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U austa_local_test -d postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Install pinned PostgreSQL Python driver
+        run: |
+          python3 -m venv "$RUNNER_TEMP/austa-ci-venv"
+          "$RUNNER_TEMP/austa-ci-venv/bin/python" -m pip install psycopg2-binary==2.9.13
+      - name: Real two-backend concurrency, rollback, RLS and definer contracts
+        env:
+          AUSTA_TEST_PG_HOST: 127.0.0.1
+          AUSTA_TEST_PG_PORT: 5432
+          AUSTA_LOCAL_PG_PASSWORD: ephemeral-ci-only
+        run: '"$RUNNER_TEMP/austa-ci-venv/bin/python" -I -B tests/postgres/test_publication_cas.py'
+      - name: Offline hosted-runner security review, no hosted credentials
+        run: '"$RUNNER_TEMP/austa-ci-venv/bin/python" -I -B -m unittest discover -s tests/hosted -p test_security.py -v'
+      - name: Hosted protocol against disposable local PostgreSQL only
+        env:
+          AUSTA_TEST_PG_HOST: 127.0.0.1
+          AUSTA_TEST_PG_PORT: 5432
+          AUSTA_LOCAL_PG_PASSWORD: ephemeral-ci-only
+        run: '"$RUNNER_TEMP/austa-ci-venv/bin/python" -I -B tests/hosted/test_local_protocol.py'
+      - name: Ensure test run changed no tracked files
+        if: always()
+        run: git diff --exit-code
+
+  windows-clipboard:
+    name: Windows R7W offline clipboard contracts
+    runs-on: windows-2025
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Python clipboard and TEST-only HTTP contracts, no live requests
+        run: python -I -B -m unittest discover -s tools/r7w -p test_clipboard_preflight.py -v
+      - name: Parse native PowerShell launcher
+        shell: powershell
+        run: |
+          $tokens = $null
+          $errors = $null
+          $null = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'tools/r7w/Start-R7W.ps1'), [ref]$tokens, [ref]$errors)
+          if ($errors.Count -ne 0) { throw 'POWERSHELL_PARSE_FAILED' }
+      - name: Native Windows clipboard with synthetic noncredential, no network
+        shell: powershell
+        run: |
+          Set-Clipboard -Value 'sb_publishable_synthetic_not_a_real_key_1234567890'
+          python -I -B -c "import runpy; m=runpy.run_path('tools/r7w/clipboard_preflight.py'); assert m['clipboard_key']() == 'sb_publishable_synthetic_not_a_real_key_1234567890'; print('NATIVE_CLIPBOARD_PASS; network=0')"
+          if ($LASTEXITCODE -ne 0) { throw 'NATIVE_CLIPBOARD_FAILED' }
+          Set-Clipboard -Value 'CI clipboard test complete'

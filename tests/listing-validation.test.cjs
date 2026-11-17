@@ -151,7 +151,7 @@ test('P0.3.1 helper, visibility, public queries and protected runtime assets rem
  const base='19c91a76502dad439811fa86d95af0fac922c88a',html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const main=cp.execFileSync('git',['show',base+':index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  for(const id of ['austa-v154e-global-promotion-pagination']){
-  const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');assert.equal(html.match(re)[0],main.match(re)[0]);
+  const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');const current=html.match(re)[0];assert.equal(current.split('\"public_service_provider_listings\"').length,2,'one exact privacy read in V154E');assert.equal(current.replace('\"public_service_provider_listings\"','\"service_provider_listings\"'),main.match(re)[0]);
  }
  require('./helpers/server-key-baseline.cjs').assertConfig();
  const changed=cp.execFileSync('git',['diff','--name-only',base,'--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
