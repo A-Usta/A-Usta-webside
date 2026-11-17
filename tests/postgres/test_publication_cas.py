@@ -3,6 +3,8 @@ Creates and drops only a fresh austa_cas_<random> database, never a cluster.
 """
 import concurrent.futures as futures
 import os
+import json
+import time
 from pathlib import Path
 import threading
 import unittest
@@ -250,6 +252,68 @@ class Contracts(unittest.TestCase):
                         q.execute("SELECT set_config('request.jwt.claim.sub',%s,true)",(A,))
                         q.execute('UPDATE profiles SET '+change+' WHERE id=%s',(A,))
             self.rejected('P0001',update)
+
+    def test_controlled_lock_observation_before_commit(self):
+        """Release A only after observer proves B waits on A's transaction lock."""
+        apply(operation())
+        a, b, observer = connect(), connect(), connect()
+        observer.autocommit = True
+        pool = futures.ThreadPoolExecutor(1)
+        pending = None
+        try:
+            pids = [c.get_backend_pid() for c in (a,b,observer)]
+            self.assertEqual(len(set(pids)),3)
+            self.assertEqual(apply(operation(expected=1,enabled=False),connection=a)[1:],(2,False))
+            started = threading.Event()
+            def contender():
+                started.set()
+                try:
+                    result = apply(operation(expected=1),connection=b)
+                    b.commit()
+                    return 'OK', result
+                except psycopg2.Error as error:
+                    b.rollback()
+                    return error.pgcode, None
+            pending = pool.submit(contender)
+            self.assertTrue(started.wait(timeout=2))
+            deadline = time.monotonic()+4
+            observed = None
+            while time.monotonic()<deadline:
+                with observer.cursor() as q:
+                    q.execute("""SELECT activity.wait_event_type, activity.wait_event,
+                        %s=ANY(pg_blocking_pids(%s)),
+                        EXISTS(SELECT 1 FROM pg_locks held JOIN pg_locks waiting
+                          ON waiting.locktype=held.locktype
+                          AND waiting.transactionid=held.transactionid
+                          WHERE held.pid=%s AND waiting.pid=%s
+                          AND held.locktype='transactionid' AND held.granted AND NOT waiting.granted)
+                        FROM pg_stat_activity activity WHERE activity.pid=%s""",
+                        (pids[0],pids[1],pids[0],pids[1],pids[1]))
+                    row=q.fetchone()
+                if row and row[0]=='Lock' and row[2] and row[3]:
+                    observed=row
+                    break
+                if pending.done():
+                    self.fail('B finished before lock observation; concurrency unproven')
+                time.sleep(0.01)
+            self.assertIsNotNone(observed,'No pg_stat_activity/pg_locks blocking proof')
+            self.assertFalse(pending.done(),'B must still be blocked when A is released')
+            a.commit()  # This line is unreachable until both lock observations are proven.
+            outcome=pending.result(timeout=5)
+            self.assertEqual(outcome,('40001',None))
+            self.assertEqual(query('SELECT revision,enabled,consent FROM provider_map_publications')[0],(2,False,False))
+            self.assertEqual(query('SELECT count(*) FROM v355_map_publication_receipts')[0][0],2)
+            print('CONTROLLED_LOCK_PROOF '+json.dumps(dict(
+                scope='disposable-local-postgres-only',transaction_a_pid=pids[0],
+                transaction_b_pid=pids[1],observer_pid=pids[2],wait_event_type=observed[0],
+                wait_event=observed[1],pg_blocking_pids_proof=observed[2],
+                pg_locks_proof=observed[3],released_after_observation=True,
+                b_sqlstate=outcome[0],final_revision=2)),flush=True)
+        finally:
+            # Rollback releases A on a missing-proof/error path; never call terminate_backend.
+            a.rollback()
+            pool.shutdown(wait=True,cancel_futures=True)
+            for c in (a,b,observer):c.close()
 
     def test_migration_reapply_fails_atomically(self):
         apply(operation())
