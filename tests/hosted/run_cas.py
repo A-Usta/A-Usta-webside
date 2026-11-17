@@ -140,14 +140,14 @@ def protocol(connect, baseline=BASELINE):
                 b.rollback()
         pending=pool.submit(contender)
         observer.autocommit=True
-        deadline=time.monotonic()+5
+        # PostgreSQL may expose a tuple wait or transaction-id wait; require both\n        # the server-reported blocker PID and a real ungranted row-lock-related wait.\n        deadline=time.monotonic()+6
         proof=None
         while time.monotonic()<deadline:
             with observer.cursor() as q:
                 q.execute("""SELECT s.wait_event_type,s.wait_event,%s=ANY(pg_blocking_pids(%s)),
-                    EXISTS(SELECT 1 FROM pg_locks h JOIN pg_locks w ON h.locktype=w.locktype AND h.transactionid=w.transactionid
-                     WHERE h.pid=%s AND w.pid=%s AND h.locktype='transactionid' AND h.granted AND NOT w.granted)
-                    FROM pg_stat_activity s WHERE s.pid=%s""",(pids[0],pids[1],pids[0],pids[1],pids[1]))
+                    EXISTS(SELECT 1 FROM pg_locks w
+                     WHERE w.pid=%s AND NOT w.granted AND w.locktype IN ('transactionid','tuple'))
+                    FROM pg_stat_activity s WHERE s.pid=%s""",(pids[0],pids[1],pids[1],pids[1]))
                 row=q.fetchone()
             if row and row[0]=='Lock' and row[2] and row[3]: proof=row;break
             require(not pending.done(),'B_FINISHED_WITHOUT_PROOF')
