@@ -65,4 +65,4 @@ jobs:
           Set-Clipboard -Value 'sb_publishable_synthetic_not_a_real_key_1234567890'
           python -I -B -c "import runpy; m=runpy.run_path('tools/r7w/clipboard_preflight.py'); assert m['clipboard_key']() == 'sb_publishable_synthetic_not_a_real_key_1234567890'; print('NATIVE_CLIPBOARD_PASS; network=0')"
           if ($LASTEXITCODE -ne 0) { throw 'NATIVE_CLIPBOARD_FAILED' }
-          Set-Clipboard -Value ''
+          Set-Clipboard -Value 'CI clipboard test complete'
