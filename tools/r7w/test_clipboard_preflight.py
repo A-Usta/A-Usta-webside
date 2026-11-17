@@ -1,3 +1,5 @@
+import tempfile
+import hashlib
 import contextlib
 import importlib.util
 import io
@@ -59,6 +61,20 @@ class Tests(unittest.TestCase):
     def test_system_tls_cannot_be_disabled(self):
         ctx=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT);ctx.check_hostname=False;ctx.verify_mode=ssl.CERT_NONE
         with patch.object(m.ssl,'create_default_context',return_value=ctx),self.assertRaises(m.Blocked):m.probe(KEY,Transport())
+    def test_manifest_accepts_vendor_names_and_rejects_tamper_or_traversal(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            names=['clipboard_preflight.py','Start-R7W.ps1','test_clipboard_preflight.py','vendor/@scope/a+1.txt']
+            lines=[]
+            for name in names:
+                p=root/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b'synthetic')
+                lines.append(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+name)
+            manifest=root/'MANIFEST.sha256';manifest.write_text('\n'.join(lines))
+            m.verify_manifest(root)
+            (root/names[0]).write_bytes(b'tampered')
+            with self.assertRaises(m.Blocked):m.verify_manifest(root)
+            manifest.write_text(hashlib.sha256(b'').hexdigest()+'  ../outside')
+            with self.assertRaises(m.Blocked):m.verify_manifest(root)
     def test_powershell_reads_confirmation_before_python_clipboard(self):
         s=Path(__file__).with_name('Start-R7W.ps1').read_text()
         self.assertLess(s.index('Read-Host'),s.rindex("clipboard_preflight.py"))

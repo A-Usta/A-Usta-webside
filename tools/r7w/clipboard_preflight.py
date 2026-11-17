@@ -100,11 +100,14 @@ def verify_manifest(root):
     lines = (root / 'MANIFEST.sha256').read_text(encoding='ascii').splitlines()
     seen = set()
     for line in lines:
-        match = re.fullmatch(r'([0-9a-f]{64})  ([A-Za-z0-9_./-]+)', line)
+        match = re.fullmatch(r'([0-9a-f]{64})  ([A-Za-z0-9_./@+-]+)', line)
         if not match:
             raise Blocked('MANIFEST_FORMAT')
         digest, name = match.groups()
-        path = (root / name).resolve()
+        candidate = root / name
+        if '..' in Path(name).parts or candidate.is_symlink():
+            raise Blocked('MANIFEST_PATH')
+        path = candidate.resolve()
         if root.resolve() not in path.parents or name in seen or path.is_symlink():
             raise Blocked('MANIFEST_PATH')
         seen.add(name)
