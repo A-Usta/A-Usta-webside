@@ -16,7 +16,7 @@ const files={
  "tests/hosted/check_environment.py": "fbc390ab9878ddede023bf17aeb9b0758cf0bfb0132c6cff36998fb2dec944c1",
  "tests/hosted/run_cas.py": "00d3d6b358487f5ad018634e7e96d0b0689fda86ca770ca15a67bedd0806c5e2",
  ".github/workflows/v355-hosted-cas.yml": "6aeffffcd463dc5304a8aa1191aeca69ab52e631f7a616423b995c32f489c130",
- ".github/workflows/v355-security.yml": "3716c9ae8a9eac06f85ad9a948ce9b97d0c4f480963dd034f0a6bc2eabc4b644",
+ ".github/workflows/v355-security.yml": "ddd716b6ca4c87a2fc7ec0e48f96352dd8fc99112bffc6cb533229be901b1c8e",
  "supabase/migrations/20261117090000_v355_map_publication_cas.sql": "560222a53a0840a82b98f7ca4327d37e08f00757a784bcbbf9bbbd58f1c3320d",
  "supabase/migrations/20261114132329_v355_provider_location_privacy.sql": "6819d31972685dd601cb8ada708748c75b99896c458ee543bd766a0e7dd4982a",
  "assets/marketplace/listing-detail.js": "05469b1100b0c904e108002fb5e00bd1fac2573e70d792385bb8936a506d35c2",

@@ -30,21 +30,23 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
       - name: Install pinned PostgreSQL Python driver
-        run: python3 -m pip install psycopg2-binary==2.9.13
+        run: |
+          python3 -m venv "$RUNNER_TEMP/austa-ci-venv"
+          "$RUNNER_TEMP/austa-ci-venv/bin/python" -m pip install psycopg2-binary==2.9.13
       - name: Real two-backend concurrency, rollback, RLS and definer contracts
         env:
           AUSTA_TEST_PG_HOST: 127.0.0.1
           AUSTA_TEST_PG_PORT: 5432
           AUSTA_LOCAL_PG_PASSWORD: ephemeral-ci-only
-        run: python3 tests/postgres/test_publication_cas.py
+        run: '"$RUNNER_TEMP/austa-ci-venv/bin/python" -I -B tests/postgres/test_publication_cas.py'
       - name: Offline hosted-runner security review, no hosted credentials
-        run: python3 -I -B -m unittest discover -s tests/hosted -p test_security.py -v
+        run: '"$RUNNER_TEMP/austa-ci-venv/bin/python" -I -B -m unittest discover -s tests/hosted -p test_security.py -v'
       - name: Hosted protocol against disposable local PostgreSQL only
         env:
           AUSTA_TEST_PG_HOST: 127.0.0.1
           AUSTA_TEST_PG_PORT: 5432
           AUSTA_LOCAL_PG_PASSWORD: ephemeral-ci-only
-        run: python3 -I -B tests/hosted/test_local_protocol.py
+        run: '"$RUNNER_TEMP/austa-ci-venv/bin/python" -I -B tests/hosted/test_local_protocol.py'
       - name: Ensure test run changed no tracked files
         if: always()
         run: git diff --exit-code
