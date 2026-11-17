@@ -107,6 +107,13 @@ def withdraw(c, request_id):
         q.execute('SELECT listing_id::text,revision,enabled FROM public.v355_apply_map_publication(%s,3,%s,false)',(L,request_id))
         return q.fetchone()
 
+def server_backend_pid(c):
+    # PgBouncer's protocol BackendKeyData PID can be virtual. Obtain the real
+    # PostgreSQL backend PID for pg_stat_activity and pg_blocking_pids checks.
+    with c.cursor() as q:
+        q.execute('SELECT pg_backend_pid()')
+        return q.fetchone()[0]
+
 def protocol(connect, baseline=BASELINE):
     """Internal connection-factory seam supports synthetic/local tests, never a CLI target override."""
     a=b=observer=None
@@ -118,7 +125,7 @@ def protocol(connect, baseline=BASELINE):
     observed_wait='NOT_OBSERVED'
     try:
         a=connect();b=connect();observer=connect()
-        pids=[c.get_backend_pid() for c in (a,b,observer)]
+        pids=[server_backend_pid(c) for c in (a,b,observer)]
         require(len(set(pids))==3,'DISTINCT_BACKENDS')
         old_receipts=None
         for c in (a,b,observer):
