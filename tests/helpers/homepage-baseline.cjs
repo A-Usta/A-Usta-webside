@@ -15,8 +15,8 @@ exports.normalize=html=>{if(html.includes('\"public_service_provider_listings\"'
 const files={
  "tools/geoapify/proxy/__init__.py": "cda1b46582b300b220b48ce656e27192badd257705b0c3999497279db5c772de",
  "tools/geoapify/proxy/core.py": "4d4266f69321f446dd46f947c6cd671025177d513db5c50e1de68970cee08875",
- "tools/geoapify/proxy/app.py": "1a9a6b5816496ba0e4873c889cf150163ca3ea8d74290bc1a33ef4ee45721f13",
- "tools/geoapify/proxy/README.md": "ada633a0b1fa2a4dac358eeb99f9adf901f0b5eec3da7bba232cfa5a91fe74f0",
+ "tools/geoapify/proxy/app.py": "b77cf7186662f805b1227650546210201561066e6b39bae58d13e2a365a0118f",
+ "tools/geoapify/proxy/README.md": "619f61d199b1817fd627c5fbaf39c80175c020daad9ff92ff1dc583d11f7b5b1",
  "tools/geoapify/live.cjs": "010e5c7371950ad2833fe3fc376324dee974a1947aa75fa47bdd400ad8c7a541",
  "tools/geoapify/preview.cjs": "777d113a18b2062f06e9756f4e5a4188cda3e73c038b0de5e248e7a7a368774b",
  "assets/map/runtime-config.example.json": "3da7c17a9ed5fcccb808f79cdc9a36fd21843126f7e22c69cfdebcd2fa1c86e9",

@@ -189,6 +189,8 @@ class ProxyTests(unittest.TestCase):
             response,body=call(app,**change)
             self.assertTrue(response[0].startswith(status))
             self.assertNotIn(KEY.encode(),body)
+        response,_=call(app,HTTP_ORIGIN='',HTTP_REFERER='https://a-usta.github.io/A-Usta-webside/')
+        self.assertTrue(response[0].startswith('401'),'same-origin metadata cannot replace authentication')
         app=application(self.proxy,authenticate=lambda e:self.principal,allowed_origin='https://a-usta.github.io')
         self.proxy.fetch=lambda _:('application/json',b'{"type":"FeatureCollection","features":[]}')
         response,body=call(app)
@@ -196,6 +198,10 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual(response[1]['Cache-Control'],'no-store')
         self.assertEqual(response[1]['Access-Control-Allow-Origin'],'https://a-usta.github.io')
         self.assertNotIn(KEY.encode(),body)
+        response,_=call(app,HTTP_ORIGIN='',HTTP_REFERER='https://a-usta.github.io/A-Usta-webside/')
+        self.assertTrue(response[0].startswith('200'))
+        response,_=call(app,HTTP_ORIGIN='',HTTP_REFERER='https://a-usta.github.io/',HTTP_SEC_FETCH_SITE='cross-site')
+        self.assertTrue(response[0].startswith('403'))
         with self.assertRaises(core.Denied):application(self.proxy,authenticate=lambda _:None,allowed_origin='https://evil.invalid/path')
 
     def test_lease_fencing_never_allows_an_expired_owner_to_overwrite_cache(self):

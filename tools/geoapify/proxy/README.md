@@ -8,7 +8,10 @@ live or production-certified integration.
 ## Security contract
 
 `Proxy.handle(Principal, route, query_pairs)` is a server-side library boundary.
-The WSGI adapter additionally rejects absent/foreign Origin, but Origin and
+The WSGI adapter rejects foreign Origin and requests lacking both approved
+Origin and same-origin Referer metadata. Native same-origin GET fetch normally
+omits Origin, so that legitimate case is accepted only with approved Referer
+and a verified principal; cross-site fetch metadata is rejected. Origin and
 Referer are never authentication. An injected host `authenticate(environ)` must
 verify an actual server-side session and return a stable pseudonymous principal
 with at most 15 minutes remaining validity. Never construct it from an unsigned
@@ -115,3 +118,9 @@ Run the offline suite from the repository root:
 It is also included in frontend full regression through
 `tests/geoapify-proxy.test.cjs`. All network/provider/auth inputs in this suite
 are synthetic; SQLite and concurrent processes are real.
+
+The frontend regression also runs a real Chromium, zero-provider-egress browser
+contract test against a synthetic WSGI bridge. It exercises native Origin-less
+same-origin GET, a synthetic HttpOnly session cookie (not readable in JavaScript),
+401 without that session and 403 without Origin/Referer metadata. It is not a
+live provider, national geometry, full UI or deployed authenticator proof.

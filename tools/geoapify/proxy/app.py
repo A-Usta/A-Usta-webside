@@ -20,8 +20,17 @@ def application(proxy, *, authenticate, allowed_origin):
             if environ.get('REQUEST_METHOD') != 'GET':
                 raise Denied('METHOD', 405)
             # Additional browser check, NOT the authentication boundary.
-            if environ.get('HTTP_ORIGIN') != allowed_origin:
-                raise Denied('ORIGIN', 403)
+            origin = environ.get('HTTP_ORIGIN')
+            if origin:
+                if origin != allowed_origin:
+                    raise Denied('ORIGIN', 403)
+            else:
+                # Native same-origin GET fetch omits Origin. Referer is only a
+                # browser CSRF signal; a verified principal is still required.
+                referer = urlsplit(environ.get('HTTP_REFERER', ''))
+                if (referer.scheme+'://'+referer.netloc != allowed_origin or
+                        environ.get('HTTP_SEC_FETCH_SITE', 'same-origin') != 'same-origin'):
+                    raise Denied('ORIGIN', 403)
             query = environ.get('QUERY_STRING', '')
             if len(query) > 2048 or re.search(r'%(?![a-fA-F0-9]{2})', query):
                 raise Denied('PARAMETERS', 400)
