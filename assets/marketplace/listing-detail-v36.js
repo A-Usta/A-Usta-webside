@@ -13,7 +13,8 @@ function context(page){
  const source=u.searchParams.get('source')||h.get('source')||'vehicle';
  return id&&sourceSet.has(source)?{id,source,page,valid:()=>{const current=new URL(location.href),hash=new URLSearchParams(current.hash.replace(/^#/,''));return page.isConnected&&document.getElementById('austaFinalListingPage')===page&&(current.searchParams.get('listing')||hash.get('listing'))===id&&(current.searchParams.get('source')||hash.get('source')||'vehicle')===source;}}:null;
 }
-function date(value){const d=new Date(value);return Number.isNaN(d.getTime())?'':new Intl.DateTimeFormat('az-AZ',{day:'2-digit',month:'2-digit',year:'numeric'}).format(d);}
+function date(value){const d=new Date(value);if(Number.isNaN(d.getTime()))return '';return `${String(d.getUTCDate()).padStart(2,'0')}.${String(d.getUTCMonth()+1).padStart(2,'0')}.${d.getUTCFullYear()}`;}
+function count(value){const n=Number(value);return Number.isFinite(n)?Math.trunc(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' '):'0';}
 function visitorId(){
  const key='austa-listing-viewer-v1';
  try{let id=localStorage.getItem(key);if(!id){id=crypto.randomUUID();localStorage.setItem(key,id);}return id;}catch{return crypto.randomUUID();}
@@ -71,7 +72,7 @@ async function loadMetadata(page,c){
   const result=await db.rpc('austa_get_listing_detail_metadata',{p_source:c.source,p_listing_id:c.id});if(!c.valid())return;
   if(result.error){box.textContent='Elan statistikası hazırda əlçatan deyil.';return;}
   const row=Array.isArray(result.data)?result.data[0]:result.data;if(!row){box.textContent='Elan nömrəsi və baxış məlumatı mövcud deyil.';return;}
-  box.replaceChildren();for(const [label,value] of [['№ ',row.public_number],['Baxışların sayı: ',Number(row.view_count).toLocaleString('az-AZ')],['Yeniləndi: ',date(row.updated_at)]]){if(value===null||value===undefined||value==='')continue;const span=document.createElement('span');span.textContent=label+value;box.append(span);}
+  box.replaceChildren();for(const [label,value] of [['№ ',row.public_number],['Baxışların sayı: ',count(row.view_count)],['Yeniləndi: ',date(row.updated_at)]]){if(value===null||value===undefined||value==='')continue;const span=document.createElement('span');span.textContent=label+value;box.append(span);}
  }catch{if(c.valid())box.textContent='Elan statistikası hazırda əlçatan deyil.';}
 }
 function dialog(page,title,body){const d=document.createElement('dialog');d.className='austa-v36-dialog';d.innerHTML=`<h2>${escape(title)}</h2>${body}`;page.append(d);d.addEventListener('close',()=>d.remove(),{once:true});d.showModal();return d;}

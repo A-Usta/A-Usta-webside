@@ -25,7 +25,7 @@ test('V3.6 listing detail layout and actions fit desktop/tablet/mobile viewports
    assert.equal(await page.locator('.austa-v36-title-actions button').count(),3);
    assert.equal(await page.locator('.austa-v36-spec-row').count(),3);
    assert.equal(await page.locator('[data-v36-promotion]').count(),3);
-   assert.match(await page.locator('[data-v36-listing-metadata]').innerText(),/№ 1254565.*Baxışların sayı: 12 817.*Yeniləndi:/s);
+   assert.match(await page.locator('[data-v36-listing-metadata]').innerText(),/№ 1254565.*Baxışların sayı: 12 817.*Yeniləndi: 18\.11\.2026/s);
    const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,specColumns:getComputedStyle(document.querySelector('.austa-v36-spec-row')).gridTemplateColumns,wrap:getComputedStyle(document.querySelector('.austa-final-wrap')).gridTemplateColumns}));
    assert.equal(layout.overflow,false,`horizontal overflow at ${width}px`);
    assert.equal(layout.specColumns.split(' ').length,width<=600?1:2,`spec columns at ${width}px`);

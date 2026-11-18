@@ -83,9 +83,10 @@ const files={
   "assets/homepage/mobile-preview.webp": "65ddacf11241fcfe0ed32cf21e1872e3b15cbd32a4ca3fe8b1246220d476c231",
   "assets/homepage/website-qr.png": "35cd532af33dfccaad80fa7fcf5374e7df6db50c0a0604b16c698b5bc270124f",
   "assets/marketplace/listing-detail-v36.css": "6e2aa6d0ff417b5bb1b06cc216a9af6dae068bfb583a487e366836efa85ee84e",
-  "assets/marketplace/listing-detail-v36.js": "519ccd301cab8d26ee85be3fb481aa269071050d4de989af3f2bc2f8d02679f7"
+  "assets/marketplace/listing-detail-v36.js": "45787322ddb42a9d7c59002b947dac99e888da71318f417979e755737534e232"
 };
 exports.reviewed=files;
+files["supabase/migrations/20261118100000_v36_listing_detail_metrics.sql"]="ee2be4047eabcad19afb25cd10ce900b4c199673502c828f53d4987ddcf836c3";
 exports.isReviewedFile=p=>{if(!Object.hasOwn(files,p))return false;assert.equal(digest(fs.readFileSync(path.join(root,p))),files[p],'exact reviewed V3.4 file: '+p);return true;};
 exports.verify=()=>{for(const p of Object.keys(files))exports.isReviewedFile(p);};
 
