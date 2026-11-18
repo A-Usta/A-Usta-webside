@@ -197,7 +197,7 @@ async function runOfflineWorker({keyProvider,readUsage,restrictionsVerified=fals
   await session.send('Fetch.enable',{patterns:[{urlPattern:'*',requestStage:'Request'}]});
   const routing={route:async(pattern,handler)=>{if(pattern!==BASE+'**')throw Error('Unexpected fixture route');routes.push({prefix:BASE,handler});}};
   // Isolate the existing geocoding probe: its deny-only gate must not authorize automatic tiles/Places.
-  report.phase='fixture';await fixture(page,true,false,{base:BASE,routing,externalMocks:false,runtimeKey:key,isolated:true,includeConfig:true,beforeModules:async p=>p.evaluate(preflight=>{window.AUSTA_MAP_CONFIG=Object.freeze({ready:async()=>true});if(preflight){const native=window.fetch;window.fetch=(url,options)=>native(url,{...options,headers:{...options?.headers,'x-offline-probe':'1'}});}},scenario==='preflight')});
+  report.phase='fixture';await fixture(page,false,false,{base:BASE,routing,externalMocks:false,runtimeKey:key,isolated:true,includeConfig:true,beforeModules:async p=>p.evaluate(preflight=>{window.AUSTA_MAP_CONFIG=Object.freeze({ready:async()=>true});if(preflight){const native=window.fetch;window.fetch=(url,options)=>native(url,{...options,headers:{...options?.headers,'x-offline-probe':'1'}});}},scenario==='preflight')});
   if(signal?.aborted){report.reason='cancelled';return report;}
   await page.evaluate(value=>{window.AUSTA_MAP_SETTINGS=Object.freeze({geoapifyBrowserKey:value});},key);
   report.phase='geocode-input';await page.getByLabel('Şəhər / rayon / qəsəbə / kənd',{exact:true}).fill('Bakı');
