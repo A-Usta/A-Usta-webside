@@ -103,3 +103,26 @@ stops the protocol; it does not increase the budget or fabricate coverage.
 These API samples are not full city totals or regional visual/geocoding proof.
 The isolated Chromium layout suite now covers 1920, 1536, 1366, 900, 768 and 390px.
 Its screenshots remain explicitly marked synthetic, even though Chromium is real.
+
+
+## Blocker-resolution implementation — 18 November 2026
+
+The support thread and incoming Geoapify mail were checked; there was no reply.
+No duplicate inquiry was sent. The previous 18-request live run remains historical
+API/Baku evidence; it is not new proxy or full regional visual evidence.
+
+An inactive server-only implementation now exists under `tools/geoapify/proxy/`.
+It includes a WSGI boundary, strict upstream construction and response rebuilding,
+pinned multi-polygon/hole validation, persistent atomic quarter-credit admission,
+rate limits, durable public-response caching and fenced cross-worker coalescing.
+The real local SQLite ledger and independent processes are tested offline.
+See its README for the exact single-host/shared-volume deployment constraint and
+mandatory production/TEST host integration requirements. The frontend and
+production backend remain unchanged. No authenticated TEST proxy endpoint,
+server-only key, verified session integration or real pinned AZ border has been
+configured. Therefore headerless abuse of the old browser key is still NOT
+resolved, and full nine-region live visual QA is BLOCKED pending these inputs.
+
+The offline proxy suite is included in frontend regression and the existing
+PostgreSQL Security CI without any new secret reference or deployment step.
+Synthetic provider/auth/geometry tests cannot clear the live release gate.

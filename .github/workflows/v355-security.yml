@@ -47,6 +47,8 @@ jobs:
           AUSTA_TEST_PG_PORT: 5432
           AUSTA_LOCAL_PG_PASSWORD: ephemeral-ci-only
         run: '"$RUNNER_TEMP/austa-ci-venv/bin/python" -I -B tests/hosted/test_local_protocol.py'
+      - name: Offline server-only map proxy budgets and request security
+        run: python3 -B -m unittest discover -s tests/geoapify -p test_proxy.py -v
       - name: Ensure test run changed no tracked files
         if: always()
         run: git diff --exit-code
