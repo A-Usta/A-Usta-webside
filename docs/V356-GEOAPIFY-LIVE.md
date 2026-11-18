@@ -19,3 +19,87 @@ The GitHub connector has no dispatch API. The already registered v355-hosted-cas
 Actions → the existing **V355 approved TEST CAS withdrawal** workflow (file v355-hosted-cas.yml) → Run workflow → select **feat/v356-live-automotive-map** → approved_sha exact reviewed HEAD. Confirm the run contains only the **geoapify** job, with CAS jobs skipped. Do not choose feat/v355-automotive-map for this test. Artifact v356-key-free-map-test has3-day retention. A successful result certifies only the bounded protocol fields, not all regional visual QA, A-USTA hosted data or release readiness. Browser/API dispatch still requires an available authenticated GitHub control path; missing dispatch capability is not another owner authorization request.
 
 Official restriction guidance: https://myprojects.geoapify.com/help/api-keys/ . Allowed origins/referrers protect access; CORS alone does not. No live PASS may be inferred from the synthetic transport security test or owner-reported secret existence.
+
+## Security decision — 18 November 2026
+
+The headerless 200 is an unresolved release blocker, not a CORS success. The
+provider's official API-key help says browser keys are visible and CORS only
+controls browser response reading. Its React Native tutorial explicitly says
+Origin/Referer restrictions do not protect native requests and recommends a
+backend for stricter Places control:
+
+- https://myprojects.geoapify.com/help/api-keys/
+- https://www.geoapify.com/tutorial/maplibre-react-native-geoapify-map-tiles/
+
+This explains the observed class of bypass. The exact account-side rule and
+whether Geoapify can require headers still need provider confirmation. No
+Geoapify account setting, billing setting or key has been changed here.
+
+The current direct-browser integration must stay TEST-only. Do not publish the
+real runtime configuration to Pages. A successful bounded API protocol is not a
+production-security certificate; even HTTP rejection for all four probes would
+not prove protection against forged headers from a non-browser client.
+
+### Provider support request (sent 18 November 2026)
+
+Sent through the connected Gmail account to the official support address
+info@geoapify.com, without credentials. No provider reply has been received
+or treated as approval.
+
+Subject: Require rejection of headerless requests for restricted browser API key
+
+We are validating an Azerbaijan automotive map in an isolated test environment.
+For the same restricted key and /v2/places request, invalid Origin+Referer,
+invalid Origin+approved Referer, and approved Origin+invalid Referer return 401.
+With both headers omitted the response is 200. No API key is included here.
+
+Can you confirm whether missing headers intentionally bypass these restrictions,
+whether a setting can require and validate both headers, and whether allowed-IP
+rules are enforced for headerless requests? Please clarify AND/OR semantics when
+IP, Origin and Referer rules are combined, and availability of a hard daily
+credit stop. We understand CORS is not authentication and headers are forgeable
+outside browsers. If browser rules cannot prevent unauthorized credit use, we
+will use a server-held key behind a metered proxy. Please confirm the supported
+configuration before we publish.
+
+### Server-only transition prerequisites
+
+A proxy is required if the existing key cannot satisfy the release access-risk
+gate. Adding a proxy while leaving that key valid in clients does not fix the
+bypass. This repository has an existing production backend; attaching an
+untested route to it or putting the browser key there would not constitute a
+safe isolated test deployment. No proxy is registered with that backend here.
+
+Before enabling an isolated proxy, provision a separate server-only key in a
+TEST secret store and an isolated HTTPS test host with known egress IP. Configure
+provider-side IP restrictions and confirm rejection from another IP, including
+headerless and forged-header requests. Never ship this key in runtime config.
+
+Implement fixed Places/geocoding/tile routes, without accepting upstream URLs,
+keys or arbitrary query parameters. Validate narrow viewport and Azerbaijan
+geometry (a bounding rectangle alone includes neighboring countries); filter
+Places/geocode results to AZ. Bound tile coordinates/zoom to the admitted
+viewport. Reject duplicate parameters, redirects, unexpected MIME/GeoJSON/PNG,
+large streams and timeouts. Keep TLS verification enabled. Use shared atomic
+per-client/global admission and persistent daily reservations that survive
+restarts and multiple workers, plus bounded cache and in-flight coalescing.
+An in-memory counter is insufficient for the daily release budget. Fail closed
+when the budget store is unavailable. Redact URL query and raw provider errors
+from logs. Test SSRF, header forgery, parallel budget exhaustion, restart,
+coalescing, cache isolation and cancellation before connecting the frontend.
+
+After isolated end-to-end verification, remove the browser runtime key from all
+artifacts, replace client requests with the proxy contract, and revoke the old
+browser key. Verify old-key denial independently. Roll back by disabling the
+external layer while preserving the A-USTA provider list; never restore the
+exposed browser key. Production activation remains outside this PR's authority.
+
+### Extended QA coverage
+
+The bounded manual runner now samples nine locations, adding Sumqayit, Quba and
+Khinaliq to the previous six. The unchanged hard limits remain 30 requests and
+60 conservative reserved credits, with one request per second. Reaching a cap
+stops the protocol; it does not increase the budget or fabricate coverage.
+These API samples are not full city totals or regional visual/geocoding proof.
+The isolated Chromium layout suite now covers 1920, 1536, 1366, 900, 768 and 390px.
+Its screenshots remain explicitly marked synthetic, even though Chromium is real.
