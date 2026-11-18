@@ -1,7 +1,7 @@
 'use strict';
 // Fully intercepted offline Chromium contract. No live provider/Supabase traffic.
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{chromium}=require('playwright');
-const root=path.resolve(__dirname,'..'),pages='https://a-usta.github.io',proxy='https://austa-map-api.austahelper.workers.dev';
+const root=path.resolve(__dirname,'..'),pages='https://a-usta.github.io',proxy='https://austa-map-test.austahelper.workers.dev';
 const token='eyJzIjoiZml4dHVyZSIsImUiOjB9.'+'a'.repeat(64),png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAX+XDSwAAAABJRU5ErkJggg==','base64');
 for(const width of [1536,390])test('offline Pages cross-origin map, memory session and all filters '+width,async()=>{
  const browser=await chromium.launch({args:['--no-sandbox'],...(process.env.AUSTA_CHROMIUM?{executablePath:process.env.AUSTA_CHROMIUM}:{})});
@@ -17,7 +17,7 @@ for(const width of [1536,390])test('offline Pages cross-origin map, memory sessi
  return route.abort();}
  if(u.origin!==pages)return route.abort();
  assert(!u.pathname.startsWith('/map-api'),'Pages is static; no implicit same-origin API');
- if(u.pathname.endsWith('/runtime-config.json'))return route.fulfill({json:{proxyPath:'/map-api',proxyOrigin:proxy,allowedOrigins:[pages]}});
+ if(u.pathname.endsWith('/runtime-config.json'))return route.fulfill({status:404,body:'not published'});
  const rel=u.pathname.replace('/A-Usta-webside/','');if(!rel||rel==='index.html')return route.fulfill({contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><div id="austaTopUrgentV24"></div><link rel="stylesheet" href="assets/map/map.css"><script src="assets/map/config.js"></script><script src="assets/map/data.js"></script><script src="assets/map/map.js"></script>'});
  const file=path.resolve(root,rel);if(!file.startsWith(root+path.sep)||!fs.existsSync(file))return route.abort();return route.fulfill({path:file});});
  await p.goto(pages+'/A-Usta-webside/');await p.locator('#austaMapEntry').click();await p.waitForSelector('.am-marker-austa');await p.waitForSelector('.leaflet-tile-loaded');

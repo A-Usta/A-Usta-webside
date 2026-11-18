@@ -18,7 +18,12 @@ async function ready(){
   if(url.origin!==window.location.origin||url.protocol!=='https:')return false;
   const control=new AbortController();timer=setTimeout(()=>control.abort(),4000);
   const response=await fetch(url,{signal:control.signal,credentials:'omit',cache:'no-store',redirect:'error'});
-  if(!response.ok||response.url&&new URL(response.url).origin!==url.origin)return false;
+  if(response.url&&new URL(response.url).origin!==url.origin)return false;
+  if(!response.ok){
+   // Source-published Pages has no server build step. This public default ships with the map.
+   if(response.status===404&&window.location.origin==='https://a-usta.github.io'&&new URL(document.baseURI).pathname.startsWith('/A-Usta-webside/')){window.AUSTA_MAP_SETTINGS=Object.freeze({proxyPath:'/map-api',proxyOrigin:'https://austa-map-test.austahelper.workers.dev',geoapifyBrowserKey:''});return true;}
+   return false;
+  }
   const body=await response.text();if(body.length>4096)return false;
   const config=JSON.parse(body);
   if(!(config.proxyPath==='/map-api'&&!config.geoapifyBrowserKey&&(!config.proxyOrigin||remote(config))||!config.proxyPath&&valid(config.geoapifyBrowserKey))||!Array.isArray(config.allowedOrigins)||!config.allowedOrigins.includes(window.location.origin)||config.allowedOrigins.some(v=>typeof v!=='string'||new URL(v).origin!==v||!v.startsWith('https://')))return false;
