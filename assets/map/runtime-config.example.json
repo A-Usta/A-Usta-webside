@@ -1,0 +1,5 @@
+{
+  "proxyPath": "/map-api",
+  "proxyOrigin": "https://austa-map-test.austahelper.workers.dev",
+  "allowedOrigins": ["https://a-usta.github.io"]
+}

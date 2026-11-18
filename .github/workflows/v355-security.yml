@@ -47,6 +47,12 @@ jobs:
           AUSTA_TEST_PG_PORT: 5432
           AUSTA_LOCAL_PG_PASSWORD: ephemeral-ci-only
         run: '"$RUNNER_TEMP/austa-ci-venv/bin/python" -I -B tests/hosted/test_local_protocol.py'
+      - name: Install hash-locked TEST host server
+        run: '"$RUNNER_TEMP/austa-ci-venv/bin/python" -m pip install --require-hashes -r tools/geoapify/proxy/requirements-test-host.txt'
+      - name: Check actual TEST server configuration without a listener or live credentials
+        run: '"$RUNNER_TEMP/austa-ci-venv/bin/python" -B tests/geoapify/check_host.py'
+      - name: Offline server-only map proxy budgets and request security
+        run: python3 -B -m unittest discover -s tests/geoapify -p 'test_*.py' -v
       - name: Ensure test run changed no tracked files
         if: always()
         run: git diff --exit-code

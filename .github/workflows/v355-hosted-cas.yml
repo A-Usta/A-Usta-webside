@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       approved_sha:
-        description: Exact reviewed commit SHA on feat/v355-automotive-map
+        description: Exact reviewed HEAD on the selected TEST feature branch
         required: true
         type: string
 permissions:
@@ -64,3 +64,43 @@ jobs:
           AUSTA_TEST_DB_PASSWORD: ${{ secrets.AUSTA_TEST_DB_PASSWORD }}
           AUSTA_TEST_DB_CA_PEM: ${{ secrets.AUSTA_TEST_DB_CA_PEM }}
         run: '"$RUNNER_TEMP/austa-hosted-venv/bin/python" -I -B tests/hosted/run_cas.py'
+
+  geoapify:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.repository == 'A-Usta/A-Usta-webside' &&
+      github.ref == 'refs/heads/feat/v356-live-automotive-map' &&
+      inputs.approved_sha == github.sha
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.approved_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.2
+      - name: Install reviewed browser tooling without live credentials
+        run: npm ci --prefix tests
+      - name: Install Chromium without live credentials
+        run: ./tests/node_modules/.bin/playwright install --with-deps chromium --only-shell
+      - name: Offline security and public artifact review
+        run: |
+          node --test tests/geoapify-manual-live.test.cjs
+          node tools/geoapify/preview.cjs "$RUNNER_TEMP/austa-geo-public"
+      - name: Bounded live integration, encrypted repository secrets only
+        env:
+          AUSTA_APPROVED_SHA: ${{ inputs.approved_sha }}
+          GEOAPIFY_BROWSER_KEY: ${{ secrets.GEOAPIFY_BROWSER_KEY }}
+          GEOAPIFY_ALLOWED_ORIGINS: ${{ secrets.GEOAPIFY_ALLOWED_ORIGINS }}
+          AUSTA_PUBLIC_REPORT_DIR: ${{ runner.temp }}/austa-geo-public
+        run: node tools/geoapify/live.cjs
+      - name: Upload only key-free preview and allowlisted result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: v356-key-free-map-test
+          path: ${{ runner.temp }}/austa-geo-public
+          retention-days: 3
+          if-no-files-found: error

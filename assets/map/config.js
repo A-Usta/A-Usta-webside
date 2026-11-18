@@ -1,10 +1,34 @@
-/* Approved domain-restricted Geoapify BROWSER key may be injected before this file.
-   Never inject a Supabase/service-role/server secret. No real key is committed. */
+/* Prefer the secret-free same-origin proxy. Legacy browser-key mode is TEST compatibility.
+   Never put a server/Supabase credential in public runtime configuration. */
 (function(){
 'use strict';
+if(window.AUSTA_MAP_CONFIG)return;
+const valid=k=>typeof k==='string'&&/^[a-zA-Z0-9_-]{20,100}$/.test(k)&&!/^sb_(secret|publishable)/.test(k);
+const origins=['https://austa-map-test.austahelper.workers.dev','https://austa-map-api.austahelper.workers.dev'];
+const remote=c=>c?.proxyPath==='/map-api'&&origins.includes(c.proxyOrigin)&&!c.geoapifyBrowserKey;
 const existing=window.AUSTA_MAP_SETTINGS;
-if(existing&&Object.isFrozen(existing))return;
-const candidate=existing?.geoapifyBrowserKey;
-const valid=typeof candidate==='string'&&/^[a-zA-Z0-9_-]{20,100}$/.test(candidate)&&!/^sb_(secret|publishable)/.test(candidate);
-window.AUSTA_MAP_SETTINGS=Object.freeze({geoapifyBrowserKey:valid?candidate:''});
+if(!existing||!Object.isFrozen(existing))window.AUSTA_MAP_SETTINGS=Object.freeze(existing?.proxyPath==='/map-api'?{proxyPath:'/map-api',...(remote(existing)?{proxyOrigin:existing.proxyOrigin}:{}),geoapifyBrowserKey:''}:{geoapifyBrowserKey:valid(existing?.geoapifyBrowserKey)?existing.geoapifyBrowserKey:''});
+let pending;
+async function ready(){
+ if(window.AUSTA_MAP_SETTINGS?.proxyPath==='/map-api'||valid(window.AUSTA_MAP_SETTINGS?.geoapifyBrowserKey))return true;
+ if(pending)return pending;
+ pending=(async()=>{let timer;try{
+  // Same-origin public configuration, requested only when the user opens the map.
+  const url=new URL('assets/map/runtime-config.json',document.baseURI);
+  if(url.origin!==window.location.origin||url.protocol!=='https:')return false;
+  const control=new AbortController();timer=setTimeout(()=>control.abort(),4000);
+  const response=await fetch(url,{signal:control.signal,credentials:'omit',cache:'no-store',redirect:'error'});
+  if(response.url&&new URL(response.url).origin!==url.origin)return false;
+  if(!response.ok){
+   // Source-published Pages has no server build step. This public default ships with the map.
+   if(response.status===404&&window.location.origin==='https://a-usta.github.io'&&new URL(document.baseURI).pathname.startsWith('/A-Usta-webside/')){window.AUSTA_MAP_SETTINGS=Object.freeze({proxyPath:'/map-api',proxyOrigin:'https://austa-map-test.austahelper.workers.dev',geoapifyBrowserKey:''});return true;}
+   return false;
+  }
+  const body=await response.text();if(body.length>4096)return false;
+  const config=JSON.parse(body);
+  if(!(config.proxyPath==='/map-api'&&!config.geoapifyBrowserKey&&(!config.proxyOrigin||remote(config))||!config.proxyPath&&valid(config.geoapifyBrowserKey))||!Array.isArray(config.allowedOrigins)||!config.allowedOrigins.includes(window.location.origin)||config.allowedOrigins.some(v=>typeof v!=='string'||new URL(v).origin!==v||!v.startsWith('https://')))return false;
+  window.AUSTA_MAP_SETTINGS=Object.freeze(config.proxyPath==='/map-api'?{proxyPath:'/map-api',...(remote(config)?{proxyOrigin:config.proxyOrigin}:{}),geoapifyBrowserKey:''}:{geoapifyBrowserKey:config.geoapifyBrowserKey});return true;
+ }catch{return false;}finally{clearTimeout(timer);pending=null;}})();return pending;
+}
+window.AUSTA_MAP_CONFIG=Object.freeze({ready});
 })();

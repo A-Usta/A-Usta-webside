@@ -1,0 +1,29 @@
+# V3.5.6 — automatic automotive map
+
+Baseline: PR293 was already merged into main (`bc7121b`), including its latest branch HEAD `65fe77c0fc954bd239041391fddb9d559404aee4`. Work continues on `feat/v356-live-automotive-map`; no PR294, production/deployment, credentials or database changes.
+
+## Confirmed causes and changes
+
+The previous frozen configuration contained no browser key on a normal page load. No runtime configuration producer existed. Even with a key, tiles required a second activation click. Initial whole-country bounds exceeded the existing 0.5-degree Places guard. Initial discovery was manual. These conditions produced an empty grey canvas rather than a live map.
+
+The map now initializes when the user explicitly opens Nearby Services, at Baku zoom13. Tiles and one bounded discovery begin automatically. It does not request geolocation automatically. Permission refusal leaves manual navigation working. Baku/Nakhchivan shortcuts, arbitrary location lookup and existing nationwide A-USTA-name search remain available. ResizeObserver plus invalidateSize handles modal sizing; SDK failure/retry and teardown are bounded. No offscreen/homepage Geoapify load is introduced.
+
+A wide map precedes the results, with six compact category shortcuts and the existing detailed category selector. Markers distinguish A-USTA/public external sources. A marker opens a DOM-only popup with source, supplied address/contact, coordinates and navigation. Existing profile/service delegation is retained; no direct assignment or new booking flow. No live charging availability, opening status, ratings or contacts are invented.
+
+Places uses service.vehicle.fuel, service.vehicle.charging_station, service.vehicle.repair (including its descendants), and service.vehicle.car_wash. Current official categories checked against https://apidocs.geoapify.com/docs/places/. Only named, valid-coordinate, country-code AZ API results render. Generic repair does not imply tyre/alignment services. Internal discovery remains the unchanged RLS/consent/eligibility-protected RPC. The A-USTA shortcut maps to its existing category=all contract; client filtering excludes external rows. Existing provider-type eligibility is not expanded through a database change.
+
+Movement/category changes cancel stale searches and debounce 900ms. External TTL60s/cache30/in-flight coalescing survives view changes; internal authorization is never cached. Auth changes/close/publication recovery purge shared state. Existing max20 JSON requests/minute, 500ms JSON spacing, shared300ms network pacing,60 network requests/minute,48 lifetime tile reservations,20 Places results/page,3 pages and narrow bounds are unchanged. Retry does not reset quotas. Broad zoomed-out discovery fails without a countrywide Places download. Clustering is deferred because visible bounded results are capped; no additional vendor/network library was added.
+
+## Public runtime configuration
+
+Existing early window.AUSTA_MAP_SETTINGS.geoapifyBrowserKey injection remains supported. Alternatively, after the section opens, config.ready reads HTTPS same-origin assets/map/runtime-config.json with no credentials/redirects, a deadline, size/shape validation and exact current-origin allowlist. Failed configuration can be retried without reloading. The JSON filename is ignored by git; runtime-config.example.json contains no key. Return values/errors do not expose it. Only the validated browser key is retained, never arbitrary server config fields.
+
+The tested artifact-only producer tools/build-map-runtime-config.cjs reads GEOAPIFY_BROWSER_KEY and GEOAPIFY_ALLOWED_ORIGINS from the build environment and creates the JSON only in a separate output directory. It refuses source-tree/symlink targets, existing output, invalid key/origin data and prints only an allowlisted status. It never deploys or fetches credentials. A deployment system may use this producer to create the public JSON using a protected deployment variable; this PR neither alters deployment nor supplies a real key. A browser key is necessarily visible to the visitor's browser/network tools: restrictions must be enforced by Geoapify itself. The JSON allowedOrigins is an additional client check, not provider-side domain verification. Existing Github Pages origin is https://a-usta.github.io; future https://a-usta.az is configurable, not claimed verified. No service-role/API secret is a valid substitute.
+
+**Live blocker:** this session has no authorized real Geoapify runtime key or provider account access. Domain restrictions cannot be independently certified and no live Geoapify request is dispatched. The owner-reported credit statistics/limits are accepted; no billing/limit change is proposed. This implementation cannot make the deployed site live until a genuinely restricted public key is provisioned through deployment configuration. Do not merge as a completed live acceptance certificate.
+
+## Verification boundary
+
+All new browser tests intercept external requests and clearly label synthetic QA fixtures. Real Leaflet, native Chromium, source markers/popups, six filters, Baku/Nakhchivan, layout widths1536/1366/900/390, retry after missing configuration and existing map regressions are exercised. Transparent test tiles are not real basemap evidence. Screenshots are isolated UI QA, not proof of live places or provider restrictions. Runtime-key tests cover lazy/coalesced loading, wrong domains, server-key rejection, invalid/oversized JSON, HTTPS/same-origin rejection and sanitized retry.
+
+CAS migration, receipts, publication.js, hosted test executors and local-only PostgreSQL protection remain byte-identical to main. No database mutation or fixture cleanup is performed. CI PostgreSQL security remains disposable-only. Production remains untouched. Keep the new PR Draft while the real-key/domain/live desktop-mobile gate is outstanding.

@@ -65,7 +65,12 @@ class Security(unittest.TestCase):
         self.assertIn('  workflow_dispatch:',s)
         self.assertNotIn('  pull_request:',s);self.assertNotIn('  push:',s)
         self.assertIn('environment: austa-test-only',s)
-        review,hosted=s.split('  hosted:',1)
+        review,rest=s.split('  hosted:',1)
+        hosted,geo=rest.split('  geoapify:',1)
+        self.assertNotIn('AUSTA_TEST_DB_',geo)
+        self.assertIn("github.ref == 'refs/heads/feat/v356-live-automotive-map'",geo)
+        self.assertIn("github.ref == 'refs/heads/feat/v355-automotive-map'",review)
+        self.assertIn("github.ref == 'refs/heads/feat/v355-automotive-map'",hosted)
         self.assertNotIn('secrets.',review)
         for p in (ROOT/'.github/workflows').glob('*.yml'):
             if p.name!='v355-hosted-cas.yml':self.assertNotIn('secrets.AUSTA_TEST_DB_',p.read_text())
