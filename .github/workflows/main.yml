@@ -242,20 +242,9 @@ jobs:
         run: npm run browser:install --prefix tests
 
       - name: Complete frontend including real Chromium and P2.A
-        env:
-          V36_SCREENSHOTS: ${{ runner.temp }}/austa-v36-visual-evidence
         run: |
           set -euo pipefail
           npm test --prefix tests | tee "$RUNNER_TEMP/frontend-regression.tap"
-
-      - name: Upload V3.6 desktop/mobile visual evidence
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: v36-listing-detail-cards-visual-evidence
-          path: ${{ runner.temp }}/austa-v36-visual-evidence
-          if-no-files-found: ignore
-          retention-days: 7
 
       - name: Assert repository cleanliness
         if: always()
