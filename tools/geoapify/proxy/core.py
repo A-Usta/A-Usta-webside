@@ -250,9 +250,12 @@ def transport(url):
     # Fixed HTTPS hosts only; no environment proxy, cookies, redirects or custom CA.
     from urllib.parse import urlsplit
     u = urlsplit(url)
+    if os.environ.get('SSLKEYLOGFILE'):
+        raise Denied('UPSTREAM', 502)
     if u.scheme != 'https' or u.netloc not in ('api.geoapify.com', 'maps.geoapify.com') or u.fragment:
         raise Denied('UPSTREAM', 502)
     conn = http.client.HTTPSConnection(u.netloc, timeout=8, context=ssl.create_default_context())
+    conn.set_debuglevel(0)
     deadline = time.monotonic()+8
     try:
         conn.connect()

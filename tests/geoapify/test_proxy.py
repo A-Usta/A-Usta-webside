@@ -234,6 +234,9 @@ class ProxyTests(unittest.TestCase):
     def test_tls_verification_fixed_hosts_redirects_and_timeout(self):
         from unittest.mock import patch,MagicMock
         import ssl
+        with patch.dict(os.environ,{'SSLKEYLOGFILE':'/synthetic-do-not-create'}), patch.object(core.http.client,'HTTPSConnection') as constructor:
+            with self.assertRaisesRegex(core.Denied,'UPSTREAM'):core.transport('https://api.geoapify.com/v2/places?apiKey='+KEY)
+            constructor.assert_not_called()
         for bad in ['http://api.geoapify.com/v2/places','https://evil.invalid/','https://api.geoapify.com@evil.invalid/','https://api.geoapify.com:8443/']:
             with self.assertRaises(core.Denied):core.transport(bad)
         for status in [301,302,307,308,401,429,500]:
@@ -245,6 +248,7 @@ class ProxyTests(unittest.TestCase):
                 self.assertTrue(context.check_hostname)
                 self.assertEqual(context.verify_mode,ssl.CERT_REQUIRED)
                 self.assertEqual(constructor.call_args.kwargs['timeout'],8)
+                conn.set_debuglevel.assert_called_once_with(0)
                 conn.close.assert_called_once()
         with patch.object(core.http.client,'HTTPSConnection') as constructor, patch.object(core.time,'monotonic',side_effect=[0,9]):
             with self.assertRaisesRegex(core.Denied,'UPSTREAM'):core.transport('https://api.geoapify.com/v2/places?apiKey='+KEY)

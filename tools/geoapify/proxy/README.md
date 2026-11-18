@@ -34,6 +34,8 @@ optional bounded name. Geocode forces countrycode:az and limit 5. Tile zoom is
 12–18, coordinates must intersect the admitted viewport. TLS certificate and
 hostname verification are enabled; redirects, environment HTTP proxies, >2 MB
 bodies, unexpected MIME/shapes and provider echoes of the key are rejected.
+HTTP client debug logging is explicitly disabled and TLS key logging through
+SSLKEYLOGFILE is rejected before creating the TLS context.
 The transport uses eight-second socket timeouts and deadline checks between
 connection/request/header phases and during streaming. A host-level hard request
 deadline and bounded DNS resolver are also required: Python socket timeouts alone
