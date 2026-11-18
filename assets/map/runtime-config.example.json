@@ -1,4 +1,5 @@
 {
-  "geoapifyBrowserKey": "",
-  "allowedOrigins": ["https://a-usta.github.io", "https://a-usta.az"]
+  "proxyPath": "/map-api",
+  "proxyOrigin": "https://austa-map-api.austahelper.workers.dev",
+  "allowedOrigins": ["https://a-usta.github.io"]
 }

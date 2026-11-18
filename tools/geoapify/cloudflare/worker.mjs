@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import {
   ORIGIN,
+  PAGES_ORIGIN, PRODUCTION_ORIGIN, workerOrigin,
   Denied,
   sha,
   boundary,
@@ -255,7 +256,7 @@ export class MapAdmission extends DurableObject {
       const subject = await this.verify(peer, cookie);
       if (!subject) fail("AUTH", 401);
       const u = new URL(urlString);
-      if (u.origin !== ORIGIN) fail("HOST");
+      if (u.origin !== workerOrigin(this.env)) fail("HOST");
       const p = plan(u, contains),
         key = await sha(
           p.url + JSON.stringify(p.box) + (p.ttl ? "" : crypto.randomUUID()),
@@ -358,7 +359,7 @@ export default {
   async fetch(request, env) {
     try {
       const u = new URL(request.url);
-      if (u.origin !== ORIGIN || env.AUSTA_MAP_MODE !== "TEST")
+      if (!workerOrigin(env) || u.origin !== workerOrigin(env))
         fail("TEST_SCOPE");
       if (u.username || u.password || u.hash) fail("PARAMETERS", 400);
       const path = u.pathname;
@@ -376,7 +377,7 @@ export default {
           }),
         );
       }
-      if(path === '/map-test-config' && request.method === 'GET' && !u.search){
+      if(env.AUSTA_MAP_MODE==='TEST' && path === '/map-test-config' && request.method === 'GET' && !u.search){
         const key=env.SUPABASE_TEST_PUBLISHABLE_KEY;
         if(typeof key!=='string'||!/^sb_publishable_[A-Za-z0-9_-]{10,100}$/.test(key))fail('TEST_CONFIG',503);
         // Public anon credential by design: no Geoapify/server/service-role value.
@@ -384,25 +385,27 @@ export default {
       }
       if (path.startsWith("/map-api/")) {
         if (request.headers.has("CF-Worker")) fail("WORKER_SUBREQUEST");
-        const origin = request.headers.get("Origin"),
-          referer = request.headers.get("Referer"),
-          site = request.headers.get("Sec-Fetch-Site");
-        if (site && site !== "same-origin") fail("ORIGIN");
-        if (origin && origin !== ORIGIN) fail("ORIGIN");
-        if (!origin) {
-          try {
-            if (new URL(referer).origin !== ORIGIN) fail("ORIGIN");
-          } catch {
-            fail("ORIGIN");
-          }
+        const origin=request.headers.get('Origin'),referer=request.headers.get('Referer'),site=request.headers.get('Sec-Fetch-Site');
+        const cross=origin===PAGES_ORIGIN && env.AUSTA_MAP_PAGES_ORIGIN===PAGES_ORIGIN;
+        const cors=cross?{'Access-Control-Allow-Origin':PAGES_ORIGIN,'Vary':'Origin'}:{};
+        if(origin && origin!==u.origin && !cross)fail('ORIGIN');
+        if(!origin){try{if(new URL(referer).origin!==u.origin)fail('ORIGIN');}catch{fail('ORIGIN');}}
+        if(site && site!=='same-origin' && !cross)fail('ORIGIN');
+        if(request.method==='OPTIONS'){
+          const method=request.headers.get('Access-Control-Request-Method');
+          const names=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().split(',').map(s=>s.trim()).filter(Boolean);
+          if(!cross||!['GET','POST'].includes(method)||names.some(s=>!['x-austa-map-token','x-austa-map-session'].includes(s)))fail('PREFLIGHT');
+          return reply(null,204,'text/plain',{...cors,'Access-Control-Allow-Methods':'GET, POST','Access-Control-Allow-Headers':'X-AUSTA-Map-Token, X-AUSTA-Map-Session','Access-Control-Max-Age':'300'});
         }
+        const token=request.headers.get('X-AUSTA-Map-Token');
+        if(cross && token && !/^[A-Za-z0-9_-]{1,256}\.[a-f0-9]{64}$/.test(token))fail('AUTH',401);
         const peer = request.headers.get("CF-Connecting-IP") || "",
-          cookie = request.headers.get("Cookie") || "",
+          cookie = cross ? (token ? COOKIE+"="+token : "") : request.headers.get("Cookie") || "",
           stub = env.MAP_ADMISSION.getByName("austa-map-test-v1");
         if (path === "/map-api/session") {
           if (
             request.method !== "POST" ||
-            origin !== ORIGIN ||
+            (!cross && origin !== u.origin) ||
             request.headers.get("X-AUSTA-Map-Session") !== "1" ||
             u.search ||
             (request.headers.get("Content-Length") &&
@@ -413,22 +416,23 @@ export default {
           const r = await stub.session(peer, cookie);
           return reply(
             JSON.stringify(
-              r.status === 200 ? { ready: true } : { error: "SESSION_DENIED" },
+              r.status === 200 ? { ready: true, ...(cross?{token:r.cookie ? r.cookie.split(";")[0].slice(COOKIE.length+1) : token}: {}) } : { error: "SESSION_DENIED" },
             ),
             r.status,
             "application/json",
-            r.cookie ? { "Set-Cookie": r.cookie } : {},
+            {...cors,...(!cross && r.cookie ? { "Set-Cookie": r.cookie } : {})},
           );
         }
         if (request.method !== "GET") fail("METHOD", 405);
         const r = await stub.query(u.href, peer, cookie);
-        return reply(r.body, r.status, r.mime);
+        return reply(r.body, r.status, r.mime, cors);
       }
       if (request.method !== "GET" || u.search) fail("NOT_FOUND", 404);
-      if (path === "/assets/map/runtime-config.json")
+      if (env.AUSTA_MAP_MODE==="TEST" && path === "/assets/map/runtime-config.json")
         return reply(
           JSON.stringify({ proxyPath: "/map-api", allowedOrigins: [ORIGIN] }),
         );
+      if(env.AUSTA_MAP_MODE!=="TEST")fail("NOT_FOUND",404);
       const a = assets[path];
       if (!a) fail("NOT_FOUND", 404);
       return reply(

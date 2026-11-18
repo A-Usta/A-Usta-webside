@@ -1,5 +1,8 @@
 // Server-only endpoint and response contracts, ported from proxy/core.py.
 export const ORIGIN = "https://austa-map-test.austahelper.workers.dev";
+export const PAGES_ORIGIN = 'https://a-usta.github.io';
+export const PRODUCTION_ORIGIN = 'https://austa-map-api.austahelper.workers.dev';
+export const workerOrigin = env => env.AUSTA_MAP_MODE === 'TEST' ? ORIGIN : env.AUSTA_MAP_MODE === 'PRODUCTION' ? PRODUCTION_ORIGIN : '';
 export const LIMIT = 2000000;
 export const CATS = {
   fuel: "service.vehicle.fuel",

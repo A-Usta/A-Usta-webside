@@ -4,8 +4,10 @@
 'use strict';
 if(window.AUSTA_MAP_CONFIG)return;
 const valid=k=>typeof k==='string'&&/^[a-zA-Z0-9_-]{20,100}$/.test(k)&&!/^sb_(secret|publishable)/.test(k);
+const origins=['https://austa-map-test.austahelper.workers.dev','https://austa-map-api.austahelper.workers.dev'];
+const remote=c=>c?.proxyPath==='/map-api'&&origins.includes(c.proxyOrigin)&&!c.geoapifyBrowserKey;
 const existing=window.AUSTA_MAP_SETTINGS;
-if(!existing||!Object.isFrozen(existing))window.AUSTA_MAP_SETTINGS=Object.freeze(existing?.proxyPath==='/map-api'?{proxyPath:'/map-api',geoapifyBrowserKey:''}:{geoapifyBrowserKey:valid(existing?.geoapifyBrowserKey)?existing.geoapifyBrowserKey:''});
+if(!existing||!Object.isFrozen(existing))window.AUSTA_MAP_SETTINGS=Object.freeze(existing?.proxyPath==='/map-api'?{proxyPath:'/map-api',...(remote(existing)?{proxyOrigin:existing.proxyOrigin}:{}),geoapifyBrowserKey:''}:{geoapifyBrowserKey:valid(existing?.geoapifyBrowserKey)?existing.geoapifyBrowserKey:''});
 let pending;
 async function ready(){
  if(window.AUSTA_MAP_SETTINGS?.proxyPath==='/map-api'||valid(window.AUSTA_MAP_SETTINGS?.geoapifyBrowserKey))return true;
@@ -19,8 +21,8 @@ async function ready(){
   if(!response.ok||response.url&&new URL(response.url).origin!==url.origin)return false;
   const body=await response.text();if(body.length>4096)return false;
   const config=JSON.parse(body);
-  if(!(config.proxyPath==='/map-api'&&!config.geoapifyBrowserKey||!config.proxyPath&&valid(config.geoapifyBrowserKey))||!Array.isArray(config.allowedOrigins)||!config.allowedOrigins.includes(window.location.origin)||config.allowedOrigins.some(v=>typeof v!=='string'||new URL(v).origin!==v||!v.startsWith('https://')))return false;
-  window.AUSTA_MAP_SETTINGS=Object.freeze(config.proxyPath==='/map-api'?{proxyPath:'/map-api',geoapifyBrowserKey:''}:{geoapifyBrowserKey:config.geoapifyBrowserKey});return true;
+  if(!(config.proxyPath==='/map-api'&&!config.geoapifyBrowserKey&&(!config.proxyOrigin||remote(config))||!config.proxyPath&&valid(config.geoapifyBrowserKey))||!Array.isArray(config.allowedOrigins)||!config.allowedOrigins.includes(window.location.origin)||config.allowedOrigins.some(v=>typeof v!=='string'||new URL(v).origin!==v||!v.startsWith('https://')))return false;
+  window.AUSTA_MAP_SETTINGS=Object.freeze(config.proxyPath==='/map-api'?{proxyPath:'/map-api',...(remote(config)?{proxyOrigin:config.proxyOrigin}:{}),geoapifyBrowserKey:''}:{geoapifyBrowserKey:config.geoapifyBrowserKey});return true;
  }catch{return false;}finally{clearTimeout(timer);pending=null;}})();return pending;
 }
 window.AUSTA_MAP_CONFIG=Object.freeze({ready});

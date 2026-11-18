@@ -11,3 +11,9 @@ test('proxy runtime config is same-origin and key-free; mixed or arbitrary proxy
  assert.equal(await f.window.AUSTA_MAP_CONFIG.ready(),true);assert.equal(f.window.AUSTA_MAP_SETTINGS.proxyPath,'/map-api');assert.equal(f.window.AUSTA_MAP_SETTINGS.geoapifyBrowserKey,'');
  for(const config of [{proxyPath:'/map-api',geoapifyBrowserKey:key},{proxyPath:'https://evil.test'},{proxyPath:'//evil.test/map-api'}]){const bad=fixture({...config,allowedOrigins:['https://a-usta.github.io']});assert.equal(await bad.window.AUSTA_MAP_CONFIG.ready(),false);}
 });
+
+test('key-free Pages proxy artifact pins approved HTTPS gateway and rejects mixed browser credentials',()=>{
+ const os=require('node:os'),fs=require('node:fs'),path=require('node:path'),{build}=require('../tools/build-map-runtime-config.cjs');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'austa-proxy-config-'));
+ try{const file=build({output:dir,proxyOrigin:'https://austa-map-api.austahelper.workers.dev',origins:['https://a-usta.github.io']});const c=JSON.parse(fs.readFileSync(file));assert.equal(c.proxyPath,'/map-api');assert.equal(c.proxyOrigin,'https://austa-map-api.austahelper.workers.dev');assert.equal(c.geoapifyBrowserKey,undefined);for(const proxyOrigin of ['https://attacker.invalid','http://austa-map-api.austahelper.workers.dev','https://austa-map-api.austahelper.workers.dev/path'])assert.throws(()=>build({output:dir,proxyOrigin,origins:['https://a-usta.github.io']}));assert.throws(()=>build({output:dir,proxyOrigin:c.proxyOrigin,key:'SyntheticBrowserKeyNotActual0001',origins:['https://a-usta.github.io']}));}finally{fs.rmSync(dir,{recursive:true,force:true});}
+});

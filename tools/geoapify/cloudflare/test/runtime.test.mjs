@@ -26,7 +26,7 @@ const make = () =>
     ],
     modulesRoot: process.cwd(),
     compatibilityDate: "2026-07-30",
-    bindings: { AUSTA_MAP_MODE: "TEST", GEOAPIFY_SERVER_KEY: secret },
+    bindings: { AUSTA_MAP_MODE: "TEST", AUSTA_MAP_PAGES_ORIGIN: "https://a-usta.github.io", GEOAPIFY_SERVER_KEY: secret },
     durableObjects: {
       MAP_ADMISSION: { className: "MapAdmission", useSQLite: true },
     },
@@ -202,4 +202,17 @@ test("per-principal daily cap rejects the eleventh concurrent 12-unit reservatio
 test.after(async () => {
   await mf.dispose();
   await rm(dir, { recursive: true, force: true });
+});
+
+
+test('Pages CORS preflight and memory token work without third-party cookies; foreign origin cannot mint/read a token',async()=>{
+ const pageOrigin='https://a-usta.github.io',h={Origin:pageOrigin,'Sec-Fetch-Site':'cross-site','CF-Connecting-IP':'192.0.2.88'};
+ const pre=await mf.dispatchFetch(origin+'/map-api/session',{method:'OPTIONS',headers:{...h,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'x-austa-map-session'}});
+ assert.equal(pre.status,204);assert.equal(pre.headers.get('Access-Control-Allow-Origin'),pageOrigin);assert.equal(pre.headers.get('Access-Control-Allow-Credentials'),null);
+ const denied=await mf.dispatchFetch(origin+'/map-api/session',{method:'OPTIONS',headers:{...h,Origin:'https://attacker.invalid','Access-Control-Request-Method':'POST'}});assert.equal(denied.status,403);assert.equal(denied.headers.get('Access-Control-Allow-Origin'),null);
+ const issued=await mf.dispatchFetch(origin+'/map-api/session',{method:'POST',headers:{...h,'X-AUSTA-Map-Session':'1'}});assert.equal(issued.status,200);assert.equal(issued.headers.get('set-cookie'),null);const {token}=await issued.json();assert.match(token,/^[A-Za-z0-9_-]+\.[a-f0-9]{64}$/);
+ const r=await mf.dispatchFetch(url,{headers:{...h,'X-AUSTA-Map-Token':token}});assert.ok([200,429].includes(r.status));assert.equal(r.headers.get('Access-Control-Allow-Origin'),pageOrigin);
+ const noToken=await mf.dispatchFetch(url,{headers:h});assert.equal(noToken.status,401);
+ const otherPeer=await mf.dispatchFetch(url,{headers:{...h,'CF-Connecting-IP':'192.0.2.89','X-AUSTA-Map-Token':token}});assert.equal(otherPeer.status,401);
+ const leak=await mf.dispatchFetch(url,{headers:{...h,Origin:'https://attacker.invalid','X-AUSTA-Map-Token':token}});assert.equal(leak.status,403);assert.equal(leak.headers.get('Access-Control-Allow-Origin'),null);
 });
