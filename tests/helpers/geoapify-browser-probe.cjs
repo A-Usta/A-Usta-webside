@@ -196,15 +196,17 @@ async function runOfflineWorker({keyProvider,readUsage,restrictionsVerified=fals
   });
   await session.send('Fetch.enable',{patterns:[{urlPattern:'*',requestStage:'Request'}]});
   const routing={route:async(pattern,handler)=>{if(pattern!==BASE+'**')throw Error('Unexpected fixture route');routes.push({prefix:BASE,handler});}};
-  report.phase='fixture';await fixture(page,true,false,{base:BASE,routing,externalMocks:false,runtimeKey:key,isolated:true,includeConfig:true,beforeModules:scenario==='preflight'?async p=>p.evaluate(()=>{const native=window.fetch;window.fetch=(url,options)=>native(url,{...options,headers:{...options?.headers,'x-offline-probe':'1'}});}):undefined});
+  // Isolate the existing geocoding probe: its deny-only gate must not authorize automatic tiles/Places.
+  report.phase='fixture';await fixture(page,false,false,{base:BASE,routing,externalMocks:false,runtimeKey:key,isolated:true,includeConfig:true,beforeModules:scenario==='preflight'?async p=>p.evaluate(()=>{const native=window.fetch;window.fetch=(url,options)=>native(url,{...options,headers:{...options?.headers,'x-offline-probe':'1'}});}):undefined});
   if(signal?.aborted){report.reason='cancelled';return report;}
+  await page.evaluate(value=>{window.AUSTA_MAP_SETTINGS=Object.freeze({geoapifyBrowserKey:value});},key);
   report.phase='geocode-input';await page.getByLabel('Şəhər / rayon / qəsəbə / kənd',{exact:true}).fill('Bakı');
   report.phase='geocode-request';await page.getByRole('button',{name:'Ərazini tap',exact:true}).click();
   report.phase='geocode-completion';await page.waitForFunction(()=>Boolean(document.querySelector('.am-geocode button'))||!document.querySelector('.am-status').textContent.includes('Ərazi axtarılır'),{},{timeout:10000});
   report.phase='geocode-parse';report.rows=await page.locator('.am-geocode button').count();
   const empty=await page.locator('.am-status').evaluate(n=>n.textContent==='Ərazi tapılmadı.');
   report.parsed=report.rows>0||empty;
-  if(report.rows){report.phase='geocode-selection';await page.locator('.am-geocode button').first().click();report.selectedArea=await page.locator('.am-status').evaluate(n=>n.textContent.includes('Bu ərazidə axtar'));}
+  if(report.rows){report.phase='geocode-selection';await page.locator('.am-geocode button').first().click();report.selectedArea=await page.locator('.am-status').evaluate(n=>n.textContent.includes('məntəqələr yenilənir'));}
   const snapshot=gate.snapshot();report.httpStatus=snapshot.events.find(r=>r.method==='GET'&&r.allowed)?.status??null;
   report.corsAccepted=report.httpStatus===200&&report.parsed;
   report.status=report.corsAccepted&&!snapshot.events.some(r=>!r.allowed)&&!uncertain&&!fuse.attempts()?'PASS':'BLOCKED';
