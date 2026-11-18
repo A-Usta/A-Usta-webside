@@ -4,8 +4,10 @@ This adapter ports the existing Python contracts into Workers JavaScript and
 SQLite-backed Durable Objects. It never imports the production backend or
 changes Supabase. Only https://austa-map-test.austahelper.workers.dev is accepted.
 The real source map frontend and API are served together. This labelled isolated
-preview disconnects Supabase and therefore does not certify live A-USTA provider
-rows; the source frontend's existing publication/RPC paths remain unchanged.
+preview uses only A-USTA-TEST anonymous public discovery via a pinned read-only
+adapter. A modern TEST publishable key (not a server/service-role secret) is
+intentionally public through guarded /map-test-config. Only the TEST Supabase
+origin is added to CSP. Source publication/RPC paths remain unchanged.
 
 ## Security and persistence
 
@@ -90,3 +92,10 @@ Country context is appended to bare geocoding text (unless already present), aft
 Session bootstrap accepts only a bounded empty body with a two-second read deadline; it never buffers an unbounded request. Public /health exposes only aggregate reservations and cache count, not identities or credentials. Existing schema/policy mismatch fails closed.
 
 Before the workflow exists on main, GitHub hides its workflow_dispatch UI. The only pre-merge alternative is an explicit owner-added austa-map-live-qa label event on PR #296, the same repository and exact feature branch. Synchronize/open events do not invoke live requests. The owner login, action, label, PR number, head repository and branch are checked, and checkout pins the event head SHA. No secrets are passed to either PR or dispatch jobs. This is a bounded manual TEST action, not an automatic hosted test on pushes. Partial live coverage fails its release gate and is saved honestly in the artifact.
+
+Two-blocker completion: hosted rollback fixtures prove anonymous usta/service discovery,
+cross-user ownership denial, revocation and inactive-listing suppression. No fixture
+is committed to TEST. Before/after listings/publications/profiles fingerprint:
+44d386b8c501f008492a217430d8f9a6. Existing real TEST publication remains disabled.
+The manual runner checks aggregate quota first and makes no Places request when
+remaining units cannot admit one. Successful regional samples are not replayed.

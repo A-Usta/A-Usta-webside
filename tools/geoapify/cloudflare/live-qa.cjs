@@ -11,11 +11,19 @@ const origin='https://austa-map-test.austahelper.workers.dev';
  await p.route(origin+'/map-api/**',async route=>{if(route.request().method()==='GET'&&++report.requests>12)return route.abort();return route.continue();});
  const home=await p.goto(origin);if(home.status()!==200)throw Error('TEST_ORIGIN_REJECTED');
  report.before=await p.evaluate(async()=>await(await fetch('/health')).json());
+ report.providers=[];
+ for(const category of ['usta','service']){
+  const result=await p.evaluate(async category=>await AUSTA_MAP_DATA.discover({box:[40.38,49.84,40.44,49.90],filter:category}),category);
+  if(result.errors.length)throw Error('PUBLIC_PROVIDER_DISCOVERY');report.providers.push({category,groups:result.groups.length,errors:result.errors});
+ }
+ if(report.before.globalDailyCap-report.before.reservedUnits<12){report.budgetStopped=true;report.nextQuotaUTC=new Date((Math.floor(Date.now()/86400000)+1)*86400000).toISOString();}
+ else{
  const session=await p.evaluate(async()=> (await fetch('/map-api/session',{method:'POST',headers:{'X-AUSTA-Map-Session':'1'}})).status);if(session!==200)throw Error('SESSION_'+session);
- // No map open here: reuse the successful desktop/mobile screenshots; no tile burst.
- for(const [name,lat,lon,category]of [['Xınalıq',41.1786,48.1268,'all'],['Lənkəran',38.752,48.8506,'all'],['Ağdam',39.9908,46.9274,'all'],['Bakı EV',40.4093,49.8671,'charging'],['Bakı repair',40.4093,49.8671,'repair']]){
- const result=await p.evaluate(async({lat,lon,category})=>{const box=[lon-.025,lat-.025,lon+.025,lat+.025].join(',');const r=await fetch('/map-api/places?category='+category+'&box='+encodeURIComponent(box),{credentials:'same-origin',cache:'no-store',redirect:'error'});if(r.status!==200)return {status:r.status};const j=await r.json();return {status:200,features:j.features,hasMore:j.hasMore,rows:AUSTA_MAP_DATA.externalRows(j,category)};},{lat,lon,category});
- report.regional.push({name,category,...result});if(result.status===429){report.budgetStopped=true;break;}if(result.status!==200)throw Error('UPSTREAM_'+result.status);await p.waitForTimeout(650);
+ // Only missing EV/repair; successful region samples are not repeated.
+ for(const category of ['charging','repair']){
+ const result=await p.evaluate(async category=>{const r=await fetch('/map-api/places?category='+category+'&box=49.8421,40.3843,49.8921,40.4343',{credentials:'same-origin',cache:'no-store',redirect:'error'});if(r.status!==200)return {status:r.status};const j=await r.json();return {status:200,features:j.features,hasMore:j.hasMore,rows:AUSTA_MAP_DATA.externalRows(j,category)};},category);
+ report.regional.push({name:'Bakı',category,...result});if(result.status===429){report.budgetStopped=true;break;}if(result.status!==200)throw Error('UPSTREAM_'+result.status);await p.waitForTimeout(650);
+ }
  }
  report.after=await p.evaluate(async()=>await(await fetch('/health')).json());
  report.upstreamUpperBound=report.requests;report.status=report.budgetStopped?'BLOCKED_QUOTA':'PARTIAL_API_ONLY';

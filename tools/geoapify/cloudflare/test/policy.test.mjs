@@ -180,3 +180,15 @@ test('safe paging retains raw-page fullness after country filtering and explicit
  const r=await safeResponse(Response.json({type:'FeatureCollection',features:Array.from({length:20},(_,i)=>feature(i>0))}),p,contains,'SyntheticOnlySecretValue');
  const d=JSON.parse(new TextDecoder().decode(r.body));assert.equal(d.features.length,1);assert.equal(d.hasMore,true);assert.equal(d.features[0].properties.brand,'SOCAR');assert.equal(d.features[0].properties.datasource.raw['service:vehicle:tyres_repair'],'yes');assert.equal(d.features[0].properties.datasource.raw.shop,'tyres');assert.equal(d.features[0].properties.datasource.raw.private,undefined);assert.equal(d.features[0].properties.datasource.raw['service:vehicle:alignment'],undefined);
 });
+
+test('TEST public adapter accepts only anonymous discovery, pinned TEST config, no privileged key or mutable API',async()=>{
+ const vm=await import('node:vm'),source=fs.readFileSync(new URL('../test-providers.js',import.meta.url),'utf8');
+ const calls=[],window={location:{origin:ORIGIN}};const key='sb_publishable_SyntheticNotActualCredential01';
+ vm.runInNewContext(source,{window,fetch:async(u,opts)=>{calls.push([u,opts]);return {ok:true,json:async()=>({project:'xnhxneziasqthkhhntkv',publishableKey:key}),text:async()=> '[]'};}});
+ assert.deepEqual(Object.keys(window.AUSTA_SUPABASE),['rpc']);
+ await assert.rejects(window.AUSTA_SUPABASE.rpc('delete_all',{}));
+ await assert.rejects(window.AUSTA_SUPABASE.rpc('discover_public_providers',{owner_id:'attacker'}));
+ const c=new AbortController();assert.equal((await window.AUSTA_SUPABASE.rpc('discover_public_providers',{south:40.38,west:49.84,north:40.44,east:49.90}).abortSignal(c.signal)).data.length,0);
+ assert.equal(calls.length,2);assert.equal(calls[1][0],'https://xnhxneziasqthkhhntkv.supabase.co/rest/v1/rpc/discover_public_providers');assert.equal(calls[1][1].credentials,'omit');assert.equal(calls[1][1].headers.apikey,key);assert.equal(calls[1][1].signal,c.signal);assert.equal(calls[1][1].headers.Authorization,undefined);
+ const wrong={location:{origin:'https://production.invalid'}};vm.runInNewContext(source,{window:wrong});assert.equal(wrong.AUSTA_SUPABASE,undefined);
+});

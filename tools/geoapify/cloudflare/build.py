@@ -11,6 +11,12 @@ def build(target):
     if target.exists() or root==target or root in target.parents:raise ValueError('TARGET')
     target.mkdir(parents=True)
     preview=target/'preview';prepare(preview)
+    # Replace only this isolated Cloudflare preview's stub; generic host preview is unchanged.
+    index=preview/'index.html'
+    html=index.read_text().replace('TEST PREVIEW · Supabase disconnected · source: Geoapify when configured','TEST PREVIEW · A-USTA-TEST public discovery · Geoapify external data')
+    html=html.replace('<script>window.AUSTA_SUPABASE={rpc:async()=>({data:[]})};</script>','<script src="assets/map/test-providers.js"></script>')
+    index.write_text(html)
+    (preview/'assets/map/test-providers.js').write_text((Path(__file__).parent/'test-providers.js').read_text())
     assets={}
     for f in preview.rglob('*'):
         if f.is_file():

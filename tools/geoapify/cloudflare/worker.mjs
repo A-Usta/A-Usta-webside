@@ -338,7 +338,7 @@ const headers = {
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "same-origin",
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self' https://xnhxneziasqthkhhntkv.supabase.co; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
 };
 async function emptyRequest(request) {
   if (!request.body) return true;
@@ -375,6 +375,12 @@ export default {
             perPeerDailyCap: 120,
           }),
         );
+      }
+      if(path === '/map-test-config' && request.method === 'GET' && !u.search){
+        const key=env.SUPABASE_TEST_PUBLISHABLE_KEY;
+        if(typeof key!=='string'||!/^sb_publishable_[A-Za-z0-9_-]{10,100}$/.test(key))fail('TEST_CONFIG',503);
+        // Public anon credential by design: no Geoapify/server/service-role value.
+        return reply(JSON.stringify({project:'xnhxneziasqthkhhntkv',publishableKey:key}));
       }
       if (path.startsWith("/map-api/")) {
         if (request.headers.has("CF-Worker")) fail("WORKER_SUBREQUEST");
