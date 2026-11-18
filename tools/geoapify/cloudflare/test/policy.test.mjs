@@ -160,3 +160,16 @@ test("geocoding retains addresses and adds real country context to ambiguous AZ 
   );
   assert.equal(new URL(b.url).searchParams.get("text"), "Gəncə, Azərbaycan");
 });
+
+test('live CI requires exact owner manual action, rejects forks, other PRs, branches and pushes; no secrets',()=>{
+ const y=fs.readFileSync(new URL('../../../../.github/workflows/v356-cloudflare-test.yml',import.meta.url),'utf8');
+ const condition=y.match(/    if: >-\n([\s\S]+?)    runs-on:/)[1].split('\n').map(x=>x.trim()).join(' ');
+ const allowed=new Function('github','return ('+condition+')');
+ const base={repository:'A-Usta/A-Usta-webside',actor:'A-Usta',event_name:'pull_request',ref:'refs/pull/296/merge',event:{action:'labeled',label:{name:'austa-map-live-qa'},pull_request:{number:296,head:{repo:{full_name:'A-Usta/A-Usta-webside'},ref:'feat/v356-live-automotive-map'}}}};
+ assert.equal(allowed(base),true);
+ const change=(fn)=>{const x=structuredClone(base);fn(x);return allowed(x);};
+ for(const fn of[x=>x.actor='other',x=>x.event.action='synchronize',x=>x.event.label.name='other',x=>x.event.pull_request.number=294,x=>x.event.pull_request.head.repo.full_name='fork/repo',x=>x.event.pull_request.head.ref='main',x=>x.event_name='push'])assert.equal(change(fn),false);
+ assert.equal(allowed({repository:base.repository,actor:base.actor,event_name:'workflow_dispatch',ref:'refs/heads/feat/v356-live-automotive-map',event:{}}),true);
+ assert.equal(allowed({repository:base.repository,actor:base.actor,event_name:'workflow_dispatch',ref:'refs/heads/main',event:{}}),false);
+ assert.doesNotMatch(y,/secrets\./);assert.match(y,/contents: read/);assert.match(y,/github\.event\.pull_request\.head\.sha \|\| github\.sha/);
+});

@@ -2,6 +2,7 @@ name: V356 Cloudflare TEST map
 on:
   pull_request:
     branches: [main]
+    types: [opened, reopened, synchronize, labeled]
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,13 +26,19 @@ jobs:
       - run: git diff --exit-code
   live:
     name: Explicit manual real TEST map QA
-    if: github.event_name == 'workflow_dispatch' && github.repository == 'A-Usta/A-Usta-webside' && github.ref == 'refs/heads/feat/v356-live-automotive-map'
+    if: >-
+      github.repository == 'A-Usta/A-Usta-webside' && github.actor == 'A-Usta' &&
+      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feat/v356-live-automotive-map') ||
+      (github.event_name == 'pull_request' && github.event.action == 'labeled' &&
+      github.event.label.name == 'austa-map-live-qa' && github.event.pull_request.number == 296 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'feat/v356-live-automotive-map'))
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:

@@ -40,7 +40,7 @@ not evidence that deployment or the public site is universally unavailable.
 
 ## Offline security proof
 
-Eight Node tests include actual Miniflare/workerd SQLite, concurrent admission,
+Nine Node tests include actual Miniflare/workerd SQLite, concurrent admission,
 global daily budget exhaustion across identities, cookie reset and issuance caps,
 HMAC peer-binding, cache-hit authorization, coalescing, full runtime restart with
 persistent usage/session/cache and strict endpoint/query/response checks. Boundary
