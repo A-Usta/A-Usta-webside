@@ -2931,6 +2931,9 @@ exports.withBaselineLifecycle=(html,base)=>recent(base)?html:apply(partitionLife
 exports.withBaselineMediaHydration=(html,base)=>{assert.equal(recent(base),false,'P2.A media historical generation');return apply(html,'media');};
 const presentationInputs=new Map();
 exports.withBaselineOwnerDelete=(html,base)=>{
+ const v36css='<link rel="stylesheet" href="assets/marketplace/listing-detail-v36.css">',v36js='<script src="assets/marketplace/listing-detail-v36.js"></script>';
+ if(html.includes(v36css)){assert.equal(html.split(v36css).length,2,'exact V3.6 stylesheet import');const line='\n'+v36css+'\n';assert.equal(html.split(line).length,2,'exact V3.6 stylesheet placement');html=html.replace(line,'\n');}
+ if(html.includes(v36js)){assert.equal(html.split(v36js).length,2,'exact V3.6 script import');assert.equal(html.split(v36js+'\n').length,2,'exact V3.6 script placement');html=html.replace(v36js+'\n','');}
  html=require('./personal-account-baseline.cjs').normalize(html);
  html=require('./p2f1-baseline.cjs').normalize(html);
  if(html.includes("// One key per selected File/assignment/stage,"))html=require("./e2b-baseline.cjs").normalize(html);

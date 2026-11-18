@@ -77,7 +77,9 @@ test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
  assertP2D1Configuration();
  const main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  const blocks=text=>[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
- const old=blocks(main),now=blocks(require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(require('./helpers/seller-integration-baseline.cjs').withBaselineOwnerDelete(html,main)));assert.equal(now.length,old.length);
+ let normalized=require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(require('./helpers/seller-integration-baseline.cjs').withBaselineOwnerDelete(html,main));
+ const v36Import='<script src="assets/marketplace/listing-detail-v36.js"></script>';if(normalized.includes(v36Import)){assert.equal(normalized.split(v36Import).length,2,'exact V3.6 detail module import');normalized=normalized.replace(v36Import,'');}
+ const old=blocks(main),now=blocks(normalized);assert.equal(now.length,old.length);
  for(let i=0;i<old.length;i++){
   if(['austa-v153b-all-real-listing-router','austa-v153c-real-listing-form-js','austa-v153d-14-category-media-js'].some(id=>now[i][1].includes(id)))continue;
   assert.equal(now[i][0],old[i][0]);
