@@ -1,6 +1,7 @@
 # Server-only Geoapify core — inactive, offline verified
 
-This package is not imported by the existing backend or frontend. It opens no
+The production backend does not import this package. The frontend has an optional
+secret-free same-origin proxy mode, and a guarded TEST host factory is prepared. It opens no
 listener, loads no environment credential, starts no deployment, changes no
 Supabase database and has no public token-issuing endpoint. Do not label it a
 live or production-certified integration.
@@ -54,8 +55,10 @@ extend outside the polygon: returned Places points must pass BOTH countrycode
 and polygon/viewport checks; geocode results must pass countrycode and polygon.
 This is deliberately not a claim that a rectangle is Azerbaijan's boundary.
 
-**No authoritative production boundary has been configured.** Unit tests use an
-explicit synthetic two-part polygon with a hole, not a country border. Before
+**A real cartographic AZ boundary is now bundled and pinned; it is not an
+authoritative legal/survey boundary.** The original core unit tests use an
+explicit synthetic two-part polygon with a hole; integration tests additionally
+check the real dataset and all nine selected locations. Before
 live activation, review the provenance/license, accuracy and SHA of an actual
 AZ boundary, including Nakhchivan, Qarabagh, border villages and coastline. A bad
 operator-supplied polygon cannot be corrected by hash pinning alone.
@@ -95,15 +98,16 @@ Before an isolated live test, provide:
 
 1. A separate TEST server key, stored only on the TEST server, restricted by
    provider-side known egress IP and independently tested for denial elsewhere.
-2. A reviewed real AZ boundary file and pinned digest.
+2. Review the bundled real AZ cartographic boundary and pinned digest for the
+   intended deployment; provenance and limitations are in BOUNDARY.md.
 3. An isolated HTTPS TEST host with one durable admission volume and no other
    unmetered use of that key. Deployment is not performed by this package.
 4. A verified session/authenticator integration and strict request/header/time
    limits, TLS termination, disabled sensitive logging, process supervision,
    storage capacity monitoring and backup/restore policy preserving usage.
-5. A reviewed frontend proxy adapter/session flow. The current frontend remains
-   unchanged and still has the TEST-only direct-browser mode. No server secret
-   may be put in its existing runtime configuration or Pages artifact.
+5. Activate and live-verify the implemented same-origin frontend proxy/session
+   flow on that TEST host. Historical direct-browser mode remains TEST-only. No
+   server secret belongs in runtime configuration or a Pages artifact.
 6. End-to-end provider schema/tile compatibility, denied unauthenticated and
    forged-header calls, rate/daily-cap tests, and real nine-region desktop/mobile
    QA with screenshots that contain no request URLs, keys or personal data.
@@ -124,3 +128,17 @@ contract test against a synthetic WSGI bridge. It exercises native Origin-less
 same-origin GET, a synthetic HttpOnly session cookie (not readable in JavaScript),
 401 without that session and 403 without Origin/Referer metadata. It is not a
 live provider, national geometry, full UI or deployed authenticator proof.
+
+## Integrated TEST path
+
+The same-origin frontend now supports the public runtime contract
+`{proxyPath:"/map-api",allowedOrigins:[approvedOrigin]}` with no browser key.
+Places, geocode and bounded blob-backed tiles use the proxy and its signed guest
+session. There is no direct-provider fallback in proxy mode. Existing browser-key
+mode remains for historical TEST compatibility until replacement is live and
+the old key can safely be retired.
+
+The real pinned geoBoundaries AZ ADM0 dataset is bundled, with Nakhchivan and
+all nine QA sample points verified; see BOUNDARY.md. The inactive TEST WSGI
+host factory, guest issuer, zero-cost infrastructure constraints and activation
+prerequisites are documented in TEST-HOST.md. No host is deployed by this code.

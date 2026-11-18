@@ -126,3 +126,39 @@ resolved, and full nine-region live visual QA is BLOCKED pending these inputs.
 The offline proxy suite is included in frontend regression and the existing
 PostgreSQL Security CI without any new secret reference or deployment step.
 Synthetic provider/auth/geometry tests cannot clear the live release gate.
+
+
+## Current frontend integration (18 November 2026)
+
+The earlier inactive-core notes are superseded for source integration: the
+existing map now supports same-origin `/map-api` runtime configuration without
+a client Geoapify key. Places, geocoding and bounded blob tiles use the real
+proxy contract. Signed, expiring, peer-bound guest sessions preserve public map
+access without creating an A-USTA Auth user or requiring account login.
+
+The bundled real geoBoundaries ADM0 dataset covers all nine selected points and
+Nakhchivan; its license, pinned SHA and precision limitations are in
+`tools/geoapify/proxy/BOUNDARY.md`. Public phone details and explicit tyre/alignment
+tags are retained through safe DTO rebuilding. The original A-USTA public RPC,
+search, filters, category options, pagination, routing and transport flows remain.
+
+The guarded TEST host factory, hash-locked Gunicorn entry point and example
+protected configuration are prepared, not deployed. Native Chromium integration
+tests exercise the actual WSGI/SQLite/HMAC session path at desktop/mobile sizes
+with synthetic provider payloads. All screenshots or results from that fixture
+would be synthetic, not evidence of real map tiles/POIs. No new live provider
+request, API-key rotation, paid resource, production change or deploy was made.
+
+Render returned `no workspace selected`; its resource inventory cannot be read
+until a workspace is selected. Only My Workspace was listed, but no selection
+or service mutation was made. A separately configured TEST server key, verified
+HTTPS ingress and already-available durable quota volume remain external gates.
+A free ephemeral filesystem is not a durable ledger; no paid disk is activated.
+
+Alfiya's older 15 November reply confirms dashboard-only usage reporting, no
+guaranteed ten-second latency, zero-credit OPTIONS and one-credit geocoding.
+Her 18 November security follow-up has no reply at this check. No duplicate
+mail was sent. The old browser key must not be revoked until the live replacement
+has been independently verified; therefore revocation remains intentionally
+unperformed. Nine-region real-provider desktop/mobile screenshot QA remains
+NOT CERTIFIED, and the PR stays Draft.

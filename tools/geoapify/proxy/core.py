@@ -24,7 +24,7 @@ CATEGORIES = {
     'fuel': 'service.vehicle.fuel', 'charging': 'service.vehicle.charging_station',
     'repair': 'service.vehicle.repair', 'wash': 'service.vehicle.car_wash',
 }
-ENVELOPE = (44.7, 38.3, 50.8, 41.95)
+ENVELOPE = (44.7, 38.3, 50.95, 41.95)
 MAX_BODY = 2_000_000
 
 class Denied(Exception):
@@ -127,11 +127,14 @@ class Store:
     Initialization is explicit; request paths use mode=rw (never auto-create).
     """
     def __init__(self, path, *, initialize=False, daily=240, per_client_daily=120,
-                 global_minute=60, client_minute=20, clock=time.time):
+                 global_minute=60, client_minute=20, network_client_minute=None, clock=time.time):
         self.path = Path(path).absolute()
         self.clock = clock
         self.limits = daily, per_client_daily, global_minute, client_minute
-        if any(type(v) is not int or not 1 <= v <= 100_000 for v in self.limits):
+        self.network_limit = client_minute if network_client_minute is None else network_client_minute
+        self.policy = self.limits if network_client_minute is None else (*self.limits,network_client_minute)
+        self.separate_json_limit = network_client_minute is not None
+        if any(type(v) is not int or not 1 <= v <= 100_000 for v in self.policy):
             raise Denied('STORE_CONFIG', 503)
         parent = self.path.parent
         if parent.is_symlink() or parent.resolve() != parent or not parent.is_dir() or parent.stat().st_uid != os.getuid() or stat.S_IMODE(parent.stat().st_mode) & 0o077:
@@ -151,11 +154,11 @@ class Store:
                 CREATE TABLE cache(key TEXT PRIMARY KEY, expiry REAL NOT NULL, mime TEXT NOT NULL, body BLOB NOT NULL);
                 CREATE TABLE lease(key TEXT PRIMARY KEY, owner TEXT NOT NULL, expiry REAL NOT NULL);
                 ''')
-                db.execute('INSERT INTO meta VALUES(1,0,?)', (json.dumps(self.limits),))
+                db.execute('INSERT INTO meta VALUES(1,0,?)', (json.dumps(self.policy),))
         # A replacement empty file or lost schema fails at startup too.
         with closing(self._db()) as db:
             policy = db.execute('SELECT policy FROM meta WHERE singleton=1').fetchone()
-            if not policy or policy[0] != json.dumps(self.limits):
+            if not policy or policy[0] != json.dumps(self.policy):
                 raise Denied('STORE_CONFIG', 503)
 
     def _verify_file(self):
@@ -191,7 +194,10 @@ class Store:
             if now < high-5:
                 raise Denied('CLOCK', 503)
             db.execute('UPDATE meta SET highwater=max(highwater,?)', (now,))
-            for who, limit in [('*', self.limits[2]), (subject, self.limits[3])]:
+            rate_limits=[('*', self.limits[2]), (subject, self.network_limit)]
+            if self.separate_json_limit and cost != 1:
+                rate_limits.append(('json:'+subject,self.limits[3]))
+            for who, limit in rate_limits:
                 calls = db.execute('SELECT calls FROM rate WHERE minute=? AND subject=?', (minute, who)).fetchone()
                 if calls and calls[0] >= limit:
                     raise Denied('RATE', 429)
@@ -408,6 +414,14 @@ class Proxy:
                     safe['categories'] = [v for v in cats if isinstance(v,str) and len(v)<100 and any(v==base or v.startswith(base+'.') for base in CATEGORIES.values())][:20]
                     if not safe['categories']:
                         continue
+                contact=p.get('contact',{})
+                raw=p.get('datasource',{}).get('raw',{}) if isinstance(p.get('datasource',{}),dict) else {}
+                if isinstance(contact,dict) and isinstance(raw,dict):
+                    phone=contact.get('phone') or raw.get('phone')
+                    if isinstance(phone,str) and re.fullmatch(r'\+?[0-9 ()-]{5,30}',phone):
+                        safe['contact']={'phone':phone}
+                    flags={k:'yes' for k in ('service:vehicle:tyres','service:vehicle:alignment') if raw.get(k)=='yes'}
+                    if flags:safe['datasource']={'raw':flags}
                 features.append({'type':'Feature','properties':safe,'geometry':{'type':'Point','coordinates':c}})
             return 'application/json', json.dumps({'type':'FeatureCollection','features':features},allow_nan=False,separators=(',',':')).encode()
         except (ValueError, TypeError, KeyError, AttributeError, UnicodeError):
