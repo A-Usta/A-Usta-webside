@@ -18,7 +18,7 @@ const files={
  "tools/geoapify/proxy/gunicorn_config.py": "b1d2c6fa12d7d80562906b3b2845e38c75c977a90a88151b31d01010e6fde42e",
  "tools/geoapify/proxy/wsgi.py": "5dbd1e9d14bec1547db4ae7b999e086cdbcc1eb607d6e309133b661c896ca274",
  "tools/geoapify/proxy/test-config.example.json": "5d17fb5da3f61d1561f59d9d8b8967863450cbac6596ad22bf9db1b3eff2444d",
- "tools/geoapify/proxy/TEST-HOST.md": "ac1f6053259472c0be857f72c66911410c903313f6acb711fff28c07ee9e65a6",
+ "tools/geoapify/proxy/TEST-HOST.md": "4378b278ad76950046f6179e77bca7f6bce5c5c37283c5de8f7cb2f98782cb28",
  "tools/geoapify/proxy/BOUNDARY.md": "6d031adbe6c544e9c251e9fe0189b2d26534f4d170d9396a62019d1525dbb2b2",
  "tools/geoapify/proxy/aze-adm0.geojson": "8578487282384781be5bf87fb4d4fe0635c1323a2bec08cd331f67f8122266fc",
  "tools/geoapify/proxy/test_app.py": "334ff8e80d8814359b6dfee6b08324f17904ba5d149a3314b1030cb2d0c03cfc",

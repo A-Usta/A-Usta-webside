@@ -45,10 +45,15 @@ This package supplies no unrestricted listener or public debug console.
 
 ## Zero-extra-cost constraint
 
-The Render connection currently has no selected workspace, so no service or
-persistent volume has been identified or modified. Resource absence is not
-claimed. Current Render disk documentation says runtime files are ephemeral by
-default and service-attached persistent disks require a paid service:
+Read-only Render inventory succeeded with the existing workspace ID, without
+changing selected-workspace state or any service. It lists only the production
+A-Usta-webside service on main, Node runtime, free plan, automatic deploys off.
+No TEST web service, Postgres instance or Key Value instance was found in that
+workspace. No usable TEST persistent volume was identified. The earlier
+`no workspace selected` response applied to the unscoped request, not an
+inability to read this inventory with explicit context.
+Current Render disk documentation says runtime files are ephemeral by default
+and service-attached persistent disks require a paid service:
 https://render.com/docs/disks
 
 No plan, disk, database, service, Blueprint sync or automatic deploy was created.
@@ -96,3 +101,12 @@ resource only after the Render workspace/resource and zero incremental cost are
 confirmed. It is deliberately not an automatically applied render.yaml or a new
 paid service declaration. The example has blank secret/origin/path fields and
 fails closed until populated through protected TEST configuration.
+
+## Existing GitHub Pages compatibility
+
+This adapter is deliberately same-origin. GitHub Pages alone cannot serve its
+`/map-api` routes. The prepared TEST host serves the isolated preview and API
+together, without buying a domain or changing Pages. Production Pages activation
+still needs a reviewed routing/deployment decision or separately reviewed
+cross-origin guest transport; it is not silently enabled by merging source.
+No account JWT is sent to an arbitrary proxy origin.

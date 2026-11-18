@@ -149,9 +149,10 @@ with synthetic provider payloads. All screenshots or results from that fixture
 would be synthetic, not evidence of real map tiles/POIs. No new live provider
 request, API-key rotation, paid resource, production change or deploy was made.
 
-Render returned `no workspace selected`; its resource inventory cannot be read
-until a workspace is selected. Only My Workspace was listed, but no selection
-or service mutation was made. A separately configured TEST server key, verified
+The initial unscoped Render request returned `no workspace selected`. An
+explicit-context read then succeeded without selecting/changing the workspace:
+only the production main/free A-Usta-webside service exists; no TEST web service,
+Render Postgres or Key Value was found. No service mutation was made. A separately configured TEST server key, verified
 HTTPS ingress and already-available durable quota volume remain external gates.
 A free ephemeral filesystem is not a durable ledger; no paid disk is activated.
 
