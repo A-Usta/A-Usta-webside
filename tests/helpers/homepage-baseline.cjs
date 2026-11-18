@@ -13,6 +13,18 @@ const v354suffix="<!-- V3.5.4 listing presentation; existing publication control
 const v355suffix="<!-- V3.5.5 opt-in automotive map; existing service and listing controllers retained. -->\n<link rel=\"stylesheet\" href=\"assets/map/map.css\">\n<script src=\"assets/map/config.js\"></script>\n<script src=\"assets/map/data.js\"></script>\n<script src=\"assets/map/publication.js\"></script>\n<script src=\"assets/map/map.js\"></script>\n";
 exports.normalize=html=>{if(html.includes('\"public_service_provider_listings\"')){assert.equal(html.split('\"public_service_provider_listings\"').length,3,'exact two provider privacy read sites');html=html.replaceAll('\"public_service_provider_listings\"','\"service_provider_listings\"');}if(html.includes("<!-- V3.5.5 opt-in automotive map")){assert(html.endsWith(v355suffix),"final suffix: exact V3.5.5 suffix");assert.equal(html.split(v355suffix).length,2);html=html.slice(0,-v355suffix.length);}if(html.includes("<!-- V3.5.4 listing presentation")){assert(html.endsWith(v354suffix),"final suffix: exact final V3.5.4 suffix");assert.equal(html.split(v354suffix).length,2);html=html.slice(0,-v354suffix.length);}if(html.includes("<!-- V3.5.3 service")){assert(html.endsWith(v353suffix),"final suffix: exact V3.5.3 suffix");assert.equal(html.split(v353suffix).length,2);html=exports.withoutServiceCatalog(html.slice(0,-v353suffix.length));}if(html.includes("<!-- V3.5.2 header/search")){assert(html.endsWith(v352suffix),"final suffix: exact V3.5.2 suffix");assert.equal(html.split(v352suffix).length,2);html=html.slice(0,-v352suffix.length);}if(html.includes('<!-- V3.5.1 header')){assert(html.endsWith(v351suffix),'final suffix: exact V3.5.1 suffix');assert.equal(html.split(v351suffix).length,2);html=html.slice(0,-v351suffix.length);}if(html.includes('<!-- V3.5 compact Home')){assert(html.endsWith(v35suffix),'final suffix: exact V3.5 suffix');assert.equal(html.split(v35suffix).length,2);html=html.slice(0,-v35suffix.length);}if(!html.includes('<!-- V3.4 Home presentation;'))return html;assert.equal(html.split(suffix).length,2,'exact unique V3.4 bootstrap');assert(html.endsWith(suffix),'V3.4 bootstrap is final suffix');assert.equal(html.split(footer).length,2,'exact unique V3.4 fallback footer');return html.slice(0,-suffix.length).replace(footer,()=>oldFooter);};
 const files={
+ ".github/workflows/v356-cloudflare-test.yml": "990635120316d765ab0772f307fa371b7179f24e4f592da05e119879a44508c9",
+ "tools/geoapify/cloudflare/.gitignore": "2f21d2245886c2ee7c64b5b515976d29bad0baed47b5fb9e23ff8779179a4393",
+ "tools/geoapify/cloudflare/README.md": "7df1a56eb3196dd849b4b6ed75fafae70cfb9b3b01325d7cedd9bc606920c7a9",
+ "tools/geoapify/cloudflare/build.py": "0755208541f197d12b0a05ae3e10557e489c3ce6922a92f2b4a6bec6448f143e",
+ "tools/geoapify/cloudflare/live-qa.cjs": "bc43c082f8159ff05cc78a68812c3cf03eceb80a111d0aca1d6038926c84e8b2",
+ "tools/geoapify/cloudflare/package-lock.json": "5f7e7394010ba4d91de44f5f07d0e571e02812bfc266773d1565ffc21ce67681",
+ "tools/geoapify/cloudflare/package.json": "87806f4ff58f064988e93a4192a385b40a414144d16bcc8752685b4ad3368cf9",
+ "tools/geoapify/cloudflare/policy.mjs": "985ed2358e368ecce4fbae5b7ae49d577cc11ed737df7d6bf006485091b04ace",
+ "tools/geoapify/cloudflare/test/policy.test.mjs": "ef4f5e007edb26f6174b0d6b3c44126bf1e433bd7b3fc085c611d7fb1edcd8ca",
+ "tools/geoapify/cloudflare/test/runtime.test.mjs": "5e62df8d186d62ee86b1b9ade35232f47c7b5909ad38336a86fe50fea35a39a0",
+ "tools/geoapify/cloudflare/worker.mjs": "7556424ea19b4f2feb66ea1e59aa6178bab504511f3b558da67cdfe0aaa4dd33",
+
  "tools/geoapify/proxy/requirements-test-host.txt": "61faa20900c365a53e5bc060644b5c1b9a278a1058a5615ef11ea752648c2c0a",
  "tools/geoapify/proxy/prepare_preview.py": "a0362214e2883a6b6e791c76b5dc1cf3b01d61a84f2a46f6178d05a6fe60ab78",
  "tools/geoapify/proxy/gunicorn_config.py": "b1d2c6fa12d7d80562906b3b2845e38c75c977a90a88151b31d01010e6fde42e",
@@ -46,7 +58,7 @@ const files={
  "assets/map/publication.js": "275f252764e1e7b9538252be0eac7bb7935b0962b9b758da49ad1613982c537e",
  "assets/map/map.js": "6f0941970c8758720ac5eb8688482594257aedc15d15d511d53f1261586a0553",
  "assets/map/map.css": "cc9d5ca39488fbf619881b36b27cad4ea5292df4a5d9d758a209edcfc8c3ab35",
- "assets/map/data.js": "be93697cd5a0c6bd8c0b557b7f91852cffa59c37c7fcfc5d31d0608a18dd3d09",
+ "assets/map/data.js": "b7027442b2b467086c313338a75340d46e6dd0b4fb8003582a0f9e0487c42d20",
  "assets/map/config.js": "7bca4d2651a1f14c88d55e22a8731608e7c34a140fb4dd6f7cbb9adf8a8e3416",
   "assets/marketplace/listing-experience.css": "cb81ba715229fdb8316893c8b380359357a6b2f99adaeeb11a3bd1c31facae95",
   "assets/marketplace/listing-experience.js": "b4d703b1950aa21d39fff75438efb3e641cfd7edba7a9a6456bf6694c4734d36",
