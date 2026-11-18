@@ -14,7 +14,7 @@ function context(page){
  return id&&sourceSet.has(source)?{id,source,page,valid:()=>{const current=new URL(location.href),hash=new URLSearchParams(current.hash.replace(/^#/,''));return page.isConnected&&document.getElementById('austaFinalListingPage')===page&&(current.searchParams.get('listing')||hash.get('listing'))===id&&(current.searchParams.get('source')||hash.get('source')||'vehicle')===source;}}:null;
 }
 function date(value){const d=new Date(value);if(Number.isNaN(d.getTime()))return '';return `${String(d.getUTCDate()).padStart(2,'0')}.${String(d.getUTCMonth()+1).padStart(2,'0')}.${d.getUTCFullYear()}`;}
-function count(value){const n=Number(value);return Number.isFinite(n)?Math.trunc(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' '):'0';}
+function count(value){if(value===null||value===undefined||value==='')return '';const n=Number(value);return Number.isFinite(n)&&n>=0?Math.trunc(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' '):'';}
 function visitorId(){
  const key='austa-listing-viewer-v1';
  try{let id=localStorage.getItem(key);if(!id){id=crypto.randomUUID();localStorage.setItem(key,id);}return id;}catch{return crypto.randomUUID();}
@@ -23,13 +23,26 @@ function actionButton(text,attrs){const b=document.createElement('button');b.typ
 function installTitleActions(page,c,item){
  const title=page.querySelector('.austa-final-title');if(!title||page.querySelector('.austa-v36-title-actions'))return;
  const group=document.createElement('div');group.className='austa-v36-title-actions';group.setAttribute('role','group');group.setAttribute('aria-label','Elan əməliyyatları');
- group.append(actionButton('♡ Seçilmişlərdə saxla',{'class':'austa-v36-favorite','data-favorite-source':c.source,'data-favorite-id':c.id,'aria-label':'Elanı yadda saxla','aria-pressed':'false','aria-busy':'true',disabled:'disabled'}),actionButton('⚑ Şikayət et',{'data-v36-report':''}),actionButton('↗ Paylaş',{'data-v36-share':''}));
- title.insertAdjacentElement('afterend',group);
+ // Use the platform's existing authenticated listing_favorites controller.
+ // Its delegated listener hydrates aria-pressed and applies per-item locking.
+ const favorite=actionButton('♡',{'class':'austa-v36-favorite','data-favorite-source':c.source,'data-favorite-id':c.id,'aria-label':'Elanı yadda saxla','aria-pressed':'false','aria-busy':'true'});
+ group.append(favorite,actionButton('⚑ Şikayət et',{'data-v36-report':''}),actionButton('↗ Paylaş',{'data-v36-share':''}));
+ const row=document.createElement('div');row.className='austa-v36-heading-row';title.parentNode.insertBefore(row,title);row.append(title,group);
  page.querySelector('.austa-final-id')?.remove();
 }
 function installMetadata(page,c){
  const gallery=page.querySelector('.austa-final-gallery');if(!gallery||page.querySelector('[data-v36-listing-metadata]'))return null;
  const box=document.createElement('div');box.className='austa-v36-metadata';box.dataset.v36ListingMetadata='';box.setAttribute('aria-live','polite');box.textContent='Elan statistikası yüklənir';gallery.insertAdjacentElement('afterend',box);return box;
+}
+function removeLegacyMetadata(page){
+ for(const section of page.querySelectorAll('.austa-final-info-section')){
+  if(!/elan məlumatı/i.test(section.querySelector('.austa-final-section-title')?.textContent||''))continue;
+  for(const row of section.querySelectorAll('dl > div')){
+   const label=row.querySelector('dt')?.textContent?.trim()||'';
+   if(/^(elan №|yerləşdirildi)$/i.test(label))row.remove();
+  }
+  if(!section.querySelector('dl > div'))section.remove();
+ }
 }
 function compactSpecs(page){
  const grids=[...page.querySelectorAll('.austa-compact-spec-columns,.austa-final-spec-grid')];
@@ -47,16 +60,25 @@ function compactSpecs(page){
   const heading=section.querySelector('.austa-final-section-title');if(heading&&/elan haqqında məlumat/i.test(heading.textContent))heading.textContent='ELAN XÜSUSİYYƏTLƏRİ';
  }
 }
-function installContactAndPromotions(page,item){
+async function installContactAndPromotions(page,item,c){
  const side=page.querySelector('.austa-final-side-card');if(!side)return;
  const price=side.querySelector('.austa-final-price');
- if(price&&!side.querySelector('[data-v36-price-history]'))price.insertAdjacentElement('afterend',actionButton('Qiymət tarixçəsi',{'class':'austa-v36-price-history','data-v36-price-history':''}));
+ if(price){
+  let history=side.querySelector('[data-v36-price-history]');if(!history)history=actionButton('Qiymət tarixçəsi',{'class':'austa-v36-price-history','data-v36-price-history':''});
+  let line=side.querySelector('.austa-v36-price-line');if(!line){line=document.createElement('div');line.className='austa-v36-price-line';price.parentNode.insertBefore(line,price);}
+  line.append(price,history);
+ }
  if(!price&&!side.querySelector('.austa-v36-no-price')){const note=document.createElement('div');note.className='austa-v36-no-price';note.textContent='Qiymət məlumatı əlavə edilməyib';side.prepend(note);}
  const place=[item.region,item.district].filter(Boolean).join(' / ');if(place&&!side.querySelector('.austa-v36-seller-place')){const p=document.createElement('div');p.className='austa-v36-seller-place';p.textContent=place;side.querySelector('[data-professional-seller]')?.insertAdjacentElement('afterend',p);}
- page.querySelectorAll('[data-owner-boost],[data-owner-vip],[data-owner-premium]').forEach(el=>el.remove());
  if(!page.querySelector('.austa-v36-promotion-card')){
   const card=document.createElement('section');card.className='austa-final-side-card austa-v36-promotion-card';card.innerHTML='<h2 class="austa-final-section-title">Elanı irəli çəkin</h2><p>Tariflərə baxın. Aktivləşdirmə yalnız elan sahibinin hesabı və mövcud tanıtım icazəsi ilə mümkündür.</p><button type="button" data-v36-promotion="boost"><strong>↑ İrəli çək</strong><small>Elan siyahıda yenilənsin</small><span>Tariflərə bax</span></button><button type="button" data-v36-promotion="vip"><strong>★ VIP</strong><small>VIP yerləşdirmə</small><span>Tariflərə bax</span></button><button type="button" data-v36-promotion="premium"><strong>◆ Premium</strong><small>Üstün görünürlük</small><span>Tariflərə bax</span></button>';
   side.insertAdjacentElement('afterend',card);
+  let owner=false;
+  try{const session=await window.AUSTA_SUPABASE?.auth?.getSession?.();owner=Boolean(c.valid()&&session?.data?.session?.user?.id&&session.data.session.user.id===item.owner_id);}catch{}
+  // Owners keep using the original V157 buttons and lifecycle. Other visitors
+  // get the public entry points, which still pass through promotion authority.
+  if(!c.valid())return;
+  card.hidden=owner;
  }
 }
 function installFullscreen(page){
@@ -72,7 +94,7 @@ async function loadMetadata(page,c){
   const result=await db.rpc('austa_get_listing_detail_metadata',{p_source:c.source,p_listing_id:c.id});if(!c.valid())return;
   if(result.error){box.textContent='Elan statistikası hazırda əlçatan deyil.';return;}
   const row=Array.isArray(result.data)?result.data[0]:result.data;if(!row){box.textContent='Elan nömrəsi və baxış məlumatı mövcud deyil.';return;}
-  box.replaceChildren();for(const [label,value] of [['№ ',row.public_number],['Baxışların sayı: ',count(row.view_count)],['Yeniləndi: ',date(row.updated_at)]]){if(value===null||value===undefined||value==='')continue;const span=document.createElement('span');span.textContent=label+value;box.append(span);}
+  box.replaceChildren();for(const [label,value] of [['№ ',row.public_number],['Baxışların sayı: ',count(row.view_count)],['Yeniləndi: ',date(row.updated_at)]]){if(value===null||value===undefined||value==='')continue;const span=document.createElement('span');span.textContent=label+value;box.append(span);}if(!box.childElementCount)box.textContent='Elan statistikası mövcud deyil.';
  }catch{if(c.valid())box.textContent='Elan statistikası hazırda əlçatan deyil.';}
 }
 function dialog(page,title,body){const d=document.createElement('dialog');d.className='austa-v36-dialog';d.innerHTML=`<h2>${escape(title)}</h2>${body}`;page.append(d);d.addEventListener('close',()=>d.remove(),{once:true});d.showModal();return d;}
@@ -88,7 +110,7 @@ async function priceHistory(page,c){
 async function enhance(page){
  if(activePages.has(page))return;const c=context(page);if(!c)return;activePages.add(page);
  const result=await api.lookup(c.id,c.source);if(!c.valid())return;if(!result?.listing)return;const item=result.listing;
- installTitleActions(page,c,item);const metadata=installMetadata(page,c);compactSpecs(page);installContactAndPromotions(page,item);installFullscreen(page);if(metadata)void loadMetadata(page,c);
+ installTitleActions(page,c,item);const metadata=installMetadata(page,c);removeLegacyMetadata(page);compactSpecs(page);await installContactAndPromotions(page,item,c);if(!c.valid())return;installFullscreen(page);if(metadata)void loadMetadata(page,c);
 }
 document.addEventListener('click',async event=>{
  const page=event.target.closest?.('#austaFinalListingPage');if(!page)return;const c=context(page);if(!c)return;

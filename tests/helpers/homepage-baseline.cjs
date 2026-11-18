@@ -82,8 +82,8 @@ const files={
   "assets/homepage/mobile-links.js": "f34151a63f2bfdc6f7ac580a59f1162e5701394a33904627daab04dbe77efc8a",
   "assets/homepage/mobile-preview.webp": "65ddacf11241fcfe0ed32cf21e1872e3b15cbd32a4ca3fe8b1246220d476c231",
   "assets/homepage/website-qr.png": "35cd532af33dfccaad80fa7fcf5374e7df6db50c0a0604b16c698b5bc270124f",
-  "assets/marketplace/listing-detail-v36.css": "6e2aa6d0ff417b5bb1b06cc216a9af6dae068bfb583a487e366836efa85ee84e",
-  "assets/marketplace/listing-detail-v36.js": "45787322ddb42a9d7c59002b947dac99e888da71318f417979e755737534e232"
+  "assets/marketplace/listing-detail-v36.css": "94af61003ae16c0decf46c96d16b30e616aa04dfb99d361d787681aa4a7bf7f4",
+  "assets/marketplace/listing-detail-v36.js": "5e27bfe5f9182a91446b3889c68d0dd303ebdf25692203e6c901280fb703d0fc"
 };
 exports.reviewed=files;
 files["supabase/migrations/20261118100000_v36_listing_detail_metrics.sql"]="ee2be4047eabcad19afb25cd10ce900b4c199673502c828f53d4987ddcf836c3";
