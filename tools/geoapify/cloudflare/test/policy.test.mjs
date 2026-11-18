@@ -173,3 +173,10 @@ test('live CI requires exact owner manual action, rejects forks, other PRs, bran
  assert.equal(allowed({repository:base.repository,actor:base.actor,event_name:'workflow_dispatch',ref:'refs/heads/main',event:{}}),false);
  assert.doesNotMatch(y,/secrets\./);assert.match(y,/contents: read/);assert.match(y,/github\.event\.pull_request\.head\.sha \|\| github\.sha/);
 });
+
+test('safe paging retains raw-page fullness after country filtering and explicit tyre evidence survives DTO',async()=>{
+ const p=plan(new URL(ORIGIN+'/map-api/places?category=repair&box=49.84,40.38,49.89,40.44'),contains);
+ const feature=(foreign)=>({type:'Feature',geometry:{type:'Point',coordinates:foreign?[44.51,40.18]:[49.8671,40.4093]},properties:{country_code:'az',name:'Independent',brand:'SOCAR',operator:'Operator',categories:['service.vehicle.repair.car'],datasource:{raw:{'service:vehicle:tyres_repair':'yes','service:vehicle:alignment':'no',shop:'tyres',private:'discard'}}}});
+ const r=await safeResponse(Response.json({type:'FeatureCollection',features:Array.from({length:20},(_,i)=>feature(i>0))}),p,contains,'SyntheticOnlySecretValue');
+ const d=JSON.parse(new TextDecoder().decode(r.body));assert.equal(d.features.length,1);assert.equal(d.hasMore,true);assert.equal(d.features[0].properties.brand,'SOCAR');assert.equal(d.features[0].properties.datasource.raw['service:vehicle:tyres_repair'],'yes');assert.equal(d.features[0].properties.datasource.raw.shop,'tyres');assert.equal(d.features[0].properties.datasource.raw.private,undefined);assert.equal(d.features[0].properties.datasource.raw['service:vehicle:alignment'],undefined);
+});

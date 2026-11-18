@@ -290,6 +290,8 @@ export async function safeResponse(response, p, contains, secret) {
     const safe = { country_code: "az" };
     for (const field of [
       "name",
+      "brand",
+      "operator",
       "formatted",
       "city",
       "county",
@@ -322,8 +324,9 @@ export async function safeResponse(response, p, contains, secret) {
     if (typeof phone === "string" && /^\+?[0-9 ()-]{5,30}$/.test(phone))
       safe.contact = { phone };
     const raw = {};
-    for (const k of ["service:vehicle:tyres", "service:vehicle:alignment"])
+    for (const k of ["service:vehicle:tyres", "service:vehicle:tyres_repair", "service:vehicle:alignment"])
       if (pr.datasource?.raw?.[k] === "yes") raw[k] = "yes";
+    if (pr.datasource?.raw?.shop === "tyres") raw.shop = "tyres";
     if (Object.keys(raw).length) safe.datasource = { raw };
     features.push({
       type: "Feature",
@@ -334,7 +337,7 @@ export async function safeResponse(response, p, contains, secret) {
   return {
     mime: "application/json",
     body: new TextEncoder().encode(
-      JSON.stringify({ type: "FeatureCollection", features }),
+      JSON.stringify({ type: "FeatureCollection", features, ...(p.route === "/places" ? {hasMore: data.features.length === 20} : {}) }),
     ),
   };
 }
