@@ -77,6 +77,8 @@ function fixture(){
  const core=window.AUSTA_V153.saveListing;
  const media=block(ids.media),end=media.lastIndexOf('})();');
  vm.runInContext(media.slice(0,end)+`window.__media={patchSave,uploadMedia,setDealerEdit:item=>{dealerEditItem=item;}};`+media.slice(end),context);
+ const v36=fs.readFileSync(path.join(root,'assets/marketplace/listing-detail-v36.js'),'utf8'),equipmentStart=v36.indexOf('/* Category-specific optional equipment for V3.6 listing create/edit forms. */');
+ assert.ok(equipmentStart>=0,'V3.6 listing equipment helper exists');vm.runInContext(v36.slice(equipmentStart),context);
  window.__media.patchSave();
  const api=window.AUSTA_V153;
  const create=(type='parts',extra={})=>api.saveListing(type,{...input,...extra});
