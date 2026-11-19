@@ -33,7 +33,7 @@ function read(container,editing){
   });return result;
 }
 const fk={vehicle:'vehicle_listing_id',marketplace:'marketplace_listing_id',service_provider:'service_provider_listing_id',auto_dealer:'auto_dealer_listing_id'};
-function source(type){return ['cars','rent'].includes(type)?'vehicle':['service','usta','mechanic'].includes(type)?'service_provider':type==='dealer'?'auto_dealer':['parts','accessories','moto','special','bus','water','caravan','trailer','plate'].includes(type)?'marketplace':null;}
+function source(type){return ['cars','rent'].includes(type)?'vehicle':['service','usta','mechanic','leasing','insurance','sober_driver'].includes(type)?'service_provider':type==='dealer'?'auto_dealer':['parts','accessories','moto','special','bus','water','caravan','trailer','plate'].includes(type)?'marketplace':null;}
 function attributes(type,item){return type==='cars'&&item?.listing_type==='sale'?`<div class="austa-sale-badges">${item.barter_available===true?'<span>Barter</span>':''}${item.credit_available===true?'<span>Kredit</span>':''}</div>`:'';}
 function heart(type,item){const s=source(type);return s&&item?.id?`<button type="button" class="austa-favorite" data-favorite-source="${s}" data-favorite-id="${esc(item.id)}" aria-label="Elanı yadda saxla" aria-pressed="false" aria-busy="true" disabled>♡</button>`:'';}
 let client=null,userId=null,generation=0,ready=false,initializing=null,timer=null,reading=false,queued=false;
