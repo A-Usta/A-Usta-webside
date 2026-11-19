@@ -4,7 +4,7 @@
 const labels=Object.freeze({dealer:'Avtosalon',store:'Mağaza',service:'Servis',usta:'Usta'});
 const business=Object.freeze({cars:'dealer',rent:'dealer',parts:'store',accessories:'store',
   special:'store',moto:'store',plate:'store',bus:'store',trailer:'store',water:'store',caravan:'store',
-  service:'service',usta:'usta',dealer:'dealer'});
+  service:'service',leasing:'service',insurance:'service',sober_driver:'service',usta:'usta',dealer:'dealer'});
 const fields=['id','business_type','display_name','status','verification_status','official_status','official_scope'];
 const roots=new WeakMap(),tokens=new WeakMap(),live=new Set();
 let client=null,subscription=null,epoch=0,authKey=null,cache=null,pending=null;
