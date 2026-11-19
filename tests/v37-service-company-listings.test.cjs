@@ -52,7 +52,7 @@ test('public view preserves V355 RLS, owner fields and consent-gated contact/loc
 
 test('V3.7 forms render and stay within desktop/mobile widths; checklist values round-trip',async t=>{
  let browser;
- try{browser=await chromium.launch({executablePath:process.env.AUSTA_CHROMIUM_EXECUTABLE_PATH||'/usr/bin/chromium',args:['--no-sandbox','--disable-dev-shm-usage']});}
+ try{const launch={args:['--no-sandbox','--disable-dev-shm-usage']};if(process.env.AUSTA_CHROMIUM_EXECUTABLE_PATH)launch.executablePath=process.env.AUSTA_CHROMIUM_EXECUTABLE_PATH;browser=await chromium.launch(launch);}
  catch(e){t.skip('Chromium əlçatan deyil: '+e.message.split('\n')[0]);return;}
  try{
   const page=await browser.newPage({viewport:{width:1536,height:1100}});
