@@ -49,7 +49,7 @@ function fixture({type='rent',stored=null}={}){
 for(const value of values){
  test('Rent '+value+': real form router → P0.3 staging → activation persists column',async()=>{
   const f=fixture();await f.create({rental_type:value});assert.equal(f.state.row.rental_type,value);assert.equal(f.state.row.status,'active');
-  const insert=f.state.ops.find(o=>o.op==='insert');assert.equal(insert.payload.rental_type,value);assert.equal(insert.payload.status,'draft');assert.ok(!Object.hasOwn(insert.payload,'details'));
+  const insert=f.state.ops.find(o=>o.op==='insert');assert.equal(insert.payload.rental_type,value);assert.equal(insert.payload.status,'draft');assert.deepEqual(insert.payload.details,{});
   assert.equal(f.state.ops.filter(o=>o.op==='insert').length,1);
  });
  test('Rent '+value+': edit hydrates real column, ignores conflicting legacy JSON',()=>{

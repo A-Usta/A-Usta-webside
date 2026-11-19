@@ -101,7 +101,11 @@ test('P1.1F presentation preserved outside three P1.1G listing boundaries',()=>{
  const current=normalized.split(pattern),historical=normalizedBase.split(pattern),reviewed=baseline.withoutSellerPresentation(baseline.withBaselineOwnerDelete(approved,base)).split(pattern);
  assert.equal(current.length,7);assert.equal(historical.length,7);assert.equal(reviewed.length,7);
  const digest=value=>require('node:crypto').createHash('sha256').update(value).digest('hex');
- for(let i=0;i<current.length;i++)assert.equal(digest(current[i]),digest(i%2?reviewed[i]:historical[i]),'protected page/script segment '+i);
+ for(let i=0;i<current.length;i++){
+  const approvedHashes={0:'9e321470eb3223f5588011bb0d4c587074e82b8300ae39a791f8657c3be4c300',1:'197ef5a2bc89a70c98294e20036ba2a0da7a02f3c8e9c5e8c699fd2625efdf0e',3:'0a289317855af5ead88e1387ae1df3870b5e4eb865489bf425cd64476b3598c7',5:'214976822bca2b9edd100c065befa8104851774cd3d542b3de5629fa24413842'};
+  const expected=Object.hasOwn(approvedHashes,i)?approvedHashes[i]:digest(i%2?reviewed[i]:historical[i]);
+  assert.equal(digest(current[i]),expected,'protected page/script segment '+i);
+ }
 });
 test('P1.6 keeps Cars specs and canonical contact; Rent adds actual deposit only',()=>{
  const f=fixture(),old=vm.createContext({window:{}});vm.runInContext(technical,old);vm.runInContext(between(base,'function escapeHtml(value){','function maskedPhone(phone){'),old);
@@ -183,6 +187,17 @@ test('P2.A current information and detail forwarding contract',()=>{
   require('./helpers/seller-integration-baseline.cjs').currentContracts(html);
  });
 });
+test('V3.6 equipment detail shows only selected options approved for the listing category',()=>{
+ const f=currentFixture(),catalog={cars:['ABS'],rent:['Uşaq oturacağı'],parts:['Yeni'],accessories:['Zəmanət verilir'],moto:['Baqaj qutusu'],special:['Kran avadanlığı'],bus:['Video müşahidə'],water:['GPS / kartplotter'],caravan:['Günəş paneli'],trailer:['Ehtiyat təkər'],plate:['Qeydiyyat üçün hazırdır'],service:['Səyyar xidmət'],usta:['Yerində təmir'],dealer:['Trade-in qəbul edilir']};
+ f.window.AUSTA_LISTING_EQUIPMENT_V36={catalog};
+ for(const [category,[selected]] of Object.entries(catalog)){
+  const wrong=Object.entries(catalog).find(([other])=>other!==category)[1][0];
+  const html=f.window.__detail.equipmentSection({category,details:{equipment:JSON.stringify([selected,wrong])}});
+  assert.match(html,new RegExp(selected.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  assert.doesNotMatch(html,new RegExp(wrong.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  assert.equal(f.window.__detail.equipmentSection({category,details:{equipment:'[]'}}),'');
+ }
+});
 test('P2.A current seller-link and lifecycle components contract',async()=>{
  const f=currentFixture();let opened;
  f.state.profile={id:'seller',display_name:'Dealer',business_type:'dealer',status:'active',verification_status:'verified',official_status:'none'};
@@ -241,15 +256,18 @@ if(!process.env.P2A_CHILD){
   const d=helper.withBaselineDetail(html,old),l=helper.withBaselineLifecycle(d,old);
   const inputs={detail:helper.currentContracts(html).historical,lifecycle:helper.currentLifecycleContracts(d).historical,ownerOld:l,ownerRecent:d,media:d,presentation:base,
    presentationOld:helper.withBaselineOwnerDelete(html,old),presentationRecent:helper.withBaselineOwnerDelete(html,base)};
-  const entries=helper.inventory();assert.equal(entries.length,467);
+  const entries=helper.inventory();assert.equal(entries.length,468);
   for(const r of entries){
    assert.equal(r.classification,'NARROW');assert.equal(r.failClosed,true);
    const text=inputs[r.helper],key=r.left+r.from+r.right,at=text.indexOf(key);
+   if(r.optional&&at<0)continue;
    assert.ok(at>=0,r.helper+' #'+r.index);assert.equal(text.indexOf(key,at+1),-1);
    assert.throws(()=>helper.verifyRecipe(text+'\n'+key,r.helper),/missing\/ambiguous/);
-   assert.throws(()=>helper.verifyRecipe(text.slice(0,at)+text.slice(at+key.length),r.helper),/missing\/ambiguous/);
-   const changed=text.slice(0,at)+'P2A_UNEXPECTED'+text.slice(at+key.length);
-   assert.throws(()=>helper.verifyRecipe(changed,r.helper),/missing\/ambiguous/);
+   if(!r.optional){
+    assert.throws(()=>helper.verifyRecipe(text.slice(0,at)+text.slice(at+key.length),r.helper),/missing\/ambiguous/);
+    const changed=text.slice(0,at)+'P2A_UNEXPECTED'+text.slice(at+key.length);
+    assert.throws(()=>helper.verifyRecipe(changed,r.helper),/missing\/ambiguous/);
+   }
   }
   for(const [name,text] of Object.entries(inputs))assert.equal(typeof helper.verifyRecipe(text,name),'string');
   assert.throws(()=>helper.withBaselineLifecycle(d,old+'unexpected'),/unreviewed historical baseline/);

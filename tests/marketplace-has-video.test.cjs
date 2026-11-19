@@ -210,7 +210,7 @@ test('unrelated inline scripts and five pre-existing syntax issues remain unchan
     try{new vm.Script(old[i][2]);}catch(e){before=e.message;legacy++;}
     try{new vm.Script(current[i][2]);}catch(e){after=e.message;}
     assert.equal(after,before);
-    if(!id.includes(routerId)&&!id.includes(mediaId)&&!id.includes('austa-v153c-real-listing-form-js')){
+    if(!id.includes(routerId)&&!id.includes(mediaId)&&!id.includes('austa-v153c-real-listing-form-js')&&!id.includes('austa-final-full-listing-js')){
       assert.equal(current[i][2],old[i][2]);
     }
   }

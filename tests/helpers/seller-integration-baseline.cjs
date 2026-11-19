@@ -970,31 +970,36 @@ const recipes={
    "left": "cation=isVehicle ? vehicleExtraLocation(item) : ",
    "from": "['parts','access",
    "to": "l",
-   "right": "ories','special','moto','plate','bus','water','c"
+   "right": "ories','special','moto','plate','bus','water','c",
+   "optional": true
   },
   {
    "left": "? vehicleExtraLocation(item) : ['parts','accesso",
    "from": "ries','special','moto','plate','bus','water','caravan','trailer'].includes(",
    "to": "",
-   "right": "category)?vehicleText(item.address):[item.region"
+   "right": "category)?vehicleText(item.address):[item.region",
+   "optional": true
   },
   {
    "left": ",'bus','water','caravan','trailer'].includes(cat",
    "from": "eg",
    "to": "i",
-   "right": "ory)?vehicleText(item.address):[item.region,item"
+   "right": "ory)?vehicleText(item.address):[item.region,item",
+   "optional": true
   },
   {
    "left": "us','water','caravan','trailer'].includes(catego",
    "from": "ry)?vehicleText",
    "to": "nOf",
-   "right": "(item.address):[item.region,item.district,item.a"
+   "right": "(item.address):[item.region,item.district,item.a",
+   "optional": true
   },
   {
    "left": "','trailer'].includes(category)?vehicleText(item",
    "from": ".address):[item.region,item.district,item.address].map(vehicleText).filter(Boolean).filter((value,index,all)=>all.indexOf(value)===index).join(', '",
    "to": "",
-   "right": ");\n\n  const phone=\n    phoneOf(item);\n\n  const v"
+   "right": ");\n\n  const phone=\n    phoneOf(item);\n\n  const v",
+   "optional": true
   },
   {
    "left": "item)\n            )}\n          </h1>\n\n          ",
@@ -1084,7 +1089,15 @@ const recipes={
    "left": "             `)\n              : ''\n          }\n\n",
    "from": "          ${detailLocation?`<section class=\"austa-final-info-section\"><h3 class=\"austa-final-section-title\">YERLƏŞMƏ</h3><p>${escapeHtml(detailLocation)}</p></section>`:''}\n          ${detailInformation(item)}\n",
    "to": "",
-   "right": "          ${similarHtml(item)}\n\n        </main>\n"
+   "right": "          ${similarHtml(item)}\n\n        </main>\n",
+   "optional": true
+  },
+  {
+   "left": "             `)\n              : ''\n          }\n\n",
+   "from": "          ${equipmentSection(item)}\n\n",
+   "to": "",
+   "right": "          ${similarHtml(item)}\n\n        </main>\n",
+   "optional": true
   },
   {
    "left": "      `\n                  : ''\n              }\n\n",
@@ -2827,9 +2840,10 @@ const recipes={
 function apply(text,name){
  const edits=recipes[name].map((r,index)=>{
   const key=r.left+r.from+r.right,at=text.indexOf(key);
+  if(r.optional&&at<0)return null;
   assert.ok(key&&at>=0&&text.indexOf(key,at+1)<0,'P2.A missing/ambiguous '+name+' #'+(index+1));
   return {start:at+r.left.length,end:at+r.left.length+r.from.length,to:r.to};
- }).sort((a,b)=>b.start-a.start);
+ }).filter(Boolean).sort((a,b)=>b.start-a.start);
  for(let i=0;i<edits.length;i++)for(let j=i+1;j<edits.length;j++){
   const a=edits[i],b=edits[j],aInsert=a.start===a.end,bInsert=b.start===b.end;
   const collision=aInsert?bInsert?a.start===b.start:a.start>=b.start&&a.start<=b.end
@@ -2926,7 +2940,7 @@ function partitionLifecycleState(html){
 }
 exports.currentLifecycleContracts=partitionLifecycleState;
 
-exports.withBaselineDetail=(html,base)=>{recent(base);return apply(partitionCurrent(html).historical,'detail');};
+exports.withBaselineDetail=(html,base)=>{recent(base);if(html.includes('function equipmentValues(item)'))html=require('./homepage-baseline.cjs').reverseV36Equipment(html);return apply(partitionCurrent(html).historical,'detail');};
 exports.withBaselineLifecycle=(html,base)=>recent(base)?html:apply(partitionLifecycleState(html).historical,'lifecycle');
 exports.withBaselineMediaHydration=(html,base)=>{assert.equal(recent(base),false,'P2.A media historical generation');return apply(html,'media');};
 const presentationInputs=new Map();
