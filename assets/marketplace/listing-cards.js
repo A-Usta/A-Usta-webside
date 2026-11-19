@@ -28,7 +28,7 @@ function publication(item,now=Date.now()){
 function location(item){return text(item?.region)||text(item?.district);}
 function locationRow(item){
   const city=location(item),posted=publication(item);
-  return city||posted?`<div class="austa-card-location-time">${city?`<span class="austa-card-city" title="${esc(city)}">${esc(city)}</span>`:''}${posted?`<span class="austa-card-posted">${esc(posted)}</span>`:''}</div>`:'';
+  return city||posted?`<div class="austa-card-location-time">${city?`<span class="austa-card-city" title="${esc(city)}">${esc(city)}</span>`:''}${city&&posted?'<span class="austa-card-location-separator" aria-hidden="true">·</span>':''}${posted?`<span class="austa-card-posted">${esc(posted)}</span>`:''}</div>`:'';
 }
 function mileage(value){return number(value)&&Number.isInteger(Number(value))&&Number(value)>=0?digits(value)+' km':'';}
 function vehicleSummary(item){
@@ -37,28 +37,36 @@ function vehicleSummary(item){
   const engine=window.AUSTA_VEHICLE_TECHNICAL?.engineLabel(item,fuel)?.text||text(item.engine);
   return [text(item.year),engine,mileage(item.mileage)].filter(Boolean);
 }
+function deposit(value){return number(value)&&Number(value)>=0?digits(value)+' AZN depozit':'';}
+function dealerAttributes(item,details){
+  return [['credit_available','Kredit'],['leasing_available','Lizinq'],['barter_available','Barter'],['delivery_available','Çatdırılma']]
+    .filter(([key])=>item[key]===true||details[key]===true).map(([,label])=>label);
+}
 function content(type,item){
   const d=item.details&&typeof item.details==='object'&&!Array.isArray(item.details)?item.details:{};
   const brandModel=[text(item.brand),text(item.model)].filter(Boolean).join(' ');
   const condition={new:'Yeni',used:'İşlənmiş'}[item.condition]||text(item.condition);
   let title=text(item.title)||brandModel,summary=[],price=money(item.price,item.currency),business=false;
   switch(type){
-    case 'cars':case 'rent':
+    case 'cars':
       title=brandModel||text(item.title);summary=vehicleSummary(item);
-      price=type==='rent'?(money(item.daily_price,'AZN')?money(item.daily_price,'AZN')+' / gün':''):money(item.price,'AZN');break;
-    case 'parts':title=text(item.title)||text(d.part_name);summary=[text(d.oem)?'OEM '+text(d.oem):'',text(d.compatibility)||brandModel,condition];break;
-    case 'accessories':title=text(item.title)||text(d.accessory_name);summary=[brandModel,condition];break;
-    case 'moto':summary=[text(d.moto_type),text(item.year),mileage(d.mileage),condition];break;
+      price=money(item.price,'AZN');break;
+    case 'rent':
+      title=brandModel||text(item.title);summary=[text(item.year),text(item.rental_type),deposit(item.deposit),mileage(item.mileage)];
+      price=money(item.daily_price,'AZN')?(money(item.daily_price,'AZN')+' / gün'):'';break;
+    case 'parts':title=text(item.title)||text(d.part_name)||brandModel;summary=[text(d.compatibility)||brandModel,text(d.oem)?'OEM '+text(d.oem):'',condition,text(d.stock)];break;
+    case 'accessories':title=text(item.title)||text(d.accessory_name)||brandModel;summary=[brandModel,condition,text(d.stock)];break;
+    case 'moto':summary=[text(d.moto_type),text(item.year),text(d.mileage),condition];break;
     case 'special':summary=[text(d.special_type),text(item.year),text(d.work_hours),text(d.sale_rent)];break;
-    case 'bus':summary=[text(item.year),number(d.capacity)&&Number(d.capacity)>0?digits(d.capacity)+' nəfər':'',text(d.sale_rent)];break;
+    case 'bus':summary=[text(item.year),text(d.capacity),text(d.sale_rent)];break;
     case 'water':summary=[text(d.water_type),text(item.year),text(d.engine),condition];break;
-    case 'caravan':summary=[text(d.caravan_type),text(item.year),number(d.beds)&&Number(d.beds)>0?digits(d.beds)+' yataq':'',text(d.sale_rent)];break;
-    case 'trailer':summary=[text(d.trailer_type),text(item.year),number(d.load_capacity)&&Number(d.load_capacity)>0?digits(d.load_capacity)+' kq':'',condition];break;
+    case 'caravan':summary=[text(d.caravan_type),text(item.year),text(d.beds),text(d.sale_rent)];break;
+    case 'trailer':summary=[text(d.trailer_type),text(item.year),text(d.load_capacity),condition];break;
     case 'plate':title=text(d.plate_number)||text(item.title);summary=[text(d.plate_series),text(d.document_status)];break;
     case 'service':case 'usta':
-      business=true;title=text(item.name)||text(item.title);summary=[text(item.specialty)||text(item.services)];
-      price=type==='service'?text(d.price_policy):'';break;
-    case 'dealer':business=true;title=text(item.dealer_name)||text(item.title);summary=[text(item.brands),text(item.working_hours)];price='';break;
+      business=true;title=text(item.name)||text(item.title);summary=[text(item.specialty),text(item.services),text(item.experience),text(item.working_hours)];
+      price=money(item.price,item.currency)||text(d.price_policy)||text(item.price_policy);break;
+    case 'dealer':business=true;title=text(item.dealer_name)||text(item.title);summary=[text(d.brands)||text(item.brands),text(d.working_hours)||text(item.working_hours),text(d.vehicle_condition)||text(item.vehicle_condition),...dealerAttributes(item,d)];price=money(item.price,item.currency);break;
   }
   return {title,price,business,summary:[...new Set(summary.map(text).filter(Boolean))]};
 }
@@ -87,14 +95,14 @@ function render(typeValue,item,options={}){
   const vin=sale&&window.AUSTA_VEHICLE_VIN?.valid(item.vin)?'<span class="austa-card-vin" title="VIN-kod mövcuddur">VIN</span>':'';
   const price=c.price?`<div class="austa-card-price">${esc(c.price)}</div>`:'';
   const title=c.title?`<h3 class="austa-card-title" title="${esc(c.title)}">${esc(c.title)}</h3>`:'';
-  const summary=c.summary.length?`<div class="austa-card-summary">${c.summary.map(esc).join(' • ')}</div>`:'';
+  const summary=c.summary.length?`<div class="austa-card-summary">${c.summary.slice(0,4).map(value=>`<span class="austa-card-summary-item" title="${esc(value)}">${esc(value)}</span>`).join('')}</div>`:'';
   return `<article class="${klass} austa-market-card" ${connection}>
     <div class="${mediaClass} austa-card-media">
       ${image?`<img src="${esc(image)}" alt="${esc(c.title)}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="austa-card-no-image" hidden>Şəkil mövcud deyil</div>`:'<div class="austa-card-no-image">Şəkil mövcud deyil</div>'}
       ${attributes(type,item)}${window.AUSTA_MARKETPLACE_CARD_DATA.heart(type,item)}
       <div class="austa-card-lower-overlay"><span class="austa-card-identity-group">${vin}<span class="austa-card-seller" data-card-seller="${esc(sellerId)}" data-card-seller-sale="${sale}">${sellerHtml(sellerId,sale)}</span></span>${promotion(item,options.promotion)}</div>
     </div>
-    <div class="austa-card-content${c.business?' austa-card-content-business':''}">${c.business?title+summary+price:price+title+summary}${locationRow(item)}</div>
+    <div class="austa-card-content">${price}${title}${summary}${locationRow(item)}</div>
   </article>`;
 }
 let scheduled=false;const tokens=new WeakMap();

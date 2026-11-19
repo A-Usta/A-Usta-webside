@@ -1,0 +1,51 @@
+/* V3.6 styles are scoped to the existing detail overlay. */
+#austaFinalListingPage{background:#f4f6f5!important;color:#26332d!important;font-family:inherit}
+#austaFinalListingPage .austa-final-page{min-height:100%;background:#f4f6f5;color:#26332d}
+#austaFinalListingPage .austa-final-top{background:#fff;border-bottom:1px solid #e3e8e5;padding:12px max(20px,calc((100vw - 1440px)/2))}
+#austaFinalListingPage .austa-final-back{background:#176244;border-radius:8px}
+#austaFinalListingPage .austa-final-id,#austaFinalListingPage .austa-final-category{color:#718078}
+#austaFinalListingPage .austa-final-wrap{max-width:1440px;margin:auto;grid-template-columns:minmax(0,1fr) 340px;gap:26px;padding:20px 24px}
+#austaFinalListingPage .austa-v36-heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin:5px 0 10px}
+#austaFinalListingPage .austa-final-title{color:#1f2d26;flex:1;min-width:0;margin:0;font-size:28px}
+#austaFinalListingPage .austa-v36-title-actions{display:flex;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin:0}
+#austaFinalListingPage .austa-v36-title-actions button{min-height:38px;padding:8px 12px;border:1px solid #dce3df;border-radius:8px;background:#fff;color:#34443b;font-weight:650;cursor:pointer}
+#austaFinalListingPage .austa-v36-title-actions button:hover{border-color:#176244;color:#176244}
+#austaFinalListingPage .austa-v36-favorite{display:inline-flex;align-items:center;gap:7px;font-size:0!important}
+#austaFinalListingPage .austa-v36-favorite::after{content:attr(aria-label);font-size:12px}
+#austaFinalListingPage .austa-v36-favorite[aria-pressed=true]{color:#d92d20}
+#austaFinalListingPage .austa-v36-title-actions .austa-v36-favorite:disabled{opacity:.72;cursor:wait}
+#austaFinalListingPage .austa-v36-title-actions .austa-v36-favorite:not(:disabled){cursor:pointer}
+#austaFinalListingPage .austa-final-gallery{border:1px solid #dce3df;border-radius:10px;background:#111}
+#austaFinalListingPage .austa-final-info-section,#austaFinalListingPage .austa-final-description,#austaFinalListingPage .austa-final-side-card{background:#fff!important;color:#26332d!important;border:1px solid #e2e8e4!important;border-radius:10px!important;padding:16px!important;box-shadow:0 2px 8px #12291a08}
+#austaFinalListingPage .austa-final-section-title{color:#26332d;font-size:16px;margin-bottom:10px}
+#austaFinalListingPage .austa-v36-metadata{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0 16px;padding:9px 0;border-bottom:1px solid #dfe5e1;color:#728078;font-size:12px}
+#austaFinalListingPage .austa-v36-spec-table{display:grid;gap:0}
+#austaFinalListingPage .austa-v36-spec-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 28px;border-bottom:1px solid #edf0ee}
+#austaFinalListingPage .austa-v36-spec{display:grid;grid-template-columns:minmax(130px,.85fr) minmax(0,1.15fr);align-items:baseline;gap:10px;margin:0;padding:8px 0;min-width:0}
+#austaFinalListingPage .austa-v36-spec dt{color:#7a8780;font-size:13px;overflow-wrap:anywhere}
+#austaFinalListingPage .austa-v36-spec dd{margin:0;color:#35433b;font-size:13px;font-weight:650;overflow-wrap:anywhere}
+#austaFinalListingPage .austa-final-price{color:#176244;font-size:27px}
+#austaFinalListingPage .austa-v36-price-line{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 14px;margin-bottom:12px}
+#austaFinalListingPage .austa-v36-price-history{display:inline-block;margin:0;padding:0;border:0;background:none;color:#176244;text-decoration:underline;font-size:13px;cursor:pointer}
+#austaFinalListingPage .austa-v36-no-price,#austaFinalListingPage .austa-v36-seller-place{margin:7px 0 12px;color:#65736b;font-size:13px}
+#austaFinalListingPage .austa-final-phone{background:#176244;border-radius:8px}
+#austaFinalListingPage .austa-final-message{background:#fff;color:#176244;border-color:#176244}
+#austaFinalListingPage .austa-v36-promotion-card p{margin:0 0 10px;color:#718078;font-size:12px;line-height:1.5}
+#austaFinalListingPage .austa-v36-promotion-card[hidden]{display:none!important}
+#austaFinalListingPage .austa-v36-promotion-card button{display:grid;width:100%;grid-template-columns:1fr auto;gap:4px 10px;margin-top:8px;padding:11px;border:1px solid #dfe6e1;border-radius:8px;background:#fff;color:#27372e;text-align:left;cursor:pointer}
+#austaFinalListingPage .austa-v36-promotion-card button:hover{border-color:#176244}
+#austaFinalListingPage .austa-v36-promotion-card button strong{font-size:14px}
+#austaFinalListingPage .austa-v36-promotion-card button small{grid-column:1;color:#77837d;font-size:11px}
+#austaFinalListingPage .austa-v36-promotion-card button span{grid-column:2;grid-row:1/3;align-self:center;color:#176244;font-size:11px;font-weight:700}
+#austaFinalListingPage .austa-v36-fullscreen{position:absolute;z-index:2;top:10px;right:10px;padding:7px 10px;border:1px solid #ffffff9c;border-radius:7px;background:#10251dcc;color:#fff;cursor:pointer}
+#austaFinalListingPage .austa-v36-dialog{width:min(520px,calc(100vw - 28px));max-height:85dvh;overflow:auto;border:1px solid #dfe5e1;border-radius:12px;padding:20px;color:#26332d;box-shadow:0 20px 70px #0003}
+#austaFinalListingPage .austa-v36-dialog::backdrop{background:#17251d88}
+#austaFinalListingPage .austa-v36-dialog h2{margin:0 0 10px;font-size:20px}
+#austaFinalListingPage .austa-v36-dialog label{display:grid;gap:6px;margin:12px 0;color:#59675f;font-size:13px}
+#austaFinalListingPage .austa-v36-dialog select,#austaFinalListingPage .austa-v36-dialog textarea{box-sizing:border-box;width:100%;min-height:42px;padding:9px;border:1px solid #cfd8d2;border-radius:7px;background:#fff;color:#26332d;font:inherit}
+#austaFinalListingPage .austa-v36-dialog textarea{min-height:95px;resize:vertical}
+#austaFinalListingPage .austa-v36-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+#austaFinalListingPage .austa-v36-dialog-actions button{min-height:40px;padding:8px 14px;border:1px solid #176244;border-radius:7px;background:#fff;color:#176244;cursor:pointer}
+#austaFinalListingPage .austa-v36-dialog-actions button[type=submit]{background:#176244;color:#fff}
+@media(max-width:1000px){#austaFinalListingPage .austa-final-wrap{grid-template-columns:minmax(0,1fr);max-width:760px;padding:16px}}
+@media(max-width:600px){#austaFinalListingPage .austa-final-wrap{padding:10px;gap:12px}#austaFinalListingPage .austa-v36-heading-row{display:block}#austaFinalListingPage .austa-final-title{font-size:22px;margin-bottom:8px}#austaFinalListingPage .austa-v36-title-actions{justify-content:flex-start}#austaFinalListingPage .austa-v36-spec-row{grid-template-columns:minmax(0,1fr)}#austaFinalListingPage .austa-v36-spec{grid-template-columns:minmax(120px,.85fr) minmax(0,1.15fr);padding:7px 0}#austaFinalListingPage .austa-final-side-card{padding:13px!important}#austaFinalListingPage .austa-v36-metadata{font-size:11px}}
