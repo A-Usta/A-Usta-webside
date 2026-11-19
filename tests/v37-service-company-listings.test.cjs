@@ -28,6 +28,30 @@ test('V3.7 category routes, form adapter and detail contract are connected to ex
 
 });
 
+test('the primary marketplace keeps all 14 existing categories and appends three independent V3.7 categories',()=>{
+ const match=html.match(/const realMarketCategories\s*=\s*new Set\(\[([\s\S]*?)\]\)/);assert.ok(match,'canonical home-to-market route set');
+ const categories=[...match[1].matchAll(/[\"']([a-z_]+)[\"']/g)].map(item=>item[1]);
+ assert.deepEqual(categories,['cars','rent','parts','accessories','moto','special','bus','water','caravan','trailer','plate','service','usta','dealer',...types]);
+ assert.equal(categories.length,17);
+ assert.match(html,/key === "mechanic"\s*\? "usta"\s*:\s*key/);
+ assert.match(html,/"service",\s*"usta",\s*"dealer",\s*"leasing",\s*"insurance",\s*"sober_driver"/);
+});
+
+test('V3.7 search filters query category-specific JSON details',()=>{
+ const filters=read('assets/marketplace/category-filters.js'),context=vm.createContext({window:{AUSTA_VEHICLE_TECHNICAL:{fields:[]},AUSTA_VEHICLE_CATALOG:{brands:[],models:{}}},document:{},console});
+ vm.runInContext(filters,context);const api=context.window.AUSTA_CATEGORY_FILTERS;
+ const cases=[
+  ['leasing',{city:'Bakı',service_area:'Bakı',currency:'AZN',vehicle_condition:'Yeni'},['details->>city','details->>service_area','details->>currency','details->>vehicle_condition']],
+  ['insurance',{city:'Bakı',service_area:'Bakı',insurance_types:'KASKO'},['details->>city','details->>service_area','details->>insurance_types']],
+  ['sober_driver',{city:'Bakı',service_area:'Bakı',service_24_7:'Bəli',city_service:'Bəli'},['details->>city','details->>service_area','details->>service_24_7','details->>city_service']]
+ ];
+ for(const [type,input,expected] of cases){
+  const calls=[],query={ilike(column,value){calls.push([column,value]);return this;},eq(column,value){calls.push([column,value]);return this;},gte(column,value){calls.push([column,value]);return this;},lte(column,value){calls.push([column,value]);return this;}};
+  api.applyQuery(query,type,input);for(const column of expected)assert.ok(calls.some(([actual])=>actual===column),type+' filter '+column);
+  assert.equal(calls.length,expected.length,type+' only category-specific filters');
+ }
+});
+
 test('each category has its own questions and no invented quotation values',()=>{
  const expected={
   leasing:['company_name','tax_id','legal_name','phone','email','website','city','service_area','vehicle_categories','vehicle_condition','customer_types','minimum_down_payment','minimum_term','maximum_term','rate','interest_type','currency','minimum_financing','maximum_financing','guarantor_required','income_proof_required','required_documents','terms','license_reference'],

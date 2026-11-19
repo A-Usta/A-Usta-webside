@@ -1,4 +1,4 @@
-// Exact V3.4 additions only. All older regression boundaries remain authoritative.
+// Exact reviewed V3.4 and V3.7 file fingerprints. All older regression boundaries remain authoritative.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{createHash}=require('node:crypto');
 const root=path.resolve(__dirname,'../..'),digest=s=>createHash('sha256').update(s).digest('hex');
 const suffix="\n<!-- V3.4 Home presentation; existing application contracts remain authoritative. -->\n<link rel=\"stylesheet\" href=\"assets/homepage/homepage.css\">\n<script src=\"assets/homepage/mobile-links.js\"></script>\n<script src=\"assets/homepage/company-contact.js\"></script>\n<script src=\"assets/homepage/homepage.js\"></script>\n";
@@ -127,7 +127,16 @@ const files={
   "assets/marketplace/listing-detail-v36.css": "c3c12083f5eae77144089a097ff859db76b76a196046f8442fc3db9c2534def8",
  "assets/marketplace/listing-detail-v36.js": "d4e891de7bd9cf426dc5ba326585f0cb81ed8921f089f582b82ffa17e2931947",
  "assets/marketplace/listing-cards.css": "5d8e651d6a5622f44bfbae7ed362e331634b6e916da39019011928783ebb06dc",
- "assets/marketplace/listing-cards.js": "3930d5f8a35b97d5fe2357f62a88964aa96e93e69217509fd5dd412fe05fe28f"
+ // V3.7 category integration is exact-file reviewed and separately exercised by tests/v37-service-company-listings.test.cjs.
+ "assets/marketplace/card-data.js": "2bff7c81f2983542efd93f1554e2e40fea05d772a3369ff32680ee89f4f0f720",
+ "assets/marketplace/category-filters.js": "4c29711581b211aa1d52b3a59dcf46ba65411a4dfe4bbacdbed9a88c84591142",
+ "assets/marketplace/listing-cards.js": "5fceaa384be9d68bc35b31cdfa442187d5209d99b1bff01a2c3718d8a77b4cb3",
+ "assets/marketplace/listing-detail.js": "3d578bb4751ddcedc4ed5644dea8fd153cc41541875c6f8ef455a469329851c8",
+ "assets/marketplace/listing-lifecycle.js": "8df0c90fe8f624a0ee579b594632daa2ae68bf17456274fd5636f65f6b07e267",
+ "assets/marketplace/seller-intent.js": "043f8ef855069f7e70fbe57da992f24728c3b6c842ca9c1cd24d92856147a7c9",
+ "assets/marketplace/seller-page.js": "6c416fe824032f8fbbef6dcf9b08690880c7cb0b982fe4840344b55da62b8af7",
+ "assets/marketplace/service-company-v37.css": "9564c7ae0d889cf7d2d99e3324d888f64400ebd94c4e9516932c6df58aeeecf0",
+ "assets/marketplace/service-company-v37.js": "2119cf856746b5af960e37b10ab45cec87414f029ae81e1607444b75ba2d99c7"
 };
 exports.reviewed=files;
 files["supabase/migrations/20261118100000_v36_listing_detail_metrics.sql"]="ee2be4047eabcad19afb25cd10ce900b4c199673502c828f53d4987ddcf836c3";

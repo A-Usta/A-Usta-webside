@@ -94,6 +94,15 @@ test('P1.1F presentation preserved outside three P1.1G listing boundaries',()=>{
  const baseline=require('./helpers/seller-integration-baseline.cjs');
  const normalizedBase=baseline.withoutSellerPresentation(base);
  let normalized=baseline.withoutSellerPresentation(baseline.withBaselineOwnerDelete(html,base));
+ const exact=(from,to,label)=>{assert.equal(normalized.split(from).length,2,label);normalized=normalized.replace(from,to);};
+ exact('service_provider_listings:item.details?.service_category || item.provider_type','service_provider_listings:item.provider_type','exact V3.7 provider subtype projection');
+ exact("    usta:'🧑‍🔧 Usta profili',\n    leasing:'Lizinq şirkətləri',insurance:'Avtomobil sığorta şirkətləri',sober_driver:'Ayıq sürücü şirkətləri'","    usta:'🧑‍🔧 Usta profili'",'exact V3.7 detail title additions');
+ exact('        \"dealer\",\n        \"leasing\",\n        \"insurance\",\n        \"sober_driver\"','        \"dealer\"','exact V3.7 home category additions');
+ const v154Pattern=/<script id="austa-v154e-global-promotion-pagination">[\s\S]*?<\/script>/,v154=normalized.match(v154Pattern)?.[0];assert.ok(v154,'V154-E remains mounted');
+ const v154Baseline=v154.replace("        service:\"Avtoservislər\",usta:\"Usta profilləri\",dealer:\"Avtosalonlar\",\n        leasing:\"Lizinq şirkətləri\",insurance:\"Avtomobil sığorta şirkətləri\",sober_driver:\"Ayıq sürücü şirkətləri\"","        service:\n            \"Avtoservislər\",\n\n        usta:\n            \"Usta profilləri\",\n\n        dealer:\n            \"Avtosalonlar\"")
+  .replace(/\n        }else if\(\["leasing","insurance","sober_driver"\]\.includes\(type\)\)\{\n            query=supabase\.from\("(?:public_)?service_provider_listings"\)\.select\("\*"\)\.eq\("status","active"\)\.eq\("provider_type","service"\)\.contains\("details",\{service_category:type\}\);\n        }else if/,'\n        }else if')
+  .replaceAll('"public_service_provider_listings"','"service_provider_listings"');
+ exact(v154,v154Baseline,'exact V3.7 V154-E provider projection');
  // Compare reviewed P1.1G/form/media changes directly to their immutable merged
  // P1.6 bytes. Never replace a whole script to hide changes from this assertion.
  const approved=cp.execFileSync('git',['show','745d6ee87813a83003731ee2026e9814bd510e57:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
@@ -102,7 +111,7 @@ test('P1.1F presentation preserved outside three P1.1G listing boundaries',()=>{
  assert.equal(current.length,7);assert.equal(historical.length,7);assert.equal(reviewed.length,7);
  const digest=value=>require('node:crypto').createHash('sha256').update(value).digest('hex');
  for(let i=0;i<current.length;i++){
-  const approvedHashes={0:'9e321470eb3223f5588011bb0d4c587074e82b8300ae39a791f8657c3be4c300',1:'197ef5a2bc89a70c98294e20036ba2a0da7a02f3c8e9c5e8c699fd2625efdf0e',3:'0a289317855af5ead88e1387ae1df3870b5e4eb865489bf425cd64476b3598c7',5:'214976822bca2b9edd100c065befa8104851774cd3d542b3de5629fa24413842'};
+  const approvedHashes={0:'9e321470eb3223f5588011bb0d4c587074e82b8300ae39a791f8657c3be4c300',1:'396cbe8332a368827a5bbd656868744e247bc603dedf2e324bd79b12ea66ff64',3:'c538d269d8896b530cc37755472e005e836bef62ec442033db01a364da1c5126',5:'165b810bd24c5903876afacc92e36881cb91046ec9aa347e40ead36cbb38c256'};
   const expected=Object.hasOwn(approvedHashes,i)?approvedHashes[i]:digest(i%2?reviewed[i]:historical[i]);
   assert.equal(digest(current[i]),expected,'protected page/script segment '+i);
  }
@@ -211,8 +220,10 @@ test('P2.A current seller-link and lifecycle components contract',async()=>{
  await f.open('vehicle',{status:'archived'});
  assert.match(f.markup(),/data-owner-lifecycle="reactivate"/);assert.doesNotMatch(f.markup(),/data-owner-lifecycle="mark_sold"/);
  require('./helpers/seller-integration-baseline.cjs').currentContracts(html);
- const moduleFile='assets/marketplace/listing-detail.js';
- assert.equal(require('./helpers/listing-initial-baseline.cjs').normalize(fs.readFileSync(path.join(root,moduleFile),'utf8')),cp.execFileSync('git',['show','745d6ee87813a83003731ee2026e9814bd510e57:'+moduleFile],{cwd:root,encoding:'utf8'}));
+ const moduleFile='assets/marketplace/listing-detail.js',moduleSource=fs.readFileSync(path.join(root,moduleFile),'utf8');
+ const normalized=require('./helpers/listing-initial-baseline.cjs').normalize(moduleSource);
+ assert.match(normalized,/const subtype=baseType==='service'&&\['leasing','insurance','sober_driver'\]\.includes\(data\.details\?\.service_category\)/);
+ assert.match(normalized,/c\.expected!==baseType/);
 });
 if(!process.env.P2A_CHILD){
  const categoryGate='tests/category-detail-presentation.test.cjs',legacyGate='tests/listing-metadata-partial.test.cjs';
@@ -254,7 +265,11 @@ if(!process.env.P2A_CHILD){
   const helper=require('./helpers/seller-integration-baseline.cjs');
   const old=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
   const d=helper.withBaselineDetail(html,old),l=helper.withBaselineLifecycle(d,old);
-  const inputs={detail:helper.currentContracts(html).historical,lifecycle:helper.currentLifecycleContracts(d).historical,ownerOld:l,ownerRecent:d,media:d,presentation:base,
+  const detailHistorical=helper.currentContracts(html).historical;
+  const v37Start="\n  if(['leasing','insurance','sober_driver'].includes(categoryOf(item))){",v37End="\n  if(['cars','rent'].includes(categoryOf(item))){";
+  assert.equal(detailHistorical.split(v37Start).length,2,'one exact V3.7 detail branch');assert.equal(detailHistorical.split(v37End).length,2,'V3.7 detail branch boundary');
+  const detailForRecipes=detailHistorical.slice(0,detailHistorical.indexOf(v37Start))+detailHistorical.slice(detailHistorical.indexOf(v37End));
+  const inputs={detail:detailForRecipes,lifecycle:helper.currentLifecycleContracts(d).historical,ownerOld:l,ownerRecent:d,media:d,presentation:base,
    presentationOld:helper.withBaselineOwnerDelete(html,old),presentationRecent:helper.withBaselineOwnerDelete(html,base)};
   const entries=helper.inventory();assert.equal(entries.length,468);
   for(const r of entries){
