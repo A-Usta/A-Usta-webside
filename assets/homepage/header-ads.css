@@ -46,5 +46,5 @@
 #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"]{display:block;width:100%;min-height:0;height:auto;margin:0;padding:0;border:0;border-radius:0;background:transparent;line-height:0;overflow:hidden}
 #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-label,#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-copy,#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-controls{display:none!important}
 #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-body{display:block;width:100%;min-height:0;height:auto;margin:0;padding:0}
-#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media{display:block;width:100%;max-width:none;height:auto;max-height:none;aspect-ratio:508/506;flex:none;margin:0;padding:0;border:0;border-radius:0;background:transparent;overflow:hidden}
+#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media{position:static;inset:auto;z-index:auto;pointer-events:auto;display:block;width:100%;max-width:none;height:auto;max-height:none;aspect-ratio:508/506;flex:none;margin:0;padding:0;border:0;border-radius:0;background:transparent;overflow:hidden}
 #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
