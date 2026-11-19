@@ -14,7 +14,7 @@ const reviewedFiles = {
   "tests/package-lock.json": "a8c0592f8094f5eec64e3f2ddd1e626083339c99d41c763d6f407c7c732033d1",
   "tests/db/package.json": "6ba43139036db3440a1222832c6db9fc3254693c7031cb61b12f0170dc60c1a2",
   "tests/category-detail-presentation.test.cjs": "c1ace9f049d8c9ffb7a4236a799f265b6b9ec9e426de218c1f935f6d894dacdc",
-  "tests/dealer-legacy-condition.test.cjs": "09017314c8f2ed8d0af697223f0ad0a1d77aa5f2808c98cb79f65596f3f81f60"
+  "tests/dealer-legacy-condition.test.cjs": "c4e0ecc38e21ef3dc55623d4f502d32f46e3992d24b12ba9910483853df8d400"
 };
 const legacy = [
   ['austa-v16-professional-flow-patch', '5fba6d8088946960717f19ae9af9847665df46939c52cc6e756d5e72cf83a752'],

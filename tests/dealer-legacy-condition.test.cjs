@@ -39,6 +39,11 @@ test('Dealer legacy condition: real Chromium select, edit hydration and UPDATE',
     if(type!=='dealer'||editing!==true||!input||typeof input!=='object'||Array.isArray(input))throw new Error('Dealer fixture validator call contract mismatch');
     return {...input};
    },
+   validateEquipment(type,value){
+    if(type!=='dealer')throw new Error('Dealer fixture equipment category mismatch');
+    const selected=Array.isArray(value)?value:JSON.parse(value);
+    return JSON.stringify(selected);
+   },
    detailsFromForm:()=>({}),preserveDetails:async()=>undefined
   };
   window.AUSTA_V153C={categories:{}};
