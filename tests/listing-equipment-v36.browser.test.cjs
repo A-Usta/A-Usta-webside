@@ -21,6 +21,7 @@ test('V3.6 avadanlıq seçimləri bütün kateqoriyalarda seçilir, saxlanır v�
   const actual=await page.evaluate(types=>{
    const api=window.AUSTA_LISTING_EQUIPMENT_V36,root=document.querySelector('#forms'),select=document.querySelector('#austaV153CCategory');
    const results=[];
+   select.replaceChildren(...types.map(type=>{const option=document.createElement('option');option.value=type;option.textContent=type;return option;}));
    for(const type of types){
     select.value=type;const section=document.createElement('section');section.className='austa-v153c-field-grid';root.append(section);api.mount(section,type);
     const box=section.querySelector('[data-v36-equipment]'),checks=[...box.querySelectorAll('[data-v36-equipment-choice]')];
