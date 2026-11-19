@@ -2940,7 +2940,7 @@ function partitionLifecycleState(html){
 }
 exports.currentLifecycleContracts=partitionLifecycleState;
 
-exports.withBaselineDetail=(html,base)=>{recent(base);if(html.includes('function equipmentValues(item)'))html=require('./homepage-baseline.cjs').reverseV36Equipment(html);return apply(partitionCurrent(html).historical,'detail');};
+exports.withBaselineDetail=(html,base)=>{recent(base);const start="\n  if(['leasing','insurance','sober_driver'].includes(categoryOf(item))){",end="\n  if(['cars','rent'].includes(categoryOf(item))){";if(html.includes(start)){assert.equal(html.split(start).length,2,'one V3.7 service detail branch');assert.equal(html.split(end).length,2,'V3.7 detail insertion point');html=html.slice(0,html.indexOf(start))+html.slice(html.indexOf(end));}if(html.includes('function equipmentValues(item)'))html=require('./homepage-baseline.cjs').reverseV36Equipment(html);return apply(partitionCurrent(html).historical,'detail');};
 exports.withBaselineLifecycle=(html,base)=>recent(base)?html:apply(partitionLifecycleState(html).historical,'lifecycle');
 exports.withBaselineMediaHydration=(html,base)=>{assert.equal(recent(base),false,'P2.A media historical generation');return apply(html,'media');};
 const presentationInputs=new Map();
