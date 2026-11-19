@@ -22,7 +22,7 @@ function mount(){
  const campaigns=window.AUSTA_CATEGORY_CAMPAIGNS;
  if(campaigns){
   campaigns.setCampaigns('marketplace_top',[
-   {id:'austa-usa-order',active:true,headline:'A-USTA',accessibilityLabel:'A-USTA: ABŞ-dən avtomobil sifarişi',mediaType:'video',mediaUrl:'assets/homepage/austa-usa-order-source.mp4',posterUrl:'assets/homepage/austa-usa-order-source-poster.webp',durationMs:30000,priority:10},
+   {id:'austa-usa-order',active:true,headline:'A-USTA',accessibilityLabel:'A-USTA: ABŞ-dən avtomobil sifarişi',mediaType:'video',mediaUrl:'assets/homepage/austa-usa-order-source.mp4',durationMs:30000,priority:10},
    {id:'austa-discover',active:true,headline:'Növbəti avtomobilini A-USTA-da tap.',description:'Real elanları araşdır, seçimlərini daralt, uyğun avtomobili tap.',action:'cars',actionLabel:'Avtomobil elanlarına bax'},
    {id:'austa-search',active:true,headline:'Seçimini dəqiqləşdir.',description:'Marka, model və büdcəyə uyğun avtomobil elanlarını bir yerdə araşdır.',action:'cars',actionLabel:'Avtomobil elanlarına bax'}
   ]);
