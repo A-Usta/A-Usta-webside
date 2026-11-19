@@ -6,7 +6,7 @@ const path=require('node:path');
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'assets/marketplace/listing-detail-v36.js'),'utf8');
-const css=fs.readFileSync(path.join(root,'assets/marketplace/listing-equipment-v36.css'),'utf8');
+const css=fs.readFileSync(path.join(root,'assets/marketplace/listing-detail-v36.css'),'utf8');
 const expected=['cars','rent','parts','accessories','moto','special','bus','water','caravan','trailer','plate','service','usta','dealer'];
 
 test('V3.6 avadanlıq seçimləri bütün kateqoriyalarda seçilir, saxlanır və redaktədə bərpa olunur',async t=>{
