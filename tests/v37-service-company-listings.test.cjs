@@ -35,7 +35,7 @@ test('each category has its own questions and no invented quotation values',()=>
   for(const key of fields)assert.ok(block.includes("['"+key+"'"),type+' missing '+key);
  }
  assert.doesNotMatch(js,/value:\s*(?:[0-9]+(?:\.[0-9]+)?|[0-9]+%)/);
- const filters=read('assets/marketplace/category-filters.js');for(const key of ['leasing','insurance','sober_driver']){const start=filters.indexOf(key+':{title:'),end=filters.indexOf('\\n',start);assert.ok(start>=0&&filters.slice(start,end<0?filters.length:end).includes("detail('city'"),key+' city filter');}
+ const filters=read('assets/marketplace/category-filters.js');for(const key of ['leasing','insurance','sober_driver']){const start=filters.indexOf(key+':{title:'),end=filters.indexOf(String.fromCharCode(10),start);assert.ok(start>=0&&filters.slice(start,end<0?filters.length:end).includes("detail('city'"),key+' city filter');}
  assert.match(html,/Qiymət və təminat yekun sığorta təklifi deyil/);
  assert.match(html,/platforma tərəfindən yoxlanılmayıb/);
 });
