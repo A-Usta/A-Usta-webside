@@ -13,6 +13,7 @@ test('V3.7 category routes, form adapter and detail contract are connected to ex
   assert.match(html,new RegExp('contains\\("details",\\{service_category:type\\}\\)'));
  }
  assert.match(html,/SERVICE_COMPANY_TYPES=new Set\(\["leasing","insurance","sober_driver"\]\)/);
+ const specs=html.slice(html.indexOf('function specsFor(item)'),html.indexOf('function equipmentValues(item)'));for(const key of ['minimum_down_payment','insurance_types','rate_per_km','license_disclosure','service_area'])assert.ok(specs.includes(key),'detail specs missing '+key);
  assert.match(html,/providerTypeForCategory=type=>SERVICE_COMPANY_TYPES\.has\(type\)\?"service":type/);
  assert.match(html,/service_provider_listings:item\.details\?\.service_category \|\| item\.provider_type/);
  assert.match(html,/type=item\.details\?\.service_category \|\| item\.provider_type/);
