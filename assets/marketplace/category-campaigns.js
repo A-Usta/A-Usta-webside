@@ -56,7 +56,7 @@ function render(state,index=0){
  body.append(copy);
  if(campaign.mediaUrl&&campaign.mediaType!=='none'){
   const media=element('div','aca-media');const node=document.createElement(campaign.mediaType==='video'?'video':'img');
-  if(campaign.mediaType==='video'){node.muted=true;node.defaultMuted=true;node.playsInline=true;node.loop=true;node.preload='none';if(campaign.posterUrl)node.poster=campaign.posterUrl;node.setAttribute('aria-label',campaign.accessibilityLabel);}
+  if(campaign.mediaType==='video'){node.muted=true;node.defaultMuted=true;node.autoplay=true;node.playsInline=true;node.loop=true;node.preload='auto';if(campaign.posterUrl)node.poster=campaign.posterUrl;node.setAttribute('aria-label',campaign.accessibilityLabel);}
   else{node.loading='lazy';node.decoding='async';node.alt=campaign.accessibilityLabel;}
   node.addEventListener('error',()=>{media.replaceChildren(element('span','aca-media-fallback','A-USTA'));});node.src=campaign.mediaUrl;media.append(node);body.append(media);
  }else if(state.slot==='marketplace_top'){

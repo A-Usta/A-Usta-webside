@@ -67,7 +67,7 @@ const files={
   "assets/marketplace/listing-experience.js": "b4d703b1950aa21d39fff75438efb3e641cfd7edba7a9a6456bf6694c4734d36",
   "assets/homepage/service-experience.css": "318fa417f541c77ef58ef04b35f33a5a4dffc8059cca9a78c46f1964b1aa3b44",
   "assets/homepage/service-experience.js": "56f2acd569a377539b08c1d6d6114200f53ab271fddf3f630b014a9f4afd74ac",
-  "assets/homepage/header-search-polish.js": "0d281be32f98ac438d866f844800d4f024bd905bd7da181dff3e2cbdcf420b3e",
+  "assets/homepage/header-search-polish.js": "75a53ee35d5aab727f004857b3763282dbc908fb8561f8866cb0d50529109dfd",
   "assets/homepage/austa-usa-order.gif": "d1283362d9ce843768163f3fb96383205d132af7e40723e02fc8524abaa6e25a",
   "assets/homepage/austa-usa-order-wide.gif": "cc3192578f539dbb499dd1850d2fda6184dbf6918fc3d583dd83e3c685b9e19a",
   "assets/homepage/austa-usa-order-slow.webp": "45837f66ffcdc417e9d41049a46b13ae2298168413431070b3182297932278a8",
@@ -75,9 +75,11 @@ const files={
   "assets/homepage/austa-usa-order-wide.webp": "be0b79fac1ef8328bf3312efbe75d506e3e39d8dd2c0a004f38e51b15beb4fb3",
   "assets/homepage/austa-usa-order-wide-poster.webp": "0dad595741e16701cb09aa25e8bbee898095941d91ac22e0ae413cc34f12a1aa",
   "assets/homepage/header-search-polish.css": "a444231719876956e73563cc3d31a2309f7dc5c9e74658be36d51ccb81d3eed8",
-  "assets/homepage/header-ads.css": "b96cefa36f198ee123245dc33bef36fb053561811904448670860ae3535cd8fd",
+  "assets/homepage/header-ads.css": "fe30fb01c88e8b6ac7c13f2c8ea9bddad58750b21ab28b09c7f01cf2bf9e748d",
+  "assets/homepage/austa-usa-order-source.mp4": "dc5476455e4eee8f821f71d1a008645187d009f238a49a36b792a7da873faea7",
+  "assets/homepage/austa-usa-order-source-poster.webp": "0776518a3d1c68788d7cb82fbc2cf6f2063a15341d60686ab8280b434c08640d",
   "assets/homepage/header-ads.js": "862ccf1b589398ea70ade5bcaf80b5322e3a4376d4775e435d8d851f6e4b4275",
-  "assets/marketplace/category-campaigns.js": "48e9c3ebc6d67f4be494bfe0c49c417e38d33b76428898ff9ae770c9faea5df3",
+  "assets/marketplace/category-campaigns.js": "ea4c1f6766c19e7d9ba48ecb0bdf8d24c657b0b2d1c742036be9af77998d0ab1",
 
   "assets/homepage/premium-homepage.css": "fc55a06349ce701e9368eca14ebb2cd2fbb53fedbfe1583aa9c16b81592dfbfa",
   "assets/homepage/premium-homepage.js": "8dffa44c2e41a1b4e87d13bdcf930a51143cee4c68188278e577323653bbd7ad",
@@ -99,4 +101,5 @@ exports.isReviewedFile=p=>{if(!Object.hasOwn(files,p))return false;assert.equal(
 exports.verify=()=>{for(const p of Object.keys(files))exports.isReviewedFile(p);};
 
 const campaignFrom=" // Existing category callers retain side-only placement; Home explicitly opts into TOP.\n if(options.placements!==undefined&&!Array.isArray(options.placements))throw new Error('Reklam yerl\u0259\u015fimi d\u00fczg\u00fcn deyil.');\n const placementSlots=options.placements===undefined?slots.filter(slot=>slot!=='marketplace_top'):[...new Set(options.placements)].filter(slot=>slots.includes(slot));\n for(const slot of placementSlots){",campaignTo=" // Category pages currently mount only side placements; keep TOP campaign support for future placement.\n for(const slot of slots.filter(slot=>slot!=='marketplace_top')){";
-exports.normalizeCampaigns=text=>{if(!text.includes(campaignFrom))return text;assert.equal(text.split(campaignFrom).length,2,"exact reviewed placement opt-in");return text.replace(campaignFrom,()=>campaignTo);};
+const videoFrom="if(campaign.mediaType==='video'){node.muted=true;node.defaultMuted=true;node.playsInline=true;node.loop=true;node.preload='none';if(campaign.posterUrl)node.poster=campaign.posterUrl;node.setAttribute('aria-label',campaign.accessibilityLabel);}",videoTo="if(campaign.mediaType==='video'){node.muted=true;node.defaultMuted=true;node.autoplay=true;node.playsInline=true;node.loop=true;node.preload='auto';if(campaign.posterUrl)node.poster=campaign.posterUrl;node.setAttribute('aria-label',campaign.accessibilityLabel);}";
+exports.normalizeCampaigns=text=>{if(text.includes(campaignFrom)){assert.equal(text.split(campaignFrom).length,2,"exact reviewed placement opt-in");text=text.replace(campaignFrom,()=>campaignTo);}if(text.includes(videoTo)){assert.equal(text.split(videoTo).length,2,"exact reviewed muted autoplay behavior");text=text.replace(videoTo,()=>videoFrom);}return text;};
