@@ -103,15 +103,6 @@ jobs:
         working-directory: backend/a-usta56
         run: npm audit
 
-      - name: Upload TOP banner desktop and mobile screenshots
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: pr298-top-banner-screenshots
-          path: ${{ runner.temp }}/austa-pr298-top-banner-*.png
-          if-no-files-found: ignore
-          retention-days: 7
-
       - name: Assert repository cleanliness
         if: always()
         run: |
@@ -254,6 +245,15 @@ jobs:
         run: |
           set -euo pipefail
           npm test --prefix tests | tee "$RUNNER_TEMP/frontend-regression.tap"
+
+      - name: Upload TOP banner desktop and mobile screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pr298-top-banner-screenshots
+          path: ${{ runner.temp }}/austa-pr298-top-banner-*.png
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Assert repository cleanliness
         if: always()
