@@ -151,15 +151,7 @@ test('P0.3.1 helper, visibility, public queries and protected runtime assets rem
  const base='19c91a76502dad439811fa86d95af0fac922c88a',html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const main=cp.execFileSync('git',['show',base+':index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  for(const id of ['austa-v154e-global-promotion-pagination']){
-  const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');const current=html.match(re)[0];assert.equal(current.split('\"public_service_provider_listings\"').length,3,'V3.7 provider privacy read in V154E');const normalized=current.replace('        service:"Avtoservislər",usta:"Usta profilləri",dealer:"Avtosalonlar",
-        leasing:"Lizinq şirkətləri",insurance:"Avtomobil sığorta şirkətləri",sober_driver:"Ayıq sürücü şirkətləri','        service:
-            "Avtoservislər",
-
-        usta:
-            "Usta profilləri",
-
-        dealer:
-            "Avtosalonlar"').replace(/\n        }else if\(\["leasing","insurance","sober_driver"\]\.includes\(type\)\)\{\n            query=supabase\.from\("public_service_provider_listings"\)\.select\("\*"\)\.eq\("status","active"\)\.eq\("provider_type","service"\)\.contains\("details",\{service_category:type\}\);\n        }else if/,"\n        }else if").replaceAll('\"public_service_provider_listings\"','\"service_provider_listings\"');assert.equal(normalized,main.match(re)[0]);
+  const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');const current=html.match(re)[0];assert.equal(current.split('\"public_service_provider_listings\"').length,3,'V3.7 provider privacy read in V154E');const normalized=current.replace("        service:\"Avtoservislər\",usta:\"Usta profilləri\",dealer:\"Avtosalonlar\",\n        leasing:\"Lizinq şirkətləri\",insurance:\"Avtomobil sığorta şirkətləri\",sober_driver:\"Ayıq sürücü şirkətləri","        service:\n            \"Avtoservislər\",\n\n        usta:\n            \"Usta profilləri\",\n\n        dealer:\n            \"Avtosalonlar\"").replace(/\n        }else if\(\["leasing","insurance","sober_driver"\]\.includes\(type\)\)\{\n            query=supabase\.from\("public_service_provider_listings"\)\.select\("\*"\)\.eq\("status","active"\)\.eq\("provider_type","service"\)\.contains\("details",\{service_category:type\}\);\n        }else if/,"\n        }else if").replaceAll('\"public_service_provider_listings\"','\"service_provider_listings\"');assert.equal(normalized,main.match(re)[0]);
  }
  require('./helpers/server-key-baseline.cjs').assertConfig();
  const changed=cp.execFileSync('git',['diff','--name-only',base,'--','assets','backend'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
