@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const block=id=>html.match(new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>'))[1];
 const ids={router:'austa-v153b-all-real-listing-router',media:'austa-v153d-14-category-media-js',form:'austa-v153c-real-listing-form-js'};
-const maps={cars:['vehicle_listings','listing_media','listing-media'],rent:['vehicle_listings','listing_media','listing-media'],parts:['marketplace_listings','marketplace_listing_media','marketplace-media'],service:['service_provider_listings','service_provider_media','provider-media'],usta:['service_provider_listings','service_provider_media','provider-media'],dealer:['auto_dealer_listings','auto_dealer_media','auto-dealer-media']};
+const maps={cars:['vehicle_listings','listing_media','listing-media'],rent:['vehicle_listings','listing_media','listing-media'],parts:['marketplace_listings','marketplace_listing_media','marketplace-media'],service:['service_provider_listings','service_provider_media','provider-media'],usta:['service_provider_listings','service_provider_media','provider-media'],leasing:['service_provider_listings','service_provider_media','provider-media'],insurance:['service_provider_listings','service_provider_media','provider-media'],sober_driver:['service_provider_listings','service_provider_media','provider-media'],dealer:['auto_dealer_listings','auto_dealer_media','auto-dealer-media']};
 const input={title:'Listing',name:'Name',specialty:'Repair',brand:'BMW',model:'X5',year:2022,price:10,phone:'test',region:'Bakı',address:'Address',dealer_name:'Dealer'};
 const photo=name=>({name,type:'image/jpeg',size:128}),video=name=>({name,type:'video/mp4',size:256});
 function fixture(){
@@ -437,5 +437,23 @@ for(const type of ['cars','rent']){
   assert.equal(f.state.insertions,1);assert.equal(f.listings()[0].status,'draft');noSuccess(f);
   f.state.release();await Promise.all([first,second]);await f.create(type);
   assert.equal(f.state.insertions,1);assert.equal(f.state.events.length,1);
+ });
+}
+
+for(const type of ['leasing','insurance','sober_driver']){
+ test(`V3.7 ${type}: company subtype, files, edit and owner scope share the service provider pipeline`,async()=>{
+  const f=fixture();f.files.images=[photo(type+'.jpg')];
+  const details={service_category:type,company_name:'A-USTA test '+type,tax_id:'0000000000',city:'Bakı',service_area:'Bakı'};
+  const created=await f.create(type,{name:details.company_name,company_name:details.company_name,provider_type:'service',details});
+  assert.equal(created.source,'service_provider_listings');
+  const row=f.state.tables.service_provider_listings[0];
+  assert.equal(row.provider_type,'service');assert.equal(row.details.service_category,type);
+  assert.equal(row.status,'active');assert.equal(row.owner_id,f.state.owner);
+  assert.equal(f.media().length,1);assert.equal(f.state.objects.size,1);
+  await f.api.updateListing(type,row.id,{name:'Updated '+type,provider_type:'service',details:{...details,company_name:'Updated '+type}});
+  assert.equal(row.details.company_name,'Updated '+type);
+  const ownerUpdate=f.state.ops.findLast(op=>op.table==='service_provider_listings'&&op.op==='update');
+  assert.ok(ownerUpdate.filters.some(([key,value])=>key==='owner_id'&&value===f.state.owner));
+  assert.equal(row.details.service_category,type);
  });
 }
