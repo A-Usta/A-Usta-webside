@@ -52316,7 +52316,7 @@ async function saveProvider(type, input, user, publishAttempt, sellerIntent) {
 
     if(sellerIntent&&!window.AUSTA_SELLER_INTENT)throw new Error('Satıcı profili sistemi hazır deyil.');
     Object.assign(row,window.AUSTA_SELLER_INTENT
-        ? await window.AUSTA_SELLER_INTENT.resolve(providerTypeForCategory(type),user,sellerIntent)
+        ? await window.AUSTA_SELLER_INTENT.resolve(type,user,sellerIntent)
         : {seller_profile_id:null});
     publishAttempt.insertStarted = true;
     const {
@@ -52817,7 +52817,7 @@ async function updateListing(
 
     if(sellerIntent&&!window.AUSTA_SELLER_INTENT)throw new Error('Satıcı profili sistemi hazır deyil.');
     Object.assign(row,window.AUSTA_SELLER_INTENT
-        ? await window.AUSTA_SELLER_INTENT.resolve(providerTypeForCategory(type),user,sellerIntent,true,listingId)
+        ? await window.AUSTA_SELLER_INTENT.resolve(type,user,sellerIntent,true,listingId)
         : {});
 
     const {
