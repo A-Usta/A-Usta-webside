@@ -244,7 +244,6 @@ jobs:
       - name: Complete frontend including real Chromium and P2.A
         env:
           V36_SCREENSHOTS: ${{ runner.temp }}/austa-v36-screenshots
-          V37_SCREENSHOTS: ${{ runner.temp }}/austa-v37-screenshots
         run: |
           set -euo pipefail
           npm test --prefix tests | tee "$RUNNER_TEMP/frontend-regression.tap"
@@ -255,14 +254,6 @@ jobs:
         with:
           name: v36-listing-detail-and-equipment-screenshots
           path: ${{ runner.temp }}/austa-v36-screenshots/*.png
-          if-no-files-found: ignore
-          retention-days: 7
-      - name: Upload V3.7 service-company screenshots
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: v37-service-company-screenshots
-          path: ${{ runner.temp }}/austa-v37-screenshots/*.png
           if-no-files-found: ignore
           retention-days: 7
 
