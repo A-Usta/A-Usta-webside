@@ -52,8 +52,10 @@ async function read(c){
  await actor(c);
  const {data,error}=await c.client.from(c.source==='service_provider'?'public_service_provider_listings':c.config.table).select('*').eq('id',c.id).maybeSingle();check(c);
  if(error||!data||String(data.id)!==c.id)return null;
- const type=c.config.field?c.config.types[data[c.config.field]]:'dealer';
- if(!type||c.config.field&&!own(c.config.types,data[c.config.field])||c.expected&&type!==c.expected)return null;
+ const baseType=c.config.field?c.config.types[data[c.config.field]]:'dealer';
+ const subtype=baseType==='service'&&['leasing','insurance','sober_driver'].includes(data.details?.service_category)?data.details.service_category:null;
+ const type=subtype||baseType;
+ if(!type||c.config.field&&!own(c.config.types,data[c.config.field])||c.expected&&type!==c.expected&&c.expected!==baseType)return null;
  const owner=Boolean(c.user&&data.owner_id===c.user.id);
  if(!c.config.statuses.includes(data.status)||data.status!=='active'&&!owner)return null;
  c.owner=owner;c.type=type;
