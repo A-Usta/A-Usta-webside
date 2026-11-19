@@ -69,7 +69,7 @@ async function resolve(state){
   }catch(error){if(active(state)){console.warn('A-USTA seller page:',error?.message);status(state,'Avtosalon məlumatı yüklənmədi. Yenidən cəhd edin.',true);}}
   finally{state.resolving=false;}
 }
-async function open(id,listingType='sale'){ 
+async function open(id,listingType='sale'){
   if(!['sale','rent'].includes(listingType))return;
   close();
   if(typeof id!=='string'||!id)return;
