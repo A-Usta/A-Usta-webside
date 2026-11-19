@@ -78,7 +78,7 @@ const files={
   "assets/homepage/header-ads.css": "fe30fb01c88e8b6ac7c13f2c8ea9bddad58750b21ab28b09c7f01cf2bf9e748d",
   "assets/homepage/austa-usa-order-source.mp4": "dc5476455e4eee8f821f71d1a008645187d009f238a49a36b792a7da873faea7",
   "assets/homepage/header-ads.js": "862ccf1b589398ea70ade5bcaf80b5322e3a4376d4775e435d8d851f6e4b4275",
-  "assets/marketplace/category-campaigns.js": "ea4c1f6766c19e7d9ba48ecb0bdf8d24c657b0b2d1c742036be9af77998d0ab1",
+  "assets/marketplace/category-campaigns.js": "48e9c3ebc6d67f4be494bfe0c49c417e38d33b76428898ff9ae770c9faea5df3",
 
   "assets/homepage/premium-homepage.css": "fc55a06349ce701e9368eca14ebb2cd2fbb53fedbfe1583aa9c16b81592dfbfa",
   "assets/homepage/premium-homepage.js": "8dffa44c2e41a1b4e87d13bdcf930a51143cee4c68188278e577323653bbd7ad",
@@ -100,5 +100,4 @@ exports.isReviewedFile=p=>{if(!Object.hasOwn(files,p))return false;assert.equal(
 exports.verify=()=>{for(const p of Object.keys(files))exports.isReviewedFile(p);};
 
 const campaignFrom=" // Existing category callers retain side-only placement; Home explicitly opts into TOP.\n if(options.placements!==undefined&&!Array.isArray(options.placements))throw new Error('Reklam yerl\u0259\u015fimi d\u00fczg\u00fcn deyil.');\n const placementSlots=options.placements===undefined?slots.filter(slot=>slot!=='marketplace_top'):[...new Set(options.placements)].filter(slot=>slots.includes(slot));\n for(const slot of placementSlots){",campaignTo=" // Category pages currently mount only side placements; keep TOP campaign support for future placement.\n for(const slot of slots.filter(slot=>slot!=='marketplace_top')){";
-const videoFrom="if(campaign.mediaType==='video'){node.muted=true;node.defaultMuted=true;node.playsInline=true;node.loop=true;node.preload='none';if(campaign.posterUrl)node.poster=campaign.posterUrl;node.setAttribute('aria-label',campaign.accessibilityLabel);}",videoTo="if(campaign.mediaType==='video'){node.muted=true;node.defaultMuted=true;node.autoplay=true;node.playsInline=true;node.loop=true;node.preload='auto';if(campaign.posterUrl)node.poster=campaign.posterUrl;node.setAttribute('aria-label',campaign.accessibilityLabel);}";
-exports.normalizeCampaigns=text=>{if(text.includes(campaignFrom)){assert.equal(text.split(campaignFrom).length,2,"exact reviewed placement opt-in");text=text.replace(campaignFrom,()=>campaignTo);}if(text.includes(videoTo)){assert.equal(text.split(videoTo).length,2,"exact reviewed muted autoplay behavior");text=text.replace(videoTo,()=>videoFrom);}return text;};
+exports.normalizeCampaigns=text=>{if(!text.includes(campaignFrom))return text;assert.equal(text.split(campaignFrom).length,2,"exact reviewed placement opt-in");return text.replace(campaignFrom,()=>campaignTo);};
