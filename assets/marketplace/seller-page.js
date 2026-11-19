@@ -29,7 +29,7 @@ async function loadBatch(state){
     const sb=window.AUSTA_SUPABASE,api=window.AUSTA_V151_MARKETPLACE;
     if(!sb?.from||!api?.hydrateVehicleCardMedia||!api?.vehicleCardHtml)throw new Error('Elanlar hazırda yüklənmir.');
     let query=sb.from('vehicle_listings').select(fields)
-      .eq('status','active').eq('listing_type','sale').eq('seller_profile_id',state.id)
+      .eq('status','active').eq('listing_type',state.listingType).eq('seller_profile_id',state.id)
       .order('created_at',{ascending:false}).order('id',{ascending:false})
       .range(state.offset,state.offset+BATCH_SIZE);
     if(typeof query.abortSignal==='function')query=query.abortSignal(controller.signal);
@@ -38,7 +38,7 @@ async function loadBatch(state){
     if(error)throw error;
     if(!Array.isArray(data))throw new Error('Elan məlumatının formatı düzgün deyil.');
     const consumed=data.slice(0,BATCH_SIZE);
-    const eligible=consumed.filter(item=>item?.id&&item.status==='active'&&item.listing_type==='sale'&&item.seller_profile_id===state.id&&!state.seen.has(item.id));
+    const eligible=consumed.filter(item=>item?.id&&item.status==='active'&&item.listing_type===state.listingType&&item.seller_profile_id===state.id&&!state.seen.has(item.id));
     await api.hydrateVehicleCardMedia(eligible);
     if(!active(state)||controller.signal.aborted)return;
     const markup=eligible.map(item=>api.vehicleCardHtml(item)).join('');
@@ -63,17 +63,17 @@ async function resolve(state){
       status(state,'Avtosalon mövcud deyil');return;
     }
     state.profile=profile;
-    state.header.innerHTML=`<h1 id="austaSellerPageTitle">${esc(profile.display_name||'Avtosalon')}</h1><div class="austa-seller-page-meta"><span>Avtosalon</span>${api.isOfficial(profile)===true?'<span class="austa-seller-page-official">Rəsmi</span>':''}${profile.country_code?`<span>${esc(profile.country_code)}</span>`:''}</div>`;
+    const companyLabel=state.listingType==='rent'?'Rent a Car':'Avtosalon';\n    state.header.innerHTML=`<h1 id="austaSellerPageTitle">${esc(profile.display_name||companyLabel)}</h1><div class="austa-seller-page-meta"><span>${companyLabel}</span>${api.isOfficial(profile)===true?'<span class="austa-seller-page-official">Rəsmi</span>':''}${profile.country_code?`<span>${esc(profile.country_code)}</span>`:''}</div>`;
     await loadBatch(state);
   }catch(error){if(active(state)){console.warn('A-USTA seller page:',error?.message);status(state,'Avtosalon məlumatı yüklənmədi. Yenidən cəhd edin.',true);}}
   finally{state.resolving=false;}
 }
-async function open(id){
+async function open(id,listingType='sale'){\n  if(!['sale','rent'].includes(listingType))return;
   close();
   if(typeof id!=='string'||!id)return;
   const root=document.createElement('section');root.id='austaSellerPage';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-labelledby','austaSellerPageTitle');root.tabIndex=-1;
   root.innerHTML='<div class="austa-seller-page-inner"><button type="button" class="austa-seller-page-back" data-seller-close>← Geri</button><header data-seller-header><h1 id="austaSellerPageTitle">Avtosalon</h1></header><div data-seller-status role="status" aria-live="polite"></div><button type="button" data-seller-retry hidden>Yenidən cəhd et</button><div class="austa-seller-page-grid" data-seller-grid></div><button type="button" data-seller-more hidden>Daha çox elan göstər</button></div>';
-  const state={root,id,session:++session,profile:null,offset:0,hasMore:true,loading:false,seen:new Set(),returnFocus:document.activeElement,overflow:document.body.style.overflow};
+  const state={root,id,listingType,session:++session,profile:null,offset:0,hasMore:true,loading:false,seen:new Set(),returnFocus:document.activeElement,overflow:document.body.style.overflow};
   state.header=root.querySelector('[data-seller-header]');state.message=root.querySelector('[data-seller-status]');state.grid=root.querySelector('[data-seller-grid]');state.retry=root.querySelector('[data-seller-retry]');state.more=root.querySelector('[data-seller-more]');current=state;
   root.querySelector('[data-seller-close]').addEventListener('click',close);
   state.more.addEventListener('click',()=>void loadBatch(state));
@@ -104,7 +104,7 @@ async function open(id){
 }
 document.addEventListener('click',event=>{
   const control=event.target.closest?.('button[data-austa-seller-page]');if(!control)return;
-  event.preventDefault();event.stopPropagation();void open(control.dataset.austaSellerPage);
+  event.preventDefault();event.stopPropagation();void open(control.dataset.austaSellerPage,control.dataset.austaSellerListingType||'sale');
 });
 window.AUSTA_SELLER_PAGE=Object.freeze({open,close});
 })();
