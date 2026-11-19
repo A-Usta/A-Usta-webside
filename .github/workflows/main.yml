@@ -250,8 +250,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: pr298-top-banner-screenshots
-          path: ${{ runner.temp }}/austa-pr298-top-banner-*.png
+          name: pr299-top-banner-screenshots
+          path: ${{ runner.temp }}/austa-pr299-top-banner-*.png
           if-no-files-found: ignore
           retention-days: 7
 
