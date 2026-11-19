@@ -42,3 +42,18 @@
 #austaMainHeader[data-v351] #austaHeaderAddListing{width:auto!important}#austaMainHeader[data-v351] #austaHeaderAddListing::after{content:none!important}
 #austaMainHeader[data-v351] .v351-support>a{display:inline-flex;align-items:center;min-height:30px}
 @media(max-width:650px){#austaMainHeader[data-v351] #locationMenu{left:0!important;right:auto!important;width:min(350px,calc(100vw - 28px))!important}}
+/* The approved A-USTA order GIF is the entire TOP ad creative. */
+#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"]{display:block;width:100%;min-height:0;height:auto;margin:0;padding:0;border:0;border-radius:0;background:transparent;line-height:0;overflow:hidden}
+#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-label,#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-copy,#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-controls{display:none!important}
+#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-body{display:block;width:100%;min-height:0;height:auto;margin:0;padding:0}
+#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media{position:static;inset:auto;z-index:auto;pointer-events:auto;display:block;width:100%;max-width:none;height:auto;max-height:none;aspect-ratio:508/506;flex:none;margin:0;padding:0;border:0;border-radius:0;background:transparent;overflow:hidden}
+#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
+
+/* Desktop uses a compact wide composition; mobile keeps the original square GIF. */
+#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media{aspect-ratio:1240/210;background:#071321}
+#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media picture{display:block;width:100%;height:100%}
+#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media img{object-fit:cover}
+@media(max-width:650px){
+ #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media{aspect-ratio:508/506}
+ #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media img{object-fit:contain}
+}
