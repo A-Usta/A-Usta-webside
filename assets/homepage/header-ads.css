@@ -57,3 +57,7 @@
  #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media{aspect-ratio:508/506}
  #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media img{object-fit:contain}
 }
+
+/* TOP placement is a normal-flow, viewport-wide strip; other ad placements stay unchanged. */
+#austaV351TopAd{box-sizing:border-box;width:100%;max-width:none;margin:0;color:#34473b}
+@media(max-width:650px){#austaV351TopAd{width:100%!important;margin:0!important}}
