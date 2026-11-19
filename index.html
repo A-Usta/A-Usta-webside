@@ -30332,9 +30332,12 @@ function specsFor(item){
 
   if(['leasing','insurance','sober_driver'].includes(categoryOf(item))){
     const d=item.details||{},keys=categoryOf(item)==='leasing'?['vehicle_categories','vehicle_condition','customer_types','minimum_down_payment','minimum_term','maximum_term','rate','interest_type','currency','minimum_financing','maximum_financing','guarantor_required','income_proof_required','required_documents','terms']:categoryOf(item)==='insurance'?['insurance_types','coverage','franchise','contract_months','payment_methods','installments_available','online_application','claims_support','repair_network','exclusions','license_reference','license_disclosure']:['service_24_7','working_hours','minimum_order_price','rate_per_km','rate_per_hour','night_rate','city_service','intercity_service','advance_booking','urgent_service','driver_experience','payment_methods','waiting_fee','special_conditions'];
-    const labels={vehicle_categories:'Avtomobil kateqoriyaları',vehicle_condition:'Avtomobilin vəziyyəti',customer_types:'Müştəri növü',minimum_down_payment:'Minimum ilkin ödəniş',minimum_term:'Minimum müddət',maximum_term:'Maksimum müddət',rate:'Faiz dərəcəsi',interest_type:'Faiz dövrü',currency:'Valyuta',minimum_financing:'Minimum maliyyələşmə',maximum_financing:'Maksimum maliyyələşmə',guarantor_required:'Zamin tələbi',income_proof_required:'Gəlir sənədi',required_documents:'Tələb olunan sənədlər',terms:'Təklif şərtləri',insurance_types:'Sığorta növləri',coverage:'Sığorta təminatı',franchise:'Franşiza',contract_months:'Müqavilə müddəti',payment_methods:'Ödəniş üsulları',installments_available:'Hissəli ödəniş',online_application:'Onlayn müraciət',claims_support:'Hadisə zamanı dəstək',repair_network:'Partnyor təmir şəbəkəsi',exclusions:'İstisnalar və məhdudiyyətlər',license_reference:'Şirkətin təqdim etdiyi icazə/reyestr məlumatı',license_disclosure:'İcazə yoxlaması',service_24_7:'24/7 xidmət',working_hours:'İş saatları',minimum_order_price:'Minimum sifariş qiyməti',rate_per_km:'Kilometr tarifi',rate_per_hour:'Saatlıq tarif',night_rate:'Gecə tarifi',city_service:'Şəhərdaxili xidmət',intercity_service:'Şəhərlərarası xidmət',advance_booking:'Əvvəlcədən sifariş',urgent_service:'Təcili sifariş',driver_experience:'Sürücü təcrübəsi',waiting_fee:'Gözləmə haqqı',special_conditions:'Xüsusi şərtlər',company_name:'Şirkətin adı',tax_id:'VÖEN',legal_name:'Hüquqi / ticarət adı',email:'E-poçt',website:'Veb-sayt',city:'Şəhər',service_area:'Fəaliyyət ərazisi',vehicle_categories:'Avtomobil kateqoriyaları',customer_types:'Müştəri növü'};
+    const labels={vehicle_categories:'Avtomobil kateqoriyaları',vehicle_condition:'Avtomobilin vəziyyəti',customer_types:'Müştəri növü',minimum_down_payment:'Minimum ilkin ödəniş',minimum_term:'Minimum müddət',maximum_term:'Maksimum müddət',rate:'Faiz dərəcəsi',interest_type:'Faiz dövrü',currency:'Valyuta',minimum_financing:'Minimum maliyyələşmə',maximum_financing:'Maksimum maliyyələşmə',guarantor_required:'Zamin tələbi',income_proof_required:'Gəlir sənədi',required_documents:'Tələb olunan sənədlər',terms:'Təklif şərtləri',insurance_types:'Sığorta növləri',coverage:'Sığorta təminatı',franchise:'Franşiza',contract_months:'Müqavilə müddəti',payment_methods:'Ödəniş üsulları',installments_available:'Hissəli ödəniş',online_application:'Onlayn müraciət',claims_support:'Hadisə zamanı dəstək',repair_network:'Partnyor təmir şəbəkəsi',exclusions:'İstisnalar və məhdudiyyətlər',license_reference:'Şirkətin təqdim etdiyi icazə/reyestr məlumatı',license_disclosure:'İcazə yoxlaması',service_24_7:'24/7 xidmət',working_hours:'İş saatları',minimum_order_price:'Minimum sifariş qiyməti',rate_per_km:'Kilometr tarifi',rate_per_hour:'Saatlıq tarif',night_rate:'Gecə tarifi',city_service:'Şəhərdaxili xidmət',intercity_service:'Şəhərlərarası xidmət',advance_booking:'Əvvəlcədən sifariş',urgent_service:'Təcili sifariş',driver_experience:'Sürücü təcrübəsi',waiting_fee:'Gözləmə haqqı',special_conditions:'Xüsusi şərtlər',company_name:'Şirkətin adı',tax_id:'VÖEN',legal_name:'Hüquqi / ticarət adı',email:'E-poçt',website:'Veb-sayt',city:'Şəhər',service_area:'Fəaliyyət ərazisi'};
+    for(const k of ['company_name','tax_id','legal_name','email','website','city','service_area'])if(!keys.includes(k))keys.unshift(k);
     const val=k=>{let v=d[k];if(typeof v==='string'&&v.startsWith('[')){try{v=JSON.parse(v)}catch{}}return Array.isArray(v)?v.join(', '):typeof v==='boolean'?v?'Bəli':'Xeyr':v;};
-    return keys.map(k=>[labels[k]||k,val(k)]).filter(([,v])=>v!==undefined&&v!==null&&v!=='');
+    const rows=keys.map(k=>[labels[k]||k,val(k)]).filter(([,v])=>v!==undefined&&v!==null&&v!=='');
+    if(categoryOf(item)==='insurance')rows.push(['Vacib qeyd','Qiymət və təminat yekun sığorta təklifi deyil; şərtləri şirkətlə dəqiqləşdirin. İcazə məlumatı şirkət tərəfindən təqdim olunur və platforma tərəfindən yoxlanılmayıb.']);
+    return rows;
   }
   if(['cars','rent'].includes(categoryOf(item))){
     return carSpecs(item);
@@ -54551,7 +54554,7 @@ function readFields(){
             values[key]=value;
 
             if(value && !(marketplace && ['brand','model'].includes(key))){
-                details[SERVICE_COMPANY_TYPES.has(type)?key:label]=value;
+                details[window.AUSTA_SERVICE_COMPANY_V37?.isType(type)?key:label]=value;
             }
 
         });
@@ -54562,7 +54565,7 @@ function readFields(){
         details.equipment=JSON.stringify(window.AUSTA_LISTING_EQUIPMENT_V36.selected(document.getElementById('austaV153CFields')));
         values.equipment=details.equipment;
     }
-    if(SERVICE_COMPANY_TYPES.has(type))document.querySelectorAll('#austaV153CFields [data-v37-choice]').forEach(input=>{const group=input.dataset.v37Choice,hidden=document.querySelector('#austaV153CFields [data-v153c-key="'+group+'"]');if(hidden){hidden.value=JSON.stringify([...document.querySelectorAll('#austaV153CFields [data-v37-choice="'+group+'"]:checked')].map(node=>node.value));details[group]=hidden.value;values[group]=hidden.value;}});
+    if(window.AUSTA_SERVICE_COMPANY_V37?.isType(type))document.querySelectorAll('#austaV153CFields [data-v37-choice]').forEach(input=>{const group=input.dataset.v37Choice,hidden=document.querySelector('#austaV153CFields [data-v153c-key="'+group+'"]');if(hidden){hidden.value=JSON.stringify([...document.querySelectorAll('#austaV153CFields [data-v37-choice="'+group+'"]:checked')].map(node=>node.value));details[group]=hidden.value;values[group]=hidden.value;}});
     values.details=details;
 
     if(type==='cars')Object.assign(values,window.AUSTA_MARKETPLACE_CARD_DATA.read(document.getElementById('austaV153CFields'),Boolean(currentEdit)));
@@ -55078,7 +55081,7 @@ function buildRouterInput(type,data){
 
     /* ---------------- PROVIDERS ---------------- */
 
-    if(SERVICE_COMPANY_TYPES.has(type))return {provider_type:'service',phone:data.phone,name:data.company_name,title:data.company_name,specialty:type,services:CATEGORY_NAMES[type],working_hours:data.working_hours||'',region:location.region,district:location.district,address:location.address,about:data.description||'',details:{...data.details,service_category:type}};
+    if(window.AUSTA_SERVICE_COMPANY_V37?.isType(type))return {provider_type:'service',phone:data.phone,name:data.company_name,title:data.company_name,specialty:type,services:CATEGORY_NAMES[type],working_hours:data.working_hours||'',region:location.region,district:location.district,address:location.address,about:data.description||'',details:{...data.details,service_category:type}};
 
     if(type==='service'){
 
@@ -60205,5 +60208,7 @@ if(
 <script src="assets/map/data.js"></script>
 <script src="assets/map/publication.js"></script>
 <script src="assets/map/map.js"></script>
+<link rel="stylesheet" href="assets/marketplace/service-company-v37.css">
+<script src="assets/marketplace/service-company-v37.js"></script>
 <link rel="stylesheet" href="assets/marketplace/service-company-v37.css">
 <script src="assets/marketplace/service-company-v37.js"></script>
