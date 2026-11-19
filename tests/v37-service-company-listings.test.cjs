@@ -21,6 +21,11 @@ test('V3.7 category routes, form adapter and detail contract are connected to ex
  assert.match(html,/service-company-v37\.css/);
  assert.match(read('assets/marketplace/card-data.js'),/leasing','insurance','sober_driver/);
  assert.match(read('assets/marketplace/seller-intent.js'),/leasing:'service',insurance:'service',sober_driver:'service'/);
+ const lifecycle=read('assets/marketplace/listing-lifecycle.js');
+ assert.match(lifecycle,/details\\?\.service_category/);
+ for(const type of types){assert.ok(lifecycle.includes(type),type+' lifecycle/promotion subtype support');}
+ assert.match(lifecycle,/authorizePromotion/);
+
 });
 
 test('each category has its own questions and no invented quotation values',()=>{
