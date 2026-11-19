@@ -9,8 +9,8 @@ const types=['leasing','insurance','sober_driver'];
 
 test('V3.7 category routes, form adapter and detail contract are connected to existing provider listing',()=>{
  for(const type of types){
-  assert.match(html,new RegExp('key:"'+type+'"'));
   assert.match(html,new RegExp(type+': "'));
+  assert.match(html,new RegExp('data-austa-v107-category="'+type+'"|value="'+type+'"'));
   assert.match(html,new RegExp('contains\\("details",\\{service_category:type\\}\\)'));
  }
  assert.match(html,/SERVICE_COMPANY_TYPES=new Set\(\["leasing","insurance","sober_driver"\]\)/);
