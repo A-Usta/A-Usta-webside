@@ -28,7 +28,10 @@ const definitions={
  trailer:{title:'Qoşqu və treyler axtar',fields:[detail('trailer_type','Növ'),...common]},
  plate:{title:'Qeydiyyat nişanı axtar',fields:[detail('plate_number','Nömrə'),detail('plate_series','Seriya'),price,...location]},
  service:{title:'Avtoservis axtar',fields:[text('specialty','İxtisaslaşma'),text('services','Göstərilən xidmətlər'),detail('brands','Xidmət göstərilən avtomobil markaları'),...location]},
- usta:{title:'Usta axtar',fields:[text('specialty','Usta ixtisası'),text('services','Göstərdiyi xidmətlər'),...location]}
+ usta:{title:'Usta axtar',fields:[text('specialty','Usta ixtisası'),text('services','Göstərdiyi xidmətlər'),...location]},
+ leasing:{title:'Lizinq şirkəti axtar',fields:[detail('company_name','Şirkət'),detail('city','Şəhər'),detail('vehicle_condition','Yeni / işlənmiş avtomobil'),detail('customer_types','Müştəri növü'),detail('currency','Valyuta'),detail('service_area','Xidmət ərazisi')]},
+ insurance:{title:'Avtomobil sığorta şirkəti axtar',fields:[detail('company_name','Şirkət'),detail('city','Şəhər'),detail('insurance_types','Sığorta növü'),detail('payment_methods','Ödəniş üsulu'),detail('online_application','Onlayn müraciət'),detail('service_area','Fəaliyyət ərazisi')]},
+ sober_driver:{title:'Ayıq sürücü şirkəti axtar',fields:[detail('company_name','Şirkət'),detail('city','Şəhər'),detail('service_24_7','24/7 xidmət'),detail('city_service','Şəhərdaxili'),detail('intercity_service','Şəhərlərarası'),detail('payment_methods','Ödəniş üsulu'),detail('service_area','Xidmət rayonları')]}
 };
 const typeOf=type=>type==='mechanic'?'usta':type;
 const schema=type=>definitions[typeOf(type)]||null;

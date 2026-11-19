@@ -29669,7 +29669,7 @@ function mapSupabaseListing(item){
   }
 
   const source=item.__austa_table;
-  const sourceCategories={marketplace_listings:item.category,service_provider_listings:item.provider_type,auto_dealer_listings:'dealer'};
+  const sourceCategories={marketplace_listings:item.category,service_provider_listings:item.details?.service_category || item.provider_type,auto_dealer_listings:'dealer'};
   if(Object.prototype.hasOwnProperty.call(sourceCategories,source)){
     return {...item,category:sourceCategories[source],title:item.title || item.dealer_name || item.name || '',_austaSupabase:true};
   }
@@ -29850,7 +29850,8 @@ function categoryTitle(category){
     trailer:'Qoşqu / Treyler',
     service:'Avtoservis',
     dealer:'Avtosalon',
-    usta:'🧑‍🔧 Usta profili'
+    usta:'🧑‍🔧 Usta profili',
+    leasing:'Lizinq şirkətləri',insurance:'Avtomobil sığorta şirkətləri',sober_driver:'Ayıq sürücü şirkətləri'
   })[category] || 'A-USTA elanı';
 }
 
@@ -30329,6 +30330,15 @@ function detailInformation(item){
 
 function specsFor(item){
 
+  if(['leasing','insurance','sober_driver'].includes(categoryOf(item))){
+    const d=item.details||{},keys=categoryOf(item)==='leasing'?['vehicle_categories','vehicle_condition','customer_types','minimum_down_payment','minimum_term','maximum_term','rate','interest_type','currency','minimum_financing','maximum_financing','guarantor_required','income_proof_required','required_documents','terms']:categoryOf(item)==='insurance'?['insurance_types','coverage','franchise','contract_months','payment_methods','installments_available','online_application','claims_support','repair_network','exclusions','license_reference','license_disclosure']:['service_24_7','working_hours','minimum_order_price','rate_per_km','rate_per_hour','night_rate','city_service','intercity_service','advance_booking','urgent_service','driver_experience','payment_methods','waiting_fee','special_conditions'];
+    const labels={vehicle_categories:'Avtomobil kateqoriyaları',vehicle_condition:'Avtomobilin vəziyyəti',customer_types:'Müştəri növü',minimum_down_payment:'Minimum ilkin ödəniş',minimum_term:'Minimum müddət',maximum_term:'Maksimum müddət',rate:'Faiz dərəcəsi',interest_type:'Faiz dövrü',currency:'Valyuta',minimum_financing:'Minimum maliyyələşmə',maximum_financing:'Maksimum maliyyələşmə',guarantor_required:'Zamin tələbi',income_proof_required:'Gəlir sənədi',required_documents:'Tələb olunan sənədlər',terms:'Təklif şərtləri',insurance_types:'Sığorta növləri',coverage:'Sığorta təminatı',franchise:'Franşiza',contract_months:'Müqavilə müddəti',payment_methods:'Ödəniş üsulları',installments_available:'Hissəli ödəniş',online_application:'Onlayn müraciət',claims_support:'Hadisə zamanı dəstək',repair_network:'Partnyor təmir şəbəkəsi',exclusions:'İstisnalar və məhdudiyyətlər',license_reference:'Şirkətin təqdim etdiyi icazə/reyestr məlumatı',license_disclosure:'İcazə yoxlaması',service_24_7:'24/7 xidmət',working_hours:'İş saatları',minimum_order_price:'Minimum sifariş qiyməti',rate_per_km:'Kilometr tarifi',rate_per_hour:'Saatlıq tarif',night_rate:'Gecə tarifi',city_service:'Şəhərdaxili xidmət',intercity_service:'Şəhərlərarası xidmət',advance_booking:'Əvvəlcədən sifariş',urgent_service:'Təcili sifariş',driver_experience:'Sürücü təcrübəsi',waiting_fee:'Gözləmə haqqı',special_conditions:'Xüsusi şərtlər',company_name:'Şirkətin adı',tax_id:'VÖEN',legal_name:'Hüquqi / ticarət adı',email:'E-poçt',website:'Veb-sayt',city:'Şəhər',service_area:'Fəaliyyət ərazisi'};
+    for(const k of ['company_name','tax_id','legal_name','email','website','city','service_area'])if(!keys.includes(k))keys.unshift(k);
+    const val=k=>{let v=d[k];if(typeof v==='string'&&v.startsWith('[')){try{v=JSON.parse(v)}catch{}}return Array.isArray(v)?v.join(', '):typeof v==='boolean'?v?'Bəli':'Xeyr':v;};
+    const rows=keys.map(k=>[labels[k]||k,val(k)]).filter(([,v])=>v!==undefined&&v!==null&&v!=='');
+    if(categoryOf(item)==='insurance')rows.push(['Vacib qeyd','Qiymət və təminat yekun sığorta təklifi deyil; şərtləri şirkətlə dəqiqləşdirin. İcazə məlumatı şirkət tərəfindən təqdim olunur və platforma tərəfindən yoxlanılmayıb.']);
+    return rows;
+  }
   if(['cars','rent'].includes(categoryOf(item))){
     return carSpecs(item);
   }
@@ -39307,7 +39317,10 @@ const realMarketCategories =
         "plate",
         "service",
         "usta",
-        "dealer"
+        "dealer",
+        "leasing",
+        "insurance",
+        "sober_driver"
     ]);
 
 
@@ -51576,10 +51589,9 @@ const MARKETPLACE_TYPES = new Set([
     "caravan"
 ]);
 
-const PROVIDER_TYPES = new Set([
-    "service",
-    "usta"
-]);
+const SERVICE_COMPANY_TYPES=new Set(["leasing","insurance","sober_driver"]);
+const PROVIDER_TYPES=new Set(["service","usta",...SERVICE_COMPANY_TYPES]);
+const providerTypeForCategory=type=>SERVICE_COMPANY_TYPES.has(type)?"service":type;
 
 const ALL_TYPES = new Set([
     ...VEHICLE_TYPES,
@@ -51604,7 +51616,10 @@ const CATEGORY_NAMES = {
     trailer: "Qoşqu / Treyler",
     plate: "Qeydiyyat nömrələri",
     service: "Avtoservislər",
-    usta: "Usta profilləri"
+    usta: "Usta profilləri",
+    leasing: "Lizinq şirkətləri",
+    insurance: "Avtomobil sığorta şirkətləri",
+    sober_driver: "Ayıq sürücü şirkətləri"
 };
 
 /* ============================================================
@@ -51771,6 +51786,9 @@ function category(value) {
         return "caravan";
     }
 
+    if(raw==="leasing"||raw.includes("lizinq"))return "leasing";
+    if(raw==="insurance"||raw.includes("avtomobil sigorta")||raw.includes("avto sigorta"))return "insurance";
+    if(raw==="sober_driver"||raw.includes("ayiq surucu"))return "sober_driver";
     if (
         raw === "service" ||
         raw.includes("avtoservis") ||
@@ -51846,12 +51864,8 @@ function buildTitle(type, input) {
         .join(" — ");
     }
 
-    if (type === "service") {
-
-        return (
-            str(input.name) ||
-            str(input.service_name)
-        );
+    if (type === "service" || SERVICE_COMPANY_TYPES.has(type)) {
+        return str(input.name) || str(input.service_name) || CATEGORY_NAMES[type];
     }
 
     return (
@@ -51943,10 +51957,14 @@ function validateListingInput(type,input,editing=false) {
     }else if(MARKETPLACE_TYPES.has(type)){
         number('price',{min:0});number('year',{integer:true});
     }else if(PROVIDER_TYPES.has(type)){
-        if(supplied(result,'provider_type') && result.provider_type !== type)throw new Error('Xidmət təminatçısının növü düzgün deyil.');
-        // CREATE follows the required form contract. Sparse API edits retain the
-        // existing nullable-column clear semantics; full edit forms still validate required fields.
-        if(!editing){
+        if(supplied(result,'provider_type')&&result.provider_type!==providerTypeForCategory(type))throw new Error('Xidmət təminatçısının növü düzgün deyil.');
+        if(SERVICE_COMPANY_TYPES.has(type)){
+            if(!editing){textRequired(['phone'],'Telefon');textRequired(['company_name','name','title'],'Şirkətin adı');}
+            for(const key of ['minimum_down_payment','minimum_financing','maximum_financing','minimum_order_price','rate','rate_value','rate_per_km','rate_per_hour','night_rate','waiting_fee','minimum_term','maximum_term','contract_months']){
+                if(supplied(result,key)&&!listingBlank(result[key]))result[key]=listingNumber(result[key],key,{min:0,max:100000000});
+            }
+            if(supplied(result,'interest_type')&&!listingBlank(result.interest_type)&&!['annual','monthly'].includes(result.interest_type))throw new Error('Faiz dövrünü seçin.');
+        }else if(!editing){
             textRequired(['phone'],'Telefon');textRequired(['specialty'],'İxtisaslaşma');
             textRequired(type==='service'?['service_name','name','title']:['name','title'],'Ad / başlıq');
         }
@@ -52229,7 +52247,7 @@ async function saveProvider(type, input, user, publishAttempt, sellerIntent) {
     const row = {
         owner_id: user.id,
 
-        provider_type: type,
+        provider_type: providerTypeForCategory(type),
 
         status: "inactive",
 
@@ -52362,7 +52380,7 @@ const LISTING_DETAIL_KEYS = Object.freeze({
     caravan: ['name','caravan_type','beds','sale_rent','equipment'],
     trailer: ['name','trailer_type','load_capacity','equipment'],
     plate: ['name','plate_number','plate_series','document_status','equipment'],
-    service: ['owner_name','brands','price_policy','equipment'],
+    service: ['owner_name','brands','price_policy','equipment','service_category','company_name','tax_id','legal_name','email','website','city','service_area','vehicle_categories','vehicle_condition','customer_types','minimum_down_payment','minimum_term','maximum_term','rate','interest_type','currency','minimum_financing','maximum_financing','guarantor_required','income_proof_required','required_documents','terms','insurance_types','coverage','franchise','contract_months','payment_methods','installments_available','online_application','claims_support','repair_network','exclusions','minimum_order_price','rate_per_km','rate_per_hour','night_rate','service_24_7','city_service','intercity_service','advance_booking','urgent_service','driver_experience','waiting_fee','special_conditions','license_reference','license_disclosure'],
     usta: ['equipment'],
     dealer: ['contact_name','message_contact','working_hours','brands','vehicle_condition',
         'credit_available','leasing_available','barter_available','delivery_available','equipment']
@@ -52384,8 +52402,9 @@ function vehicleOnlyDetails(type,input){
     return raw===undefined?{}:{equipment:validateEquipment(type,raw)};
 }
 function detailControls(type) {
-    if (!Object.prototype.hasOwnProperty.call(LISTING_DETAIL_KEYS, type)) return new Map();
-    const controls = new Map(LISTING_DETAIL_KEYS[type].map(key =>
+    if (!SERVICE_COMPANY_TYPES.has(type)&&!Object.prototype.hasOwnProperty.call(LISTING_DETAIL_KEYS,type)) return new Map();
+    const controlType=SERVICE_COMPANY_TYPES.has(type)?'service':type;
+    const controls=new Map(LISTING_DETAIL_KEYS[controlType].map(key =>
         [key, type === 'service' && key === 'owner_name' ? 'name' : key]));
     // readFields historically stores current form labels as JSON keys, too.
     if (type !== 'dealer') {
@@ -52398,6 +52417,7 @@ function detailControls(type) {
 }
 function detailsFromForm(type, values, normalized) {
     const entries = [];
+    if(SERVICE_COMPANY_TYPES.has(type))entries.push(['service_category',type]);
     for (const [key,control] of detailControls(type)) {
         if (!Object.prototype.hasOwnProperty.call(values, control) || values[control] === undefined) continue;
         const value = normalized && Object.prototype.hasOwnProperty.call(normalized, key)
@@ -52407,8 +52427,7 @@ function detailsFromForm(type, values, normalized) {
     return Object.fromEntries(entries);
 }
 async function preserveDetails(type, listingId, user, input) {
-    const tables = {dealer:'auto_dealer_listings', service:'service_provider_listings',
-        usta:'service_provider_listings',cars:'vehicle_listings',rent:'vehicle_listings'};
+    const tables = {dealer:'auto_dealer_listings',service:'service_provider_listings',usta:'service_provider_listings',leasing:'service_provider_listings',insurance:'service_provider_listings',sober_driver:'service_provider_listings',cars:'vehicle_listings',rent:'vehicle_listings'};
     const table = MARKETPLACE_TYPES.has(type) ? 'marketplace_listings' : tables[type];
     if (!table || input === undefined) return undefined;
     if (!input || typeof input !== 'object' || Array.isArray(input)) {
@@ -52686,7 +52705,7 @@ async function updateListing(
         row = {
 
             provider_type:
-                type,
+                providerTypeForCategory(type),
 
             title:
                 title,
@@ -52793,7 +52812,7 @@ async function updateListing(
         const current=await sb().from(table).select('provider_type')
             .eq('id',listingId).eq('owner_id',user.id).single();
         if(current.error||!current.data)throw new Error('Elanın növü təsdiqlənmədi. Yenidən cəhd edin.');
-        if(current.data.provider_type===type)delete row.provider_type;
+        if(current.data.provider_type===providerTypeForCategory(type))delete row.provider_type;
     }
 
     if(sellerIntent&&!window.AUSTA_SELLER_INTENT)throw new Error('Satıcı profili sistemi hazır deyil.');
@@ -53168,20 +53187,10 @@ async function fetchCategory(
             .eq("status", "active")
             .eq("category", type);
 
+    } else if(SERVICE_COMPANY_TYPES.has(type)){
+        query=sb().from("public_service_provider_listings").select("*",{count:"exact"}).eq("status","active").eq("provider_type","service").contains("details",{service_category:type});
     } else {
-
-        query = sb()
-            .from(
-                "public_service_provider_listings"
-            )
-            .select("*", {
-                count: "exact"
-            })
-            .eq("status", "active")
-            .eq(
-                "provider_type",
-                type
-            );
+        query=sb().from("public_service_provider_listings").select("*",{count:"exact"}).eq("status","active").eq("provider_type",type);
     }
 
     /*
@@ -54443,6 +54452,7 @@ function renderFields(){
                 }
 
 
+                if(fieldType==='checklist')return `<fieldset class="austa-v153c-field austa-v37-checklist"><legend>${esc(label)}</legend><div>${options.map(option=>`<label><input type="checkbox" data-v37-choice="${esc(key)}" value="${esc(Array.isArray(option)?option[0]:option)}"><span>${esc(Array.isArray(option)?option[1]:option)}</span></label>`).join('')}</div><input type="hidden" data-v153c-key="${esc(key)}" data-v153c-label="${esc(label)}" value="[]"></fieldset>`;
                 if(fieldType==='select'){
 
                     return `
@@ -54544,7 +54554,7 @@ function readFields(){
             values[key]=value;
 
             if(value && !(marketplace && ['brand','model'].includes(key))){
-                details[label]=value;
+                details[window.AUSTA_SERVICE_COMPANY_V37?.isType(type)?key:label]=value;
             }
 
         });
@@ -54555,6 +54565,7 @@ function readFields(){
         details.equipment=JSON.stringify(window.AUSTA_LISTING_EQUIPMENT_V36.selected(document.getElementById('austaV153CFields')));
         values.equipment=details.equipment;
     }
+    if(window.AUSTA_SERVICE_COMPANY_V37?.isType(type))document.querySelectorAll('#austaV153CFields [data-v37-choice]').forEach(input=>{const group=input.dataset.v37Choice,hidden=document.querySelector('#austaV153CFields [data-v153c-key="'+group+'"]');if(hidden){hidden.value=JSON.stringify([...document.querySelectorAll('#austaV153CFields [data-v37-choice="'+group+'"]:checked')].map(node=>node.value));details[group]=hidden.value;values[group]=hidden.value;}});
     values.details=details;
 
     if(type==='cars')Object.assign(values,window.AUSTA_MARKETPLACE_CARD_DATA.read(document.getElementById('austaV153CFields'),Boolean(currentEdit)));
@@ -54646,11 +54657,10 @@ function validate(type,data){
             'specialty'
         ],
 
-        usta:[
-            'phone',
-            'name',
-            'specialty'
-        ]
+        usta:['phone','name','specialty'],
+        leasing:['phone','company_name','city','service_area'],
+        insurance:['phone','company_name','city','service_area'],
+        sober_driver:['phone','company_name','city','service_area']
     };
 
 
@@ -55070,6 +55080,8 @@ function buildRouterInput(type,data){
 
 
     /* ---------------- PROVIDERS ---------------- */
+
+    if(window.AUSTA_SERVICE_COMPANY_V37?.isType(type))return {provider_type:'service',phone:data.phone,name:data.company_name,title:data.company_name,specialty:type,services:CATEGORY_NAMES[type],working_hours:data.working_hours||'',region:location.region,district:location.district,address:location.address,about:data.description||'',details:{...data.details,service_category:type}};
 
     if(type==='service'){
 
@@ -55682,8 +55694,7 @@ async function openEdit(item){
     'service_provider_listings'
 ){
 
-    type=
-        item.provider_type;
+    type=item.details?.service_category || item.provider_type;
 
 }else if(
     item.__austa_table ===
@@ -56062,7 +56073,10 @@ const MARKETPLACE_TYPES =
 const PROVIDER_TYPES =
     new Set([
         'service',
-        'usta'
+        'usta',
+        'leasing',
+        'insurance',
+        'sober_driver'
     ]);
 
 const DEALER_TYPE = 'dealer';
@@ -58703,14 +58717,8 @@ if(
         plate:
             "Qeydiyyat nömrələri",
 
-        service:
-            "Avtoservislər",
-
-        usta:
-            "Usta profilləri",
-
-        dealer:
-            "Avtosalonlar"
+        service:"Avtoservislər",usta:"Usta profilləri",dealer:"Avtosalonlar",
+        leasing:"Lizinq şirkətləri",insurance:"Avtomobil sığorta şirkətləri",sober_driver:"Ayıq sürücü şirkətləri"
     };
 
 
@@ -58961,6 +58969,8 @@ if(
                     );
 
 
+        }else if(["leasing","insurance","sober_driver"].includes(type)){
+            query=supabase.from("public_service_provider_listings").select("*").eq("status","active").eq("provider_type","service").contains("details",{service_category:type});
         }else if(
             type === "service" ||
             type === "usta"
@@ -60217,3 +60227,5 @@ if(
 <script src="assets/map/data.js"></script>
 <script src="assets/map/publication.js"></script>
 <script src="assets/map/map.js"></script>
+<link rel="stylesheet" href="assets/marketplace/service-company-v37.css">
+<script src="assets/marketplace/service-company-v37.js"></script>

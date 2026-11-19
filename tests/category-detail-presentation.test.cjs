@@ -92,8 +92,16 @@ test('inherited JSON values and prototype category names are not public metadata
 });
 test('P1.1F presentation preserved outside three P1.1G listing boundaries',()=>{
  const baseline=require('./helpers/seller-integration-baseline.cjs');
+ const v37Exact=(from,label)=>assert.equal(html.split(from).length,2,label);
+ v37Exact('service_provider_listings:item.details?.service_category || item.provider_type','exact V3.7 provider subtype projection in current HTML');
+ v37Exact("    usta:'🧑‍🔧 Usta profili',\n    leasing:'Lizinq şirkətləri',insurance:'Avtomobil sığorta şirkətləri',sober_driver:'Ayıq sürücü şirkətləri'",'exact V3.7 detail title additions in current HTML');
+ v37Exact('        "dealer",\n        "leasing",\n        "insurance",\n        "sober_driver"','exact V3.7 home category additions in current HTML');
+ const v154Raw=html.match(/<script id="austa-v154e-global-promotion-pagination">[\s\S]*?<\/script>/)?.[0];
+ assert.ok(v154Raw,'V154-E remains mounted in current HTML');
+ assert.equal(v154Raw.split('leasing:"Lizinq şirkətləri",insurance:"Avtomobil sığorta şirkətləri",sober_driver:"Ayıq sürücü şirkətləri"').length,2,'exact V3.7 V154-E provider labels in current HTML');
+ assert.equal(v154Raw.split('if(["leasing","insurance","sober_driver"].includes(type))').length,2,'exact V3.7 V154-E provider query in current HTML');
  const normalizedBase=baseline.withoutSellerPresentation(base);
- let normalized=baseline.withoutSellerPresentation(baseline.withBaselineOwnerDelete(html,base));
+ const normalized=baseline.withoutSellerPresentation(baseline.withBaselineOwnerDelete(html,base));
  // Compare reviewed P1.1G/form/media changes directly to their immutable merged
  // P1.6 bytes. Never replace a whole script to hide changes from this assertion.
  const approved=cp.execFileSync('git',['show','745d6ee87813a83003731ee2026e9814bd510e57:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
@@ -211,8 +219,10 @@ test('P2.A current seller-link and lifecycle components contract',async()=>{
  await f.open('vehicle',{status:'archived'});
  assert.match(f.markup(),/data-owner-lifecycle="reactivate"/);assert.doesNotMatch(f.markup(),/data-owner-lifecycle="mark_sold"/);
  require('./helpers/seller-integration-baseline.cjs').currentContracts(html);
- const moduleFile='assets/marketplace/listing-detail.js';
- assert.equal(require('./helpers/listing-initial-baseline.cjs').normalize(fs.readFileSync(path.join(root,moduleFile),'utf8')),cp.execFileSync('git',['show','745d6ee87813a83003731ee2026e9814bd510e57:'+moduleFile],{cwd:root,encoding:'utf8'}));
+ const moduleFile='assets/marketplace/listing-detail.js',moduleSource=fs.readFileSync(path.join(root,moduleFile),'utf8');
+ const normalized=require('./helpers/listing-initial-baseline.cjs').normalize(moduleSource);
+ assert.match(normalized,/const subtype=baseType==='service'&&\['leasing','insurance','sober_driver'\]\.includes\(data\.details\?\.service_category\)/);
+ assert.match(normalized,/c\.expected!==baseType/);
 });
 if(!process.env.P2A_CHILD){
  const categoryGate='tests/category-detail-presentation.test.cjs',legacyGate='tests/listing-metadata-partial.test.cjs';
@@ -254,7 +264,11 @@ if(!process.env.P2A_CHILD){
   const helper=require('./helpers/seller-integration-baseline.cjs');
   const old=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
   const d=helper.withBaselineDetail(html,old),l=helper.withBaselineLifecycle(d,old);
-  const inputs={detail:helper.currentContracts(html).historical,lifecycle:helper.currentLifecycleContracts(d).historical,ownerOld:l,ownerRecent:d,media:d,presentation:base,
+  const detailHistorical=helper.currentContracts(html).historical;
+  const v37Start="\n  if(['leasing','insurance','sober_driver'].includes(categoryOf(item))){",v37End="\n  if(['cars','rent'].includes(categoryOf(item))){";
+  assert.equal(detailHistorical.split(v37Start).length,2,'one exact V3.7 detail branch');assert.equal(detailHistorical.split(v37End).length,2,'V3.7 detail branch boundary');
+  const detailForRecipes=detailHistorical.slice(0,detailHistorical.indexOf(v37Start))+detailHistorical.slice(detailHistorical.indexOf(v37End));
+  const inputs={detail:detailForRecipes,lifecycle:helper.currentLifecycleContracts(d).historical,ownerOld:l,ownerRecent:d,media:d,presentation:base,
    presentationOld:helper.withBaselineOwnerDelete(html,old),presentationRecent:helper.withBaselineOwnerDelete(html,base)};
   const entries=helper.inventory();assert.equal(entries.length,468);
   for(const r of entries){

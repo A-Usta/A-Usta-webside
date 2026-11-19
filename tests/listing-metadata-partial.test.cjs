@@ -75,9 +75,19 @@ for(const type of [...marketplace,'service','usta'])test(type+': create payload 
 });
 test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
  assertP2D1Configuration();
+ const categoryDelta='        "dealer",\n        "leasing",\n        "insurance",\n        "sober_driver"';
+ assert.equal(html.split(categoryDelta).length,2,'exact V3.7 primary category additions in current HTML');
  const main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  const blocks=text=>[...text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
  let normalized=require('./helpers/seller-integration-baseline.cjs').withoutSellerPresentation(require('./helpers/seller-integration-baseline.cjs').withBaselineOwnerDelete(html,main));
+ normalized=normalized.replace('service_provider_listings:item.details?.service_category || item.provider_type','service_provider_listings:item.provider_type').replace(/,\n    leasing:'Lizinq şirkətləri',insurance:'Avtomobil sığorta şirkətləri',sober_driver:'Ayıq sürücü şirkətləri'/,'');
+ assert.equal(normalized.includes(categoryDelta),false,'historical baseline normalization removes the verified V3.7 category delta');
+ const v154Pattern=/<script id="austa-v154e-global-promotion-pagination">[\s\S]*?<\/script>/;
+ const v154=normalized.match(v154Pattern)?.[0];assert.ok(v154,'V154-E script remains present');
+ const normalizedV154=v154.replace("        service:\"Avtoservislər\",usta:\"Usta profilləri\",dealer:\"Avtosalonlar\",\n        leasing:\"Lizinq şirkətləri\",insurance:\"Avtomobil sığorta şirkətləri\",sober_driver:\"Ayıq sürücü şirkətləri\"","        service:\n            \"Avtoservislər\",\n\n        usta:\n            \"Usta profilləri\",\n\n        dealer:\n            \"Avtosalonlar\"")
+  .replace(/\n        }else if\(\["leasing","insurance","sober_driver"\]\.includes\(type\)\)\{\n            query=supabase\.from\("(?:public_)?service_provider_listings"\)\.select\("\*"\)\.eq\("status","active"\)\.eq\("provider_type","service"\)\.contains\("details",\{service_category:type\}\);\n        }else if/,'\n        }else if')
+  .replaceAll('\"public_service_provider_listings\"','\"service_provider_listings\"');
+ normalized=normalized.replace(v154,normalizedV154);
  const v36Import='<script src="assets/marketplace/listing-detail-v36.js"></script>';if(normalized.includes(v36Import)){assert.equal(normalized.split(v36Import).length,2,'exact V3.6 detail module import');normalized=normalized.replace(v36Import,'');}
  const old=blocks(main),now=blocks(normalized);assert.equal(now.length,old.length);
  for(let i=0;i<old.length;i++){

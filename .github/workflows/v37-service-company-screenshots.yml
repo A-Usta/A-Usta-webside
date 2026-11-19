@@ -1,0 +1,49 @@
+name: V3.7 Service Company Chromium
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'assets/marketplace/service-company-v37.*'
+      - 'tests/v37-service-company-listings.test.cjs'
+      - '.github/workflows/v37-service-company-screenshots.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chromium:
+    name: V3.7 categories at five viewports
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.2
+
+      - name: Install pinned Playwright Chromium
+        run: |
+          npm ci --prefix tests --ignore-scripts
+          npm run browser:install --prefix tests
+
+      - name: Run V3.7 questionnaire and responsive Chromium checks
+        env:
+          V37_SCREENSHOTS: ${{ runner.temp }}/austa-v37-screenshots
+        run: node --test --test-reporter=tap tests/v37-service-company-listings.test.cjs
+
+      - name: Upload V3.7 screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: v37-service-company-screenshots
+          path: ${{ runner.temp }}/austa-v37-screenshots/*.png
+          if-no-files-found: error
+          retention-days: 7
