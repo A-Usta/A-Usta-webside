@@ -25,9 +25,9 @@ test('V3.7 category routes, form adapter and detail contract are connected to ex
 
 test('each category has its own questions and no invented quotation values',()=>{
  const expected={
-  leasing:['company_name','tax_id','legal_name','phone','email','website','service_area','vehicle_categories','vehicle_condition','customer_types','minimum_down_payment','minimum_term','maximum_term','rate','interest_type','currency','minimum_financing','maximum_financing','guarantor_required','income_proof_required','required_documents','terms','license_reference'],
-  insurance:['company_name','tax_id','phone','email','website','service_area','insurance_types','coverage','franchise','contract_months','payment_methods','installments_available','online_application','claims_support','repair_network','exclusions','license_reference','license_disclosure'],
-  sober_driver:['company_name','tax_id','phone','service_area','service_24_7','working_hours','minimum_order_price','rate_per_km','rate_per_hour','night_rate','city_service','intercity_service','advance_booking','urgent_service','driver_experience','payment_methods','waiting_fee','special_conditions']
+  leasing:['company_name','tax_id','legal_name','phone','email','website','city','service_area','vehicle_categories','vehicle_condition','customer_types','minimum_down_payment','minimum_term','maximum_term','rate','interest_type','currency','minimum_financing','maximum_financing','guarantor_required','income_proof_required','required_documents','terms','license_reference'],
+  insurance:['company_name','tax_id','phone','email','website','city','service_area','insurance_types','coverage','franchise','contract_months','payment_methods','installments_available','online_application','claims_support','repair_network','exclusions','license_reference','license_disclosure'],
+  sober_driver:['company_name','tax_id','phone','city','service_area','service_24_7','working_hours','minimum_order_price','rate_per_km','rate_per_hour','night_rate','city_service','intercity_service','advance_booking','urgent_service','driver_experience','payment_methods','waiting_fee','special_conditions']
  };
  for(const [type,fields] of Object.entries(expected)){
   const start=js.indexOf(type+':{label:');assert(start>=0,type);
@@ -35,6 +35,7 @@ test('each category has its own questions and no invented quotation values',()=>
   for(const key of fields)assert.ok(block.includes("['"+key+"'"),type+' missing '+key);
  }
  assert.doesNotMatch(js,/value:\s*(?:[0-9]+(?:\.[0-9]+)?|[0-9]+%)/);
+ const filters=read('assets/marketplace/category-filters.js');for(const key of ['leasing','insurance','sober_driver'])assert.match(filters,new RegExp(key+':\\{title:[^\\n]*detail\\(\\'city\\''));
  assert.match(html,/Qiymət və təminat yekun sığorta təklifi deyil/);
  assert.match(html,/platforma tərəfindən yoxlanılmayıb/);
 });
