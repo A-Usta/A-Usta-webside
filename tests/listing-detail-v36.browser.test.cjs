@@ -22,7 +22,7 @@ test('V3.6 listing detail layout and actions fit desktop/tablet/mobile viewports
  try{
   try{browser=await chromium.launch({executablePath:process.env.AUSTA_CHROMIUM_EXECUTABLE_PATH||undefined,args:['--no-sandbox','--disable-dev-shm-usage']});}
   catch(error){t.skip(`Chromium unavailable in this environment: ${error.message.split('\n')[0]}`);return;}
-  for(const width of [1536,1366,900,390]){
+  for(const width of [1920,1536,1366,900,390]){
    const page=await browser.newPage({viewport:{width,height:1000}});await page.goto(origin+'/?listing=aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa&source=vehicle');await page.addStyleTag({content:css});await page.addScriptTag({content:js});await page.evaluate(()=>document.body.appendChild(document.getElementById('austaFinalListingPage')));
    await page.waitForSelector('[data-v36-listing-metadata] span');
    assert.equal(await page.locator('.austa-v36-title-actions button').count(),3);
@@ -31,6 +31,8 @@ test('V3.6 listing detail layout and actions fit desktop/tablet/mobile viewports
    assert.equal(await page.locator('.austa-v36-promotion-card').isHidden(),true,'owner keeps original promotion flow without a duplicate card');
    assert.equal(await page.locator('[data-owner-vip]').count(),1,'existing owner promotion control remains in the DOM');
    assert.match(await page.locator('[data-v36-listing-metadata]').innerText(),/№ 1254565.*Baxışların sayı: 12 817.*Yeniləndi: 18\.11\.2026/s);
+   assert.equal(await page.locator('[data-v36-listing-metadata]').evaluate(node=>node.previousElementSibling?.classList.contains('austa-final-gallery')),true,'metadata qalereyanın dərhal altındadır');
+   assert.doesNotMatch((await page.locator('#austaFinalListingPage').innerText()),/YERLƏŞMƏ|ELAN MƏLUMATI/);
    if(width===1536){
     const favorite=page.locator('.austa-v36-favorite');await page.waitForFunction(()=>{const b=document.querySelector('.austa-v36-favorite');return b&&b.getAttribute('aria-busy')==='false';});
     await favorite.click();await page.waitForFunction(()=>window.favoriteWrites.length===1);

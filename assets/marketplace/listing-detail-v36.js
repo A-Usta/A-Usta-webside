@@ -86,7 +86,7 @@ function installFullscreen(page){
  const add=()=>{const stage=root.querySelector('.austa-v147-main-stage');if(stage&&!stage.querySelector('[data-v36-fullscreen]'))stage.append(actionButton('⛶ Tam ekran',{'class':'austa-v36-fullscreen','data-v36-fullscreen':'','aria-label':'Tam ekran aç'}));};
  add();new MutationObserver(add).observe(root,{childList:true,subtree:true});
 }
-async function loadMetadata(page,c){
+async function loadMetadata(page,c,item){
  const box=page.querySelector('[data-v36-listing-metadata]'),db=window.AUSTA_SUPABASE;if(!box)return;
  if(!db?.rpc){box.textContent='Elan statistikası hazırda əlçatan deyil.';return;}
  try{
@@ -94,7 +94,9 @@ async function loadMetadata(page,c){
   const result=await db.rpc('austa_get_listing_detail_metadata',{p_source:c.source,p_listing_id:c.id});if(!c.valid())return;
   if(result.error){box.textContent='Elan statistikası hazırda əlçatan deyil.';return;}
   const row=Array.isArray(result.data)?result.data[0]:result.data;if(!row){box.textContent='Elan nömrəsi və baxış məlumatı mövcud deyil.';return;}
-  box.replaceChildren();for(const [label,value] of [['№ ',row.public_number],['Baxışların sayı: ',count(row.view_count)],['Yeniləndi: ',date(row.updated_at)]]){if(value===null||value===undefined||value==='')continue;const span=document.createElement('span');span.textContent=label+value;box.append(span);}if(!box.childElementCount)box.textContent='Elan statistikası mövcud deyil.';
+  const updated=row.updated_at||item?.updated_at,posted=item?.published_at||item?.created_at;
+  const dateValue=updated||posted,dateLabel=updated?'Yeniləndi: ':'Yerləşdirildi: ';
+  box.replaceChildren();for(const [label,value] of [['№ ',row.public_number],['Baxışların sayı: ',count(row.view_count)],[dateLabel,date(dateValue)]]){if(value===null||value===undefined||value==='')continue;const span=document.createElement('span');span.textContent=label+value;box.append(span);}if(!box.childElementCount)box.textContent='Elan statistikası mövcud deyil.';
  }catch{if(c.valid())box.textContent='Elan statistikası hazırda əlçatan deyil.';}
 }
 function dialog(page,title,body){const d=document.createElement('dialog');d.className='austa-v36-dialog';d.innerHTML=`<h2>${escape(title)}</h2>${body}`;page.append(d);d.addEventListener('close',()=>d.remove(),{once:true});d.showModal();return d;}
@@ -110,7 +112,7 @@ async function priceHistory(page,c){
 async function enhance(page){
  if(activePages.has(page))return;const c=context(page);if(!c)return;activePages.add(page);
  const result=await api.lookup(c.id,c.source);if(!c.valid())return;if(!result?.listing)return;const item=result.listing;
- installTitleActions(page,c,item);const metadata=installMetadata(page,c);removeLegacyMetadata(page);compactSpecs(page);await installContactAndPromotions(page,item,c);if(!c.valid())return;installFullscreen(page);if(metadata)void loadMetadata(page,c);
+ installTitleActions(page,c,item);const metadata=installMetadata(page,c);removeLegacyMetadata(page);compactSpecs(page);await installContactAndPromotions(page,item,c);if(!c.valid())return;installFullscreen(page);if(metadata)void loadMetadata(page,c,item);
 }
 document.addEventListener('click',async event=>{
  const page=event.target.closest?.('#austaFinalListingPage');if(!page)return;const c=context(page);if(!c)return;
@@ -121,4 +123,53 @@ document.addEventListener('click',async event=>{
  const fullscreen=event.target.closest('[data-v36-fullscreen]');if(fullscreen){event.preventDefault();event.stopImmediatePropagation();const stage=fullscreen.closest('.austa-v147-main-stage');if(stage?.requestFullscreen)void stage.requestFullscreen().catch(()=>{});}
 },true);
 new MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)if(n.nodeType===1){if(n.id==='austaFinalListingPage')void enhance(n);n.querySelectorAll?.('#austaFinalListingPage').forEach(page=>void enhance(page));}}).observe(document.body,{childList:true,subtree:true});
+})();
+
+
+/* Category-specific optional equipment for V3.6 listing create/edit forms. */
+(function () {
+  'use strict';
+  const options = Object.freeze({
+    cars: ['Yüngül lehimli disklər','ABS','ESP','Kondisioner','Klimat-kontrol','Yağış sensoru','İşıq sensoru','Mərkəzi qapanma','Park radarı','Arxa görüntü kamerası','360° kamera','Ksenon / LED faralar','Yan pərdələr','Oturacaqların isidilməsi','Oturacaqların ventilyasiyası','Dəri salon','Kruiz-kontrol','Adaptiv kruiz-kontrol','Start-stop','Açarsız giriş','Elektrik oturacaqlar','Panoramik dam','Lyuk','Bluetooth / multimedia','Naviqasiya'],
+    rent: ['Kondisioner','Uşaq oturacağı','GPS / naviqasiya','Tam sığorta','Çatdırılma xidməti','Bluetooth / multimedia','Avtomat ötürücü','Wi-Fi'],
+    parts: ['Orijinal ehtiyat hissəsi','Alternativ ehtiyat hissəsi','Yeni','İşlənmiş','Zəmanət verilir','Quraşdırma mümkündür'],
+    accessories: ['Orijinal','Yeni','İşlənmiş','Zəmanət verilir','Quraşdırma mümkündür'],
+    moto: ['ABS','Dartmaya nəzarət','Baqaj qutusu','Külək qoruyucusu','Qızdırılan tutacaqlar','Mərkəzi ayaqaltı','LED faralar','Sürüşmə əleyhinə sistem'],
+    special: ['Kondisioner','Kabin qızdırıcısı','GPS izləmə','Kran avadanlığı','Ön yükləyici','Arxa ekskavator','Dayaq ayaqları','Əlavə hidravlik çıxış'],
+    bus: ['Kondisioner','İsitmə sistemi','Təhlükəsizlik kəmərləri','Video müşahidə','Əlçatanlıq lifti','Bağaj bölməsi','GPS izləmə'],
+    water: ['GPS / kartplotter','Ekolot','VHF rabitə','Xilasedici jiletlər','Bimini / günəşlik','Kabina','Tualet','Yuxu yeri'],
+    caravan: ['Mətbəx','Soyuducu','Duş','Tualet','Kondisioner','İsitmə sistemi','Günəş paneli','Su çəni','Markiz','Yuxu yeri'],
+    trailer: ['Əyləc sistemi','Dayaq ayaqları','Ehtiyat təkər','Yük bərkitmə relsləri','Hidravlik qaldırıcı','Soyuducu qurğu','Kran avadanlığı'],
+    plate: ['Rəsmi sənədlər mövcuddur','Qeydiyyat üçün hazırdır'],
+    service: ['Kompüter diaqnostikası','Yağ dəyişimi','Mühərrik təmiri','Sürətlər qutusu təmiri','Avtoelektrik','Kondisioner xidməti','Təkər təmiri','Səyyar xidmət','Evakuator xidməti'],
+    usta: ['Səyyar xidmət','Yerində təmir','Kompüter diaqnostikası','Avtoelektrik','Mühərrik təmiri','Təcili çağırış'],
+    dealer: ['Texniki yoxlama mümkündür','Zəmanət təklif olunur','Trade-in qəbul edilir','Çatdırılma xidməti']
+  });
+  const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function mount(container, type) {
+    const list = options[type];
+    if (!container || !list || container.querySelector('[data-v36-equipment]')) return;
+    const fieldset = document.createElement('fieldset');
+    fieldset.className = 'austa-v36-equipment-field';
+    fieldset.dataset.v36Equipment = '';
+    fieldset.innerHTML = `<legend>Avadanlıq və təchizat</legend><p>Elanınıza uyğun olanları seçin.</p><div class="austa-v36-equipment-options">${list.map((label, index) => `<label><input type="checkbox" value="${esc(label)}" data-v36-equipment-choice=""><span>${esc(label)}</span></label>`).join('')}</div><input type="hidden" data-v153c-key="equipment" data-v153c-label="equipment" value="">`;
+    container.append(fieldset);
+    const sync = () => { fieldset.querySelector('[data-v153c-key="equipment"]').value = JSON.stringify(selected(fieldset)); };
+    fieldset.addEventListener('change', sync);
+    sync();
+  }
+  function selected(container) { return [...(container?.querySelectorAll('[data-v36-equipment-choice]:checked') || [])].map(input => input.value); }
+  function restore(container, raw) {
+    const fieldset = container?.querySelector('[data-v36-equipment]');
+    if (!fieldset) return;
+    let values = [];
+    if (Array.isArray(raw)) values = raw;
+    else if (typeof raw === 'string') { try { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) values = parsed; } catch {} }
+    const allowed = new Set(options[document.getElementById('austaV153CCategory')?.value] || []);
+    const chosen = new Set(values.filter(value => allowed.has(value)));
+    fieldset.querySelectorAll('[data-v36-equipment-choice]').forEach(input => { input.checked = chosen.has(input.value); });
+    const hidden = fieldset.querySelector('[data-v153c-key="equipment"]');
+    if (hidden) hidden.value = JSON.stringify(selected(fieldset));
+  }
+  window.AUSTA_LISTING_EQUIPMENT_V36 = Object.freeze({mount, restore, selected, categories: Object.freeze(Object.keys(options)), catalog: options});
 })();

@@ -13,7 +13,7 @@ const reviewedFiles = {
   "tests/package.json": "156d49124509a070a0e05f5a067da746a6ad52bb1339a4111f89ed378f9deba1",
   "tests/package-lock.json": "a8c0592f8094f5eec64e3f2ddd1e626083339c99d41c763d6f407c7c732033d1",
   "tests/db/package.json": "6ba43139036db3440a1222832c6db9fc3254693c7031cb61b12f0170dc60c1a2",
-  "tests/category-detail-presentation.test.cjs": "a7382a6ede8bbc9ad1b13a4b57c1bcb9ecce3437eb6d6ae7175d93630d52826e",
+  "tests/category-detail-presentation.test.cjs": "c1ace9f049d8c9ffb7a4236a799f265b6b9ec9e426de218c1f935f6d894dacdc",
   "tests/dealer-legacy-condition.test.cjs": "09017314c8f2ed8d0af697223f0ad0a1d77aa5f2808c98cb79f65596f3f81f60"
 };
 const legacy = [

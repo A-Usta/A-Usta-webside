@@ -154,9 +154,26 @@ for(const type of [...Object.keys(fields),'service','usta','dealer'])test(type+'
  if(type==='dealer'){
   for(const f of [current,old]){f.setFields({dealer_name:'Salon',phone:'123',region:'Bakı',address:'Address',credit_available:'Bəli'});await f.dealer.saveDealer({});}
  }else{for(const f of [current,old])await f.api.saveListing(type,input,{});}
- const normalize=f=>{const row=f.state.ops.find(o=>o.op==='insert').row;delete row.published_at;delete row.rating;delete row.reviews_count;row.seller_profile_id??=null;return row;};assert.deepEqual(normalize(current),normalize(old));
+ const normalize=f=>{const row=f.state.ops.find(o=>o.op==='insert').row;delete row.published_at;delete row.rating;delete row.reviews_count;row.seller_profile_id??=null;if(type==='dealer')delete row.details.equipment;return row;};if(type==='dealer')assert.equal(current.state.ops.find(o=>o.op==='insert').row.details.equipment,'[]');assert.deepEqual(normalize(current),normalize(old));
 });
 for(const type of ['cars','rent'])test(type+': Vehicle JSON/rental_type persistence behavior is unchanged',async()=>{
  const f=fixture(type,{rental_type:'Aylıq',unknown:'KEEP'});await f.api.updateListing(type,'listing',{phone:'123',details:{rental_type:'Günlük'}});
  assert.deepEqual(f.state.row.details,{rental_type:'Aylıq',unknown:'KEEP'});assert.ok(!f.state.ops.some(o=>o.columns==='details'));
+});
+for(const type of ['cars','rent'])test(type+': equipment survives owner-scoped create and edit',async()=>{
+ const selected=type==='cars'?'ESP':'GPS',initial=type==='cars'?'ABS':'GPS';
+ const f=fixture(type,{equipment:JSON.stringify([initial]),legacy:'KEEP'});
+ f.window.AUSTA_LISTING_EQUIPMENT_V36={catalog:{cars:['ABS','ESP'],rent:['GPS']}};
+ const patch=f.api.detailsFromForm(type,{equipment:JSON.stringify([selected])});
+ await f.update(patch);
+ assert.deepEqual(f.state.row.details,{equipment:JSON.stringify([selected]),legacy:'KEEP'});
+ assert.ok(f.state.ops.some(o=>o.op==='read'&&o.columns==='details'&&o.filters.some(([key,value])=>key==='owner_id'&&value==='owner')));
+ const created=fixture(type);created.window.AUSTA_LISTING_EQUIPMENT_V36=f.window.AUSTA_LISTING_EQUIPMENT_V36;
+ await created.api.saveListing(type,{brand:'Toyota',model:'Camry',year:2022,phone:'123',price:10000,daily_price:50,details:{equipment:JSON.stringify([initial]),private_note:'DROP'}},{});
+ const insert=created.state.ops.find(o=>o.op==='insert');assert.deepEqual(insert.row.details,{equipment:JSON.stringify([initial])});assert.equal(Object.hasOwn(insert.row.details,'private_note'),false);
+});
+test('vehicle equipment rejects options outside its category allowlist',async()=>{
+ const f=fixture('rent');f.window.AUSTA_LISTING_EQUIPMENT_V36={catalog:{rent:['GPS'],cars:['ABS']}};
+ await assert.rejects(f.update({equipment:'["ABS"]'}),/Kateqoriyaya uyğun olmayan/);
+ assert.ok(!f.state.ops.some(o=>o.op==='update'));
 });
