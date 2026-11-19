@@ -12,6 +12,7 @@ insurance:{label:'🛡️ Avtomobil sığorta şirkətləri',fields:[
 sober_driver:{label:'🚘 Ayıq sürücü şirkətləri',fields:[
 ['company_name','Şirkətin adı','text'],['tax_id','VÖEN (tətbiq olunduqda)','text'],['phone','Əlaqə nömrəsi','tel'],['region_address','Şəhər və ünvan','text'],['service_area','Xidmət rayonları','text'],['service_24_7','24/7 xidmət','select',['Bəli','Xeyr']],['working_hours','İş saatları','text'],['minimum_order_price','Minimum sifariş qiyməti (AZN)','number'],['rate_per_km','Kilometr üzrə tarif (AZN)','number'],['rate_per_hour','Saat üzrə tarif (AZN)','number'],['night_rate','Gecə tarifi (AZN)','number'],['city_service','Şəhərdaxili xidmət','select',['Bəli','Xeyr']],['intercity_service','Şəhərlərarası xidmət','select',['Bəli','Xeyr']],['advance_booking','Əvvəlcədən sifariş','select',['Bəli','Xeyr']],['urgent_service','Təcili sifariş','select',['Bəli','Xeyr']],['driver_experience','Sürücülərin təcrübəsi','text'],['payment_methods','Ödəniş üsulları','checklist',['Nağd','Bank kartı','Köçürmə']],['waiting_fee','Gözləmə haqqı (AZN)','number'],['special_conditions','Xüsusi şərtlər','textarea'],['description','Xidmətin təsviri','textarea']]}
 };
+forms.leasing.fields.splice(forms.leasing.fields.findIndex(field=>field[0]==='description'),0,['license_reference','Şirkətin təqdim etdiyi maliyyə icarəsi reyestri məlumatı','text'],['license_disclosure','Reyestr məlumatının statusu','select',[['company_reported_unverified','Şirkət tərəfindən təqdim edilib; platforma tərəfindən yoxlanılmayıb']]]);
 function install(){
  const api=window.AUSTA_V153C;if(!api?.categories)return false;
  Object.assign(api.categories,forms);
@@ -34,5 +35,5 @@ document.addEventListener('change',syncChecks,true);
 const obs=new MutationObserver(()=>{install();restoreChecks();});
 function boot(){install();restoreChecks();obs.observe(document.documentElement,{subtree:true,childList:true});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.AUSTA_SERVICE_COMPANY_V37=Object.freeze({forms,install});
+window.AUSTA_SERVICE_COMPANY_V37=Object.freeze({forms,install,isType:type=>Object.prototype.hasOwnProperty.call(forms,type)});
 })();
