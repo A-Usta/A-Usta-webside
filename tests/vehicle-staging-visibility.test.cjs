@@ -23,7 +23,7 @@ for(const [name,fn] of [['Home','fetchListings'],['legacy video feed','loadSupab
 test('public seller actual query excludes draft and preserves explicit seller/sale scope',async()=>{
  const source=fs.readFileSync(path.join(root,'assets/marketplace/seller-page.js'),'utf8');
  const query=source.slice(source.indexOf('let query=sb.from'),source.indexOf('if(typeof query.abortSignal'));
- const sb=client(rows),c=vm.createContext({sb,fields:'*',state:{id:'seller',offset:0},BATCH_SIZE:40});
+ const sb=client(rows),c=vm.createContext({sb,fields:'*',state:{id:'seller',listingType:'sale',offset:0},BATCH_SIZE:40});
  const result=await vm.runInContext('(async()=>{'+query+'return (await query).data;})()',c);
  assert.deepEqual(result.map(row=>row.id),['active']);
 });
