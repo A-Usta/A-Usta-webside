@@ -110,7 +110,7 @@ const cardKey=card=>card?JSON.stringify([card.dataset.austaV151ListingId||card.d
 function refreshSellers(){
   scheduled=false;const api=window.AUSTA_SELLER_IDENTITY;if(!api)return;
   const slots=[...document.querySelectorAll('.austa-market-card [data-card-seller]')].filter(slot=>slot.dataset.cardSeller);
-  const records=slots.map(slot=>{const token={},card=slot.closest('.austa-market-card');tokens.set(slot,token);return {slot,card,key:cardKey(card),id:slot.dataset.cardSeller,sale:slot.dataset.cardSellerSale,token};});
+  const records=slots.map(slot=>{const token={},card=slot.closest('.austa-market-card');tokens.set(slot,token);return {slot,card,key:cardKey(card),id:slot.dataset.cardSeller,sale:slot.dataset.cardSellerSale,rental:slot.dataset.cardSellerRental,token};});
   void api.hydrate(records.map(r=>({seller_profile_id:r.id}))).then(()=>{
     records.forEach(({slot,card,key,id,sale,token})=>{if(slot.isConnected&&slot.closest('.austa-market-card')===card&&cardKey(card)===key&&slot.dataset.cardSeller===id&&slot.dataset.cardSellerSale===sale&&slot.dataset.cardSellerRental===rental&&tokens.get(slot)===token)slot.innerHTML=sellerHtml(id,sale==='true',rental==='true');});
   }).catch(error=>console.warn('A-USTA card seller:',error?.message));
