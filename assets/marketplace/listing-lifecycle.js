@@ -4,13 +4,13 @@
 const sources=Object.freeze({
   vehicle:{table:'vehicle_listings',field:'listing_type',types:['sale','rent']},
   marketplace:{table:'marketplace_listings',field:'category',types:['parts','accessories','special','moto','plate','bus','water','caravan','trailer']},
-  service_provider:{table:'service_provider_listings',field:'provider_type',types:['service','usta']},
+  service_provider:{table:'service_provider_listings',field:'provider_type',types:['service','usta','leasing','insurance','sober_driver']},
   auto_dealer:{table:'auto_dealer_listings',types:['dealer']}
 });
 const aliases=Object.freeze({provider:'service_provider',dealer:'auto_dealer'});
 const labels=Object.freeze({active:'Aktiv',inactive:'Aktiv deyil',draft:'Qaralama',sold:'Satılıb',rented:'İcarəyə verilib',archived:'Arxivdə'});
 const actionLabels=Object.freeze({mark_sold:'Satılıb kimi işarələ',mark_rented:'İcarəyə verilib',archive:'Arxivlə',reactivate:'Yenidən aktiv et'});
-const categoryLabels=Object.freeze({parts:'Ehtiyat hissələri',accessories:'Aksesuarlar',special:'Xüsusi texnika',moto:'Moto / Moped / Skuter',plate:'Qeydiyyat nömrəsi',bus:'Avtobus',water:'Su nəqliyyatı',caravan:'Karavan',trailer:'Qoşqu / Treyler'});
+const categoryLabels=Object.freeze({leasing:'Lizinq şirkəti',insurance:'Avtomobil sığortası',sober_driver:'Ayıq sürücü',parts:'Ehtiyat hissələri',accessories:'Aksesuarlar',special:'Xüsusi texnika',moto:'Moto / Moped / Skuter',plate:'Qeydiyyat nömrəsi',bus:'Avtobus',water:'Su nəqliyyatı',caravan:'Karavan',trailer:'Qoşqu / Treyler'});
 const own=(object,key)=>typeof key==='string'&&Object.prototype.hasOwnProperty.call(object,key);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const failure=(message,code='LIFECYCLE_REJECTED')=>Object.assign(new Error(message),{code});
@@ -23,7 +23,14 @@ function ref(item){
   return {source,config:sources[source],id:item.id};
 }
 function subtype(source,row){
-  const config=sources[source],type=config.field?row[config.field]:'dealer';
+  const config=sources[source];
+  let type=config.field?row[config.field]:'dealer';
+  // V3.7 listings persist on the established provider table/type; the subtype
+  // lives in the allowlisted details JSON and must be validated explicitly.
+  if(source==='service_provider'&&type==='service'&&
+    ['leasing','insurance','sober_driver'].includes(row.details?.service_category)){
+    type=row.details.service_category;
+  }
   if(!config.types.includes(type))throw failure('Elanın kateqoriyası uyğun deyil.');
   return type;
 }
@@ -44,8 +51,8 @@ function actions(item){
 function statusLabel(status){return own(labels,status)?labels[status]:'Status əlçatan deyil';}
 function decorate(source,row){
   let type;try{type=subtype(source,row);}catch{type='';}
-  const label=source==='vehicle'?(type==='rent'?'Avtomobil icarəsi':'Avtomobil satışı'):source==='marketplace'?(categoryLabels[type]||'Elan'):source==='service_provider'?(type==='usta'?'Usta':'Avtoservis'):'Avtosalon';
-  const title=source==='vehicle'?[row.brand,row.model,row.year].filter(Boolean).join(' '):source==='auto_dealer'?row.dealer_name:row.title||row.name||row.specialty;
+  const label=source==='vehicle'?(type==='rent'?'Avtomobil icarəsi':'Avtomobil satışı'):source==='marketplace'?(categoryLabels[type]||'Elan'):source==='service_provider'?({leasing:'Lizinq şirkəti',insurance:'Avtomobil sığortası',sober_driver:'Ayıq sürücü',usta:'Usta',service:'Avtoservis'}[type]||'Xidmət şirkəti'):'Avtosalon';
+  const title=source==='vehicle'?[row.brand,row.model,row.year].filter(Boolean).join(' '):source==='auto_dealer'?row.dealer_name:row.details?.company_name||row.title||row.name||row.specialty;
   const amount=source==='vehicle'&&type==='rent'?row.daily_price:row.price;
   return {...row,__austa_source:source,__austa_table:sources[source].table,__austa_label:label,
     __austa_title:title||label,__austa_price:amount==null?'':amount+' '+(row.currency||'AZN')+(source==='vehicle'&&type==='rent'?' / gün':'')};
