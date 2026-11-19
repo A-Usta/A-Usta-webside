@@ -63,12 +63,14 @@ async function resolve(state){
       status(state,'Avtosalon mövcud deyil');return;
     }
     state.profile=profile;
-    const companyLabel=state.listingType==='rent'?'Rent a Car':'Avtosalon';\n    state.header.innerHTML=`<h1 id="austaSellerPageTitle">${esc(profile.display_name||companyLabel)}</h1><div class="austa-seller-page-meta"><span>${companyLabel}</span>${api.isOfficial(profile)===true?'<span class="austa-seller-page-official">Rəsmi</span>':''}${profile.country_code?`<span>${esc(profile.country_code)}</span>`:''}</div>`;
+    const companyLabel=state.listingType==='rent'?'Rent a Car':'Avtosalon';
+    state.header.innerHTML=`<h1 id="austaSellerPageTitle">${esc(profile.display_name||companyLabel)}</h1><div class="austa-seller-page-meta"><span>${companyLabel}</span>${api.isOfficial(profile)===true?'<span class="austa-seller-page-official">Rəsmi</span>':''}${profile.country_code?`<span>${esc(profile.country_code)}</span>`:''}</div>`;
     await loadBatch(state);
   }catch(error){if(active(state)){console.warn('A-USTA seller page:',error?.message);status(state,'Avtosalon məlumatı yüklənmədi. Yenidən cəhd edin.',true);}}
   finally{state.resolving=false;}
 }
-async function open(id,listingType='sale'){\n  if(!['sale','rent'].includes(listingType))return;
+async function open(id,listingType='sale'){ 
+  if(!['sale','rent'].includes(listingType))return;
   close();
   if(typeof id!=='string'||!id)return;
   const root=document.createElement('section');root.id='austaSellerPage';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-labelledby','austaSellerPageTitle');root.tabIndex=-1;
