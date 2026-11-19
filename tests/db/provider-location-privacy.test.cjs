@@ -1,6 +1,6 @@
 'use strict';
 const {test,before,after}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{PGlite}=require('@electric-sql/pglite');
-const map=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261114072012_v355_public_provider_discovery.sql'),'utf8'),privacy=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261114132329_v355_provider_location_privacy.sql'),'utf8');let db;
+const map=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261114072012_v355_public_provider_discovery.sql'),'utf8'),privacy=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261114132329_v355_provider_location_privacy.sql'),'utf8'),v37=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261119210000_v37_service_company_public_details.sql'),'utf8');let db;
 const A='11111111-1111-4111-8111-111111111111',B='22222222-2222-4222-8222-222222222222',L='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',LB='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',S='cccccccc-cccc-4ccc-8ccc-cccccccccccc',SB='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const PA=A+'/'+L+'/synthetic.png',PB=B+'/'+LB+'/synthetic.png';
 async function as(uid,fn){await db.exec('SET ROLE '+(uid?'authenticated':'anon'));await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid||'']);try{return await fn();}finally{await db.exec('RESET ROLE');}}
@@ -17,10 +17,32 @@ CREATE SCHEMA storage;CREATE TABLE storage.buckets(id text primary key,public bo
 INSERT INTO auth.users VALUES('${A}'),('${B}');INSERT INTO profiles VALUES('${A}','mechanic',true,'PRIVATE PROFILE',40.9,49.9),('${B}','shop',true,'PRIVATE PROFILE',40.9,49.9);INSERT INTO seller_profiles VALUES('${S}','${A}','usta','active','verified'),('${SB}','${B}','service','active','verified');
 INSERT INTO service_provider_listings(id,owner_id,provider_type,status,title,name,phone,message_contact,region,district,address,latitude,longitude,details,seller_profile_id) VALUES('${L}','${A}','usta','active','Synthetic provider','Synthetic name','PRIVATE PHONE','PRIVATE MESSAGE','PRIVATE REGION','PRIVATE DISTRICT','PRIVATE HOME',40.123456,49.123456,'{"latitude":40.123456,"nested":{"phone":"PRIVATE"},"owner_name":"PRIVATE CONTACT","brands":"BMW","price_policy":"Təklif"}','${S}'),('${LB}','${B}','service','active','Synthetic second','Synthetic second','PRIVATE B',null,'Bakı',null,'PRIVATE HOME B',40.4,49.4,'{}','${SB}');
 INSERT INTO service_provider_media VALUES('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','${L}','${A}','image','${PA}',0,true,now());INSERT INTO storage.objects VALUES('ffffffff-ffff-4fff-8fff-ffffffffffff','provider-media','${PA}');`);await db.exec(map);});after(()=>db.close());
-test('counterproof: legacy active SELECT exposes synthetic private fields before proposal',async()=>{const r=(await as(null,raw)).rows[0];assert.equal(r.latitude,40.123456);assert.equal(r.phone,'PRIVATE PHONE');await db.exec(privacy);});
+test('counterproof: legacy active SELECT exposes synthetic private fields before proposal',async()=>{const r=(await as(null,raw)).rows[0];assert.equal(r.latitude,40.123456);assert.equal(r.phone,'PRIVATE PHONE');await db.exec(privacy);await db.exec(v37);});
 test('anonymous and authenticated non-owner raw SELECT and filtered coordinate inference return no rows',async()=>{for(const uid of [null,B]){assert.equal((await as(uid,raw)).rows.length,0);assert.equal((await as(uid,()=>db.query('select id from service_provider_listings where latitude=40.123456'))).rows.length,0);}});
 test('owner retains exact private fields, edit UPDATE/returning and account listing access',async()=>{let r=(await as(A,raw)).rows[0];assert.equal(r.latitude,40.123456);assert.equal(r.address,'PRIVATE HOME');r=(await as(A,()=>db.query("update service_provider_listings set title='Synthetic updated' where id=$1 returning *",[L]))).rows[0];assert.equal(r.phone,'PRIVATE PHONE');assert.equal((await as(A,pub)).rows[0].details.owner_name,'PRIVATE CONTACT');});
 test('public listing projection preserves metadata but hides private location/contact/JSON and owner ID',async()=>{const r=(await as(null,pub)).rows[0];assert.equal(r.title,'Synthetic updated');for(const k of ['owner_id','phone','message_contact','region','district','address','latitude','longitude'])assert.equal(r[k],null,k);assert.deepEqual(r.details,{brands:'BMW',price_policy:'Təklif'});assert(!JSON.stringify(r).includes('PRIVATE'));assert.equal((await as(B,pub)).rows[0].latitude,null);});
+test('V3.7 public projection exposes only the declared subtype fields and preserves owner editing',async()=>{
+ const fixtures=[
+  ['leasing',{service_category:'leasing',company_name:'Synthetic lease',tax_id:'TAX-LEASE',rate:12,interest_type:'annual',license_reference:'REF-L',secret_internal:'PRIVATE LEASE SECRET'}],
+  ['insurance',{service_category:'insurance',company_name:'Synthetic insurance',tax_id:'TAX-INS',insurance_types:'kasko',coverage:'Synthetic coverage',license_reference:'REF-I',secret_internal:'PRIVATE INSURANCE SECRET'}],
+  ['sober_driver',{service_category:'sober_driver',company_name:'Synthetic driver',service_24_7:'yes',rate_per_km:1.2,waiting_fee:5,secret_internal:'PRIVATE DRIVER SECRET'}]
+ ];
+ for(const [kind,details] of fixtures){
+  await as(A,()=>db.query('update service_provider_listings set details=$1::jsonb where id=$2',[JSON.stringify(details),L]));
+  const owner=(await as(A,pub)).rows[0];assert.equal(owner.details.secret_internal,details.secret_internal);
+  const publicRow=(await as(null,pub)).rows[0];
+  assert.equal(publicRow.details.service_category,kind);
+  assert.equal(publicRow.details.company_name,details.company_name||undefined);
+  assert.equal(publicRow.details.secret_internal,undefined);
+  assert(!JSON.stringify(publicRow).includes('PRIVATE '+(kind==='leasing'?'LEASE':kind==='insurance'?'INSURANCE':'DRIVER')+' SECRET'));
+  if(kind==='leasing'){assert.equal(publicRow.details.rate,12);assert.equal(publicRow.details.license_reference,'REF-L');}
+  if(kind==='insurance'){assert.equal(publicRow.details.insurance_types,'kasko');assert.equal(publicRow.details.license_reference,'REF-I');}
+  if(kind==='sober_driver'){assert.equal(publicRow.details.rate_per_km,1.2);assert.equal(publicRow.details.waiting_fee,5);}
+ }
+ await assert.rejects(as(B,()=>db.query("update service_provider_listings set details='{}'::jsonb where id=$1",[L])),{code:'42501'});
+ await db.exec(v37); // CREATE OR REPLACE is safe to reapply; it changes no table or policy.
+ assert.equal((await as(null,pub)).rows[0].details.service_category,'sober_driver');
+});
 test('approved business location uses separate consented coordinates, never raw GPS',async()=>{await consent();for(const uid of [null,B]){const r=(await as(uid,pub)).rows[0];assert.equal(r.latitude,39.21);assert.equal(r.longitude,45.41);assert.equal(r.address,'Synthetic PUBLIC address');assert.equal(r.phone,'+10000000000');assert.equal(r.owner_id,null);}assert.equal((await as(A,pub)).rows[0].latitude,40.123456);});
 test('mobile mechanic service area has no precise pin or private address',async()=>{await as(A,()=>db.query("update provider_map_publications set location_kind='service_area',latitude=null,longitude=null,public_address=null where listing_id=$1",[L]));const r=(await as(null,pub)).rows[0];assert.equal(r.latitude,null);assert.equal(r.longitude,null);assert.equal(r.address,null);assert.equal(r.region,'Naxçıvan');const m=(await as(null,()=>db.query("select * from discover_public_providers(38.3,44.7,41.95,50.8,'Synthetic','',true,0,'usta')"))).rows[0];assert.equal(m.latitude,null);await consent();});
 test('consent revocation removes coordinates/contact from fresh public detail and map results',async()=>{await as(A,()=>db.query('update provider_map_publications set enabled=false,consent=false where listing_id=$1',[L]));assert.equal((await as(null,pub)).rows[0].latitude,null);assert.equal((await as(null,pub)).rows[0].phone,null);assert.equal((await as(null,()=>db.query("select * from discover_public_providers(38.3,44.7,41.95,50.8,'Synthetic','',true,0,'usta')"))).rows.length,0);await consent();});
