@@ -39,7 +39,7 @@ test('V3.7 public projection exposes only the declared subtype fields and preser
   if(kind==='insurance'){assert.equal(publicRow.details.insurance_types,'kasko');assert.equal(publicRow.details.license_reference,'REF-I');}
   if(kind==='sober_driver'){assert.equal(publicRow.details.rate_per_km,1.2);assert.equal(publicRow.details.waiting_fee,5);}
  }
- await assert.rejects(as(B,()=>db.query("update service_provider_listings set details='{}'::jsonb where id=$1",[L])),{code:'42501'});
+ const denied=await as(B,()=>db.query("update service_provider_listings set details='{}'::jsonb where id=$1 returning id",[L]));assert.equal(denied.rows.length,0,'non-owner update must affect no listing');
  await db.exec(v37); // CREATE OR REPLACE is safe to reapply; it changes no table or policy.
  assert.equal((await as(null,pub)).rows[0].details.service_category,'sober_driver');
 });
