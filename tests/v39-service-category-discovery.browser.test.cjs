@@ -10,7 +10,7 @@ const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const newCategories=[
   ['leasing','Lizinq şirkətləri','lizinq-sirketleri.webp'],
-  ['insurance','Sığorta şirkətləri','sigorta-sirketleri.webp'],
+  ['insurance','Avtomobil sığorta şirkətləri','sigorta-sirketleri.webp'],
   ['sober_driver','Ayıq sürücü','ayiq-surucu.webp']
 ];
 
