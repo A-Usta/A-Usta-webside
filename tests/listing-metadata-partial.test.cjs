@@ -92,12 +92,11 @@ test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
  // V3.9.1 removes only the V48 document-wide textContent click association.
  // Restore that exact reviewed baseline in this historical script comparison.
  const v48Pattern=/<script id="austa-v48-master">[\s\S]*?<\/script>/;
- const historicalV48=main.match(v48Pattern)?.[0],currentV48=normalized.match(v48Pattern)?.[0];assert.ok(historicalV48&&currentV48,'V48 script remains present');
+ const historicalV48=main.match(v48Pattern)?.[0],currentV48=html.match(v48Pattern)?.[0];assert.ok(historicalV48&&currentV48,'V48 script remains present');
  const legacyV48Binding=historicalV48.match(/function bindUstaCreate\(\)\{[\s\S]*?\n\}/)?.[0]+'\n';assert.ok(legacyV48Binding.trim(),'historical V48 click association is found');
  const oldV48Ready='document.addEventListener("DOMContentLoaded",()=>{addUstaListingType();bindUstaCreate();renderUstaListings();setTimeout(addUstaListingType,500);setTimeout(renderUstaListings,900)});';
  const newV48Ready='document.addEventListener("DOMContentLoaded",()=>{addUstaListingType();renderUstaListings();setTimeout(addUstaListingType,500);setTimeout(renderUstaListings,900)});';
  assert.equal(historicalV48.replace(legacyV48Binding,'').replace(oldV48Ready,newV48Ready),currentV48,'only the obsolete V48 click binding and its invocation were removed');
- normalized=normalized.replace(currentV48,historicalV48);
  const old=blocks(main),now=blocks(normalized);assert.equal(now.length,old.length);
  for(let i=0;i<old.length;i++){
   if(['austa-v153b-all-real-listing-router','austa-v153c-real-listing-form-js','austa-v153d-14-category-media-js'].some(id=>now[i][1].includes(id)))continue;
