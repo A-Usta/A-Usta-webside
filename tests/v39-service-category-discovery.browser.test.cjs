@@ -44,14 +44,14 @@ test('V3.9 service categories appear once, show images and route to their real c
       assert.equal(fs.existsSync(path.join(root,'assets/austa-home',image)),true,`${image} exists`);
     }
 
+    await page.locator('#austaV107ListingCategories [data-austa-v107-category="dealer"]').evaluate(el=>{
+      if(window.AUSTA_MARKET_V106)window.AUSTA_MARKET_V106.category=()=>{};
+      window.__v39CategoryCalls=[];
+      window.AUSTA_V151_MARKETPLACE={openCategory:(...args)=>window.__v39CategoryCalls.push(args)};
+    });
     for(const [key] of newCategories){
-      const calls=await page.locator(`#austaV107ListingCategories [data-austa-v107-category="${key}"]`).evaluate(el=>{
-        if(window.AUSTA_MARKET_V106)window.AUSTA_MARKET_V106.category=()=>{};
-        const calls=[];
-        window.AUSTA_V151_MARKETPLACE={openCategory:(...args)=>calls.push(args)};
-        el.click();
-        return calls;
-      });
+      await page.locator(`#austaV107ListingCategories [data-austa-v107-category="${key}"]`).evaluate(el=>el.click());
+      const calls=await page.evaluate(()=>window.__v39CategoryCalls.splice(0));
       assert.deepEqual(calls,[[key]],`${key} opens the matching listing category`);
     }
 

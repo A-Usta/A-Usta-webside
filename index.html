@@ -51292,6 +51292,16 @@ document.addEventListener(
             return;
         }
 
+        const categoryKey =
+            category.dataset.austaV107Category;
+
+        if(
+            categoryKey &&
+            !["cars", "rent"].includes(categoryKey)
+        ){
+            return;
+        }
+
 
         const text =
             String(
