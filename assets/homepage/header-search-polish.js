@@ -30,13 +30,13 @@ function mount(){
  let frame=0;
  function arrange(){const place=document.getElementById('locationPicker'),support=header.querySelector('.v351-support'),tools=header.querySelector('.v351-tools');if(place){const parent=innerWidth<=650?support:tools;if(place.parentNode!==parent){if(parent===tools)parent.prepend(place);else parent.append(place);}}if(!nav)return;const focused=document.activeElement;more.open=false;primary.hidden=false;for(const b of entries)primary.append(b);more.hidden=false;more.querySelector('summary').textContent=innerWidth<=720?'Kateqoriyalar':'Digər kateqoriyalar';const prioritized=entries.filter(b=>!['water','bus'].includes(b.dataset.v351Category)),waterAndBus=entries.filter(b=>['water','bus'].includes(b.dataset.v351Category));const available=nav.clientWidth,gap=parseFloat(getComputedStyle(primary).gap)||0;const widths=prioritized.map(b=>b.getBoundingClientRect().width);let count=0,total=0;const reserved=more.getBoundingClientRect().width+10;if(innerWidth>720){for(const width of widths){const next=total+width+(count?gap:0);if(next>available-reserved)break;total=next;count++;}}prioritized.forEach((b,i)=>(i<count?primary:menu).append(b));waterAndBus.forEach(b=>menu.append(b));primary.hidden=count===0;more.hidden=count===entries.length;more.querySelector('summary').textContent=count?'Digər kateqoriyalar':'Kateqoriyalar';if(entries.includes(focused)&&menu.contains(focused))more.querySelector('summary').focus({preventScroll:true});}
  const queue=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(arrange);};const navObserver=new ResizeObserver(queue);if(nav)navObserver.observe(nav);window.addEventListener('resize',queue);document.fonts?.ready.then(queue);queue();
- // The approved six-scene sequence is an animated image, never presented as video.
+ // The approved TOP campaign uses the preserved source MP4.
  const campaigns=window.AUSTA_CATEGORY_CAMPAIGNS;
  if(campaigns){
-  // Keep the approved original animated GIF visible continuously (no placeholder rotation).
-  // The desktop creative is a genuine 1240x210 GIF, mobile uses the original 508x506 GIF.
+  // Keep the approved original MP4 as the TOP creative; its playback lifecycle
+  // remains managed by category-campaigns.js.
   campaigns.setCampaigns('marketplace_top',[
-   {id:'austa-usa-order',active:true,headline:'A-USTA',accessibilityLabel:'A-USTA: ABŞ-dən avtomobil sifarişi',mediaType:'image',mediaUrl:'assets/homepage/austa-usa-order-wide.gif',mobileMediaUrl:'assets/homepage/austa-usa-order.gif',priority:10}
+   {id:'austa-usa-order',active:true,headline:'A-USTA',accessibilityLabel:'A-USTA: ABŞ-dən avtomobil sifarişi',mediaType:'video',mediaUrl:'assets/homepage/austa-usa-order-source.mp4',priority:10}
   ]);
   for(const slot of ['marketplace_left','marketplace_right'])campaigns.setCampaigns(slot,[{id:'v352-reserved-'+slot,active:true,headline:'Reklam sahəsi',description:'Təsdiqlənmiş reklam bannerləri burada göstəriləcək.'}]);
  }
