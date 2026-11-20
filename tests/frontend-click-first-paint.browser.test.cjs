@@ -67,10 +67,10 @@ test('Versioned first-paint CSS blocks paint during a slow stylesheet load and r
     await page.waitForSelector('#austaHomeSearch');
     const state=await page.evaluate(()=>({fcp:performance.getEntriesByName('first-contentful-paint')[0]?.startTime,css:performance.getEntriesByType('resource').filter(x=>x.name.includes('v=20261120-1')&&x.name.endsWith('.css?v=20261120-1')).map(x=>x.responseEnd),background:getComputedStyle(document.querySelector('#home .v34-search')).backgroundColor}));
     assert(state.css.length>=5,'versioned current CSS is fetched before page body renders');
-    assert.equal(state.background,'rgb(242, 245, 243)');
+    assert.equal(state.background,'rgb(244, 246, 245)');
     if(Number.isFinite(state.fcp))assert(state.fcp>=Math.max(...state.css)-1,'first contentful paint occurs after render-blocking stylesheets finish');
     await page.reload({waitUntil:'domcontentloaded',timeout:90000});
-    assert.equal(await page.locator('#home .v34-search').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(242, 245, 243)');
+    assert.equal(await page.locator('#home .v34-search').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(244, 246, 245)');
     assert.equal(await page.locator('#austaServiceSelection,.austa-v55-overlay,#austaV48Overlay').count(),0,'reload does not reveal an old service dialog');
   }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
 });
