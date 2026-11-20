@@ -36,7 +36,7 @@ function mount(){
   // Keep the approved original MP4 as the TOP creative; its playback lifecycle
   // remains managed by category-campaigns.js.
   campaigns.setCampaigns('marketplace_top',[
-   {id:'austa-usa-order',active:true,headline:'A-USTA',accessibilityLabel:'A-USTA: ABŞ-dən avtomobil sifarişi',mediaType:'video',mediaUrl:'assets/homepage/austa-usa-order-source.mp4',priority:10}
+   {id:'austa-usa-order',active:true,headline:'A-USTA',accessibilityLabel:'A-USTA: ABŞ-dən avtomobil sifarişi',mediaType:'video',mediaUrl:'assets/homepage/austa-usa-order-wide.mp4',priority:10}
   ]);
   for(const slot of ['marketplace_left','marketplace_right'])campaigns.setCampaigns(slot,[{id:'v352-reserved-'+slot,active:true,headline:'Reklam sahəsi',description:'Təsdiqlənmiş reklam bannerləri burada göstəriləcək.'}]);
  }
@@ -44,6 +44,12 @@ function mount(){
   for(const host of document.querySelectorAll('.v351-ad-host')){
    for(const b of host.querySelectorAll('[data-ad-control="previous"],[data-ad-control="next"]'))b.remove();
    if(host.id!=='austaV351TopAd')continue;
+   const video=host.querySelector('.aca-slot[data-campaign-id="austa-usa-order"] .aca-media > video');
+   if(video){
+    const desired=matchMedia('(max-width: 650px)').matches?'assets/homepage/austa-usa-order-source.mp4':'assets/homepage/austa-usa-order-wide.mp4';
+    if(video.getAttribute('src')!==desired){video.setAttribute('src',desired);video.load();}
+    continue;
+   }
    const img=host.querySelector('.aca-slot[data-campaign-id="austa-usa-order"] .aca-media > img');
    if(!img)continue;
    const picture=document.createElement('picture'),source=document.createElement('source');
@@ -53,7 +59,7 @@ function mount(){
    img.before(picture);picture.append(source,img);
   }
  }
- const adObserver=new MutationObserver(ads);for(const host of document.querySelectorAll('.v351-ad-host'))adObserver.observe(host,{subtree:true,childList:true});ads();
+ const adObserver=new MutationObserver(ads),adResize=()=>ads();for(const host of document.querySelectorAll('.v351-ad-host'))adObserver.observe(host,{subtree:true,childList:true});window.addEventListener('resize',adResize,{passive:true});ads();
  const box=document.getElementById('austaHomeSearch'),form=box?.querySelector('form');
  if(form&&!form.querySelector('.v352-advanced')){
   const details=el('details','v352-advanced'),summary=el('summary','','Daha çox filtr'),grid=el('div','v352-filter-grid');details.append(summary,grid);form.querySelector('.v34-search-grid').after(details);
@@ -64,7 +70,7 @@ function mount(){
  }
  function listingEntry(){const overlay=document.getElementById('austaV153COverlay'),select=overlay?.querySelector('#austaV153CCategory');if(!select||select.disabled)return;const dealers=[...select.querySelectorAll('option[value="dealer"]')];for(const duplicate of dealers.slice(1))duplicate.remove();if(overlay.dataset.v352)return;overlay.dataset.v352='1';const note=el('p','v352-listing-help','Elanınıza uyğun kateqoriyanı seçin. Seçiminizə aid mövcud forma aşağıda açılacaq.');note.id='v352ListingHelp';select.before(note);select.setAttribute('aria-describedby',note.id);}
  const observer=new MutationObserver(()=>{bindAvatar();listingEntry();});observer.observe(document.body,{childList:true,subtree:true});listingEntry();
- window.addEventListener('pagehide',()=>{++epoch;subscription?.unsubscribe();subscription=null;client=null;photo='';paintPhoto();adObserver.disconnect();observer.disconnect();navObserver.disconnect();cancelAnimationFrame(frame);});
+ window.addEventListener('pagehide',()=>{++epoch;subscription?.unsubscribe();subscription=null;client=null;photo='';paintPhoto();adObserver.disconnect();window.removeEventListener('resize',adResize);observer.disconnect();navObserver.disconnect();cancelAnimationFrame(frame);});
  window.addEventListener('pageshow',event=>{if(event.persisted){if(nav)navObserver.observe(nav);for(const host of document.querySelectorAll('.v351-ad-host'))adObserver.observe(host,{subtree:true,childList:true});observer.observe(document.body,{childList:true,subtree:true});bindAvatar();queue();}});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
