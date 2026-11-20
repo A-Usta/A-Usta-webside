@@ -7,21 +7,22 @@ const root=path.resolve(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 const html=read('index.html');
 
-test('Home category cards order Cars, Dealer, Service, Rent and retain unique keys',()=>{
+test('Header navigation puts existing Avtoservislər between Avtosalon and Rent a Car exactly once',()=>{
  const source=html.slice(html.indexOf('const categories = ['),html.indexOf('function openCategory(key)'));
  const keys=[...source.matchAll(/key:"([^"]+)"/g)].map(match=>match[1]);
- assert.deepEqual(keys.slice(0,4),['cars','dealer','service','rent']);
- assert.equal(keys.filter(key=>key==='dealer').length,1);assert.equal(keys.filter(key=>key==='service').length,1);assert.ok(keys.includes('bus')&&keys.includes('water'));
+ assert.equal(keys.filter(key=>key==='service').length,1);
+ const nav=read('assets/homepage/header-search-polish.js');
+ assert.match(nav,/categoryOrder=\['cars','dealer','service','rent'\]/);
+ assert.match(read('assets/homepage/header-ads.js'),/\['cars','dealer','service','rent'/);
  const final=html.slice(html.indexOf('const finalCategories = ['),html.indexOf('function findExistingImage('));
  const finalKeys=[...final.matchAll(/key:"([^"]+)"/g)].map(match=>match[1]);
- assert.deepEqual(finalKeys.slice(0,4),['cars','dealer','service','rent']);assert.equal(finalKeys.filter(key=>key==='dealer').length,1);assert.equal(finalKeys.filter(key=>key==='service').length,1);
+ assert.equal(finalKeys.filter(key=>key==='service').length,1);
 });
 
-test('category dropdown keeps Bus and Water in “Digər kateqoriyalar” and orders Service between Dealer and Rent',()=>{
+test('category dropdown keeps Bus in “Digər kateqoriyalar” while preserving the existing route',()=>{
  const nav=read('assets/homepage/header-search-polish.js');
  assert.match(nav,/prioritized=entries\.filter\(b=>!\['water','bus'\]\.includes\(b\.dataset\.v351Category\)\)/);
  assert.match(nav,/waterAndBus\.forEach\(b=>menu\.append\(b\)\)/);
- assert.match(read('assets/homepage/header-ads.js'),/\['cars','dealer','service','rent'/);
 });
 
 test('listing picker inserts Dealer immediately before Rent and de-duplicates it',()=>{
