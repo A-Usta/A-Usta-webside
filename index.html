@@ -39184,6 +39184,12 @@ header,
     },
 
     {
+        key:"dealer",
+        icon:"🏢",
+        title:"Avtosalon"
+    },
+
+    {
         key:"rent",
         icon:"🔑",
         title:"Rent a Car"
@@ -39253,12 +39259,6 @@ header,
         key:"mechanic",
         icon:"👨‍🔧",
         title:"Usta profilləri"
-    },
-
-    {
-        key:"dealer",
-        icon:"🏢",
-        title:"Avtosalonlar"
     },
 
     {
@@ -41087,6 +41087,13 @@ header [data-action*="listing"]{
         },
 
         {
+            key:"dealer",
+            title:"Avtosalon",
+            query:
+                "modern luxury car dealership showroom"
+        },
+
+        {
             key:"rent",
             title:"Rent a Car",
             query:
@@ -41169,13 +41176,6 @@ header [data-action*="listing"]{
             query:
                 "auto mechanic repairing car"
         },
-
-        {
-            key:"dealer",
-            title:"Avtosalonlar",
-            query:
-                "modern luxury car dealership showroom"
-        }
 
     ];
 
@@ -48816,6 +48816,7 @@ const MEDIA_BUCKET =
 
 
 let homeOffset = 0;
+let homeDealerOffset = 0;
 
 let homeLoading = false;
 
@@ -49444,7 +49445,8 @@ function ensureCategoryPage(){
 
 async function signedImageUrl(
     supabase,
-    path
+    path,
+    bucket = MEDIA_BUCKET
 ){
 
     const clean =
@@ -49468,15 +49470,16 @@ async function signedImageUrl(
     }
 
 
+    const cacheKey = String(bucket) + ':' + clean;
     if(
         mediaUrlCache.has(
-            clean
+            cacheKey
         )
     ){
 
-        const cached = mediaUrlCache.get(clean);
+        const cached = mediaUrlCache.get(cacheKey);
         if(cached.expires > Date.now()) return cached.url;
-        mediaUrlCache.delete(clean);
+        mediaUrlCache.delete(cacheKey);
 
     }
 
@@ -49489,7 +49492,7 @@ async function signedImageUrl(
         } =
             await supabase.storage
                 .from(
-                    MEDIA_BUCKET
+                    bucket
                 )
                 .createSignedUrl(
                     clean,
@@ -49506,7 +49509,7 @@ async function signedImageUrl(
 
 
         mediaUrlCache.set(
-            clean,
+            cacheKey,
             {url:data.signedUrl, expires:Date.now() + 3500 * 1000}
         );
 
@@ -49534,7 +49537,8 @@ async function signedImageUrl(
 
 async function attachImages(
     supabase,
-    listings
+    listings,
+    source = "vehicle"
 ){
 
     if(
@@ -49558,14 +49562,14 @@ async function attachImages(
     }
 
 
+    const mediaTable = source === "dealer" ? "auto_dealer_media" : "listing_media";
+    const mediaBucket = source === "dealer" ? "auto-dealer-media" : MEDIA_BUCKET;
     const {
         data:mediaRows,
         error
     } =
         await supabase
-            .from(
-                "listing_media"
-            )
+            .from(mediaTable)
             .select(
                 "listing_id,media_type,storage_path,sort_order,is_cover"
             )
@@ -49633,7 +49637,7 @@ async function attachImages(
 
     await Promise.all(listings.map(async item => {
         const path = byListing.get(item.id);
-        item._austaV151Image = path ? await signedImageUrl(supabase, path) : "";
+        item._austaV151Image = path ? await signedImageUrl(supabase, path, mediaBucket) : "";
     }));
 
 
@@ -49743,7 +49747,8 @@ function badgeHtml(item){
 
 
 function cardHtml(item){
-    return window.AUSTA_LISTING_CARDS.render("cars",item,{home:true,promotion:homePromotionType(item)});
+    const type = item._austaHomeType === "dealer" ? "dealer" : "cars";
+    return window.AUSTA_LISTING_CARDS.render(type,item,{home:true,promotion:homePromotionType(item)});
 }
 
 
@@ -49771,7 +49776,7 @@ function appendHomeItems(items){
     ){
 
         if(
-            !item?.id || item.listing_type !== "sale" || item.status !== "active" ||
+            !item?.id || (item._austaHomeType !== "dealer" && item.listing_type !== "sale") || item.status !== "active" ||
             homeSeenIds.has(
                 item.id
             )
@@ -49959,19 +49964,35 @@ async function loadNextHomeBatch(){
             .order("id", {ascending:false})
             .range(homeOffset, homeOffset + HOME_BATCH_SIZE);
         if(typeof query.abortSignal === "function") query = query.abortSignal(controller.signal);
-        const {data,error} = await query;
+        let dealerQuery = supabase.from("auto_dealer_listings")
+            .select("*")
+            .eq("status", "active")
+            .ilike("promotion_type", "premium")
+            .not("promotion_started_at", "is", null)
+            .not("promotion_until", "is", null)
+            .lte("promotion_started_at", requestTime)
+            .gt("promotion_until", requestTime)
+            .order("created_at", {ascending:false})
+            .order("id", {ascending:false})
+            .range(homeDealerOffset, homeDealerOffset + HOME_BATCH_SIZE);
+        if(typeof dealerQuery.abortSignal === "function") dealerQuery = dealerQuery.abortSignal(controller.signal);
+        const [{data,error},{data:dealerData,error:dealerError}] = await Promise.all([query,dealerQuery]);
         if(generation !== homeGeneration) return;
         if(error) throw error;
-        if(!Array.isArray(data)) throw new Error("Premium nəticəsi etibarsızdır.");
+        if(dealerError) throw dealerError;
+        if(!Array.isArray(data) || !Array.isArray(dealerData)) throw new Error("Premium nəticəsi etibarsızdır.");
         const consumed = data.slice(0, HOME_BATCH_SIZE);
-        const eligible = consumed.filter(item => !homeSeenIds.has(item.id) && homePromotionType(item) === "premium");
+        const consumedDealers = dealerData.slice(0, HOME_BATCH_SIZE).map(item => ({...item,_austaHomeType:"dealer"}));
+        const eligible = [...consumed,...consumedDealers].filter(item => !homeSeenIds.has(item.id) && homePromotionType(item) === "premium");
         void window.AUSTA_SELLER_IDENTITY?.hydrate(eligible);
-        await attachImages(supabase, eligible);
+        await attachImages(supabase, eligible.filter(item => item._austaHomeType !== "dealer"));
+        await attachImages(supabase, eligible.filter(item => item._austaHomeType === "dealer"), "dealer");
         if(generation !== homeGeneration) return;
         // Promotion may expire while media URLs are being resolved.
         appendHomeItems(eligible);
         homeOffset += consumed.length;
-        homeHasMore = data.length > HOME_BATCH_SIZE;
+        homeDealerOffset += consumedDealers.length;
+        homeHasMore = data.length > HOME_BATCH_SIZE || dealerData.length > HOME_BATCH_SIZE;
         if(!homeHasMore) homeObserver?.disconnect();
     }catch(error){
         if(generation !== homeGeneration) return;
@@ -51232,9 +51253,11 @@ document.addEventListener(
                     .austaV151ListingId;
 
 
-            openRealListing(
-                id
-            );
+            if(card.dataset.austaV151ListingType === "dealer" && typeof window.AUSTA_OPEN_FULL_LISTING === "function"){
+                void window.AUSTA_OPEN_FULL_LISTING(id,"auto_dealer","dealer");
+            }else{
+                openRealListing(id);
+            }
 
 
             return;
@@ -52431,7 +52454,7 @@ const LISTING_DETAIL_KEYS = Object.freeze({
     plate: ['name','plate_number','plate_series','document_status','equipment'],
     service: ['owner_name','brands','price_policy','equipment','service_category','company_name','tax_id','legal_name','email','website','city','service_area','vehicle_categories','vehicle_condition','customer_types','minimum_down_payment','minimum_term','maximum_term','rate','interest_type','currency','minimum_financing','maximum_financing','guarantor_required','income_proof_required','required_documents','terms','insurance_types','coverage','franchise','contract_months','payment_methods','installments_available','online_application','claims_support','repair_network','exclusions','minimum_order_price','rate_per_km','rate_per_hour','night_rate','service_24_7','city_service','intercity_service','advance_booking','urgent_service','driver_experience','waiting_fee','special_conditions','license_reference','license_disclosure'],
     usta: ['equipment'],
-    dealer: ['contact_name','message_contact','working_hours','brands','vehicle_condition',
+    dealer: ['order_type','contact_name','message_contact','working_hours','brands','vehicle_condition',
         'credit_available','leasing_available','barter_available','delivery_available','equipment']
 });
 function validateEquipment(type,value){
@@ -56201,6 +56224,16 @@ function installDealerCategory(){
             ],
 
             [
+                'order_type',
+                'Elan növü',
+                'select',
+                [
+                    ['sale', 'Adi satış'],
+                    ['order', 'Sifarişlə']
+                ]
+            ],
+
+            [
                 'contact_name',
                 'Əlaqədar şəxsin adı',
                 'text'
@@ -56360,6 +56393,11 @@ async function editDealer(item){
             dealer_name:
                 item.dealer_name,
 
+            order_type:
+                item.details?.order_type === 'order' || item.details?.order_type === 'Sifarişlə'
+                    ? 'order'
+                    : 'sale',
+
             contact_name:
                 item.contact_name,
 
@@ -56514,6 +56552,9 @@ async function updateDealer(item,sellerIntent){
 
     const details={
 
+        order_type:
+            values.order_type === 'order' ? 'order' : 'sale',
+
         contact_name:
             values.contact_name || '',
 
@@ -56608,7 +56649,7 @@ async function updateDealer(item,sellerIntent){
     for(const key of [
         'contact_name','message_contact','district','working_hours',
         'brands','vehicle_condition','about','credit_available',
-        'leasing_available','barter_available','delivery_available'
+        'leasing_available','barter_available','delivery_available','order_type'
     ]){
         if(!Object.prototype.hasOwnProperty.call(values,key) || values[key] === undefined){
             delete payload[key];
@@ -56701,6 +56742,9 @@ function ensureDealerOption(){
     }
 
     if(dealerOptions.length){
+        const existing = dealerOptions[0];
+        const rent = select.querySelector('option[value="rent"]');
+        if(rent && existing.nextElementSibling !== rent)select.insertBefore(existing,rent);
         return;
     }
 
@@ -56710,9 +56754,10 @@ function ensureDealerOption(){
     option.value = 'dealer';
 
     option.textContent =
-        '🏢 Avtosalonlar';
+        '🏢 Avtosalon';
 
-    select.appendChild(option);
+    const rent = select.querySelector('option[value="rent"]');
+    if(rent)select.insertBefore(option,rent);else select.appendChild(option);
 }
 
 
@@ -56789,6 +56834,9 @@ async function saveDealer(publishAttempt,sellerIntent,createValues){
 
 
     const details = {
+
+        order_type:
+            values.order_type === 'order' ? 'order' : 'sale',
 
         contact_name:
             values.contact_name || '',

@@ -90,16 +90,18 @@ function sellerHtml(id,sale=false,rental=false){
 function render(typeValue,item,options={}){
   const type=typeValue==='mechanic'?'usta':typeValue,c=content(type,item),home=options.home===true,id=text(item.id);
   const klass=home?'austa-v151-card':'austa-v154-card',mediaClass=home?'austa-v151-media':'austa-v154-media';
-  const connection=home?`data-austa-v151-listing-id="${esc(id)}"`:`data-austa-v154-id="${esc(id)}" data-austa-v154-type="${esc(type)}"`;
+  const connection=home?`data-austa-v151-listing-id="${esc(id)}" data-austa-v151-listing-type="${esc(type)}"`:`data-austa-v154-id="${esc(id)}" data-austa-v154-type="${esc(type)}"`;
   const image=text(item._austaV151Image),sellerId=text(item.seller_profile_id),sale=type==='cars'&&item.listing_type==='sale',rental=type==='rent'&&item.listing_type==='rent';
   const vin=sale&&window.AUSTA_VEHICLE_VIN?.valid(item.vin)?'<span class="austa-card-vin" title="VIN-kod mövcuddur">VIN</span>':'';
+  const orderByRequest=type==='dealer'&&(item.details?.order_type==='order'||item.details?.order_type==='Sifarişlə'||item.order_type==='order'||item.order_by_request===true);
+  const orderBadge=orderByRequest?'<span class="austa-card-order-badge" aria-label="Sifarişlə satış">SİFARİŞLƏ</span>':'';
   const price=c.price?`<div class="austa-card-price">${esc(c.price)}</div>`:'';
   const title=c.title?`<h3 class="austa-card-title" title="${esc(c.title)}">${esc(c.title)}</h3>`:'';
   const summary=c.summary.length?`<div class="austa-card-summary">${c.summary.slice(0,4).map(value=>`<span class="austa-card-summary-item" title="${esc(value)}">${esc(value)}</span>`).join('')}</div>`:'';
-  return `<article class="${klass} austa-market-card" ${connection}>
+  return `<article class="${klass} austa-market-card${orderByRequest?' order-by-request':''}" ${connection}>
     <div class="${mediaClass} austa-card-media">
       ${image?`<img src="${esc(image)}" alt="${esc(c.title)}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="austa-card-no-image" hidden>Şəkil mövcud deyil</div>`:'<div class="austa-card-no-image">Şəkil mövcud deyil</div>'}
-      ${attributes(type,item)}${window.AUSTA_MARKETPLACE_CARD_DATA.heart(type,item)}
+      ${attributes(type,item)}${orderBadge}${window.AUSTA_MARKETPLACE_CARD_DATA.heart(type,item)}
       <div class="austa-card-lower-overlay"><span class="austa-card-identity-group">${vin}<span class="austa-card-seller" data-card-seller="${esc(sellerId)}" data-card-seller-sale="${sale}" data-card-seller-rental="${rental}">${sellerHtml(sellerId,sale,rental)}</span></span>${promotion(item,options.promotion)}</div>
     </div>
     <div class="austa-card-content">${price}${title}${summary}${locationRow(item)}</div>

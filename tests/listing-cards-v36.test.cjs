@@ -60,3 +60,11 @@ test('missing optional data never fabricates a price, feature or posted timestam
  assert.equal(api().locationRow({region:'Bakı'}).includes('austa-card-posted'),false);
  assert.equal(api().locationRow({created_at:'2026-11-19T02:42:00Z'}).includes('austa-card-city'),false);
 });
+test('dealer order badge is limited to order listings and stays at the media corner',()=>{
+ const cards=api();
+ const order=cards.render('dealer',{id:'order',dealer_name:'Salon',details:{order_type:'order'},promotion_started_at:'2026-01-01T00:00:00Z',promotion_until:'2027-01-01T00:00:00Z'},{home:true,promotion:'premium'});
+ const regular=cards.render('dealer',{id:'sale',dealer_name:'Salon',details:{order_type:'sale'}});
+ assert.match(order,/SİFARİŞLƏ/);assert.match(order,/order-by-request/);assert.match(order,/austa-card-promotion premium/);
+ assert.doesNotMatch(regular,/SİFARİŞLƏ|order-by-request/);
+ assert.match(css,/\.austa-card-order-badge\{[^}]*right:8px;bottom:8px/);
+});

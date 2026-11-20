@@ -116,6 +116,13 @@ test('dealer explicit Bəli/Xeyr preserves existing boolean conversion',async()=
  const f=fixture('dealer',{unknown:'KEEP',credit_available:true});f.setFields({dealer_name:'Salon',phone:'123',region:'Bakı',address:'Address',credit_available:'Xeyr',barter_available:'Bəli'});
  await f.dealer.updateDealer(f.state.row);assert.equal(f.state.row.details.credit_available,false);assert.equal(f.state.row.details.barter_available,true);assert.equal(f.state.row.details.unknown,'KEEP');
 });
+test('dealer order type is persisted on create and owner-scoped edit',async()=>{
+ const created=fixture('dealer');created.setFields({dealer_name:'Salon',phone:'123',region:'Bakı',address:'Address',order_type:'order'});
+ await created.dealer.saveDealer({});assert.equal(created.state.row.details.order_type,'order');
+ const edited=fixture('dealer',{order_type:'sale',legacy:'KEEP'});edited.setFields({dealer_name:'Salon',phone:'123',region:'Bakı',address:'Address',order_type:'order'});
+ await edited.dealer.updateDealer(edited.state.row);assert.equal(edited.state.row.details.order_type,'order');assert.equal(edited.state.row.details.legacy,'KEEP');
+ const formPatch=edited.api.detailsFromForm('dealer',{order_type:'sale'});assert.deepEqual(json(formPatch),{order_type:'sale'});
+});
 for(const type of ['parts','service','usta','dealer'])test(type+': rejects injected system keys and preserves existing protected metadata',async()=>{
  const f=fixture(type,{owner_id:'OLD',status:'OLD',seller_profile_id:'OLD',legacy:'KEEP'});
  const injection=JSON.parse('{"owner_id":"ATTACK","status":"active","promotion_type":"premium","verification_status":"verified","seller_profile_id":"ATTACK","official_status":"approved","__proto__":{"polluted":true},"constructor":{"prototype":{"polluted":true}}}');
@@ -154,7 +161,7 @@ for(const type of [...Object.keys(fields),'service','usta','dealer'])test(type+'
  if(type==='dealer'){
   for(const f of [current,old]){f.setFields({dealer_name:'Salon',phone:'123',region:'Bakı',address:'Address',credit_available:'Bəli'});await f.dealer.saveDealer({});}
  }else{for(const f of [current,old])await f.api.saveListing(type,input,{});}
- const normalize=f=>{const row=f.state.ops.find(o=>o.op==='insert').row;delete row.published_at;delete row.rating;delete row.reviews_count;row.seller_profile_id??=null;if(type==='dealer')delete row.details.equipment;return row;};if(type==='dealer')assert.equal(current.state.ops.find(o=>o.op==='insert').row.details.equipment,'[]');assert.deepEqual(normalize(current),normalize(old));
+ const normalize=f=>{const row=f.state.ops.find(o=>o.op==='insert').row;delete row.published_at;delete row.rating;delete row.reviews_count;row.seller_profile_id??=null;if(type==='dealer'){delete row.details.equipment;delete row.details.order_type;}return row;};if(type==='dealer')assert.equal(current.state.ops.find(o=>o.op==='insert').row.details.equipment,'[]');assert.deepEqual(normalize(current),normalize(old));
 });
 for(const type of ['cars','rent'])test(type+': Vehicle JSON/rental_type persistence behavior is unchanged',async()=>{
  const f=fixture(type,{rental_type:'Aylıq',unknown:'KEEP'});await f.api.updateListing(type,'listing',{phone:'123',details:{rental_type:'Günlük'}});
