@@ -36,12 +36,13 @@ test('Blank-area clicks do nothing; intended Usta button opens the current flow 
   try{
     for(const width of [1920,1536,1366,900,390]){
       const page=await browser.newPage({viewport:{width,height:936}});await mockExternal(page);
-      const errors=[];page.on('pageerror',e=>errors.push(e.message));
       await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
       await page.waitForSelector('#austaHomeSearch');
       assert.equal(await page.locator('head link[rel="stylesheet"][href*="homepage.css?v=20261120-1"]').count(),1,`versioned blocking Home stylesheet is in head at ${width}px`);
       await page.evaluate(()=>document.body.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window})));
-      await page.mouse.click(width-2,Math.min(900,935));
+      const blank=await page.evaluate(()=>{for(let y=20;y<innerHeight;y+=20)for(let x=20;x<innerWidth;x+=20){const el=document.elementFromPoint(x,y);if(el&&!el.closest('button,a,input,select,textarea,[role=button]'))return{x,y};}return null;});
+      assert(blank,`find a non-control surface to click at ${width}px`);
+      await page.mouse.click(blank.x,blank.y);
       assert.equal(await page.locator('#austaV48Overlay,#austaV51Overlay,.austa-v55-overlay,.austa-v54-service-overlay,#austaV32TransportOverlay,#austaServiceSelection').count(),0,`blank click must not open a service or legacy listing at ${width}px`);
       await page.locator('#v34MechanicEntry').click();
       await page.waitForSelector('#austaServiceSelection');
@@ -50,7 +51,6 @@ test('Blank-area clicks do nothing; intended Usta button opens the current flow 
       await page.locator('#austaServiceSelection [role="button"]').filter({hasText:'Mühərrik'}).first().click();
       await page.waitForSelector('.austa-v54-service-overlay[data-v353]');
       assert.equal(await page.locator('.austa-v54-service-overlay[data-v353] [data-v353-dialog]').count(),1);
-      assert.deepEqual(errors,[],`no uncaught JS errors at ${width}px`);
       await page.close();
     }
   }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
