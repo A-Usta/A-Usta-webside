@@ -3,7 +3,7 @@
 'use strict';
 if(window.AUSTA_LISTING_EXPERIENCE)return;
 window.AUSTA_LISTING_EXPERIENCE=Object.freeze({version:'3.5.4'});
-const images={cars:'avtomobiller',rent:'rent-a-car',parts:'ehtiyat-hisseleri',accessories:'aksesuarlar',moto:'moto-moped',special:'xususi-texnika',bus:'avtobuslar',water:'su-neqliyyati',caravan:'karavanlar',trailer:'qosqu-treyler',plate:'qeydiyyat-nomreleri',service:'avtoservisler',usta:'usta-profilleri'};
+const images={cars:'avtomobiller',rent:'rent-a-car',parts:'ehtiyat-hisseleri',accessories:'aksesuarlar',moto:'moto-moped',special:'xususi-texnika',bus:'avtobuslar',water:'su-neqliyyati',caravan:'karavanlar',trailer:'qosqu-treyler',plate:'qeydiyyat-nomreleri',service:'avtoservisler',usta:'usta-profilleri',leasing:'lizinq-sirketleri',insurance:'sigorta-sirketleri',sober_driver:'ayiq-surucu'};
 const titles={basic:'Əsas məlumatlar',technical:'Kateqoriyaya aid məlumatlar',media:'Şəkil və video',contact:'Əlaqə və yerləşmə'};
 const basic=new Set(['brand','model','year','price','daily_price','deposit','part_name','accessory_name','service_name','company_name','tax_id','legal_name','website','dealer_name','plate_number','special_type','water_type','trailer_type','moto_type','caravan_type','sale_rent','rental_type','description','about']);
 // Presentation hints mirror the existing controller; no new validation gate.
@@ -50,7 +50,10 @@ function sync(){
  document.body.style.overflow='hidden';
  const registry=window.AUSTA_V153C?.categories;if(!registry)return;
  for(const option of select.options)if(!Object.hasOwn(registry,option.value)){option.hidden=true;option.disabled=true;}
- const options=[...select.options].filter(option=>Object.hasOwn(registry,option.value));for(const option of options){if(!option.value)continue;const b=categoryButton(()=>{
+ // The picker is built from options, not the homepage cards. Keep one canonical dealer tile.
+ const dealerOptions=[...select.options].filter(option=>option.value==='dealer');
+ for(const duplicate of dealerOptions.slice(1))duplicate.remove();
+ const options=[...select.options].filter(option=>Object.hasOwn(registry,option.value)).filter((option,index,all)=>option.value!=='dealer'||all.findIndex(candidate=>candidate.value==='dealer')===index);for(const option of options){if(!option.value)continue;const b=categoryButton(()=>{
   if(option.value!==select.value&&s.dirty&&!window.confirm('Kateqoriyanı dəyişsəniz, bu formanın məlumatları sıfırlanacaq. Davam edilsin?'))return;
   s.picker=false;s.step='basic';if(select.value!==option.value){s.dirty=false;select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));}decorate(s);paint(s);s.heading.focus();
  });b.dataset.v354Category=option.value;
