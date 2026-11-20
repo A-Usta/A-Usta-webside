@@ -11,7 +11,7 @@ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const newCategories=[
   ['leasing','Lizinq şirkətləri','lizinq-sirketleri.webp'],
   ['insurance','Avtomobil sığorta şirkətləri','sigorta-sirketleri.webp'],
-  ['sober_driver','Ayıq sürücü','ayiq-surucu.webp']
+  ['sober_driver','Ayıq sürücü şirkətləri','ayiq-surucu.webp']
 ];
 
 test('V3.9 service categories appear once, show images and route to their real category keys',async t=>{
