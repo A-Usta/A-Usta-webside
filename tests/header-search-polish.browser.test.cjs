@@ -26,7 +26,7 @@ for(const width of [1920,1536,1366,900,390])test('TOP animated GIF fills entire 
   assert(Math.abs(data.media.width-width)<1);
   assert(Math.abs(data.media.height/data.media.width-ratio)<.015);
   for(const k of ['x','y','width','height'])assert(Math.abs(data.image[k]-data.media[k])<1,k);
-  assert.equal(data.fit,'cover');
+  assert.equal(data.fit,'fill');
   assert(data.hidden&&!data.overflow);
   assert(data.host.bottom<=data.header.top+1);
   assert.equal(await p.locator('#globalSearch').count(),1);
