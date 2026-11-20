@@ -26252,7 +26252,7 @@ function lockOldUstaUI(){
  // Usta panelini marketplace siyahısının sonuna keçir
  const tabs=document.getElementById('austaV22Tabs');if(tabs&&panel)tabs.parentNode.appendChild(panel);
 }
-function protectedClick(e){const b=e.target.closest?.('button,a,.austa-function-btn,.premium-chip,.austa-v36-service-btn,.austa-v36-service,.service-card,[data-service],[data-top-service],[data-top-flow]');if(!b)return;if(/elan yerlesdir/.test(N(b.textContent)))return;const name=route((b.dataset?.topService||'')+' '+(b.dataset?.service||'')+' '+(b.dataset?.topTitle||'')+' '+(b.textContent||''));if(!name)return;e.preventDefault();e.stopImmediatePropagation();openProtected(name)}
+function protectedClick(e){const b=e.target.closest?.('button,a,.austa-function-btn,.premium-chip,.austa-v36-service-btn,.austa-v36-service,.service-card,[data-service],[data-top-service],[data-top-flow]');if(!b)return;if(b.matches('.austa-carcarekiosk-link'))return;if(/elan yerlesdir/.test(N(b.textContent)))return;const name=route((b.dataset?.topService||'')+' '+(b.dataset?.service||'')+' '+(b.dataset?.topTitle||'')+' '+(b.textContent||''));if(!name)return;e.preventDefault();e.stopImmediatePropagation();openProtected(name)}
 window.addEventListener('click',protectedClick,true);
 function boot(){lockOldUstaUI();setTimeout(lockOldUstaUI,100);setTimeout(lockOldUstaUI,500);setTimeout(lockOldUstaUI,1200)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();window.addEventListener('load',boot);

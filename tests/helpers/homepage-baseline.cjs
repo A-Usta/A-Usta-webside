@@ -103,6 +103,8 @@ function reverseV39Discovery(html){
 }
 
 function reverseCarCareKiosk(html){
+ const protectedClickException="if(b.matches('.austa-carcarekiosk-link'))return;";
+ if(html.includes(protectedClickException)){assert.equal(html.split(protectedClickException).length,2,'one CarCareKiosk routing exemption');html=html.replace(protectedClickException,'');}
  const styleOpen='<style id="austa-carcarekiosk-link-style">',styleClose='</style>';
  const styleCount=(html.match(/<style id="austa-carcarekiosk-link-style">/g)||[]).length;
  const hasLink=html.includes('class="austa-carcarekiosk-link"');
@@ -228,5 +230,3 @@ files["supabase/migrations/20261118100000_v36_listing_detail_metrics.sql"]="ee2b
 exports.isReviewedFile=p=>{if(!Object.hasOwn(files,p))return false;assert.equal(digest(fs.readFileSync(path.join(root,p))),files[p],'exact reviewed V3.4 file: '+p);return true;};
 exports.verify=()=>{for(const p of Object.keys(files))exports.isReviewedFile(p);};
 
-const campaignFrom=" // Existing category callers retain side-only placement; Home explicitly opts into TOP.\n if(options.placements!==undefined&&!Array.isArray(options.placements))throw new Error('Reklam yerl\u0259\u015fimi d\u00fczg\u00fcn deyil.');\n const placementSlots=options.placements===undefined?slots.filter(slot=>slot!=='marketplace_top'):[...new Set(options.placements)].filter(slot=>slots.includes(slot));\n for(const slot of placementSlots){",campaignTo=" // Category pages currently mount only side placements; keep TOP campaign support for future placement.\n for(const slot of slots.filter(slot=>slot!=='marketplace_top')){";
-exports.normalizeCampaigns=text=>{if(!text.includes(campaignFrom))return text;assert.equal(text.split(campaignFrom).length,2,"exact reviewed placement opt-in");return text.replace(campaignFrom,()=>campaignTo);};
