@@ -29,7 +29,7 @@ for(const width of [1920,1536,1366,900,390])test('TOP MP4 fills centered respons
   for(const k of ['x','y','width','height'])assert(Math.abs(data.video[k]-data.media[k])<1,k);
   assert.equal(data.fit,'cover');assert(data.muted&&data.loop&&data.inline);
   assert(data.hidden&&!data.overflow);assert(data.host.bottom<=data.header.top+1);
-  const out=path.join(process.env.RUNNER_TEMP||require('node:os').tmpdir(),'austa-top-mp4-'+width+'.png');await p.screenshot({path:out});
+  const out=path.join(process.env.RUNNER_TEMP||require('node:os').tmpdir(),'austa-pr298-top-banner-mp4-'+width+'.png');await p.screenshot({path:out});
  }finally{await b.close();}
 });
 
