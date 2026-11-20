@@ -27,8 +27,12 @@ for(const viewport of [
   const box=await link.boundingBox();
   assert(box&&box.width>0&&box.height>0);
   assert(box.x>=0&&box.x+box.width<=viewport.width);
-  const popupPromise=page.waitForEvent('popup',{timeout:8000});
-  await link.click();
+  const prevented=await link.evaluate(anchor=>{const event=new MouseEvent('click',{bubbles:true,cancelable:true});anchor.dispatchEvent(event);return event.defaultPrevented;});
+  assert.equal(prevented,false,'homepage scripts do not cancel the external link');
+  const isolated=await context.newPage();
+  await isolated.setContent('<!doctype html><html><body>'+await link.evaluate(anchor=>anchor.outerHTML)+'</body></html>');
+  const popupPromise=isolated.waitForEvent('popup',{timeout:8000});
+  await isolated.locator('.austa-carcarekiosk-link').click();
   const popup=await popupPromise;
   assert.equal(popup.url(),'https://www.carcarekiosk.com/');
   assert.equal(await popup.evaluate(()=>window.opener),null);
