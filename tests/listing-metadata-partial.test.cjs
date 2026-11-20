@@ -89,6 +89,14 @@ test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
   .replaceAll('\"public_service_provider_listings\"','\"service_provider_listings\"');
  normalized=normalized.replace(v154,normalizedV154);
  const v36Import='<script src="assets/marketplace/listing-detail-v36.js"></script>';if(normalized.includes(v36Import)){assert.equal(normalized.split(v36Import).length,2,'exact V3.6 detail module import');normalized=normalized.replace(v36Import,'');}
+ // V3.9.1 removes only the V48 document-wide textContent click association.
+ // Restore that exact reviewed baseline in this historical script comparison.
+ const v48Pattern=/<script id="austa-v48-master">[\s\S]*?<\/script>/;
+ const historicalV48=main.match(v48Pattern)?.[0],currentV48=html.match(v48Pattern)?.[0];assert.ok(historicalV48&&currentV48,'V48 script remains present');
+ const legacyV48Binding=historicalV48.match(/function bindUstaCreate\(\)\{[\s\S]*?\n\}/)?.[0]+'\n';assert.ok(legacyV48Binding.trim(),'historical V48 click association is found');
+ const oldV48Ready='document.addEventListener("DOMContentLoaded",()=>{addUstaListingType();bindUstaCreate();renderUstaListings();setTimeout(addUstaListingType,500);setTimeout(renderUstaListings,900)});';
+ const newV48Ready='document.addEventListener("DOMContentLoaded",()=>{addUstaListingType();renderUstaListings();setTimeout(addUstaListingType,500);setTimeout(renderUstaListings,900)});';
+ assert.equal(historicalV48.replace(legacyV48Binding,'').replace(oldV48Ready,newV48Ready),currentV48,'only the obsolete V48 click binding and its invocation were removed');
  const old=blocks(main),now=blocks(normalized);assert.equal(now.length,old.length);
  for(let i=0;i<old.length;i++){
   if(['austa-v153b-all-real-listing-router','austa-v153c-real-listing-form-js','austa-v153d-14-category-media-js'].some(id=>now[i][1].includes(id)))continue;
@@ -120,7 +128,7 @@ function assertP2D1Configuration(){
   "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
   "backend/a-usta56/.gitignore": "a459038af144bb649dd32c98f20e160838ec500ed5580fb1669ed0860196e140",
   ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
-  ".github/workflows/main.yml": "d8c73b30a28b1d13f08349b1b8dd762477cf73c9914cf2d1403d11db684dc108"
+  ".github/workflows/main.yml": "9b47b13d337b990f8841aca3ffc0011b416790516c96d74a94004be95b6f1cdc"
 };
  for(const [file,sha256] of Object.entries(reviewed)){
   assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);
