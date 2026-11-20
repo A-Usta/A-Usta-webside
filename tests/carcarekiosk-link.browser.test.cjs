@@ -1,0 +1,39 @@
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const path=require('node:path');
+const {pathToFileURL}=require('node:url');
+const {chromium}=require('playwright');
+
+const homeUrl=pathToFileURL(path.resolve(__dirname,'..','index.html')).href;
+
+for(const viewport of [
+ {name:'desktop',width:1440,height:1000},
+ {name:'mobile',width:390,height:844}
+])test(`CarCareKiosk link displays and opens safely on ${viewport.name}`,async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height}});
+  await context.route('https://www.carcarekiosk.com/**',route=>route.abort());
+  const page=await context.newPage();
+  await page.goto(homeUrl,{waitUntil:'domcontentloaded'});
+  const link=page.locator('.austa-carcarekiosk-link');
+  assert.equal(await link.count(),1);
+  assert.equal(await link.getAttribute('href'),'https://www.carcarekiosk.com/');
+  assert.equal(await link.getAttribute('target'),'_blank');
+  assert.equal(await link.getAttribute('rel'),'noopener noreferrer');
+  assert.match(await link.innerText(),/Avtomobilinizdəki problemləri axtarın/);
+  assert.match(await link.innerText(),/CarCareKiosk saytında araşdırın/);
+  const box=await link.boundingBox();
+  assert(box&&box.width>0&&box.height>0);
+  assert(box.x>=0&&box.x+box.width<=viewport.width);
+  const popupPromise=context.waitForEvent('page');
+  await link.click();
+  const popup=await popupPromise;
+  assert.equal(popup.url(),'https://www.carcarekiosk.com/');
+  assert.equal(await popup.evaluate(()=>window.opener),null);
+  await context.close();
+ }finally{
+  await browser.close();
+ }
+});
