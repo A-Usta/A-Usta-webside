@@ -266,6 +266,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Upload frontend regression report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frontend-regression-tap-report
+          path: ${{ runner.temp }}/frontend-regression.tap
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Assert repository cleanliness
         if: always()
         run: |
