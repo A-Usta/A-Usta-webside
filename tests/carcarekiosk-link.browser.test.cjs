@@ -27,7 +27,7 @@ for(const viewport of [
   const box=await link.boundingBox();
   assert(box&&box.width>0&&box.height>0);
   assert(box.x>=0&&box.x+box.width<=viewport.width);
-  const popupPromise=context.waitForEvent('page');
+  const popupPromise=page.waitForEvent('popup',{timeout:8000});
   await link.click();
   const popup=await popupPromise;
   assert.equal(popup.url(),'https://www.carcarekiosk.com/');
