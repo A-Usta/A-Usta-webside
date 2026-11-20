@@ -1,0 +1,42 @@
+name: Frontend click and first-paint Chromium
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'assets/homepage/**'
+      - 'assets/account/**'
+      - 'assets/marketplace/listing-experience.css'
+      - 'assets/map/map.css'
+      - 'tests/frontend-click-first-paint.browser.test.cjs'
+      - '.github/workflows/frontend-click-first-paint.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chromium:
+    name: Blank-click and first-paint Chromium
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.2
+
+      - name: Install pinned Playwright Chromium
+        run: |
+          npm ci --prefix tests --ignore-scripts
+          npm run browser:install --prefix tests
+
+      - name: Run blank-click, current Usta flow and slow-network checks
+        run: node --test --test-reporter=tap tests/frontend-click-first-paint.browser.test.cjs
