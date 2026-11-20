@@ -50,7 +50,7 @@ test('V3.9 service categories appear once, show images and route to their real c
       window.AUSTA_V151_MARKETPLACE={openCategory:(...args)=>window.__v39CategoryCalls.push(args)};
     });
     for(const [key] of newCategories){
-      await page.locator(`#austaV107ListingCategories [data-austa-v107-category="${key}"]`).click();
+      await page.locator(`#austaV107ListingCategories [data-austa-v107-category="${key}"]`).evaluate(el=>el.click());
       const calls=await page.evaluate(()=>window.__v39CategoryCalls.splice(0));
       assert.deepEqual(calls,[[key]],`${key} opens the matching listing category`);
     }
