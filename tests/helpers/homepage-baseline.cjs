@@ -169,7 +169,7 @@ const files={
   "assets/homepage/header-ads.css": "80c7afbb03a0bd6f8e3c0b2efe1797f60eb90bb9a962004ab003cc66bfd081ae",
   "assets/homepage/austa-usa-order-source.mp4": "dc5476455e4eee8f821f71d1a008645187d009f238a49a36b792a7da873faea7",
   "assets/homepage/header-ads.js": "862ccf1b589398ea70ade5bcaf80b5322e3a4376d4775e435d8d851f6e4b4275",
-  "assets/marketplace/category-campaigns.js": "3b9fe2b4b30749919bb7aa2b4d83a406ef1615c4602d355b165be19f58f315a0",
+  "assets/marketplace/category-campaigns.js": "48e9c3ebc6d67f4be494bfe0c49c417e38d33b76428898ff9ae770c9faea5df3",
 
   "assets/homepage/premium-homepage.css": "fc55a06349ce701e9368eca14ebb2cd2fbb53fedbfe1583aa9c16b81592dfbfa",
   "assets/homepage/premium-homepage.js": "8dffa44c2e41a1b4e87d13bdcf930a51143cee4c68188278e577323653bbd7ad",
