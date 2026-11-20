@@ -23,7 +23,7 @@ function mount(){
   const button=el('button',sample?.className||'',label);
   button.type='button';button.dataset.v351Category=key;
   button.addEventListener('click',()=>{more.open=false;window.AUSTA_V151_MARKETPLACE?.openCategory(key);});
-  primary.append(button);
+  menu.append(button);
  }
  const entries=[...document.querySelectorAll('#austaV107ListingCategories [data-austa-v107-category]')].map(original=>header.querySelector('[data-v351-category="'+original.dataset.austaV107Category+'"]')).filter(Boolean);
  let frame=0;
