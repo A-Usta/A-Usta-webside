@@ -14,7 +14,7 @@ for(const viewport of [
  const browser=await chromium.launch({headless:true});
  try{
   const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height}});
-  await context.route('https://www.carcarekiosk.com/**',route=>route.abort());
+  await context.route('https://www.carcarekiosk.com/**',route=>route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><title>CarCareKiosk test destination</title>'}));
   const page=await context.newPage();
   await page.goto(homeUrl,{waitUntil:'domcontentloaded'});
   const link=page.locator('.austa-carcarekiosk-link');
