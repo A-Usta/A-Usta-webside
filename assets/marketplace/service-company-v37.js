@@ -31,6 +31,18 @@ function syncChecks(event){
  const root=input.closest('#austaV153CFields'),group=input.dataset.v37Choice,hidden=root?.querySelector('[data-v153c-key="'+group+'"]');
  if(hidden)hidden.value=JSON.stringify([...root.querySelectorAll('[data-v37-choice="'+group+'"]:checked')].map(n=>n.value));
 }
+// Use the real marketplace route for these three homepage categories. Legacy
+// V106 click handlers may otherwise consume the click without opening a list.
+document.addEventListener('click',event=>{
+ const card=event.target.closest?.('#austaV107ListingCategories [data-austa-v107-category]');
+ const type=card?.dataset.austaV107Category;
+ if(!Object.prototype.hasOwnProperty.call(forms,type))return;
+ const open=window.AUSTA_V151_MARKETPLACE?.openCategory;
+ if(typeof open!=='function')return;
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ open(type);
+},true);
 document.addEventListener('change',syncChecks,true);
 const obs=new MutationObserver(()=>{install();restoreChecks();});
 function boot(){install();restoreChecks();obs.observe(document.documentElement,{subtree:true,childList:true});}
