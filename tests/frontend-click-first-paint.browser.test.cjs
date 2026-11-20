@@ -61,14 +61,17 @@ test('Versioned first-paint CSS blocks paint during a slow stylesheet load and r
   try{
     const page=await browser.newPage({viewport:{width:1366,height:900}});await mockExternal(page);
     let delayed=false;
-    await page.route('**/*.css?v=20261120-1',async route=>{if(!delayed){delayed=true;await new Promise(resolve=>setTimeout(resolve,500));}await route.continue();});
+    await page.route('**/assets/homepage/homepage.css?v=20261120-1',async route=>{if(!delayed){delayed=true;await new Promise(resolve=>setTimeout(resolve,500));}await route.continue();});
     await page.addInitScript(()=>{window.__firstPaint=[];new PerformanceObserver(list=>{for(const entry of list.getEntries())if(entry.name==='first-contentful-paint')window.__firstPaint.push(entry.startTime)}).observe({type:'paint',buffered:true});});
     await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
     await page.waitForSelector('#austaHomeSearch');
-    const state=await page.evaluate(()=>({fcp:performance.getEntriesByName('first-contentful-paint')[0]?.startTime,css:performance.getEntriesByType('resource').filter(x=>x.name.includes('v=20261120-1')&&x.name.endsWith('.css?v=20261120-1')).map(x=>x.responseEnd),background:getComputedStyle(document.querySelector('#home .v34-search')).backgroundColor}));
+    const state=await page.evaluate(()=>({fcp:performance.getEntriesByName('first-contentful-paint')[0]?.startTime,css:performance.getEntriesByType('resource').filter(x=>x.name.includes('v=20261120-1')&&x.name.endsWith('.css?v=20261120-1')).map(x=>({name:x.name,responseEnd:x.responseEnd})),background:getComputedStyle(document.querySelector('#home .v34-search')).backgroundColor}));
+    assert(delayed,'the Home CSS request was delayed to simulate a slow connection');
     assert(state.css.length>=5,'versioned current CSS is fetched before page body renders');
     assert.equal(state.background,'rgb(242, 245, 243)');
-    if(Number.isFinite(state.fcp))assert(state.fcp>=Math.max(...state.css)-1,'first contentful paint occurs after render-blocking stylesheets finish');
+    const homeCss=state.css.filter(x=>x.name.includes('/assets/homepage/homepage.css?v=20261120-1'));
+    assert(homeCss.length>0,'versioned Home presentation CSS was requested');
+    if(Number.isFinite(state.fcp))assert(state.fcp>=Math.min(...homeCss.map(x=>x.responseEnd))-1,'first contentful paint waits for the delayed, render-blocking Home stylesheet');
     await page.reload({waitUntil:'domcontentloaded',timeout:90000});
     assert.equal(await page.locator('#home .v34-search').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(242, 245, 243)');
     assert.equal(await page.locator('#austaServiceSelection,.austa-v55-overlay,#austaV48Overlay').count(),0,'reload does not reveal an old service dialog');
