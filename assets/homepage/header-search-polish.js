@@ -28,7 +28,19 @@ function mount(){
   ]);
   for(const slot of ['marketplace_left','marketplace_right'])campaigns.setCampaigns(slot,[{id:'v352-reserved-'+slot,active:true,headline:'Reklam sahəsi',description:'Təsdiqlənmiş reklam bannerləri burada göstəriləcək.'}]);
  }
- function ads(){for(const host of document.querySelectorAll('.v351-ad-host'))for(const b of host.querySelectorAll('[data-ad-control="previous"],[data-ad-control="next"]'))b.remove();}
+ function ads(){
+  for(const host of document.querySelectorAll('.v351-ad-host')){
+   for(const b of host.querySelectorAll('[data-ad-control="previous"],[data-ad-control="next"]'))b.remove();
+   if(host.id!=='austaV351TopAd')continue;
+   const img=host.querySelector('.aca-slot[data-campaign-id="austa-usa-order"] .aca-media > img');
+   if(!img)continue;
+   const picture=document.createElement('picture'),source=document.createElement('source');
+   picture.className='aca-responsive-picture';
+   source.media='(max-width: 650px)';
+   source.srcset='assets/homepage/austa-usa-order.gif';
+   img.before(picture);picture.append(source,img);
+  }
+ }
  const adObserver=new MutationObserver(ads);for(const host of document.querySelectorAll('.v351-ad-host'))adObserver.observe(host,{subtree:true,childList:true});ads();
  const box=document.getElementById('austaHomeSearch'),form=box?.querySelector('form');
  if(form&&!form.querySelector('.v352-advanced')){
