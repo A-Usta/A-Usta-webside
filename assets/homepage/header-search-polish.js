@@ -21,14 +21,26 @@ function mount(){
  // The approved six-scene sequence is an animated image, never presented as video.
  const campaigns=window.AUSTA_CATEGORY_CAMPAIGNS;
  if(campaigns){
+  // Keep the approved original animated GIF visible continuously (no placeholder rotation).
+  // The desktop creative is a genuine 1240x210 GIF, mobile uses the original 508x506 GIF.
   campaigns.setCampaigns('marketplace_top',[
-   {id:'austa-usa-order',active:true,headline:'A-USTA',accessibilityLabel:'A-USTA: ABŞ-dən avtomobil sifarişi',mediaType:'video',mediaUrl:'assets/homepage/austa-usa-order-source.mp4',durationMs:30000,priority:10},
-   {id:'austa-discover',active:true,headline:'Növbəti avtomobilini A-USTA-da tap.',description:'Real elanları araşdır, seçimlərini daralt, uyğun avtomobili tap.',action:'cars',actionLabel:'Avtomobil elanlarına bax'},
-   {id:'austa-search',active:true,headline:'Seçimini dəqiqləşdir.',description:'Marka, model və büdcəyə uyğun avtomobil elanlarını bir yerdə araşdır.',action:'cars',actionLabel:'Avtomobil elanlarına bax'}
+   {id:'austa-usa-order',active:true,headline:'A-USTA',accessibilityLabel:'A-USTA: ABŞ-dən avtomobil sifarişi',mediaType:'image',mediaUrl:'assets/homepage/austa-usa-order-wide.gif',mobileMediaUrl:'assets/homepage/austa-usa-order.gif',priority:10}
   ]);
   for(const slot of ['marketplace_left','marketplace_right'])campaigns.setCampaigns(slot,[{id:'v352-reserved-'+slot,active:true,headline:'Reklam sahəsi',description:'Təsdiqlənmiş reklam bannerləri burada göstəriləcək.'}]);
  }
- function ads(){for(const host of document.querySelectorAll('.v351-ad-host'))for(const b of host.querySelectorAll('[data-ad-control="previous"],[data-ad-control="next"]'))b.remove();}
+ function ads(){
+  for(const host of document.querySelectorAll('.v351-ad-host')){
+   for(const b of host.querySelectorAll('[data-ad-control="previous"],[data-ad-control="next"]'))b.remove();
+   if(host.id!=='austaV351TopAd')continue;
+   const img=host.querySelector('.aca-slot[data-campaign-id="austa-usa-order"] .aca-media > img');
+   if(!img)continue;
+   const picture=document.createElement('picture'),source=document.createElement('source');
+   picture.className='aca-responsive-picture';
+   source.media='(max-width: 650px)';
+   source.srcset='assets/homepage/austa-usa-order.gif';
+   img.before(picture);picture.append(source,img);
+  }
+ }
  const adObserver=new MutationObserver(ads);for(const host of document.querySelectorAll('.v351-ad-host'))adObserver.observe(host,{subtree:true,childList:true});ads();
  const box=document.getElementById('austaHomeSearch'),form=box?.querySelector('form');
  if(form&&!form.querySelector('.v352-advanced')){
