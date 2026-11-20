@@ -26,7 +26,7 @@ function normalize(item,index){
  if(!item||item.active!==true||typeof item.id!=='string'||!item.id||!String(item.headline||'').trim())return null;
  const start=item.startAt==null?null:Date.parse(item.startAt),end=item.endAt==null?null:Date.parse(item.endAt);
  if((start!==null&&!Number.isFinite(start))||(end!==null&&!Number.isFinite(end))||(start!==null&&end!==null&&start>=end))return null;
- return Object.freeze({id:item.id,advertiser:String(item.advertiser||'').slice(0,120),headline:String(item.headline).slice(0,160),description:String(item.description||'').slice(0,300),accessibilityLabel:String(item.accessibilityLabel||item.headline).slice(0,200),mediaType:['image','video'].includes(item.mediaType)?item.mediaType:'none',mediaUrl:safeUrl(item.mediaUrl),posterUrl:safeUrl(item.posterUrl),destinationUrl:safeUrl(item.destinationUrl),action:item.action==='cars'?'cars':'',actionLabel:String(item.actionLabel||'Ətraflı bax').slice(0,60),priority:Number.isFinite(item.priority)?item.priority:0,durationMs:item.durationMs==null?null:interval(item.durationMs),start,end,index});
+ return Object.freeze({id:item.id,advertiser:String(item.advertiser||'').slice(0,120),headline:String(item.headline).slice(0,160),description:String(item.description||'').slice(0,300),accessibilityLabel:String(item.accessibilityLabel||item.headline).slice(0,200),mediaType:['image','video'].includes(item.mediaType)?item.mediaType:'none',mediaUrl:safeUrl(item.mediaUrl),mobileMediaUrl:safeUrl(item.mobileMediaUrl),posterUrl:safeUrl(item.posterUrl),destinationUrl:safeUrl(item.destinationUrl),action:item.action==='cars'?'cars':'',actionLabel:String(item.actionLabel||'Ətraflı bax').slice(0,60),priority:Number.isFinite(item.priority)?item.priority:0,durationMs:item.durationMs==null?null:interval(item.durationMs),start,end,index});
 }
 function eligible(slot){const now=Date.now();const custom=(campaigns.get(slot)||[]).filter(c=>(c.start===null||c.start<=now)&&(c.end===null||c.end>now));return custom.length?custom:house[slot].map(normalize);}
 const element=(tag,klass,text)=>{const node=document.createElement(tag);if(klass)node.className=klass;if(text)node.textContent=text;return node;};
@@ -58,7 +58,12 @@ function render(state,index=0){
   const media=element('div','aca-media');const node=document.createElement(campaign.mediaType==='video'?'video':'img');
   if(campaign.mediaType==='video'){node.muted=true;node.defaultMuted=true;node.playsInline=true;node.loop=true;node.preload='none';if(campaign.posterUrl)node.poster=campaign.posterUrl;node.setAttribute('aria-label',campaign.accessibilityLabel);}
   else{node.loading='lazy';node.decoding='async';node.alt=campaign.accessibilityLabel;}
-  node.addEventListener('error',()=>{media.replaceChildren(element('span','aca-media-fallback','A-USTA'));});node.src=campaign.mediaUrl;media.append(node);body.append(media);
+  node.addEventListener('error',()=>{media.replaceChildren(element('span','aca-media-fallback','A-USTA'));});if(campaign.mediaType==='image'&&campaign.mobileMediaUrl){
+   const picture=element('picture','aca-responsive-picture'),source=document.createElement('source');
+   source.media='(max-width: 650px)';source.srcset=campaign.mobileMediaUrl;
+   picture.append(source,node);media.append(picture);
+  }else media.append(node);
+  node.src=campaign.mediaUrl;body.append(media);
  }else if(state.slot==='marketplace_top'){
   const art=element('div','aca-art');art.setAttribute('aria-hidden','true');art.innerHTML='<span class="aca-road"></span><span class="aca-car"><i></i><b></b></span><span class="aca-art-name">A-USTA</span>';body.append(art);
  }
