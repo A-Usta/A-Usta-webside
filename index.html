@@ -39250,6 +39250,24 @@ header,
         key:"dealer",
         icon:"🏢",
         title:"Avtosalonlar"
+    },
+
+    {
+        key:"leasing",
+        icon:"💳",
+        title:"Lizinq şirkətləri"
+    },
+
+    {
+        key:"insurance",
+        icon:"🛡️",
+        title:"Sığorta şirkətləri"
+    },
+
+    {
+        key:"sober_driver",
+        icon:"🚘",
+        title:"Ayıq sürücü"
     }
 
 ];
@@ -43497,6 +43515,18 @@ $("austaHeaderAddListing")?.addEventListener("click",function(event){
 /* 14 — Avtosalonlar */
 #austaV107ListingCategories [data-austa-v107-category="dealer"]{
     background-image:url("assets/austa-home/avtosalonlar.webp") !important;
+}
+
+#austaV107ListingCategories [data-austa-v107-category="leasing"]{
+    background-image:url("assets/austa-home/lizinq-sirketleri.webp") !important;
+}
+
+#austaV107ListingCategories [data-austa-v107-category="insurance"]{
+    background-image:url("assets/austa-home/sigorta-sirketleri.webp") !important;
+}
+
+#austaV107ListingCategories [data-austa-v107-category="sober_driver"]{
+    background-image:url("assets/austa-home/ayiq-surucu.webp") !important;
 }
 
 </style>
@@ -56638,11 +56668,20 @@ function ensureDealerOption(){
         return;
     }
 
-    if(
-        select.querySelector(
-            'option[value="dealer"]'
-        )
-    ){
+    const dealerOptions =
+        Array.from(
+            select.querySelectorAll(
+                'option[value="dealer"]'
+            )
+        );
+
+    if(dealerOptions.length > 1){
+        dealerOptions
+            .slice(1)
+            .forEach(option=>option.remove());
+    }
+
+    if(dealerOptions.length){
         return;
     }
 
