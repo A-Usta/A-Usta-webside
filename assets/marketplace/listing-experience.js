@@ -3,7 +3,7 @@
 'use strict';
 if(window.AUSTA_LISTING_EXPERIENCE)return;
 window.AUSTA_LISTING_EXPERIENCE=Object.freeze({version:'3.5.4'});
-const images={cars:'avtomobiller',rent:'rent-a-car',parts:'ehtiyat-hisseleri',accessories:'aksesuarlar',moto:'moto-moped',special:'xususi-texnika',bus:'avtobuslar',water:'su-neqliyyati',caravan:'karavanlar',trailer:'qosqu-treyler',plate:'qeydiyyat-nomreleri',service:'avtoservisler',usta:'usta-profilleri',leasing:'lizinq-sirketleri',insurance:'sigorta-sirketleri',sober_driver:'ayiq-surucu'};
+const images={cars:'avtomobiller',rent:'rent-a-car',parts:'ehtiyat-hisseleri',accessories:'aksesuarlar',moto:'moto-moped',special:'xususi-texnika',bus:'avtobuslar',water:'su-neqliyyati',caravan:'karavanlar',trailer:'qosqu-treyler',plate:'qeydiyyat-nomreleri',service:'avtoservisler',usta:'usta-profilleri',dealer:'avtosalonlar',leasing:'lizinq-sirketleri',insurance:'sigorta-sirketleri',sober_driver:'ayiq-surucu'};
 const titles={basic:'Əsas məlumatlar',technical:'Kateqoriyaya aid məlumatlar',media:'Şəkil və video',contact:'Əlaqə və yerləşmə'};
 const basic=new Set(['brand','model','year','price','daily_price','deposit','part_name','accessory_name','service_name','company_name','tax_id','legal_name','website','dealer_name','plate_number','special_type','water_type','trailer_type','moto_type','caravan_type','sale_rent','rental_type','description','about']);
 // Presentation hints mirror the existing controller; no new validation gate.
