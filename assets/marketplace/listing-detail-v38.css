@@ -1,0 +1,37 @@
+/* V3.8 shared listing title facts, seller contact hierarchy and inbox. */
+#austaFinalListingPage .austa-v38-title-facts{display:flex;flex-wrap:wrap;gap:7px 0;margin:-2px 0 14px;color:#435249;font-size:14px;line-height:1.5}
+#austaFinalListingPage .austa-v38-title-facts[hidden]{display:none!important}
+#austaFinalListingPage .austa-v38-title-facts span{display:inline-flex;align-items:center;white-space:normal}
+#austaFinalListingPage .austa-v38-title-facts span+span:before{content:'·';margin:0 9px;color:#98a39c}
+#austaFinalListingPage .austa-v38-seller-joined{margin:4px 0 13px;color:#718078;font-size:12px;line-height:1.45}
+#austaFinalListingPage .austa-final-message{border:0!important;background:#176244!important;color:#fff!important}
+#austaFinalListingPage .austa-final-message:hover{background:#124d35!important}
+.austa-v38-unread{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;margin-left:auto;padding:0 5px;border-radius:999px;background:#d92d20;color:#fff;font-size:11px;font-weight:800;line-height:1}
+.austa-v38-unread[hidden]{display:none!important}
+.austa-v38-chat{width:min(560px,calc(100vw - 24px));max-width:none;max-height:min(760px,calc(100dvh - 24px));padding:0;border:1px solid #dfe6e1;border-radius:14px;background:#fff;color:#26332d;box-shadow:0 24px 80px #071c1260}
+.austa-v38-chat::backdrop{background:#07120dcc}
+.austa-v38-chat>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:17px 18px;border-bottom:1px solid #e6ebe8}
+.austa-v38-chat h2{margin:0;color:#26332d;font-size:18px}
+.austa-v38-chat header p{margin:4px 0 0;color:#718078;font-size:12px}
+.austa-v38-chat [data-chat-close],.austa-v38-chat [data-inbox-close]{width:36px;height:36px;border:1px solid #dfe6e1;border-radius:8px;background:#fff;color:#26332d;font-size:22px;cursor:pointer}
+.austa-v38-chat-messages{display:flex;flex-direction:column;gap:9px;min-height:160px;max-height:min(48vh,420px);overflow:auto;padding:16px;background:#f7f9f8}
+.austa-v38-chat-bubble{align-self:flex-start;max-width:82%;padding:10px 12px;border:1px solid #e1e8e3;border-radius:12px 12px 12px 3px;background:#fff;overflow-wrap:anywhere}
+.austa-v38-chat-bubble.mine{align-self:flex-end;border-color:#176244;background:#176244;color:#fff;border-radius:12px 12px 3px 12px}
+.austa-v38-chat-bubble p{margin:0 0 5px;white-space:pre-wrap}
+.austa-v38-chat-bubble time{display:block;color:#718078;font-size:10px}
+.austa-v38-chat-bubble.mine time{color:#d7e8df}
+.austa-v38-chat-empty,.austa-v38-inbox-note{margin:auto;color:#718078;text-align:center}
+.austa-v38-chat [data-chat-status]{min-height:18px;margin:8px 16px;color:#68766e;font-size:12px}
+.austa-v38-chat [data-kind=error]{color:#b42318}
+.austa-v38-chat-compose{display:flex;align-items:flex-end;gap:9px;padding:12px 16px;border-top:1px solid #e6ebe8}
+.austa-v38-chat-compose textarea{flex:1;min-width:0;min-height:44px;max-height:130px;resize:vertical;box-sizing:border-box;padding:11px;border:1px solid #cfd9d2;border-radius:9px;font:inherit}
+.austa-v38-chat-compose button,.austa-v38-login{min-height:44px;padding:0 16px;border:0;border-radius:9px;background:#176244;color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.austa-v38-chat-compose button:disabled{opacity:.6;cursor:wait}
+.austa-v38-inbox-host{max-height:min(66vh,620px);overflow:auto;padding:16px}
+.austa-v38-inbox-list{display:grid;gap:9px;margin-top:16px}
+.austa-v38-inbox-row{display:grid;gap:5px;width:100%;padding:14px;border:1px solid #e0e6e2;border-radius:9px;background:#fff;color:#26332d;text-align:left;cursor:pointer}
+.austa-v38-inbox-row:hover{border-color:#176244}
+.austa-v38-inbox-row span{overflow:hidden;color:#58665e;text-overflow:ellipsis;white-space:nowrap}
+.austa-v38-inbox-row small{color:#87928b}
+.austa-v38-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:600px){#austaFinalListingPage .austa-v38-title-facts{font-size:13px;gap:5px 0}.austa-v38-chat{max-height:calc(100dvh - 16px);border-radius:12px}.austa-v38-chat-messages{max-height:52dvh;padding:12px}.austa-v38-chat-compose{padding:10px}.austa-v38-chat-compose button{padding:0 12px}}
