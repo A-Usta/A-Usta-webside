@@ -195,7 +195,10 @@ const files={
  "assets/marketplace/service-company-v37.js": "2119cf856746b5af960e37b10ab45cec87414f029ae81e1607444b75ba2d99c7",
  // V3.8 reviewed assets: hashes are pinned and revalidated on every legacy protected-asset gate.
  "assets/marketplace/listing-detail-v38.css": "393023a1d60985947870cd282167c4e6face011ea2fa99eda6078f5d728d4814",
- "assets/marketplace/seller-messaging.js": "7a63bec25ea0cd3ef27ba7901f222817d327757c1d11aa4e3278c29a8e870ad6"
+ "assets/marketplace/seller-messaging.js": "7a63bec25ea0cd3ef27ba7901f222817d327757c1d11aa4e3278c29a8e870ad6",
+ "assets/austa-home/lizinq-sirketleri.webp": "a90babc595339b3aa850fa56efedbae01c0313d5416f82063ed58ad161e3692c",
+ "assets/austa-home/sigorta-sirketleri.webp": "3d1f3e45ba2dbd2db960bd22e6751563ee4dae572f3748208084990820b21c44",
+ "assets/austa-home/ayiq-surucu.webp": "c92664ba7a51469d8c7571d3b0396aa46e956f458ef748ad020f24e79eebac66"
 };
 exports.reviewed=files;
 files["supabase/migrations/20261118100000_v36_listing_detail_metrics.sql"]="ee2be4047eabcad19afb25cd10ce900b4c199673502c828f53d4987ddcf836c3";
