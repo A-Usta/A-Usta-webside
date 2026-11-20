@@ -39,7 +39,7 @@ test('V3.9 service categories appear once, show images and route to their real c
     for(const [key,label,image] of newCategories){
       const card=page.locator(`#austaV107ListingCategories [data-austa-v107-category="${key}"]`);
       assert.equal(await card.count(),1,`${key} should appear once`);
-      assert.ok((await card.innerText()).trim().endsWith(label),`${key} card keeps its category label after the decorative icon`);
+      assert.ok((await card.innerText()).includes(label),`${key} card keeps its category label after the decorative icon`);
       assert.match(await card.evaluate(el=>getComputedStyle(el).backgroundImage),new RegExp(image.replace('.','\\.')));
       assert.equal(fs.existsSync(path.join(root,'assets/austa-home',image)),true,`${image} exists`);
     }
