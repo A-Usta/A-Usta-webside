@@ -166,7 +166,7 @@ const files={
   "assets/homepage/austa-usa-order-wide.webp": "be0b79fac1ef8328bf3312efbe75d506e3e39d8dd2c0a004f38e51b15beb4fb3",
   "assets/homepage/austa-usa-order-wide-poster.webp": "0dad595741e16701cb09aa25e8bbee898095941d91ac22e0ae413cc34f12a1aa",
   "assets/homepage/header-search-polish.css": "a444231719876956e73563cc3d31a2309f7dc5c9e74658be36d51ccb81d3eed8",
-  "assets/homepage/header-ads.css": "f7a9cac32581a0c2962ac4d9bf74e4513251b1adf530f26b271e0f2d73433a4d",
+  "assets/homepage/header-ads.css": "80c7afbb03a0bd6f8e3c0b2efe1797f60eb90bb9a962004ab003cc66bfd081ae",
   "assets/homepage/austa-usa-order-source.mp4": "dc5476455e4eee8f821f71d1a008645187d009f238a49a36b792a7da873faea7",
   "assets/homepage/header-ads.js": "862ccf1b589398ea70ade5bcaf80b5322e3a4376d4775e435d8d851f6e4b4275",
   "assets/marketplace/category-campaigns.js": "3b9fe2b4b30749919bb7aa2b4d83a406ef1615c4602d355b165be19f58f315a0",
