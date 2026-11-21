@@ -1,18 +1,27 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const DEFAULT_SERVICE_API = 'https://a-usta-webside.onrender.com';
-const apiBase = () => {
-  const raw = (process.env.EXPO_PUBLIC_SERVICE_API_URL || DEFAULT_SERVICE_API).trim();
+const TEST_SERVICE_API_HOST = 'austa-v40-m7-test-api.onrender.com';
+export function resolveServiceApiBase(raw: string, appEnv: string | undefined) {
   const parsed = new URL(raw);
   if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.search || parsed.hash) {
     throw new Error('Service API ünvanı təhlükəsiz HTTPS olmalıdır.');
   }
-  const isAustaTestHost = /^a-usta-webside-(?:test|staging)(?:-[a-z0-9-]+)?\.onrender\.com$/i.test(parsed.hostname);
-  if (parsed.hostname !== 'a-usta-webside.onrender.com' && !isAustaTestHost) {
+  const isTestRuntime = appEnv?.trim().toLowerCase() === 'test';
+  const isAustaTestHost = parsed.hostname === TEST_SERVICE_API_HOST;
+  const isAllowedHost = isTestRuntime
+    ? isAustaTestHost
+    : parsed.hostname === 'a-usta-webside.onrender.com';
+  if (!isAllowedHost) {
     throw new Error('Mobil service-orders API yalnız təsdiqlənmiş A-USTA Render hostunda işləyə bilər.');
   }
   return parsed.toString().replace(/\/$/, '');
-};
+}
+
+const apiBase = () => resolveServiceApiBase(
+  (process.env.EXPO_PUBLIC_SERVICE_API_URL || DEFAULT_SERVICE_API).trim(),
+  process.env.EXPO_PUBLIC_APP_ENV,
+);
 
 export type OrderAnswer = { question: string; value: string | Record<string, unknown>[] };
 export type ServiceOrderInput = {
