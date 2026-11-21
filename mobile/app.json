@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "A-USTA",
+    "slug": "a-usta-mobile",
+    "version": "0.1.0",
+    "scheme": "austa",
+    "orientation": "portrait",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "az.austa.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#176244",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "az.austa.mobile",
+      "predictiveBackGestureEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "A-USTA elanınıza şəkil və video əlavə etmək üçün media kitabxanasına giriş tələb edir."
+        }
+      ],
+      "expo-router",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#176244"
+        }
+      ]
+    ]
+  }
+}
