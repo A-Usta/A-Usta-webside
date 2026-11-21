@@ -63,6 +63,7 @@ M3 mobil marketplace UI və Supabase public client/RPC inteqrasiyasıdır. Bu PR
 - Servis qeydləri V3.3D.2 `vehicle_service_records` müqaviləsini, `create_vehicle_service_record` owner/request-ID idempotent RPC-sini, sahibə aid redaktə/silməni və tarix/yürüş xatırlatmalarını istifadə edir.
 - Private `vehicle-service-evidence` qoşma axını metadata reservation → owner-check → upload → `ready` state ardıcıllığını saxlayır. Şəkillər private storage-dan hər açılışda təzə cache nonce ilə endirilir və yerli önizləmədə açılır. PDF backend-də icazəlidir, lakin bu build-də `expo-document-picker`/native file viewer asılılığı yoxdur.
 - Mesajlar M3 tabına yönləndirilir və mövcud participant-only `austa_list_listing_conversations`, `austa_get_listing_messages`, `austa_mark_listing_messages_read` və `austa_send_listing_message` RPC-lərindən istifadə edir.
+- Repository-də mobil mesaj bloklama və şikayət üçün təsdiqlənmiş RPC/API müqaviləsi tapılmadı; UI bu əməliyyatları təqdim etmir.
 - `get_my_seller_profiles()` yalnız sahibə aid biznes statuslarını göstərir; təsdiq və qorunan əməliyyatlar server seller eligibility qaydalarına tabedir.
 - Repository-də push token qeydiyyatı, notification inbox və push göndəriş backend müqaviləsi yoxdur. Mobil tətbiq saxta bildiriş yaratmır və token yazmır; həmin hissə backend müqaviləsi tələb edir.
 
@@ -71,6 +72,7 @@ M3 mobil marketplace UI və Supabase public client/RPC inteqrasiyasıdır. Bu PR
 - `mobile-account.test.cjs` mövcud Auth, RLS, idempotency, private attachment, messaging və seller-profile müqavilələrini statik yoxlayır; bu real Supabase E2E deyil.
 - TEST Supabase credentials bu icra mühitində yoxdur; iki-istifadəçili E2E, CRUD yazma və attachment RLS yoxlamaları bloklanıb.
 - `expo-document-picker` quraşdırması npm proxy timeout ilə baş tutmadı. PDF seçimi/önizləməsi bloklanıb.
+- Profil redaktəsi və satıcı təsdiqi müraciəti üçün təsdiqlənmiş mobil yazma müqaviləsi yoxdur; yalnız sahibə aid profil və seller statusları göstərilir.
 - Push notification backend contract yoxdur; Expo push token və saxta hadisə istifadə edilmir.
 - M6 üçün Android/iOS native build və cihaz testi ayrıca SDK/signing mühiti tələb edir.
 
