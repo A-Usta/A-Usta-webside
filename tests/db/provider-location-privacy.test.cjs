@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 4575)
-Total output lines: 72
-
 'use strict';
 const {test,before,after}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{PGlite}=require('@electric-sql/pglite');
 const map=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261114072012_v355_public_provider_discovery.sql'),'utf8'),privacy=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261114132329_v355_provider_location_privacy.sql'),'utf8'),v37=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261119210000_v37_service_company_public_details.sql'),'utf8'),v40=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261121180000_v40_provider_public_details_redaction.sql'),'utf8');let db;
@@ -23,7 +20,27 @@ INSERT INTO service_provider_media VALUES('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'
 test('counterproof: legacy active SELECT exposes synthetic private fields before proposal',async()=>{const r=(await as(null,raw)).rows[0];assert.equal(r.latitude,40.123456);assert.equal(r.phone,'PRIVATE PHONE');await db.exec(privacy);await db.exec(v37);});
 test('anonymous and authenticated non-owner raw SELECT and filtered coordinate inference return no rows',async()=>{for(const uid of [null,B]){assert.equal((await as(uid,raw)).rows.length,0);assert.equal((await as(uid,()=>db.query('select id from service_provider_listings where latitude=40.123456'))).rows.length,0);}});
 test('owner retains exact private fields, edit UPDATE/returning and account listing access',async()=>{let r=(await as(A,raw)).rows[0];assert.equal(r.latitude,40.123456);assert.equal(r.address,'PRIVATE HOME');r=(await as(A,()=>db.query("update service_provider_listings set title='Synthetic updated' where id=$1 returning *",[L]))).rows[0];assert.equal(r.phone,'PRIVATE PHONE');assert.equal((await as(A,pub)).rows[0].details.owner_name,'PRIVATE CONTACT');});
-test('public listing projection preserves metadata but hides private location/contact/JSON and owner ID',async()=>{const r=(await as(null,pub)).rows[0];assert.equal(r.title,'Synthetic updated');for(const k of ['owner_id','phone','message_contact','regio…575 tokens truncated… or policy.
+test('public listing projection preserves metadata but hides private location/contact/JSON and owner ID',async()=>{const r=(await as(null,pub)).rows[0];assert.equal(r.title,'Synthetic updated');for(const k of ['owner_id','phone','message_contact','region','district','address','latitude','longitude'])assert.equal(r[k],null,k);assert.deepEqual(r.details,{brands:'BMW',price_policy:'Təklif'});assert(!JSON.stringify(r).includes('PRIVATE'));assert.equal((await as(B,pub)).rows[0].latitude,null);});
+test('V3.7 public projection exposes only the declared subtype fields and preserves owner editing',async()=>{
+ const fixtures=[
+  ['leasing',{service_category:'leasing',company_name:'Synthetic lease',tax_id:'TAX-LEASE',rate:12,interest_type:'annual',license_reference:'REF-L',secret_internal:'PRIVATE LEASE SECRET'}],
+  ['insurance',{service_category:'insurance',company_name:'Synthetic insurance',tax_id:'TAX-INS',insurance_types:'kasko',coverage:'Synthetic coverage',license_reference:'REF-I',secret_internal:'PRIVATE INSURANCE SECRET'}],
+  ['sober_driver',{service_category:'sober_driver',company_name:'Synthetic driver',service_24_7:'yes',rate_per_km:1.2,waiting_fee:5,secret_internal:'PRIVATE DRIVER SECRET'}]
+ ];
+ for(const [kind,details] of fixtures){
+  await as(A,()=>db.query('update service_provider_listings set details=$1::jsonb where id=$2',[JSON.stringify(details),L]));
+  const owner=(await as(A,pub)).rows[0];assert.equal(owner.details.secret_internal,details.secret_internal);
+  const publicRow=(await as(null,pub)).rows[0];
+  assert.equal(publicRow.details.service_category,kind);
+  assert.equal(publicRow.details.company_name,details.company_name||undefined);
+  assert.equal(publicRow.details.secret_internal,undefined);
+  assert(!JSON.stringify(publicRow).includes('PRIVATE '+(kind==='leasing'?'LEASE':kind==='insurance'?'INSURANCE':'DRIVER')+' SECRET'));
+  if(kind==='leasing'){assert.equal(publicRow.details.rate,12);assert.equal(publicRow.details.license_reference,'REF-L');}
+  if(kind==='insurance'){assert.equal(publicRow.details.insurance_types,'kasko');assert.equal(publicRow.details.license_reference,'REF-I');}
+  if(kind==='sober_driver'){assert.equal(publicRow.details.rate_per_km,1.2);assert.equal(publicRow.details.waiting_fee,5);}
+ }
+ const denied=await as(B,()=>db.query("update service_provider_listings set details='{}'::jsonb where id=$1 returning id",[L]));assert.equal(denied.rows.length,0,'non-owner update must affect no listing');
+ await db.exec(v37); // CREATE OR REPLACE is safe to reapply; it changes no table or policy.
  assert.equal((await as(null,pub)).rows[0].details.service_category,'sober_driver');
 });
 test('V4.0 redacts tax id, legal name and email from public details while preserving owner data',async()=>{
