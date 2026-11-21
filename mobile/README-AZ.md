@@ -55,6 +55,25 @@ M3 mobil marketplace UI və Supabase public client/RPC inteqrasiyasıdır. Bu PR
 - Yaxın məntəqələr xəritə/list view, məkan icazəsi, əl ilə şəhər seçimi, filter, retry, telefon və marşrut keçidləri təqdim edir. Android native basemap üçün məhdudlaşdırılmış Maps SDK key-i build mühitində verilməlidir.
 - Ana səhifədə 17 kateqoriya üfüqi zolaqdadır; seçilən kateqoriyanın filtrləri həmin kateqoriyanın mövcud elan mənbəyinə sorğu verir. Kateqoriya dəyişəndə köhnə filtr dəyərləri təmizlənir.
 
+## M5 Şəxsi kabinet
+
+- E-poçt/parol ilə giriş və qeydiyyat, e-poçtla şifrə bərpası, sessiyanın bərpası və çıxış Supabase Auth + `expo-secure-store` üzərindən işləyir. Google və telefon OTP düymələri yoxdur; bu imkanlar mobil konfiqurasiyada təsdiqlənməyib.
+- Kabinetdə profil xülasəsi, sahibə aid elanlar, seçilmişlər, mövcud service-orders API sifarişləri, şəxsi avtomobillər, servis tarixçəsi, mesajlar və seller profile statusları mövcud mənbələrə bağlanıb.
+- `vehicles` şəxsi avtomobil cədvəli elan cədvəllərindən ayrıdır. CRUD sorğuları istifadəçi identifikatoru ilə məhdudlaşır və server RLS dəyişdirilməyib. Tarixçəsi olan avtomobil silinmir; arxivləşdirmə ilə qorunur.
+- Servis qeydləri V3.3D.2 `vehicle_service_records` müqaviləsini, `create_vehicle_service_record` owner/request-ID idempotent RPC-sini, sahibə aid redaktə/silməni və tarix/yürüş xatırlatmalarını istifadə edir.
+- Private `vehicle-service-evidence` qoşma axını metadata reservation → owner-check → upload → `ready` state ardıcıllığını saxlayır. Şəkillər private storage-dan hər açılışda təzə cache nonce ilə endirilir və yerli önizləmədə açılır. PDF backend-də icazəlidir, lakin bu build-də `expo-document-picker`/native file viewer asılılığı yoxdur.
+- Mesajlar M3 tabına yönləndirilir və mövcud participant-only `austa_list_listing_conversations`, `austa_get_listing_messages`, `austa_mark_listing_messages_read` və `austa_send_listing_message` RPC-lərindən istifadə edir.
+- `get_my_seller_profiles()` yalnız sahibə aid biznes statuslarını göstərir; təsdiq və qorunan əməliyyatlar server seller eligibility qaydalarına tabedir.
+- Repository-də push token qeydiyyatı, notification inbox və push göndəriş backend müqaviləsi yoxdur. Mobil tətbiq saxta bildiriş yaratmır və token yazmır; həmin hissə backend müqaviləsi tələb edir.
+
+### M5 test sərhədi və blocker-lər
+
+- `mobile-account.test.cjs` mövcud Auth, RLS, idempotency, private attachment, messaging və seller-profile müqavilələrini statik yoxlayır; bu real Supabase E2E deyil.
+- TEST Supabase credentials bu icra mühitində yoxdur; iki-istifadəçili E2E, CRUD yazma və attachment RLS yoxlamaları bloklanıb.
+- `expo-document-picker` quraşdırması npm proxy timeout ilə baş tutmadı. PDF seçimi/önizləməsi bloklanıb.
+- Push notification backend contract yoxdur; Expo push token və saxta hadisə istifadə edilmir.
+- M6 üçün Android/iOS native build və cihaz testi ayrıca SDK/signing mühiti tələb edir.
+
 ### M3 test sərhədi
 
 Mobile unit/contract testləri, TypeScript, Expo lint və Expo Doctor işlədilir. Backend/DB write axınları yalnız disposable TEST Supabase-də sınaqdan keçirilməlidir. Bu icra mühitində TEST Supabase konfiqurasiyası yoxdur; service-order yazma və iki istifadəçi izolyasiyası real backend E2E kimi təqdim edilmir. JS export native APK/IPA və ya cihaz testi deyil.
