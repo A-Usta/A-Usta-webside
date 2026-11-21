@@ -25,4 +25,3 @@ test('service attachment rejects unsupported MIME and mismatched picked size', a
   await assert.rejects(validateAttachmentBlob('text/html', pdf), /dəstəklənir/);
   await assert.rejects(validateAttachmentBlob('application/pdf', pdf, pdf.size + 1), /ölçüsü/);
 });
-
