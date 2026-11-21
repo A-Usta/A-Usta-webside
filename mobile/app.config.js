@@ -1,5 +1,5 @@
 const TEST_SUPABASE_URL = 'https://xnhxneziasqthkhhntkv.supabase.co';
-const PRODUCTION_SERVICE_API_URL = 'https://a-usta-webside.onrender.com';
+const TEST_SERVICE_API_URL = 'https://austa-v40-m7-test-api.onrender.com';
 
 if (process.env.EXPO_PUBLIC_APP_ENV === 'test') {
   if (process.env.EXPO_PUBLIC_SUPABASE_URL !== TEST_SUPABASE_URL) {
@@ -15,9 +15,14 @@ if (process.env.EXPO_PUBLIC_APP_ENV === 'test') {
   const parsedServiceApiUrl = new URL(serviceApiUrl);
   if (
     parsedServiceApiUrl.protocol !== 'https:' ||
-    parsedServiceApiUrl.origin === PRODUCTION_SERVICE_API_URL
+    parsedServiceApiUrl.origin !== TEST_SERVICE_API_URL ||
+    parsedServiceApiUrl.username ||
+    parsedServiceApiUrl.password ||
+    parsedServiceApiUrl.search ||
+    parsedServiceApiUrl.hash ||
+    parsedServiceApiUrl.pathname !== '/'
   ) {
-    throw new Error('TEST build must use HTTPS and must not use the production Render API.');
+    throw new Error('TEST build must use the verified TEST Render API origin over HTTPS.');
   }
 }
 
