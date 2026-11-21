@@ -3,11 +3,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const vm = require('node:vm');
+const ts = require('typescript');
 
 const root = path.resolve(__dirname, '..');
 const eas = JSON.parse(fs.readFileSync(path.join(root, 'eas.json'), 'utf8'));
 const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8')).expo;
 const TEST_URL = 'https://xnhxneziasqthkhhntkv.supabase.co';
+const TEST_API_URL = 'https://austa-v40-m7-test-api.onrender.com';
+const serviceApi = fs.readFileSync(path.join(root, 'src/lib/service-orders.ts'), 'utf8');
+const appConfig = fs.readFileSync(path.join(root, 'app.config.js'), 'utf8');
 
 function loadConfig(env) {
   return spawnSync(process.execPath, ['-e', "require('./app.config.js')"], {
@@ -38,7 +43,7 @@ test('TEST app config accepts only the separate Supabase project and rejects the
     EXPO_PUBLIC_APP_ENV: 'test',
     EXPO_PUBLIC_SUPABASE_URL: TEST_URL,
     EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
-    EXPO_PUBLIC_SERVICE_API_URL: 'https://a-usta-test-api.example.invalid',
+    EXPO_PUBLIC_SERVICE_API_URL: TEST_API_URL,
   });
   assert.equal(valid.status, 0, valid.stderr);
 
@@ -46,7 +51,7 @@ test('TEST app config accepts only the separate Supabase project and rejects the
     EXPO_PUBLIC_APP_ENV: 'test',
     EXPO_PUBLIC_SUPABASE_URL: 'https://yafpnqcoyvoclmxdlxxc.supabase.co',
     EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
-    EXPO_PUBLIC_SERVICE_API_URL: 'https://a-usta-test-api.example.invalid',
+    EXPO_PUBLIC_SERVICE_API_URL: TEST_API_URL,
   });
   assert.notEqual(productionSupabase.status, 0);
   assert.match(productionSupabase.stderr, /verified A-USTA-TEST Supabase URL/);
@@ -58,5 +63,32 @@ test('TEST app config accepts only the separate Supabase project and rejects the
     EXPO_PUBLIC_SERVICE_API_URL: 'https://a-usta-webside.onrender.com',
   });
   assert.notEqual(productionApi.status, 0);
-  assert.match(productionApi.stderr, /must not use the production Render API/);
+  assert.match(productionApi.stderr, /verified TEST Render API origin/);
+
+  const unknownTestApi = loadConfig({
+    EXPO_PUBLIC_APP_ENV: 'test',
+    EXPO_PUBLIC_SUPABASE_URL: TEST_URL,
+    EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
+    EXPO_PUBLIC_SERVICE_API_URL: 'https://unverified-test-api.example.invalid',
+  });
+  assert.notEqual(unknownTestApi.status, 0);
+  assert.match(unknownTestApi.stderr, /verified TEST Render API origin/);
+});
+
+test('service-orders client allows the verified TEST host only in TEST runtime', () => {
+  assert.match(serviceApi, /TEST_SERVICE_API_HOST = 'austa-v40-m7-test-api\.onrender\.com'/);
+  assert.match(appConfig, /TEST_SERVICE_API_URL = 'https:\/\/austa-v40-m7-test-api\.onrender\.com'/);
+
+  const output = ts.transpileModule(serviceApi, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const module = { exports: {} };
+  vm.runInNewContext(output, { module, exports: module.exports, process: { env: {} }, URL });
+  const resolveServiceApiBase = module.exports.resolveServiceApiBase;
+
+  assert.equal(resolveServiceApiBase(TEST_API_URL, 'test'), TEST_API_URL);
+  assert.equal(resolveServiceApiBase('https://a-usta-webside.onrender.com', 'production'), 'https://a-usta-webside.onrender.com');
+  assert.throws(() => resolveServiceApiBase('https://a-usta-webside.onrender.com', 'test'), /təsdiqlənmiş A-USTA Render hostunda/);
+  assert.throws(() => resolveServiceApiBase('https://a-usta-webside-test.onrender.com', 'test'), /təsdiqlənmiş A-USTA Render hostunda/);
+  assert.throws(() => resolveServiceApiBase(TEST_API_URL, 'development'), /təsdiqlənmiş A-USTA Render hostunda/);
 });
