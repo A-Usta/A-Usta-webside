@@ -223,13 +223,17 @@ function assertP2D1Configuration(){
  const reviewed={
   "backend/a-usta56/src/diagnostics/admission.ts": "36b8b740be70381182abe322ed197b24a1db7ed19ba48da6b8c0f544082a5666",
   "backend/a-usta56/src/routes/listing-media.ts": "c5856ed33bac19d6f0a30b4cb4dc30e0a8831712af949350a1fc61021b9bdbe8",
-  "backend/a-usta56/src/config/server.ts": "8c6d5be8bb376ee3c8e360c6ffb4e6592bcefcda922f7d06ee7b6e9a2ebbc9e9",
+  "backend/a-usta56/src/config/server.ts": "3fb77bdc61be35b843e929963cdfb857c5bfa4c4bf376069414b5e512361c923",
+  "backend/a-usta56/.env.example": "ec156a5a9081202759d5576019c3c998997dc15fef2edfa7be70196d9f932078",
+  "backend/a-usta56/src/config/cors.ts": "24b3ffa59a096bfb74c42e26fa2c76e1a8e95dbe747e9383deb0a3eb65082c7e",
+  "backend/a-usta56/src/config/env.ts": "a5b15ce9875c6fb165f5339cd64b049e2e607964357f6caaa46d81d1b3fc225e",
+  "backend/a-usta56/tests/cors.test.ts": "bb91f9f8bc1c02146ab6819d14615019e889d9f9494bebdae8ade6bd3587763c",
   "backend/a-usta56/src/diagnostics/foundation.ts": "fc6a6cdeda3f510326baf785c3c779d3ccc1719f52e1f1bdffde73437700acee",
   "backend/a-usta56/package.json": "cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802",
   "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
   "backend/a-usta56/.gitignore": "a459038af144bb649dd32c98f20e160838ec500ed5580fb1669ed0860196e140",
   ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
-  ".github/workflows/main.yml": "9b47b13d337b990f8841aca3ffc0011b416790516c96d74a94004be95b6f1cdc"
+  ".github/workflows/main.yml": "ef470d6ab00d9534c536b9e6955e89e1f9ab40a26e0d3d1c90bb02bcf4649af3"
 };
  for(const [file,sha256] of Object.entries(reviewed)){
   assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);
