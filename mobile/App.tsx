@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getSupabaseClient } from './src/lib/supabase';
 import { ServiceScreen as M4ServiceScreen, ServiceLocationsScreen as M4ServiceLocationsScreen } from './src/components/ServiceScreens';
+import { AccountScreen as M5AccountScreen } from './src/components/AccountScreens';
 
 type ServiceKey = 'mechanic_service' | 'tow_service' | 'cargo_service';
 type Listing = { id: string; listing_type: string; brand: string; model: string; year: number | null; mileage: number | null; engine_volume: number | null; price: number | null; region: string | null; promotion_type: string | null; promotion_until: string | null };
@@ -124,7 +125,7 @@ export function ListingDetailScreen() { const { id = '' } = useLocalSearchParams
 
 export function CreateScreen() { return <View style={styles.page}><StateCard icon="plus-square" title="Yeni elan" body="Addım-addım elan forması kateqoriya, satıcı təsdiqi və mövcud media staging API-ləri ilə M3 mərhələsində qoşulacaq." /></View>; }
 
-export function AccountScreen() { return <View style={styles.page}><StateCard icon="user" title="Şəxsi kabinet" body="Giriş, elanlar, sifarişlər, biznes profili, avtomobillər və servis tarixçəsi mövcud A-USTA hesabı ilə M5 mərhələsində qoşulacaq." /></View>; }
+export function AccountScreen() { return <M5AccountScreen />; }
 
 export function FavoritesScreen() { return <View style={styles.page}><StateCard icon="heart" title="Seçilmişlər" body="Yadda saxladığınız elanlar burada görünəcək." /></View>; }
 export function MessagesScreen() { return <View style={styles.page}><StateCard icon="message-circle" title="Mesajlar" body="Elanlarla bağlı söhbətləriniz burada görünəcək." /></View>; }
