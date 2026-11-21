@@ -228,7 +228,7 @@ function assertP2D1Configuration(){
   "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
   "backend/a-usta56/.gitignore": "a459038af144bb649dd32c98f20e160838ec500ed5580fb1669ed0860196e140",
   ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
-  ".github/workflows/main.yml": "ef470d6ab00d9534c536b9e6955e89e1f9ab40a26e0d3d1c90bb02bcf4649af3"
+  ".github/workflows/main.yml": "7b7fda5041af5bf9d94215ac1f4eaccd8dee41d56db8bed4facd3142eafb23ba"
 };
  for(const [file,sha256] of Object.entries(reviewed)){
   assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);
