@@ -25,7 +25,7 @@ test('personal garage stays separate and every vehicle write is owner scoped', (
   assert.match(account, /from\('vehicles'\)/);
   assert.match(account, /eq\('user_id',ownerId\)/);
   assert.match(account, /eq\('user_id',user\.id\)/);
-  assert.match(account, /\['vehicle_listings','vehicle'\]/);
+  assert.match(account, /\['vehicle_listings','vehicle',/);
   assert.match(schema, /CREATE POLICY v33d2_vehicle_owner_guard ON public\.vehicles AS RESTRICTIVE/);
   assert.match(schema, /user_id=\(SELECT auth\.uid\(\)\)/);
 });
@@ -49,6 +49,15 @@ test('private service attachments validate owner, bucket and re-check the record
   assert.match(account, /state','ready'/);
   assert.match(schema, /VALUES\('vehicle-service-evidence','vehicle-service-evidence',false/);
   assert.match(schema, /can_access_service_file\(name,'read'\)/);
+});
+
+test('PDF service attachments use the private backend contract and native preview flow', () => {
+  assert.match(account, /expo-document-picker/);
+  assert.match(account, /DocumentPicker\.getDocumentAsync\(\{type:'application\/pdf',copyToCacheDirectory:true/);
+  assert.match(account, /\.eq\('owner_id',user\.id\)\.eq\('state','ready'\)/);
+  assert.match(account, /new File\(Paths\.cache/);
+  assert.match(account, /\.preview\(\{mimeType:'application\/pdf'/);
+  assert.match(schema, /'application\/pdf'/);
 });
 
 test('messages and business profile use the existing participant and seller RPC contracts', () => {
