@@ -85,9 +85,17 @@ jobs:
         working-directory: backend/a-usta56
         run: npm run typecheck
 
+      - name: Test M7.6 TEST Auth bootstrap safety
+        working-directory: backend/a-usta56
+        run: node --test --test-reporter=tap tools/test-auth-bootstrap.test.mjs
+
       - name: Test service orders
         working-directory: backend/a-usta56
         run: node --import tsx --test --test-reporter=tap tests/service-orders.test.ts
+
+      - name: Test CORS allowlist configuration
+        working-directory: backend/a-usta56
+        run: node --import tsx --test --test-reporter=tap tests/cors.test.ts
 
       - name: Test media and access
         working-directory: backend/a-usta56

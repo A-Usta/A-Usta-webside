@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import sensible from "@fastify/sensible";
 import multipart from "@fastify/multipart";
+import { env } from "./env.js";
 
 import { serviceOrderRoutes } from "../routes/service-orders.js";
 import { authRoutes } from "../routes/auth.js";
@@ -16,10 +17,7 @@ installDiagnostics(app);
 installAdmission(app);
 
 await app.register(cors, {
-  origin: [
-    "https://a-usta.github.io",
-    "https://a-usta-webside.onrender.com",
-  ],
+  origin: env.corsOrigins,
   credentials: true,
   exposedHeaders: ["x-request-id"],
 });

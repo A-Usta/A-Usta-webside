@@ -1,6 +1,6 @@
 'use strict';
 const {test,before,after}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{PGlite}=require('@electric-sql/pglite');
-const map=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261114072012_v355_public_provider_discovery.sql'),'utf8'),privacy=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261114132329_v355_provider_location_privacy.sql'),'utf8'),v37=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261119210000_v37_service_company_public_details.sql'),'utf8');let db;
+const map=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261114072012_v355_public_provider_discovery.sql'),'utf8'),privacy=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261114132329_v355_provider_location_privacy.sql'),'utf8'),v37=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261119210000_v37_service_company_public_details.sql'),'utf8'),v40=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261121180000_v40_provider_public_details_redaction.sql'),'utf8');let db;
 const A='11111111-1111-4111-8111-111111111111',B='22222222-2222-4222-8222-222222222222',L='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',LB='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',S='cccccccc-cccc-4ccc-8ccc-cccccccccccc',SB='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const PA=A+'/'+L+'/synthetic.png',PB=B+'/'+LB+'/synthetic.png';
 async function as(uid,fn){await db.exec('SET ROLE '+(uid?'authenticated':'anon'));await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid||'']);try{return await fn();}finally{await db.exec('RESET ROLE');}}
@@ -42,6 +42,20 @@ test('V3.7 public projection exposes only the declared subtype fields and preser
  const denied=await as(B,()=>db.query("update service_provider_listings set details='{}'::jsonb where id=$1 returning id",[L]));assert.equal(denied.rows.length,0,'non-owner update must affect no listing');
  await db.exec(v37); // CREATE OR REPLACE is safe to reapply; it changes no table or policy.
  assert.equal((await as(null,pub)).rows[0].details.service_category,'sober_driver');
+});
+test('V4.0 redacts tax id, legal name and email from public details while preserving owner data',async()=>{
+ const details={service_category:'leasing',company_name:'Synthetic lease',tax_id:'TEST-TAX-DO-NOT-EXPOSE',legal_name:'Private legal entity',email:'private@example.invalid',rate:12};
+ await as(A,()=>db.query('update service_provider_listings set details=$1::jsonb where id=$2',[JSON.stringify(details),L]));
+ await db.exec(v40);
+ const owner=(await as(A,pub)).rows[0];
+ for(const key of ['tax_id','legal_name','email'])assert.equal(owner.details[key],details[key],`owner retains ${key}`);
+ const publicRow=(await as(null,pub)).rows[0];
+ for(const key of ['tax_id','legal_name','email'])assert.equal(publicRow.details[key],undefined,`anon cannot read ${key}`);
+ assert.equal(publicRow.details.company_name,details.company_name);
+ assert.equal(publicRow.details.rate,details.rate);
+ const otherUser=(await as(B,pub)).rows[0];
+ for(const key of ['tax_id','legal_name','email'])assert.equal(otherUser.details[key],undefined,`non-owner cannot read ${key}`);
+ assert.equal(otherUser.details.company_name,details.company_name);
 });
 test('approved business location uses separate consented coordinates, never raw GPS',async()=>{await consent();for(const uid of [null,B]){const r=(await as(uid,pub)).rows[0];assert.equal(r.latitude,39.21);assert.equal(r.longitude,45.41);assert.equal(r.address,'Synthetic PUBLIC address');assert.equal(r.phone,'+10000000000');assert.equal(r.owner_id,null);}assert.equal((await as(A,pub)).rows[0].latitude,40.123456);});
 test('mobile mechanic service area has no precise pin or private address',async()=>{await as(A,()=>db.query("update provider_map_publications set location_kind='service_area',latitude=null,longitude=null,public_address=null where listing_id=$1",[L]));const r=(await as(null,pub)).rows[0];assert.equal(r.latitude,null);assert.equal(r.longitude,null);assert.equal(r.address,null);assert.equal(r.region,'Naxçıvan');const m=(await as(null,()=>db.query("select * from discover_public_providers(38.3,44.7,41.95,50.8,'Synthetic','',true,0,'usta')"))).rows[0];assert.equal(m.latitude,null);await consent();});
