@@ -1,0 +1,68 @@
+name: Mobile marketplace
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile-marketplace.yml"
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile-marketplace.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-marketplace:
+    name: Mobile marketplace
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+        working-directory: mobile
+    steps:
+      - name: Checkout event commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.22.2
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install mobile dependencies
+        run: npm ci
+
+      - name: TypeScript and lint
+        run: |
+          set -euo pipefail
+          npx tsc --noEmit
+          npx expo lint
+
+      - name: Marketplace contracts and Expo diagnostics
+        run: |
+          set -euo pipefail
+          npm test
+          npx expo-doctor
+
+      - name: Android and iOS JavaScript exports
+        run: |
+          set -euo pipefail
+          npm run build:android-js
+          npm run build:ios-js
+
+      - name: Assert repository cleanliness
+        if: always()
+        working-directory: .
+        run: |
+          git status --short
+          test -z "$(git status --porcelain)"
