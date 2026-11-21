@@ -1,2 +1,2 @@
-import { FavoritesScreen } from '../../../../App';
-export default FavoritesScreen;
+import { MarketplaceFavoritesScreen } from '../../../components/MarketplaceScreens';
+export default MarketplaceFavoritesScreen;

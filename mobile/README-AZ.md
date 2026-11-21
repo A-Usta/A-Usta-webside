@@ -21,7 +21,7 @@ Bu qovluq A-USTA üçün native Android/iOS Expo + React Native + TypeScript tə
 - A-USTA yaşıl rəngi, light surfaces, tab safe-area, placeholder/empty/error/loading state-lər.
 - Ana səhifə public anon client vasitəsilə `vehicle_listings` cədvəlindən aktiv satış elanlarını yalnız oxuyur. Supabase konfiqurasiyası verilmədikdə nümunə məlumat göstərilmir.
 - Supabase sessiyası cihazda `expo-secure-store` vasitəsilə saxlanılır.
-- Elan, hesab, sifariş və xəritə ekranları hələ M3–M5 mərhələsindəki API inteqrasiyasını gözləyir; hazırkı UI onların işlədiyini iddia etmir.
+- Hesab, service-order və xəritə inteqrasiyaları növbəti mərhələlərdə tamamlanacaq; marketplace axını M3-də ayrıca API/DB müqavilələrinə qoşulub.
 
 ## Local başlatma
 
@@ -34,4 +34,18 @@ Yalnız local/test layihəsinin public anon key-indən istifadə edin. Service-r
 
 ## Mərhələ sərhədi
 
-Bu PR yalnız M1 qeydləri və M2 native karkası üçündür. İstehsalat Supabase, backend, RLS, Storage və mövcud veb axınlarında dəyişiklik yoxdur. Android/iOS emulator testləri və quraşdırıla bilən build bu execution mühitində SDK/simulator mövcudluğu ilə ayrıca təsdiqlənməlidir.
+M3 mobil marketplace UI və Supabase public client/RPC inteqrasiyasıdır. Bu PR production DB/backend dəyişiklikləri və production deploy etmir. Android/iOS emulator və cihaz yoxlaması ayrıca build/signing mühiti tələb edir.
+
+## M3 Marketplace
+
+- Ana səhifə, kateqoriya siyahıları, seçilmişlər, mesajlar və elan detalı mövcud Supabase anon client/RPC-lərinə bağlanıb.
+- Aktiv 17 kateqoriya öz mövcud listing cədvəlindən istifadə edir. Provider elanlarının public siyahısı `public_service_provider_listings` təhlükəsiz view-undan oxunur; şəxsi provider media üçün storage RLS qaydaları qüvvədə qalır.
+- Media mənbələri `listing_media`, `marketplace_listing_media`, `service_provider_media`, `auto_dealer_media` və mövcud bucket-lərlə uyğunlaşdırılır. Ekranda media açmaq üçün qısa müddətli signed URL alınır.
+- Premium/VIP vaxtı, son irəli çəkmə vaxtı və standart elanlar ayrı sıralanır. Vaxtı bitmiş promotion sıralamada standart elan kimi davranır.
+- Elan yerləşdirmə login/registration, owner-scoped qaralama, edit, image/video picker, upload progress və status compare-and-set ilə dərc axınını istifadə edir. Başlanğıc statusu avtomobil üçün `draft`, qalan mənbələr üçün `inactive` saxlanılır; promo sütunları redaktə zamanı dəyişdirilmir.
+- Detail ekranı telefon keçidi, mesaj RPC-ləri, sevimlilər, paylaşım, view metadata, şikayət RPC-si və oxşar elanları bağlayır.
+- Avtomobil marka/model seçimi canonical `assets/vehicle/catalog.js` kataloqundan yaradılan JSON ilə işləyir. Kataloqu yeniləmək üçün `npm run catalog:sync`; mobile tests mənbə ilə bərabərliyi yoxlayır.
+
+### M3 test sərhədi
+
+Mobile unit/contract testləri, TypeScript, Expo lint və Expo Doctor işlədilir. Backend/DB write axınları yalnız disposable TEST Supabase-də sınaqdan keçirilməlidir. Bu execution mühitində TEST Supabase konfiqurasiyası yoxdursa, elan dərc etmə və iki istifadəçi izolyasiyası real backend E2E kimi təqdim edilmir. JS export native APK/IPA və ya cihaz testi deyil.

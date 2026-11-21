@@ -1,2 +1,2 @@
-import { ListingDetailScreen } from '../../../App';
-export default ListingDetailScreen;
+import { MarketplaceListingDetailScreen } from '../../components/MarketplaceScreens';
+export default MarketplaceListingDetailScreen;

@@ -1,2 +1,2 @@
-import { MessagesScreen } from '../../../../App';
-export default MessagesScreen;
+import { MarketplaceMessagesScreen } from '../../../components/MarketplaceScreens';
+export default MarketplaceMessagesScreen;

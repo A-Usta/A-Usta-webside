@@ -1,2 +1,2 @@
-import { CreateScreen } from '../../../../App';
-export default CreateScreen;
+import { MarketplaceCreateScreen } from '../../../components/MarketplaceScreens';
+export default MarketplaceCreateScreen;

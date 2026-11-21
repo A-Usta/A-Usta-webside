@@ -1,2 +1,2 @@
-import { CategoryScreen } from '../../../App';
-export default CategoryScreen;
+import { MarketplaceCategoryScreen } from '../../components/MarketplaceScreens';
+export default MarketplaceCategoryScreen;

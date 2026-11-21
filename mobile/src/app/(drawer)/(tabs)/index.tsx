@@ -1,2 +1,2 @@
-import { HomeScreen } from '../../../../App';
-export default HomeScreen;
+import { MarketplaceHomeScreen } from '../../../components/MarketplaceScreens';
+export default MarketplaceHomeScreen;
