@@ -26,6 +26,9 @@ test('service orders use the owner-authenticated API and existing idempotency fi
   assert.doesNotMatch(api, /service_role|SUPABASE_SERVICE_ROLE_KEY/i);
   assert.match(screens, /reconcileOrder\(client,clientId\)/);
   assert.match(screens, /Təkrar göndərilmədi/);
+  assert.match(screens, /signInWithPassword/);
+  assert.match(screens, /auth\.signUp/);
+  assert.match(screens, /secureTextEntry/);
   assert.match(screens, /key==='tow_service'&&!clean\(destination\)/);
   assert.match(screens, /clean\(cargoType\)/);
   assert.match(screens, /evidence_files:files/);
