@@ -20,13 +20,14 @@ Audit date: 2026-11-21. This is a read-only readiness record; no TEST or product
 
 ## Separate TEST API deployment plan
 
-Create a separate Render web service only after the TEST service-role secret has been entered securely in Render:
+A separate TEST-only Render web service was created after owner confirmation; no production service was changed:
 
-- Workspace: `My Workspace` (owner-selected).
-- Repository: `A-Usta/A-Usta-webside`; branch: `feat/v40-mobile-app-foundation` (or the exact reviewed commit).
-- Root directory: `backend/a-usta56`; runtime: Node; build: `npm ci --include=dev && npm run build`; start: `npm start`; health route: `/health`; region: Frankfurt to match the TEST database region.
-- TEST-only environment: `SUPABASE_URL=https://xnhxneziasqthkhhntkv.supabase.co`, `SUPABASE_SERVICE_ROLE_KEY` from this TEST project only, and `CORS_ORIGINS` containing exact local/TEST web origins. Render supplies `PORT`.
-- The backend service-role value is absent here. Do not substitute the anon key or production key. No endpoint hostname has been invented.
+- Workspace: `My Workspace`; service: `austa-v40-m7-test-api` (`srv-dc0qrjjm8hqs73fc1vhg`).
+- Repository/branch: `A-Usta/A-Usta-webside`, `feat/v40-mobile-app-foundation`; Node commands run from `backend/a-usta56`; region Frankfurt; auto-deploy disabled.
+- Service URL: `https://austa-v40-m7-test-api.onrender.com`. This URL is real, but the API is not operational yet.
+- Initial Render build succeeded; start failed with exit code 1 because `SUPABASE_SERVICE_ROLE_KEY` is not set. No privileged key was substituted. The service is not healthy and no E2E requests were sent.
+- TEST-only values configured: `SUPABASE_URL=https://xnhxneziasqthkhhntkv.supabase.co`, `CORS_ORIGINS=http://localhost:8081,http://127.0.0.1:8081`. The secret must be entered only in Render's protected Environment UI; then the service can be deployed and `/health` checked.
+- The Render create-service action performed its initial deploy despite `autoDeploy=no`; it failed at startup. Future auto-deploy is disabled.
 - `CORS_ORIGINS` now accepts only explicit comma-separated HTTP(S) origins; when unset, the existing production origin allowlist remains unchanged.
 
 The mobile app additionally needs `EXPO_PUBLIC_APP_ENV=test`, the TEST Supabase URL and public anon key, and `EXPO_PUBLIC_SERVICE_API_URL` set to the actual TEST API URL after deployment. These public values belong in the TEST EAS environment, not in source. A local/branch web app must also be configured for the same TEST project/API; the production website stays on production services.
