@@ -76,6 +76,18 @@ M3 mobil marketplace UI və Supabase public client/RPC inteqrasiyasıdır. Bu PR
 - Push notification backend contract yoxdur; Expo push token və saxta hadisə istifadə edilmir.
 - M6 üçün Android/iOS native build və cihaz testi ayrıca SDK/signing mühiti tələb edir.
 
+## M6 Native build hazırlığı
+
+- Android package və iOS bundle identifier eyni `az.austa.mobile` dəyərindədir. URL scheme `austa`-dır; Android App Links/iOS Universal Links domen assosiasiyaları hələ konfiqurasiya edilməyib.
+- `eas.json`-da `development` və `preview` adlı yalnız TEST profilləri var. Hər ikisi Android APK yaradır; `development` iOS Simulator üçündür, `preview` isə fiziki iOS cihaz üçün EAS signing tələb edir. Production build profili əlavə edilməyib.
+- TEST Supabase layihəsi `A-USTA-TEST`, project ref `xnhxneziasqthkhhntkv`, URL `https://xnhxneziasqthkhhntkv.supabase.co` və `ACTIVE_HEALTHY` statusundadır. İdarəetmə məlumatında ayrıca production layihə (`A-Usta`, ref `yafpnqcoyvoclmxdlxxc`) görünür. TEST-də `vehicles`, `vehicle_service_records`, attachment, seller, listing və service-order cədvəlləri mövcuddur; heç bir sətirə yazılmayıb.
+- TEST EAS `preview` environment-ə `EXPO_PUBLIC_APP_ENV=test`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` və ayrıca TEST `EXPO_PUBLIC_SERVICE_API_URL` əlavə olunmalıdır. Dynamic app config TEST Supabase ref-in dəqiqliyini, public anon key-in olmasını və repository-də müəyyən edilmiş production Render API hostunun istifadə edilməməsini yoxlayır. Secret/service-role açarları tətbiq konfiqurasiyasına daxil edilmir.
+- EAS hesabında CLI/build env yoxlaması aparılmalıdır. Bu mühitdə EAS CLI 27.11.0 işləyir, lakin CLI `Not logged in` qaytarır və `extra.eas.projectId` hələ yoxdur. Buna görə cloud build başlatmaq mümkün olmayıb.
+- Bu Render workspace-də yalnız `main`-ə bağlı `A-Usta-webside` API xidməti görünür; ayrıca TEST API xidməti yoxdur. Build və M4 service-order testləri üçün TEST backend hostu yaradılmalı/ayrıca verilməlidir. Production Render env-ləri oxunmayıb və dəyişdirilməyib.
+- Android SDK/ADB, iOS Xcode/simulator, Expo/EAS token və Google Maps Android API key bu icra mühitində yoxdur. Google Maps açarı yalnız `az.austa.mobile` package və EAS Android signing sertifikatının SHA-1/SHA-256 fingerprint-ləri ilə məhdudlaşdırılaraq sonradan əlavə edilməlidir. iOS xəritəsi Apple Maps istifadə edir.
+- `expo-dev-client` və `expo-document-picker` SDK 58 uyğun versiyaları mövcud mühitdə npm cache-də yoxdur; package registry proxy timeout verir. Development profili beləliklə standart internal build yaradır, hot-reload dev-client deyil. PDF picker/önizləməsi də quraşdırma və test gözləyir.
+- TEST build üçün tələb olunan EAS env-lər verilmədikcə `app.config.js` build-i fail-closed dayandırır. `eas build --platform android --profile preview` və `eas build --platform ios --profile development` autentifikasiya/link olmadığı üçün çalışdırıla bilməyib; APK/IPA və cihaz screenshot-u yoxdur.
+
 ### M3 test sərhədi
 
 Mobile unit/contract testləri, TypeScript, Expo lint və Expo Doctor işlədilir. Backend/DB write axınları yalnız disposable TEST Supabase-də sınaqdan keçirilməlidir. Bu icra mühitində TEST Supabase konfiqurasiyası yoxdur; service-order yazma və iki istifadəçi izolyasiyası real backend E2E kimi təqdim edilmir. JS export native APK/IPA və ya cihaz testi deyil.
