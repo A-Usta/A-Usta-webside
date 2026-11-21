@@ -5,6 +5,7 @@ import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getSupabaseClient } from './src/lib/supabase';
+import { ServiceScreen as M4ServiceScreen, ServiceLocationsScreen as M4ServiceLocationsScreen } from './src/components/ServiceScreens';
 
 type ServiceKey = 'mechanic_service' | 'tow_service' | 'cargo_service';
 type Listing = { id: string; listing_type: string; brand: string; model: string; year: number | null; mileage: number | null; engine_volume: number | null; price: number | null; region: string | null; promotion_type: string | null; promotion_until: string | null };
@@ -114,12 +115,10 @@ export function CategoryScreen() {
 }
 
 export function ServiceScreen() {
-  const { key = 'mechanic_service', title = 'Xidmət sifarişi' } = useLocalSearchParams<{ key?: ServiceKey; title?: string }>();
-  const copy = key === 'mechanic_service' ? 'Avtomobiliniz üçün usta və ya servis sifarişi yaradın.' : key === 'tow_service' ? 'Evakuator xidmətinə ehtiyacınız olduqda sifariş məlumatlarını hazırlayın.' : 'Yükdaşıma xidmətinə müraciət edin.';
-  return <View style={styles.page}><View style={styles.serviceHero}><View style={styles.serviceHeroIcon}><Feather name={key === 'tow_service' ? 'truck' : key === 'cargo_service' ? 'package' : 'tool'} size={31} color={GREEN} /></View><Text style={styles.pageTitle}>{title}</Text><Text style={styles.pageCopy}>{copy}</Text></View><StateCard icon="info" title="Sifariş forması inteqrasiya mərhələsindədir" body="Mobil tətbiq mövcud service-orders API və RLS müqaviləsinə qoşulacaq. Bu ekrandan hələ sifariş göndərilmir." /></View>;
+  return <M4ServiceScreen />;
 }
 
-export function ServiceLocationsScreen() { return <View style={styles.page}><StateCard icon="map-pin" title="Yaxın məntəqələr" body="Mövcud A-USTA xəritə RPC-si və büdcə qoruyucusu audit edildi. Mobil xəritə M4 mərhələsində qoşulacaq; bu ekran xarici xəritə sorğusu göndərmir." /></View>; }
+export function ServiceLocationsScreen() { return <M4ServiceLocationsScreen />; }
 
 export function ListingDetailScreen() { const { id = '' } = useLocalSearchParams<{ id?: string }>(); return <View style={styles.page}><StateCard icon="file-text" title="Elan məlumatı" body={`Elan: ${id}. Media imzalama və kateqoriyaya uyğun detalları M3 mərhələsində qoşulacaq.`} /></View>; }
 

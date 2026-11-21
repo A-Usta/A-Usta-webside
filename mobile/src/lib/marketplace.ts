@@ -5,6 +5,40 @@ export type ListingSource = 'vehicle' | 'marketplace' | 'service_provider' | 'au
 export type Category = { key: CategoryKey; title: string; icon: string; source: ListingSource; table: string; mediaTable: string; bucket: string; status: string; sourceValue?: string };
 export type Listing = Record<string, any> & { id: string; _category: CategoryKey; _source: ListingSource; _media?: Media[] };
 export type Media = { id: string; media_type: 'image' | 'video'; storage_path: string; sort_order: number; is_cover: boolean; url?: string };
+export type CategoryFilter = { key: string; label: string; column: string; kind?: 'text' | 'number'; operator?: 'gte' | 'lte' };
+
+// Only columns exposed by the public listing DTOs and the documented JSON details
+// are used. JSON detail fields are text searched so no unsafe numeric casts occur.
+const f=(key:string,label:string,column=key,kind:'text'|'number'='text'):CategoryFilter=>({key,label,column,kind});
+export const CATEGORY_FILTERS:Record<CategoryKey,CategoryFilter[]>={
+  cars:[f('brand','Marka'),f('model','Model'),f('year','İl','year','number'),f('price','Qiymət min.','price','number'),{...f('price_max','Qiymət maks.','price','number'),operator:'lte'},f('mileage','Yürüş min.','mileage','number')],
+  dealer:[f('dealer_name','Avtosalon'),f('brands','Marka','brands'),f('region','Şəhər')],
+  service:[f('specialty','Xidmət növü','specialty'),f('region','Şəhər'),f('services','Xidmət')],
+  rent:[f('brand','Marka'),f('model','Model'),f('daily_price','Günlük qiymət min.','daily_price','number'),{...f('daily_price_max','Günlük qiymət maks.','daily_price','number'),operator:'lte'},f('rental_type','İcarə müddəti','details->>rental_type'),f('region','Şəhər')],
+  parts:[f('title','Hissə növü','title'),f('brand','Marka'),f('model','Model'),f('price','Qiymət min.','price','number'),f('oem','OEM / kod','details->>oem')],
+  accessories:[f('title','Aksessuar növü','title'),f('brand','Marka'),f('model','Model'),f('price','Qiymət min.','price','number')],
+  moto:[f('moto_type','Nəqliyyat növü','details->>moto_type'),f('brand','Marka'),f('model','Model'),f('year','İl','year','number'),f('price','Qiymət min.','price','number')],
+  special:[f('special_type','Texnika növü','details->>special_type'),f('brand','Marka'),f('model','Model'),f('year','İl','year','number'),f('price','Qiymət min.','price','number')],
+  bus:[f('brand','Marka'),f('model','Model'),f('year','İl','year','number'),f('sale_rent','Satış / icarə','details->>sale_rent'),f('price','Qiymət min.','price','number')],
+  trailer:[f('trailer_type','Qoşqu növü','details->>trailer_type'),f('brand','Marka'),f('model','Model'),f('price','Qiymət min.','price','number'),f('region','Şəhər')],
+  water:[f('water_type','Su nəqliyyatı növü','details->>water_type'),f('brand','Marka'),f('model','Model'),f('year','İl','year','number'),f('price','Qiymət min.','price','number')],
+  caravan:[f('caravan_type','Karavan növü','details->>caravan_type'),f('brand','Marka'),f('model','Model'),f('year','İl','year','number'),f('price','Qiymət min.','price','number')],
+  plate:[f('plate_number','Nömrə','details->>plate_number'),f('plate_series','Seriya','details->>plate_series'),f('price','Qiymət min.','price','number'),f('region','Şəhər')],
+  usta:[f('specialty','İxtisas','specialty'),f('region','Xidmət ərazisi','region'),f('services','Xidmət','services')],
+  insurance:[f('company_name','Şirkət','details->>company_name'),f('city','Şəhər','details->>city'),f('insurance_types','Sığorta növü','details->>insurance_types')],
+  sober_driver:[f('city','Şəhər','details->>city'),f('service_area','Xidmət ərazisi','details->>service_area'),f('service_24_7','24/7 xidmət','details->>service_24_7')],
+  leasing:[f('company_name','Şirkət','details->>company_name'),f('city','Şəhər','details->>city'),f('vehicle_condition','Avtomobil vəziyyəti','details->>vehicle_condition'),f('customer_types','Müştəri növü','details->>customer_types')],
+};
+
+export function categoryFilterValues(key:CategoryKey,values:Record<string,string>):Record<string,string>{
+  const allowed=new Set((CATEGORY_FILTERS[key]||[]).map(item=>item.key));
+  return Object.fromEntries(Object.entries(values).filter(([name,value])=>allowed.has(name)&&String(value).trim()!==''));
+}
+export function categoryFilterError(key:CategoryKey,values:Record<string,string>):string|null{
+  for(const field of CATEGORY_FILTERS[key]||[]){const raw=String(values[field.key]||'').trim();if(!raw)continue;if(field.kind==='number'&&(!Number.isFinite(Number(raw))||Number(raw)<0))return `${field.label}: sıfır və ya müsbət rəqəm daxil edin.`;}
+  for(const [minKey,maxKey,label] of [['price','price_max','Qiymət'],['daily_price','daily_price_max','Günlük qiymət']] as const){const min=values[minKey],max=values[maxKey];if(min&&max&&Number(min)>Number(max))return `${label}: minimum maksimumdan böyük ola bilməz.`;}
+  return null;
+}
 
 export const CATEGORIES: Category[] = [
   {key:'cars',title:'Avtomobillər',icon:'truck',source:'vehicle',table:'vehicle_listings',mediaTable:'listing_media',bucket:'listing-media',status:'active',sourceValue:'sale'},
@@ -62,8 +96,8 @@ export async function listHome(client: SupabaseClient, search = ''): Promise<Lis
   return sortListings(unique);
 }
 
-export async function listCategory(client: SupabaseClient, category: Category, options: {from?:number;to?:number;search?:string;brand?:string;model?:string;region?:string;minPrice?:string;maxPrice?:string;yearMin?:string;yearMax?:string;promotionsOnly?:boolean} = {}) {
-  const {from=0,to=19,search='',brand='',model='',region='',minPrice='',maxPrice='',yearMin='',yearMax='',promotionsOnly=false}=options;
+export async function listCategory(client: SupabaseClient, category: Category, options: {from?:number;to?:number;search?:string;brand?:string;model?:string;region?:string;minPrice?:string;maxPrice?:string;yearMin?:string;yearMax?:string;promotionsOnly?:boolean;filters?:Record<string,string>} = {}) {
+  const {from=0,to=19,search='',brand='',model='',region='',minPrice='',maxPrice='',yearMin='',yearMax='',promotionsOnly=false,filters={}}=options;
   let query:any=client.from(category.table).select('*').eq('status','active');
   if(category.source==='vehicle') query=query.eq('listing_type',category.sourceValue);
   else if(category.source==='marketplace') query=query.eq('category',category.sourceValue);
@@ -82,6 +116,12 @@ export async function listCategory(client: SupabaseClient, category: Category, o
   if(maxPrice && ['vehicle','marketplace'].includes(category.source)) query=query.lte(priceField,Number(maxPrice));
   if(yearMin && category.source==='vehicle') query=query.gte('year',Number(yearMin));
   if(yearMax && category.source==='vehicle') query=query.lte('year',Number(yearMax));
+  for(const field of CATEGORY_FILTERS[category.key]||[]){
+    const value=String(filters[field.key]||'').trim();if(!value)continue;
+    if(field.kind==='number'){
+      const amount=Number(value);if(Number.isFinite(amount)&&amount>=0)query=field.operator==='lte'?query.lte(field.column,amount):query.gte(field.column,amount);
+    }else query=query.ilike(field.column,`%${escapeLike(value)}%`);
+  }
   if(search.trim()) {
     const term=escapeLike(search.trim());
     if(category.source==='vehicle') query=query.or(`brand.ilike.%${term}%,model.ilike.%${term}%,description.ilike.%${term}%`);

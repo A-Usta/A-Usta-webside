@@ -13,7 +13,7 @@ const supabaseSource = read('src/lib/supabase.ts');
 const tsModule = { exports: {} };
 const js = ts.transpile(marketplaceSource, { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
 vm.runInNewContext(`(function(exports,module){${js}\n})(module.exports,module)`, { module: tsModule });
-const { CATEGORIES, categoryConfig, promotionRank, sortListings } = tsModule.exports;
+const { CATEGORIES, CATEGORY_FILTERS, categoryFilterError, categoryFilterValues, categoryConfig, listCategory, promotionRank, sortListings } = tsModule.exports;
 
 test('17 active categories route to the existing public source and media bucket', () => {
   assert.equal(CATEGORIES.length, 17);
@@ -29,6 +29,41 @@ test('17 active categories route to the existing public source and media bucket'
   assert.equal(categoryConfig('usta').sourceValue, 'usta');
   assert.equal(categoryConfig('leasing').sourceValue, 'leasing');
   assert.equal(categoryConfig('parts').table, 'marketplace_listings');
+});
+
+test('all 17 homepage categories expose their own real-query filters and clear stale values', () => {
+  assert.equal(Object.keys(CATEGORY_FILTERS).length, 17);
+  for (const category of CATEGORIES) assert.ok(CATEGORY_FILTERS[category.key].length > 0, category.key);
+  assert.deepEqual(Array.from(CATEGORY_FILTERS.cars, field => field.key), ['brand','model','year','price','price_max','mileage']);
+  assert.ok(CATEGORY_FILTERS.rent.some(field => field.key === 'daily_price'));
+  assert.ok(CATEGORY_FILTERS.parts.some(field => field.key === 'title'));
+  assert.ok(CATEGORY_FILTERS.usta.some(field => field.key === 'specialty'));
+  assert.ok(CATEGORY_FILTERS.service.some(field => field.key === 'region'));
+  assert.equal(JSON.stringify(categoryFilterValues('parts', { title:'far', brand:'BMW', mileage:'90000', model:'' })), JSON.stringify({ title:'far', brand:'BMW' }));
+  assert.match(categoryFilterError('cars', { price:'9000', price_max:'5000' }), /minimum maksimumdan böyük/);
+  assert.match(categoryFilterError('rent', { daily_price:'-1' }), /müsbət rəqəm/);
+});
+
+test('each category filter is applied to its configured live query column', async () => {
+  for (const category of CATEGORIES) {
+    const field = CATEGORY_FILTERS[category.key][0];
+    const calls = [];
+    const query = {};
+    for (const method of ['select','eq','in','contains','or','ilike','gte','lte','order','range']) query[method] = (...args) => { calls.push([method,...args]); return query; };
+    query.then = (resolve,reject) => Promise.resolve({data:[],error:null}).then(resolve,reject);
+    const client = { from: table => { calls.push(['from',table]); return query; } };
+    const value = field.kind === 'number' ? '100' : 'test';
+    await listCategory(client,category,{filters:{[field.key]:value}});
+    assert.ok(calls.some(call => call[0] === 'from' && call[1] === category.table), category.key+' table');
+    assert.ok(calls.some(call => ['ilike','gte','lte'].includes(call[0]) && call[1] === field.column), category.key+' filter '+field.column);
+  }
+});
+
+test('homepage switches the selected category above adaptive search and queries its real table', () => {
+  assert.match(appSource, /CATEGORIES\.map\(c=>/);
+  assert.match(appSource, /setHomeCategory\(c\.key\);setSearch\(''\);setDraftFilters\(\{\}\);setAppliedFilters\(\{\}\)/);
+  assert.match(appSource, /listCategory\(sb,activeCategory,\{from:0,to:39,search,filters:appliedFilters\}\)/);
+  assert.match(appSource, /CATEGORY_FILTERS\[homeCategory\]/);
 });
 
 test('mobile vehicle brand/model choices match the canonical repository catalog', () => {
