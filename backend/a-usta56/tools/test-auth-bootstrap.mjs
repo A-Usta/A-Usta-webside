@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { chmod, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -8,6 +9,45 @@ export const TEST_PROJECT_REF = "xnhxneziasqthkhhntkv";
 export const TEST_PROJECT_URL = `https://${TEST_PROJECT_REF}.supabase.co`;
 const TEST_EMAIL_DOMAIN = "example.invalid";
 const ACTORS = ["customer_a", "customer_b", "provider_candidate"];
+
+function checkWindowsAcl(target) {
+  const command = [
+    "$ErrorActionPreference='Stop'",
+    "$sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value",
+    "$acl=Get-Acl -LiteralPath $env:AUSTA_ACL_TARGET",
+    "if (-not $acl.AreAccessRulesProtected) { throw 'ACL inheritance enabled' }",
+    "$rules=@($acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]))",
+    "if ($rules.Count -ne 1) { throw 'Unexpected ACL entries' }",
+    "$r=$rules[0]",
+    "if ($r.IdentityReference.Value -ne $sid -or $r.AccessControlType -ne 'Allow' -or $r.IsInherited) { throw 'Non-owner ACL' }",
+    "$full=[Security.AccessControl.FileSystemRights]::FullControl",
+    "if (($r.FileSystemRights -band $full) -ne $full) { throw 'Owner lacks full control' }",
+  ].join('; ');
+  execFileSync('powershell.exe', ['-NoProfile','-NonInteractive','-Command',command], {
+    env: {...process.env, AUSTA_ACL_TARGET:target}, stdio:'pipe', windowsHide:true,
+  });
+}
+
+function protectWindowsAcl(target) {
+  execFileSync('icacls.exe', [target, '/inheritance:r'], {stdio:'pipe',windowsHide:true});
+  // Remove all explicit access entries, including DENY entries.
+  const command = [
+    "$ErrorActionPreference='Stop'",
+    "$acl=Get-Acl -LiteralPath $env:AUSTA_ACL_TARGET",
+    "$acl.SetAccessRuleProtection($true,$false)",
+    "foreach ($r in @($acl.Access)) { [void]$acl.RemoveAccessRuleSpecific($r) }",
+    "$owner=[Security.Principal.WindowsIdentity]::GetCurrent().User",
+    "$acl.SetOwner($owner)",
+    "$rule=New-Object System.Security.AccessControl.FileSystemAccessRule($owner,'FullControl','Allow')",
+    "$acl.AddAccessRule($rule)",
+    "Set-Acl -LiteralPath $env:AUSTA_ACL_TARGET -AclObject $acl",
+  ].join('; ');
+  execFileSync('powershell.exe', ['-NoProfile','-NonInteractive','-Command',command], {
+    env: {...process.env, AUSTA_ACL_TARGET:target}, stdio:'pipe', windowsHide:true,
+  });
+  checkWindowsAcl(target);
+}
+
 
 export function validateTestEnvironment(env) {
   const url = env.AUSTA_TEST_SUPABASE_URL;
@@ -86,6 +126,16 @@ export async function bootstrapTestUsers({
   let directory;
 
   try {
+    if (process.platform === 'win32') {
+      if (!env.AUSTA_TEST_CREDENTIAL_ROOT || path.resolve(credentialRoot) !== path.resolve(env.AUSTA_TEST_CREDENTIAL_ROOT)) {
+        throw new Error('Explicit TEST credential root required on Windows.');
+      }
+      checkWindowsAcl(credentialRoot);
+    }
+    directory = await mkdtemp(path.join(credentialRoot, 'austa-m76-auth-'));
+    if (process.platform === 'win32') protectWindowsAcl(directory);
+    else await chmod(directory, 0o700);
+
     for (const actor of ACTORS) {
       const email = `m76.${runId}.${actor}@${TEST_EMAIL_DOMAIN}`;
       const password = randomBytes(32).toString("base64url");
@@ -107,8 +157,6 @@ export async function bootstrapTestUsers({
       created.push({ id: data.user.id, email, password, actor });
     }
 
-    directory = await mkdtemp(path.join(credentialRoot, "austa-m76-auth-"));
-    await chmod(directory, 0o700);
     const credentialsFile = path.join(directory, "users.json");
     const credentialDocument = {
       version: 1,
@@ -122,12 +170,18 @@ export async function bootstrapTestUsers({
       flag: "wx",
       mode: 0o600,
     });
-    await chmod(credentialsFile, 0o600);
-
-    const directoryMode = (await stat(directory)).mode;
-    const fileMode = (await stat(credentialsFile)).mode;
-    if ((directoryMode & 0o077) !== 0 || (fileMode & 0o077) !== 0) {
-      throw new Error("Temporary credential storage permissions are too broad.");
+    if (process.platform === 'win32') {
+      // The file must inherit ONLY the protected directory's owner ACE.
+      checkWindowsAcl(directory);
+      // Inherited ACEs are rejected; protect and verify the file explicitly.
+      protectWindowsAcl(credentialsFile);
+    } else {
+      await chmod(credentialsFile, 0o600);
+      const directoryMode = (await stat(directory)).mode;
+      const fileMode = (await stat(credentialsFile)).mode;
+      if ((directoryMode & 0o077) !== 0 || (fileMode & 0o077) !== 0) {
+        throw new Error('Temporary credential storage permissions are too broad.');
+      }
     }
 
     return {
@@ -149,7 +203,12 @@ export async function bootstrapTestUsers({
 async function main() {
   try {
     const { createClient } = await import("@supabase/supabase-js");
-    const result = await bootstrapTestUsers({ createClientFactory: createClient });
+    const options = { createClientFactory: createClient };
+    if (process.platform === 'win32') {
+      if (!process.env.AUSTA_TEST_CREDENTIAL_ROOT) throw new Error('AUSTA_TEST_CREDENTIAL_ROOT required');
+      options.credentialRoot = process.env.AUSTA_TEST_CREDENTIAL_ROOT;
+    }
+    const result = await bootstrapTestUsers(options);
     console.log(
       `M7.6 created three TEST Auth accounts without assigning application roles. Credentials are in a private temporary file: ${result.credentialsFile}`,
     );

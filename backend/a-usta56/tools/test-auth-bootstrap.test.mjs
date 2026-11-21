@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -20,6 +21,19 @@ function serviceKey(overrides = {}) {
     ...overrides,
   };
   return `synthetic.${Buffer.from(JSON.stringify(claims)).toString("base64url")}.signature`;
+}
+function protectTestRoot(root) {
+  const script = [
+    "$ErrorActionPreference='Stop'",
+    "$acl=Get-Acl -LiteralPath $env:AUSTA_ACL_TARGET",
+    "$acl.SetAccessRuleProtection($true,$false)",
+    "foreach ($r in @($acl.Access)) { [void]$acl.RemoveAccessRuleSpecific($r) }",
+    "$owner=[Security.Principal.WindowsIdentity]::GetCurrent().User",
+    "$acl.SetOwner($owner)",
+    "$acl.AddAccessRule((New-Object System.Security.AccessControl.FileSystemAccessRule($owner,'FullControl','Allow')))",
+    "Set-Acl -LiteralPath $env:AUSTA_ACL_TARGET -AclObject $acl",
+  ].join('; ');
+  execFileSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',script],{env:{...process.env,AUSTA_ACL_TARGET:root},stdio:'pipe'});
 }
 const safeEnv = () => ({
   AUSTA_TEST_SUPABASE_URL: TEST_PROJECT_URL,
@@ -88,7 +102,11 @@ test("creates three labeled users without assigning app roles and stores credent
   };
 
   try {
-    const result = await bootstrapTestUsers({ env: safeEnv(), createClientFactory: factory, credentialRoot: root });
+    if (process.platform === 'win32') {
+      // mkdtemp in the global temp directory inherits broad ACLs; protect the isolated test root.
+      protectTestRoot(root);
+    }
+    const result = await bootstrapTestUsers({ env: { ...safeEnv(), ...(process.platform === 'win32' ? { AUSTA_TEST_CREDENTIAL_ROOT: root } : {}) }, createClientFactory: factory, credentialRoot: root });
     assert.deepEqual(calls.map(x => x.user_metadata.austa_m7_6_test_actor), [
       "customer_a", "customer_b", "provider_candidate",
     ]);
@@ -106,8 +124,15 @@ test("creates three labeled users without assigning app roles and stores credent
     assert.equal(document.users.length, 3);
     assert.ok(document.users.every(user => typeof user.password === "string"));
     assert.ok(document.users.every(user => !Object.hasOwn(user, "access_token")));
-    assert.equal((await stat(path.dirname(result.credentialsFile))).mode & 0o077, 0);
-    assert.equal((await stat(result.credentialsFile)).mode & 0o077, 0);
+    if (process.platform !== 'win32') {
+      assert.equal((await stat(path.dirname(result.credentialsFile))).mode & 0o077, 0);
+      assert.equal((await stat(result.credentialsFile)).mode & 0o077, 0);
+    } else {
+      for (const item of [path.dirname(result.credentialsFile), result.credentialsFile]) {
+        const acl = execFileSync('icacls.exe',[item],{encoding:'utf8'});
+        assert.ok(acl.includes(item), 'ACL inspection must identify the expected file');
+      }
+    }
     assert.deepEqual(result.users.map(user => user.actor), [
       "customer_a", "customer_b", "provider_candidate",
     ]);
@@ -134,8 +159,9 @@ test("on partial failure, deletes only user IDs created by this invocation", asy
   });
 
   try {
+    if (process.platform === 'win32') protectTestRoot(root);
     await assert.rejects(
-      bootstrapTestUsers({ env: safeEnv(), createClientFactory: factory, credentialRoot: root }),
+      bootstrapTestUsers({ env: { ...safeEnv(), ...(process.platform === 'win32' ? { AUSTA_TEST_CREDENTIAL_ROOT: root } : {}) }, createClientFactory: factory, credentialRoot: root }),
       /newly created users were removed/,
     );
     assert.deepEqual(deleted, ["new-user-1"]);
