@@ -351,7 +351,12 @@ for(const [name,change,contract]of [
  ['429 becomes 500',(s:string)=>replaceOnce(s,'reply.code(429)','reply.code(500)'),(m:any)=>preAuthContract(m.installAdmission)],
  ['Retry-After removed',(s:string)=>replaceOnce(s,'.header("Retry-After", String(retry))',''),(m:any)=>preAuthContract(m.installAdmission)],
  ['correlation broken',(s:string)=>replaceOnce(s,'request_id: request.id, retry_after_seconds: retry','request_id: "wrong", retry_after_seconds: retry'),(m:any)=>preAuthContract(m.installAdmission)],
- ['unverified bearer actor key',(s:string)=>replaceOnce(s,'const actor = (request as FastifyRequest & { user: { id: string } }).user.id;\n        if (!admitActor','const actor = String(request.headers.authorization);\n        if (!admitActor'),(m:any)=>actorContract(m.installAdmission)],
+ ['unverified bearer actor key',(s:string)=>{
+   const pattern = /const actor = \(request as FastifyRequest & \{ user: \{ id: string \} \}\)\.user\.id;(?=\r?\n\s*if \(!admitActor)/g;
+   const matches = [...s.matchAll(pattern)];
+   assert.equal(matches.length,1,'unique verified actor mutation target');
+   return s.replace(pattern,'const actor = String(request.headers.authorization);');
+ },(m:any)=>actorContract(m.installAdmission)],
 ] as const)test('E2A mutation detected: '+name,async()=>{
  await contract(loadAdmission());const mutated=loadAdmission(change);await assert.rejects(async()=>contract(mutated),(e:any)=>e?.name==='AssertionError');
 });
@@ -380,7 +385,7 @@ test('E2A resource-before-authorization mutation detected on actual route',async
  const mutated=loadRoutes(source=>{
   const line='      if (!admitResource(app, request, reply, "pricing", assignment.id)) return;';
   source=replaceOnce(source,line,'');const start=source.indexOf('"/service-order-assignments/:assignmentId/price-offer"');
-  const at=source.indexOf('    if (\n      assignment.provider_id !==',start);assert.ok(at>start);return source.slice(0,at)+line+'\n'+source.slice(at);
+  const at=source.lastIndexOf('    if (',source.indexOf('assignment.provider_id !==',start));assert.ok(at>start);return source.slice(0,at)+line+'\n'+source.slice(at);
  });await assert.rejects(()=>resourceAuthorizationContract(mutated),(e:any)=>e?.name==='AssertionError');
 });
 for(const [name,change,contract]of [
