@@ -58,7 +58,7 @@
  #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media video{width:100%;height:100%;object-fit:contain}
 }
 
-/* TOP campaign only: full-viewport desktop strip; mobile keeps the square creative. */
+/* Approved static TOP banner: full-width image, directly above the header. */
 #austaV351TopAd{
  box-sizing:border-box!important;
  position:relative!important;
@@ -72,15 +72,17 @@
 #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"]{
  position:relative!important;
  box-sizing:border-box!important;
+ display:block!important;
  width:100%!important;
  min-height:0!important;
+ height:auto!important;
  aspect-ratio:1920/210!important;
  margin:0!important;
  padding:0!important;
  overflow:hidden!important;
  border:0!important;
  border-radius:0!important;
- background:#071321!important;
+ background:#211a18!important;
 }
 #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-body{
  position:absolute!important;
@@ -104,20 +106,20 @@
  margin:0!important;
  padding:0!important;
  overflow:hidden!important;
- background:#071321!important;
+ background:#211a18!important;
 }
-#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media video{
+#austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-media img{
  display:block!important;
  width:100%!important;
  height:100%!important;
  max-width:none!important;
  object-fit:cover!important;
- object-position:center 50%!important;
+ object-position:center!important;
 }
 #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-label,
 #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-copy,
 #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"] .aca-controls{display:none!important}
 @media(max-width:650px){
- #austaV351TopAd{left:auto!important;width:calc(100% - 28px)!important;margin:8px auto!important}
- #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"]{aspect-ratio:508/506!important}
+ #austaV351TopAd{left:50%!important;width:100vw!important;margin:0 0 0 -50vw!important}
+ #austaV351TopAd .aca-slot[data-campaign-id="austa-usa-order"]{aspect-ratio:1920/210!important}
 }
