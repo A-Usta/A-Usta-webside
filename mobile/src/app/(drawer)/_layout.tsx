@@ -1,5 +1,5 @@
 import { Drawer } from 'expo-router/drawer';
-import { ServiceDrawer } from '../../../App';
+import { ServiceDrawer } from '../../components/ServiceDrawer';
 
 export default function DrawerLayout() {
   return <Drawer
