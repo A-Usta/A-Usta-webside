@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "A-USTA",
-    "slug": "a-usta-mobile",
+    "slug": "a-usta-mobile-fo0dl5bou9jy0p3h7snjv",
     "version": "0.1.0",
     "scheme": "austa",
     "orientation": "portrait",
@@ -47,6 +47,12 @@
         }
       ],
       "expo-video"
-    ]
+    ],
+    "owner": "austa-az",
+    "extra": {
+      "eas": {
+        "projectId": "1b6dc2f0-e7df-4a1f-bc85-05c6a144101c"
+      }
+    }
   }
 }
