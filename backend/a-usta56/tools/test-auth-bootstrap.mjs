@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 export const TEST_PROJECT_REF = "xnhxneziasqthkhhntkv";
 export const TEST_PROJECT_URL = `https://${TEST_PROJECT_REF}.supabase.co`;
 const TEST_EMAIL_DOMAIN = "example.invalid";
-const ACTORS = ["customer_a", "customer_b", "provider_candidate"];
+const ACTORS = ["customer_a", "customer_b"];
 
 function checkWindowsAcl(target) {
   const command = [
@@ -210,7 +210,7 @@ async function main() {
     }
     const result = await bootstrapTestUsers(options);
     console.log(
-      `M7.6 created three TEST Auth accounts without assigning application roles. Credentials are in a private temporary file: ${result.credentialsFile}`,
+      `M7.7 created two disposable TEST customer accounts without assigning application roles. Credentials are in a private temporary file: ${result.credentialsFile}`,
     );
   } catch (error) {
     const message =

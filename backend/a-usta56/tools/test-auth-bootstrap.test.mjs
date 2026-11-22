@@ -81,7 +81,7 @@ test("requires protected TEST variables before constructing a Supabase client", 
   assert.equal(factoryCalled, false);
 });
 
-test("creates three labeled users without assigning app roles and stores credentials privately", async () => {
+test("creates two labeled users without assigning app roles and stores credentials privately", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "austa-m76-test-"));
   const calls = [];
   const factory = (url, key, options) => {
@@ -108,7 +108,7 @@ test("creates three labeled users without assigning app roles and stores credent
     }
     const result = await bootstrapTestUsers({ env: { ...safeEnv(), ...(process.platform === 'win32' ? { AUSTA_TEST_CREDENTIAL_ROOT: root } : {}) }, createClientFactory: factory, credentialRoot: root });
     assert.deepEqual(calls.map(x => x.user_metadata.austa_m7_6_test_actor), [
-      "customer_a", "customer_b", "provider_candidate",
+      "customer_a", "customer_b",
     ]);
     for (const attributes of calls) {
       assert.equal(attributes.email_confirm, true);
@@ -121,7 +121,7 @@ test("creates three labeled users without assigning app roles and stores credent
 
     const document = JSON.parse(await readFile(result.credentialsFile, "utf8"));
     assert.equal(document.project_ref, TEST_PROJECT_REF);
-    assert.equal(document.users.length, 3);
+    assert.equal(document.users.length, 2);
     assert.ok(document.users.every(user => typeof user.password === "string"));
     assert.ok(document.users.every(user => !Object.hasOwn(user, "access_token")));
     if (process.platform !== 'win32') {
@@ -134,7 +134,7 @@ test("creates three labeled users without assigning app roles and stores credent
       }
     }
     assert.deepEqual(result.users.map(user => user.actor), [
-      "customer_a", "customer_b", "provider_candidate",
+      "customer_a", "customer_b",
     ]);
   } finally {
     await rm(root, { recursive: true, force: true });
