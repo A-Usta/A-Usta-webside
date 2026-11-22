@@ -50,16 +50,18 @@ test('F06 ranges, UUIDs, body and estimate ordering',()=>{
  assert.equal(serviceOrderInputError('/service-orders','POST',{service_category:'mechanic_service',latitude:90,longitude:-180,estimated_price_min:0,estimated_price_max:'1.123'},{}),null);
 });
 
-type Scenario={authGate?:Promise<void>;uploadGate?:Promise<void>;uploadThrows?:boolean;authThrows?:boolean;rpcThrows?:boolean;acceptResult?:string;actor?:string;order?:Record<string,unknown>;assignment?:Record<string,unknown>;rpcError?:{code?:string};rpcResults?:any[];insertError?:{code:string};};
+type Scenario={authGate?:Promise<void>;uploadGate?:Promise<void>;uploadThrows?:boolean;authThrows?:boolean;invalidAuth?:boolean;rpcThrows?:boolean;acceptResult?:string;actor?:string;order?:Record<string,unknown>;assignment?:Record<string,unknown>;profile?:Record<string,unknown>|null;providerProfile?:Record<string,unknown>|null;profileError?:{code?:string};providerProfileError?:{code?:string};rpcError?:{code?:string};rpcResults?:any[];insertError?:{code:string};};
 async function fixture(s:Scenario={}, state=new Admission(), installer=installAdmission, routes=serviceOrderRoutes){
  const calls:any[]=[],uploads:string[]=[],removes:string[]=[],upstream:string[]=[];
  const order={id,customer_id:customer,status:'accepted',price_status:'offered',proposed_price:25,final_price:null,price_offered_at:'2026-11-02T12:00:00.123456+00:00',price_responded_at:null,evidence_files:[],...s.order};
  const assignment={id:aid,order_id:id,provider_id:provider,status:'accepted',...s.assignment};
- (supabase.auth as any).getUser=async()=>{upstream.push("auth");await s.authGate;if(s.authThrows)throw diagnosticException();return {data:{user:{id:s.actor??provider}},error:null};};
+ (supabase.auth as any).getUser=async()=>{upstream.push("auth");await s.authGate;if(s.authThrows)throw diagnosticException();return s.invalidAuth?{data:{user:null},error:{message:"invalid token"}}:{data:{user:{id:s.actor??provider}},error:null};};
  (supabase as any).from=(table:string)=>{
   upstream.push("db");
   let insert:any;
-  const q:any={select(){return q},eq(){return q},not(){return q},in(){return q},update(){assert.fail('transition must not write via from.update')},insert(row:any){insert=row;calls.push(['insert',table,row]);return q},async single(){calls.push(['read',table]);return {data:insert?{id,...insert}:table==='service_orders'?order:table==='profiles'?{id:provider,role:'mechanic',is_active:true}:assignment,error:insert?s.insertError??null:null}},async maybeSingle(){return table==='service_order_assignments'?{data:null,error:null}:q.single()}};
+  let updated:any;
+  let lookupId:string|undefined;
+  const q:any={select(){return q},eq(_key:string,value:string){lookupId=value;return q},not(){return q},in(){return q},order(){return q},update(row:any){updated=row;calls.push(['update',table,row]);return q},insert(row:any){insert=row;calls.push(['insert',table,row]);return q},async single(){calls.push(['read',table]);const data=insert?{id,...insert}:updated?{id:lookupId??provider,role:'mechanic',is_active:true,...updated}:table==='service_orders'?order:table==='profiles'?(s.profile??{id:lookupId??provider,role:'mechanic',is_active:true}):table==='provider_profiles'?(s.providerProfile===null?null:s.providerProfile??{user_id:lookupId??provider,requested_role:'mechanic',kyc_status:'approved'}):assignment;const error=insert?s.insertError??null:table==='profiles'?s.profileError??null:table==='provider_profiles'?s.providerProfileError??null:null;return {data,error}},async maybeSingle(){return table==='service_order_assignments'?{data:null,error:null}:q.single()}};
   return q;
  };
  (supabase as any).rpc=async(name:string,args:any)=>{
@@ -351,7 +353,12 @@ for(const [name,change,contract]of [
  ['429 becomes 500',(s:string)=>replaceOnce(s,'reply.code(429)','reply.code(500)'),(m:any)=>preAuthContract(m.installAdmission)],
  ['Retry-After removed',(s:string)=>replaceOnce(s,'.header("Retry-After", String(retry))',''),(m:any)=>preAuthContract(m.installAdmission)],
  ['correlation broken',(s:string)=>replaceOnce(s,'request_id: request.id, retry_after_seconds: retry','request_id: "wrong", retry_after_seconds: retry'),(m:any)=>preAuthContract(m.installAdmission)],
- ['unverified bearer actor key',(s:string)=>replaceOnce(s,'const actor = (request as FastifyRequest & { user: { id: string } }).user.id;\n        if (!admitActor','const actor = String(request.headers.authorization);\n        if (!admitActor'),(m:any)=>actorContract(m.installAdmission)],
+ ['unverified bearer actor key',(s:string)=>{
+   const pattern = /const actor = \(request as FastifyRequest & \{ user: \{ id: string \} \}\)\.user\.id;(?=\r?\n\s*if \(!admitActor)/g;
+   const matches = [...s.matchAll(pattern)];
+   assert.equal(matches.length,1,'unique verified actor mutation target');
+   return s.replace(pattern,'const actor = String(request.headers.authorization);');
+ },(m:any)=>actorContract(m.installAdmission)],
 ] as const)test('E2A mutation detected: '+name,async()=>{
  await contract(loadAdmission());const mutated=loadAdmission(change);await assert.rejects(async()=>contract(mutated),(e:any)=>e?.name==='AssertionError');
 });
@@ -380,7 +387,7 @@ test('E2A resource-before-authorization mutation detected on actual route',async
  const mutated=loadRoutes(source=>{
   const line='      if (!admitResource(app, request, reply, "pricing", assignment.id)) return;';
   source=replaceOnce(source,line,'');const start=source.indexOf('"/service-order-assignments/:assignmentId/price-offer"');
-  const at=source.indexOf('    if (\n      assignment.provider_id !==',start);assert.ok(at>start);return source.slice(0,at)+line+'\n'+source.slice(at);
+  const at=source.lastIndexOf('    if (',source.indexOf('assignment.provider_id !==',start));assert.ok(at>start);return source.slice(0,at)+line+'\n'+source.slice(at);
  });await assert.rejects(()=>resourceAuthorizationContract(mutated),(e:any)=>e?.name==='AssertionError');
 });
 for(const [name,change,contract]of [
@@ -412,3 +419,63 @@ async function actorPrivacyContract(installer=installAdmission){
 
 // Run the durable boundary suite in the existing backend CI entrypoint.
 await import("./durable-uploads.test.js");
+
+
+const locationRequest=(scenario:Scenario={},payload:any={latitude:40.4,longitude:49.8})=>request('/provider/location',payload,scenario);
+test('M7.11 approved active provider can update own location',async()=>{
+ const f=await locationRequest();assert.equal(f.response.statusCode,200);const write=f.calls.find(c=>c[0]==='update');assert.ok(write);assert.equal(write[1],'profiles');assert.deepEqual(write[2].latitude,40.4);assert.ok(f.response.json().provider);
+});
+test('M7.11 inactive provider is rejected before location mutation',async()=>{
+ const f=await locationRequest({profile:{id:provider,role:'mechanic',is_active:false}});assert.equal(f.response.statusCode,409);assert.ok(!f.calls.some(c=>c[0]==='update'));
+});
+for(const [label,providerProfile] of [
+ ['pending KYC',{user_id:provider,requested_role:'mechanic',kyc_status:'pending'}],
+ ['rejected KYC',{user_id:provider,requested_role:'mechanic',kyc_status:'rejected'}],
+ ['missing KYC',null],
+ ['role mismatch',{user_id:provider,requested_role:'tow',kyc_status:'approved'}],
+] as const)test('M7.11 '+label+' is rejected before location mutation',async()=>{
+ const f=await locationRequest({providerProfile});assert.equal(f.response.statusCode,403);assert.ok(!f.calls.some(c=>c[0]==='update'));
+});
+test('M7.11 customer role cannot mutate provider location',async()=>{
+ const f=await locationRequest({profile:{id:provider,role:'customer',is_active:true}});assert.equal(f.response.statusCode,403);assert.ok(!f.calls.some(c=>c[0]==='update'));
+});
+test('M7.11 invalid JWT is rejected before database access',async()=>{
+ const f=await locationRequest({invalidAuth:true});assert.equal(f.response.statusCode,401);assert.deepEqual(f.upstream,['auth']);assert.ok(!f.calls.some(c=>c[0]==='update'));
+});
+test('M7.11 profile and KYC database errors fail closed without mutation',async()=>{
+ for(const scenario of [{profileError:{code:'08006'}},{providerProfileError:{code:'08006'}}]){const f=await locationRequest(scenario);assert.equal(f.response.statusCode,500);assert.ok(!f.calls.some(c=>c[0]==='update'));}
+});
+test('M7.11 client role/KYC/user fields cannot choose location owner',async()=>{
+ const f=await locationRequest({}, {latitude:40.4,longitude:49.8,provider_id:customer,user_id:customer,role:'customer',kyc_status:'approved'});assert.equal(f.response.statusCode,200);const write=f.calls.find(c=>c[0]==='update');assert.ok(write);assert.ok(f.calls.some(c=>c[0]==='read'&&c[1]==='profiles'));assert.equal(f.calls.some(c=>c[0]==='update'&&c[2].user_id===customer),false);
+});
+test('M7.11 unapproved provider cannot perform provider writes or read assigned customer data',async()=>{
+ const f=await fixture({providerProfile:{user_id:provider,requested_role:'mechanic',kyc_status:'pending'}});try{
+  for(const [method,url,payload] of [
+   ['PATCH',`/service-order-assignments/${aid}/accept`,undefined],
+   ['PATCH',`/service-order-assignments/${aid}/price-offer`,{proposed_price:25}],
+   ['PATCH',`/service-order-assignments/${aid}/start`,undefined],
+   ['PATCH',`/service-order-assignments/${aid}/complete`,undefined],
+   ['POST',`/service-order-assignments/${aid}/evidence/before`,undefined],
+   ['GET','/service-order-assignments',undefined],
+  ] as const){const result=await f.app.inject({method,url,headers:{authorization:'Bearer test-token'},...(payload?{payload}: {})});assert.equal(result.statusCode,403,url);}
+  assert.equal(f.calls.some(c=>c[0]==='rpc'||c[0]==='insert'||c[0]==='update'),false);assert.deepEqual(f.uploads,[]);
+ }finally{await f.app.close();}
+});
+test('M7.11 provider may reject own offer without KYC but must be active and correctly scoped',async()=>{
+ const f=await fixture({providerProfile:null});try{f.assignment.status='offered';const res=await f.app.inject({method:'PATCH',url:`/service-order-assignments/${aid}/reject`,headers:{authorization:'Bearer test-token'}});assert.equal(res.statusCode,200);assert.ok(f.calls.some(c=>c[0]==='update'&&c[1]==='service_order_assignments'));}finally{await f.app.close();}
+});
+test('M7.11 assignment creation rejects a target provider without approved KYC',async()=>{
+ const f=await fixture({actor:customer,order:{status:'pending',service_category:'mechanic_service',service_mode:'mobile'},providerProfile:{user_id:provider,requested_role:'mechanic',kyc_status:'pending'}});try{const res=await f.app.inject({method:'POST',url:`/service-orders/${id}/assignments`,headers:{authorization:'Bearer test-token'},payload:{provider_id:provider,provider_type:'mechanic'}});assert.equal(res.statusCode,403);assert.equal(f.calls.some(c=>c[0]==='insert'),false);}finally{await f.app.close();}
+});
+
+
+test('M7.11 dispatch omits unverified providers before creating assignments',async()=>{
+ const providerMatch={provider_id:provider,provider_type:'mechanic',service_type:'mechanic_mobile',distance_km:1,service_radius_km:10,location_updated_at:'2026-11-22T00:00:00Z'};
+ const f=await fixture({actor:customer,order:{status:'pending',service_category:'mechanic_service',service_mode:'mobile',latitude:40.4,longitude:49.8},providerProfile:{user_id:provider,requested_role:'mechanic',kyc_status:'pending'},rpcResults:[{data:[providerMatch],error:null}]});
+ try{const res=await f.app.inject({method:'POST',url:`/service-orders/${id}/dispatch`,headers:{authorization:'Bearer test-token'}});assert.equal(res.statusCode,200);assert.equal(res.json().offered_count,0);assert.equal(res.json().discovered_count,1);assert.equal(f.calls.some(c=>c[0]==='insert'),false);}finally{await f.app.close();}
+});
+test('M7.11 dispatch fails closed on eligibility database error before any assignment write',async()=>{
+ const providerMatch={provider_id:provider,provider_type:'mechanic',service_type:'mechanic_mobile',distance_km:1,service_radius_km:10,location_updated_at:'2026-11-22T00:00:00Z'};
+ const f=await fixture({actor:customer,order:{status:'pending',service_category:'mechanic_service',service_mode:'mobile',latitude:40.4,longitude:49.8},providerProfileError:{code:'08006'},rpcResults:[{data:[providerMatch],error:null}]});
+ try{const res=await f.app.inject({method:'POST',url:`/service-orders/${id}/dispatch`,headers:{authorization:'Bearer test-token'}});assert.equal(res.statusCode,500);assert.equal(f.calls.some(c=>c[0]==='insert'),false);}finally{await f.app.close();}
+});

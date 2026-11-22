@@ -404,6 +404,64 @@ function expectedProviderServiceType(
   }
 }
 
+async function inspectProviderEligibility(
+  providerId: string,
+  options: { requireKyc?: boolean } = {},
+): Promise<{ eligible: true; role: ProviderType } | { eligible: false; reason: "profile_missing" | "inactive" | "not_provider" | "kyc_missing" | "kyc_not_approved" | "role_mismatch" | "database_error"; error?: unknown }> {
+  let profileResult: { data: any; error: any };
+  try {
+    profileResult = await supabase.from("profiles").select("id, role, is_active").eq("id", providerId).maybeSingle();
+  } catch (error) {
+    return { eligible: false, reason: "database_error", error };
+  }
+  const { data: profile, error: profileError } = profileResult;
+  if (profileError) return { eligible: false, reason: "database_error", error: profileError };
+  if (!profile || profile.id !== providerId) return { eligible: false, reason: "profile_missing" };
+  if (profile.is_active !== true) return { eligible: false, reason: "inactive" };
+  if (!isAllowed(profile.role, allowedProviderTypes)) return { eligible: false, reason: "not_provider" };
+  if (options.requireKyc === false) return { eligible: true, role: profile.role };
+
+  let providerProfileResult: { data: any; error: any };
+  try {
+    providerProfileResult = await supabase.from("provider_profiles").select("user_id, requested_role, kyc_status").eq("user_id", providerId).maybeSingle();
+  } catch (error) {
+    return { eligible: false, reason: "database_error", error };
+  }
+  const { data: providerProfile, error: providerProfileError } = providerProfileResult;
+  if (providerProfileError) return { eligible: false, reason: "database_error", error: providerProfileError };
+  if (!providerProfile) return { eligible: false, reason: "kyc_missing" };
+  if (providerProfile.requested_role !== profile.role) return { eligible: false, reason: "role_mismatch" };
+  if (providerProfile.kyc_status !== "approved") return { eligible: false, reason: "kyc_not_approved" };
+  return { eligible: true, role: profile.role };
+}
+
+async function requireProviderEligibility(
+  request: import("fastify").FastifyRequest,
+  reply: import("fastify").FastifyReply,
+  providerId: string,
+  options: { requireKyc?: boolean; omitIneligible?: boolean } = {},
+): Promise<ProviderType | null> {
+  const result = await inspectProviderEligibility(providerId, options);
+  if (result.eligible) return result.role;
+
+  if (result.reason === "database_error") {
+    logDiagnostic(request, "database_or_rpc", result.error);
+    sendServerError(reply, "Provider eligibility could not be verified");
+    return null;
+  }
+  if (options.omitIneligible) return null;
+  if (result.reason === "profile_missing") {
+    sendNotFound(reply, "Provider profile not found");
+    return null;
+  }
+  if (result.reason === "inactive") {
+    sendConflict(reply, "Provider is not active");
+    return null;
+  }
+  sendForbidden(reply, "Provider is not eligible for this operation");
+  return null;
+}
+
 function sendBadRequest(
   reply: import("fastify").FastifyReply,
   message: string,
@@ -1280,10 +1338,20 @@ if (evidenceFiles === null) {
        * --------------------------------------------------------
        */
 
+      const discoveredMatches = (providers ?? []) as MatchingProvider[];
+      const eligibleMatches: MatchingProvider[] = [];
+      for (const provider of discoveredMatches) {
+        const eligibleRole = await requireProviderEligibility(request, reply, provider.provider_id, { omitIneligible: true });
+        if (!eligibleRole) {
+          if (reply.sent) return;
+          continue;
+        }
+        if (eligibleRole === provider.provider_type && provider.provider_type === providerType)
+          eligibleMatches.push(provider);
+      }
+
      const matches =
-  (
-    (providers ?? []) as MatchingProvider[]
-  ).map(
+  eligibleMatches.map(
     (provider) => ({
             provider_id:
               provider.provider_id,
@@ -1572,11 +1640,16 @@ if (evidenceFiles === null) {
         );
       }
 
-      const providers =
-        (
-          discoveredProviders ??
-          []
-        ) as MatchingProvider[];
+      const discovered = (discoveredProviders ?? []) as MatchingProvider[];
+      const providers: MatchingProvider[] = [];
+      for (const provider of discovered) {
+        const eligibleRole = await requireProviderEligibility(request, reply, provider.provider_id, { omitIneligible: true });
+        if (!eligibleRole) {
+          if (reply.sent) return;
+          continue;
+        }
+        if (eligibleRole === provider.provider_type) providers.push(provider);
+      }
 
       /*
        * --------------------------------------------------------
@@ -1599,11 +1672,11 @@ if (evidenceFiles === null) {
           required_service_type:
             requiredServiceType,
 
-          discovered_count: 0,
+          discovered_count: discovered.length,
 
           offered_count: 0,
 
-          skipped_count: 0,
+          skipped_count: discovered.length,
 
           assignments: [],
         });
@@ -1708,7 +1781,7 @@ if (evidenceFiles === null) {
           createdAssignments.length,
 
         skipped_count:
-          skippedCount,
+          skippedCount + (discovered.length - providers.length),
 
         assignments:
           createdAssignments,
@@ -1856,47 +1929,10 @@ if (evidenceFiles === null) {
         );
       }
 
-      const {
-        data: provider,
-        error: providerError,
-      } = await supabase
-        .from("profiles")
-        .select(
-          "id, full_name, role, is_active",
-        )
-        .eq(
-          "id",
-          providerId,
-        )
-        .single();
-
-      if (
-        providerError ||
-        !provider
-      ) {
-        return sendNotFound(
-          reply,
-          "Provider not found",
-        );
-      }
-
-      if (
-        !provider.is_active
-      ) {
-        return sendConflict(
-          reply,
-          "Provider is not active",
-        );
-      }
-
-      if (
-        provider.role !==
-        providerType
-      ) {
-        return sendConflict(
-          reply,
-          "Provider type does not match provider profile role",
-        );
+      const eligibleRole = await requireProviderEligibility(request, reply, providerId);
+      if (!eligibleRole) return;
+      if (eligibleRole !== providerType) {
+        return sendConflict(reply, "Provider type does not match provider profile role");
       }
 
       const serviceCategory =
@@ -2152,77 +2188,10 @@ if (evidenceFiles === null) {
         );
       }
 
-      /*
-       * --------------------------------------------------------
-       * Authenticated istifadəçinin profilini yoxla.
-       * --------------------------------------------------------
-       */
+      const providerRole = await requireProviderEligibility(request, reply, providerUserId);
+      if (!providerRole) return;
 
-      const {
-        data: provider,
-        error: providerError,
-      } = await supabase
-        .from(
-          "profiles",
-        )
-        .select(
-          "id, role, is_active",
-        )
-        .eq(
-          "id",
-          providerUserId,
-        )
-        .single();
-
-      if (
-        providerError ||
-        !provider
-      ) {
-        return sendNotFound(
-          reply,
-          "Provider profile not found",
-        );
-      }
-
-      /*
-       * --------------------------------------------------------
-       * Provider aktiv olmalıdır.
-       * --------------------------------------------------------
-       */
-
-      if (
-        !provider.is_active
-      ) {
-        return sendConflict(
-          reply,
-          "Provider is not active",
-        );
-      }
-
-      /*
-       * --------------------------------------------------------
-       * Yalnız provider rolları GPS yeniləyə bilər.
-       *
-       * mechanic
-       * shop
-       * tow
-       * cargo
-       * --------------------------------------------------------
-       */
-
-      if (
-        !isAllowed(
-          provider.role,
-          allowedProviderTypes,
-        )
-      ) {
-        return sendForbidden(
-          reply,
-          "Only providers can update provider location",
-        );
-      }
-
-      if (!admitResource(app, request, reply, "location", provider.id)) return;
+      if (!admitResource(app, request, reply, "location", providerUserId)) return;
 
       /*
        * --------------------------------------------------------
@@ -2330,6 +2299,9 @@ if (evidenceFiles === null) {
           "assignmentId is required",
         );
       }
+
+      const eligibleRole = await requireProviderEligibility(request, reply, providerUserId);
+      if (!eligibleRole) return;
 
       /*
        * --------------------------------------------------------
@@ -2594,6 +2566,9 @@ app.patch(
       );
     }
 
+    const eligibleRole = await requireProviderEligibility(request, reply, providerUserId);
+    if (!eligibleRole) return;
+
       if (!admitResource(app, request, reply, "pricing", assignment.id)) return;
 
     if (
@@ -2761,6 +2736,10 @@ app.patch(
         );
       }
 
+      // Declining an offer only releases the provider's own assignment; KYC is not required.
+      const providerRole = await requireProviderEligibility(request, reply, providerUserId, { requireKyc: false });
+      if (!providerRole) return;
+
       if (!admitResource(app, request, reply, "lifecycle", assignment.id)) return;
 
       if (
@@ -2839,6 +2818,9 @@ app.patch(
     async (request, reply) => {
       const providerUserId =
         getAuthenticatedUserId(request);
+
+      const eligibleRole = await requireProviderEligibility(request, reply, providerUserId);
+      if (!eligibleRole) return;
 
       const {
         data: assignments,
@@ -3006,6 +2988,9 @@ app.patch(
           "You are not allowed to upload evidence for this assignment",
         );
       }
+
+      const eligibleRole = await requireProviderEligibility(request, reply, providerUserId);
+      if (!eligibleRole) return;
 
       if (!admitResource(app, request, reply, "upload", assignment.id)) return;
       if (await managedUpload(request,reply,providerUserId,assignment.id,stage)) return;
@@ -3264,6 +3249,9 @@ app.patch(
       );
     }
 
+    const eligibleRole = await requireProviderEligibility(request, reply, providerUserId);
+    if (!eligibleRole) return;
+
       if (!admitResource(app, request, reply, "lifecycle", assignment.id)) return;
 
     if (
@@ -3455,6 +3443,9 @@ app.patch(
           "You are not allowed to complete this assignment",
         );
       }
+
+      const eligibleRole = await requireProviderEligibility(request, reply, providerUserId);
+      if (!eligibleRole) return;
 
       if (!admitResource(app, request, reply, "lifecycle", assignment.id)) return;
 

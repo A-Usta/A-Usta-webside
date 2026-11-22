@@ -1,0 +1,10 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const source = path.resolve(__dirname, '../../assets/vehicle/catalog.js');
+const target = path.resolve(__dirname, '../src/data/vehicle-catalog.json');
+const context = { window: {} };
+vm.runInNewContext(fs.readFileSync(source, 'utf8'), context, { timeout: 1000 });
+const catalog = context.window.AUSTA_VEHICLE_CATALOG;
+if (!catalog || !catalog.models || !Array.isArray(catalog.brands)) throw new Error('A-USTA catalog source is invalid');
+fs.writeFileSync(target, `${JSON.stringify({ brands: catalog.brands, popular: catalog.popular, models: catalog.models }, null, 2)}\n`);
