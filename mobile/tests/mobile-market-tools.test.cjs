@@ -51,3 +51,49 @@ test('home quick links and summary cards route to real screens', () => {
   assert.match(tools, /getMostViewedActiveCars\(client\)/);
   assert.match(read('src/lib/marketTools.ts'), /austa_get_listing_detail_metadata/);
 });
+
+test('listing media step supports direct camera capture and safe native permissions', () => {
+  const screen = read('src/components/MarketplaceScreens.tsx');
+  const app = read('app.json');
+  assert.match(screen, /requestCameraPermissionsAsync\(\)/);
+  assert.match(screen, /launchCameraAsync\(\{mediaTypes:\['images','videos'\]/);
+  assert.match(screen, /Kamera ilə çək/);
+  assert.match(screen, /setAssets\(current=>\[\.\.\.current,result\.assets\[0\]\]\.slice\(0,10\)\)/);
+  assert.match(app, /"cameraPermission":\s*"A-USTA elanınıza birbaşa kameradan/);
+  assert.match(app, /"microphonePermission":\s*"A-USTA elanınıza kameradan video çəkərkən/);
+});
+
+test('listing detail provides paged full-screen media and truthful A-USTA listing labels', () => {
+  const screen = read('src/components/MarketplaceScreens.tsx');
+  assert.match(screen, /pagingEnabled/);
+  assert.match(screen, /resizeMode="contain"/);
+  assert.match(screen, /austa_get_listing_detail_metadata/);
+  assert.match(screen, /item\.credit_available===true/);
+  assert.match(screen, /item\.barter_available===true/);
+  assert.match(screen, /SİFARİŞLƏ/);
+  assert.match(screen, /Videonu paylaş/);
+  assert.match(screen, /Elanı yadda saxla/);
+});
+
+test('video feed reads only attached video rows that resolve to active public listings', () => {
+  const core = read('src/lib/marketplace.ts');
+  const screen = read('src/components/MarketplaceScreens.tsx');
+  assert.match(core, /export async function listHomeVideos/);
+  assert.match(core, /\.eq\('media_type','video'\)/);
+  assert.match(core, /\.eq\('status','active'\)/);
+  assert.match(core, /createSignedUrl\(row\.storage_path,3600\)/);
+  assert.match(core, /limit\(Math\.min\(8,limit\)\)/);
+  assert.match(core, /Promise\.all\(media\.filter/);
+  assert.match(screen, /listHomeVideos\(sb\)/);
+  assert.match(screen, /A-USTA mobil elan/);
+});
+
+test('nearby map native module failure leaves the backend list available', () => {
+  const screen = read('src/components/ServiceScreens.tsx');
+  assert.match(screen, /try\{const maps=require\('react-native-maps'\)/);
+  assert.match(screen, /Xəritə modulu bu cihazda yüklənmədi/);
+  assert.match(screen, /MapView\?\s*<View style=\{css\.map\}/);
+  assert.match(screen, /class NativeMapBoundary extends Component/);
+  assert.match(screen, /Yaxın məntəqələr siyahıda qalır/);
+  assert.match(screen, /Siyahı görünüşü/);
+});

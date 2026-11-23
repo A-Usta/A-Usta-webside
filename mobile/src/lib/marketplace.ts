@@ -96,6 +96,43 @@ export async function listHome(client: SupabaseClient, search = ''): Promise<Lis
   return sortListings(unique);
 }
 
+/** Public video feed, sourced only from active listings and their already-published video media. */
+export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<Listing[]> {
+  const sources=[
+    {source:'vehicle' as const,mediaTable:'listing_media',table:'vehicle_listings',bucket:'listing-media'},
+    {source:'marketplace' as const,mediaTable:'marketplace_listing_media',table:'marketplace_listings',bucket:'marketplace-media'},
+    {source:'service_provider' as const,mediaTable:'service_provider_media',table:'public_service_provider_listings',bucket:'provider-media'},
+    {source:'auto_dealer' as const,mediaTable:'auto_dealer_media',table:'auto_dealer_listings',bucket:'auto-dealer-media'},
+  ];
+  const result=await Promise.all(sources.map(async source=>{
+    // Keep startup work bounded on low-memory phones; the four sources contribute
+    // at most eight candidates each before the final cross-source sort.
+    const mediaResult=await client.from(source.mediaTable).select('id,listing_id,storage_path,media_type,sort_order,is_cover,created_at').eq('media_type','video').order('created_at',{ascending:false}).limit(Math.min(8,limit));
+    if(mediaResult.error)throw mediaResult.error;
+    const media=(mediaResult.data||[]).filter((row:Record<string,any>)=>typeof row.listing_id==='string'&&typeof row.storage_path==='string');
+    if(!media.length)return [] as Listing[];
+    let query:any=client.from(source.table).select('*').eq('status','active').in('id',[...new Set(media.map((row:Record<string,any>)=>row.listing_id))]);
+    if(source.source==='vehicle')query=query.in('listing_type',['sale','rent']);
+    if(source.source==='marketplace')query=query.in('category',CATEGORIES.filter(c=>c.source==='marketplace').map(c=>c.key));
+    if(source.source==='service_provider')query=query.in('provider_type',['service','usta']);
+    const parentResult=await query;
+    if(parentResult.error)throw parentResult.error;
+    const parents=new Map((parentResult.data||[]).map((row:Record<string,any>)=>[String(row.id),row]));
+    const grouped=new Map<string,Media[]>();
+    await Promise.all(media.filter((row:Record<string,any>)=>parents.has(String(row.listing_id))).map(async(row:Record<string,any>)=>{const signed=await client.storage.from(source.bucket).createSignedUrl(row.storage_path,3600);if(signed.error||!signed.data?.signedUrl)return;const list=grouped.get(String(row.listing_id))||[];list.push({...row,url:signed.data.signedUrl} as Media);grouped.set(String(row.listing_id),list);}));
+    return (parentResult.data||[]).flatMap((row:Record<string,any>)=>{
+      const videos=grouped.get(String(row.id));if(!videos?.length)return [];
+      let key:CategoryKey;
+      if(source.source==='vehicle')key=row.listing_type==='rent'?'rent':'cars';
+      else if(source.source==='marketplace')key=row.category;
+      else if(source.source==='auto_dealer')key='dealer';
+      else key=row.provider_type==='usta'?'usta':['leasing','insurance','sober_driver'].includes(row.details?.service_category)?row.details.service_category:'service';
+      return categoryConfig(key)?[{...row,_category:key,_source:source.source,_media:videos} as Listing]:[];
+    });
+  }));
+  return result.flat().sort((a,b)=>Date.parse(String(b._media?.[0]?.created_at||b.created_at||''))-Date.parse(String(a._media?.[0]?.created_at||a.created_at||''))).slice(0,limit);
+}
+
 export async function listCategory(client: SupabaseClient, category: Category, options: {from?:number;to?:number;search?:string;brand?:string;model?:string;region?:string;minPrice?:string;maxPrice?:string;yearMin?:string;yearMax?:string;promotionsOnly?:boolean;filters?:Record<string,string>} = {}) {
   const {from=0,to=19,search='',brand='',model='',region='',minPrice='',maxPrice='',yearMin='',yearMax='',promotionsOnly=false,filters={}}=options;
   let query:any=client.from(category.table).select('*').eq('status','active');

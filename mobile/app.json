@@ -32,6 +32,8 @@
       [
         "expo-image-picker",
         {
+          "cameraPermission": "A-USTA elanınıza birbaşa kameradan şəkil və ya video əlavə etmək üçün kameraya giriş tələb edir.",
+          "microphonePermission": "A-USTA elanınıza kameradan video çəkərkən səs yazmaq üçün mikrofona giriş tələb edir.",
           "photosPermission": "A-USTA elanınıza şəkil və video əlavə etmək üçün media kitabxanasına giriş tələb edir."
         }
       ],
