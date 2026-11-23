@@ -34,20 +34,11 @@ test('all supported listing categories and CarCareKiosk destination are present'
   assert.match(drawerScreen, /Linking\.openURL\(CARCARE_URL\)/);
 });
 
-test('mobile TOP advertisement matches the currently active website banner in full-width contain mode', () => {
-  const crypto = require('node:crypto');
+test('V4.1 keeps the website advertisement untouched and removes the mobile TOP advertisement', () => {
   const websiteBanner = path.resolve(root, '../assets/homepage/austa-top-static-banner.webp');
-  const mobileBanner = path.join(root, 'assets/austa-top-static-banner.webp');
   assert.ok(fs.existsSync(websiteBanner));
-  assert.ok(fs.existsSync(mobileBanner));
-  const digest = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
-  assert.equal(digest(mobileBanner), digest(websiteBanner));
-  assert.match(marketplace, /require\('\.\.\/\.\.\/assets\/austa-top-static-banner\.webp'\)/);
-  assert.match(marketplace, /resizeMode="contain"/);
-  assert.match(marketplace, /aspectRatio:1920\/210/);
-  assert.match(marketplace, /accessibilityLabel="A-USTA ABŞ-dən avtomobil sifarişi reklamı\. Elanlara bax"/);
-  assert.match(marketplace, /params:\{key:'cars',title:'Avtomobillər'\}/);
-  assert.doesNotMatch(marketplace.slice(marketplace.indexOf('function TopAdvertisement'), marketplace.indexOf('function CatalogPicker')), /austa-usa-order-wide\.mp4|VideoView|useVideoPlayer/);
+  assert.doesNotMatch(marketplace, /TopAdvertisement|austa-top-static-banner\.webp/);
+  assert.match(marketplace, /Sizin üçün videolar/);
 });
 
 test('vehicle filter panels collapse without discarding filters and expose apply/reset', () => {
