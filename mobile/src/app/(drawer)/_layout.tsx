@@ -1,18 +1,7 @@
-import { Drawer } from 'expo-router/drawer';
-import { ServiceDrawer } from '../../components/ServiceDrawer';
+import { Stack } from 'expo-router';
 
 export default function DrawerLayout() {
-  return <Drawer
-    drawerContent={props => <ServiceDrawer navigation={props.navigation} />}
-    screenOptions={{
-      headerShown: false,
-      drawerType: 'front',
-      swipeEnabled: true,
-      drawerStyle: { width: 310 },
-      overlayColor: 'rgba(18, 26, 34, 0.36)',
-      sceneStyle: { backgroundColor: '#F4F6F8' },
-    }}
-  >
-    <Drawer.Screen name="(tabs)" options={{ title: 'A-USTA' }} />
-  </Drawer>;
+  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F4F6F8' } }}>
+    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+  </Stack>;
 }

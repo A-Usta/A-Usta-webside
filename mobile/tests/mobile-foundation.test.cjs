@@ -11,20 +11,11 @@ const drawer = fs.readFileSync(path.join(root, 'src/app/(drawer)/_layout.tsx'), 
 const drawerScreen = fs.readFileSync(path.join(root, 'src/components/ServiceDrawer.tsx'), 'utf8');
 const marketplace = fs.readFileSync(path.join(root, 'src/components/MarketplaceScreens.tsx'), 'utf8');
 
-test('Expo Router exposes five mobile tabs and the left service drawer', () => {
+test('Expo Router exposes five mobile tabs without a drawer menu', () => {
   for (const name of ['index', 'favorites', 'create', 'messages', 'account']) assert.match(tabs, new RegExp(`<Tabs\\.Screen name="${name}"`));
-  assert.match(drawer, /drawerType: 'front'/);
-  assert.match(drawer, /swipeEnabled: true/);
-  assert.match(marketplace, /accessibilityLabel="Xidmətlər menyusunu aç"/);
-  assert.match(marketplace, /navigation\.openDrawer\?\.\(\)/);
-  const keys = [...drawerScreen.matchAll(/\{ title: '([^']+)', key: '([^']+)'/g)].map(match => match[2]);
-  assert.deepEqual(keys.slice(0, 5), ['mechanic_service', 'tow_service', 'cargo_service', 'locations', 'carcare']);
-  assert.match(drawerScreen, /setOpen\(value => !value\)/);
-  assert.match(drawerScreen, /navigation\.closeDrawer\(\)/);
-  assert.match(drawerScreen, /router\.push\('\/locations'\)/);
-  assert.match(drawerScreen, /router\.push\(\{ pathname: '\/service\/\[key\]'/);
-  assert.match(drawerScreen, /Linking\.openURL\(CARCARE_URL\)/);
-  assert.match(drawer, /overlayColor:/);
+  assert.match(drawer, /<Stack/);
+  assert.doesNotMatch(drawer, /drawerType|swipeEnabled|<Drawer/);
+  assert.doesNotMatch(marketplace, /Xidmətlər menyusunu aç|openDrawer/);
 });
 
 test('all supported listing categories and CarCareKiosk destination are present', () => {
@@ -43,7 +34,7 @@ test('V4.1 keeps the website advertisement untouched and removes the mobile TOP 
 
 test('vehicle filter panels collapse without discarding filters and expose apply/reset', () => {
   assert.match(marketplace, /accessibilityState=\{\{expanded:filtersOpen\}\}/);
-  assert.match(marketplace, /activeCategory\.source==='vehicle'&&<Pressable/);
+  assert.match(marketplace, /accessibilityLabel=\"Avtomobil filtrlərini aç\"/);
   assert.match(marketplace, /\(activeCategory\.source!=='vehicle'\|\|filtersOpen\)/);
   assert.match(marketplace, /setDraftFilters\(current=>\(\{\.\.\.current,\[field\.key\]:value\}\)\)/);
   assert.match(marketplace, /setAppliedFilters\(values\)/);

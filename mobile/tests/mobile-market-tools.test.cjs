@@ -75,6 +75,29 @@ test('listing detail provides paged full-screen media and truthful A-USTA listin
   assert.match(screen, /Elanı yadda saxla/);
 });
 
+test('mobile detail page uses real price history, masks VIN and offers seller contact and safety actions', () => {
+  const screen = read('src/components/MarketplaceScreens.tsx');
+  assert.match(screen, /austa_get_listing_price_history/);
+  assert.match(screen, /\['vin',null\]/);
+  assert.match(screen, /VIN mövcuddur/);
+  assert.match(screen, /Satıcıdan soruşun/);
+  assert.match(screen, /austa_open_listing_conversation/);
+  assert.match(screen, /austa_send_listing_message/);
+  assert.match(screen, /Təhlükəsizlik məsləhəti/);
+  assert.match(screen, /Müqayisə et/);
+  assert.match(screen, /Zəng et/);
+});
+
+test('mobile settings show supported language and currency and do not fabricate unsupported options', () => {
+  const settings = read('src/components/SettingsScreen.tsx');
+  assert.match(settings, /Azərbaycan dili/);
+  assert.match(settings, /AZN/);
+  assert.match(settings, /qaranlıq tema yoxdur/);
+  assert.match(settings, /canlı məzənnə/);
+  assert.match(settings, /Linking\.openSettings/);
+  assert.match(settings, /Bizimlə əlaqə/);
+});
+
 test('video feed reads only attached video rows that resolve to active public listings', () => {
   const core = read('src/lib/marketplace.ts');
   const screen = read('src/components/MarketplaceScreens.tsx');

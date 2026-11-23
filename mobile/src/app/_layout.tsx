@@ -27,6 +27,8 @@ export default function RootLayout() {
       <Stack.Screen name="tools/catalog" options={{ title: 'Avtokataloq' }} />
       <Stack.Screen name="tools/dealers" options={{ title: 'Dilerlər' }} />
       <Stack.Screen name="tools/most-viewed" options={{ title: 'Ən çox baxılanlar' }} />
+      <Stack.Screen name="settings" options={{ headerShown: false }} />
+      <Stack.Screen name="videos" options={{ headerShown: false }} />
     </Stack>
   </SafeAreaProvider>;
 }

@@ -61,8 +61,8 @@ test('each category filter is applied to its configured live query column', asyn
 
 test('homepage switches the selected category above adaptive search and queries its real table', () => {
   assert.match(appSource, /CATEGORIES\.map\(c=>/);
-  assert.match(appSource, /setHomeCategory\(c\.key\);setSearch\(''\);setDraftFilters\(\{\}\);setAppliedFilters\(\{\}\)/);
-  assert.match(appSource, /listCategory\(sb,activeCategory,\{from:0,to:39,search,filters:appliedFilters\}\)/);
+  assert.match(appSource, /setHomeCategory\(c\.key\);setSearch\(''\);setHomeBrand\(''\);setHomeModel\(''\);setDraftFilters\(\{\}\);setAppliedFilters\(\{\}\)/);
+  assert.match(appSource, /listCategory\(sb,activeCategory,\{from:0,to:39,search,brand:homeBrand,model:homeModel,filters:appliedFilters\}\)/);
   assert.match(appSource, /CATEGORY_FILTERS\[homeCategory\]/);
 });
 

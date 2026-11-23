@@ -18,7 +18,8 @@ test('cold-start routes do not eagerly import the map and account native screens
     assert.doesNotMatch(source, /from ['"][^'"]*\/App['"]/);
     assert.doesNotMatch(source, /react-native-maps|ServiceScreens|AccountScreens/);
   }
-  assert.match(read('src/app/(drawer)/_layout.tsx'), /components\/ServiceDrawer/);
+  assert.match(read('src/app/(drawer)/_layout.tsx'), /<Stack/);
+  assert.doesNotMatch(read('src/app/(drawer)/_layout.tsx'), /drawerType|swipeEnabled|<Drawer/);
   assert.match(read('src/app/(drawer)/(tabs)/index.tsx'), /components\/MarketplaceScreens/);
   assert.match(read('src/app/service/[key].tsx'), /components\/ServiceScreens/);
   assert.match(read('src/app/(drawer)/(tabs)/account.tsx'), /components\/AccountScreens/);
