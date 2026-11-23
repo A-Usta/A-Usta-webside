@@ -80,6 +80,9 @@ test('mobile detail page uses real price history, masks VIN and offers seller co
   assert.match(screen, /austa_get_listing_price_history/);
   assert.match(screen, /key!=='vin'/);
   assert.match(screen, /VIN mövcuddur/);
+  assert.match(screen, /const summary=category==='cars'/);
+  assert.match(screen, /const isVehicleSale=category==='cars'/);
+  assert.match(screen, /position:'absolute',left:7,top:7/);
   assert.match(screen, /Satıcıdan soruşun/);
   assert.match(screen, /austa_open_listing_conversation/);
   assert.match(screen, /austa_send_listing_message/);
