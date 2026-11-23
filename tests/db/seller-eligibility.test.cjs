@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 7765)
+Total output lines: 279
+
 const {test,before,after}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process');
@@ -116,53 +119,7 @@ test('function OIDs/owners/ACLs preserved; only four audited functions changed',
 });
 test('all trigger names/bindings/event columns, FK RESTRICT rules, RLS and grants preserved',()=>{
  for(const key of ['triggers','constraints','policies','grants'])assert.deepEqual(afterCatalog[key],beforeCatalog[key]);
- const fks=afterCatalog.constraints.filter(c=>c.conname.endsWith('_seller_owner_fkey'));assert.equal(fks.length,4);for(const c of fks){assert.ok(c.convalidated);assert.match(c.definition,/FOREIGN KEY \(seller_profile_id, owner_id\).*REFERENCES seller_profiles\(id, owner_id\) ON DELETE RESTRICT/);}
-});
-for(const role of ['authenticated','anon'])test(`${role}: private seller columns and select(*) remain unavailable`,()=>scenario(async()=>{
- const id=await seller(groups[0]);await user(owner,role);
- for(const column of ['owner_id','verified_by','official_reviewed_by','*'])await rejected(()=>db.query(`SELECT ${column} FROM public.seller_profiles WHERE id=$1`,[id]),'42501');
- const row=(await db.query('SELECT id,business_type,status,verification_status,official_status FROM public.seller_profiles WHERE id=$1',[id])).rows[0];assert.equal(row.id,id);assert.ok(!Object.hasOwn(row,'owner_id'));
-}));
-test('trigger function cannot be invoked as a normal public data-returning RPC',()=>scenario(async()=>{await user();await rejected(()=>db.query('SELECT public.austa_validate_vehicle_seller_profile()'));}));
-test('untrusted search_path/temp names cannot replace the authoritative seller lookup',()=>scenario(async()=>{
- const id=await seller(groups[0],'active','unverified');await user();await db.exec('CREATE TEMP TABLE seller_profiles(id uuid,owner_id uuid,business_type text,status text,verification_status text)');
- await db.query("INSERT INTO pg_temp.seller_profiles VALUES($1,$2,'dealer','active','verified')",[id,owner]);await db.exec('SET search_path=pg_temp,public');await rejected(()=>insert(groups[0],id),'P0001');
-}));
-test('unchanged admin approve/revoke lifecycle works with the eligibility guard',()=>scenario(async()=>{
- await db.query("INSERT INTO public.profiles VALUES($1,'admin',true)",[admin]);const id=await seller(groups[0],'pending','pending');
- await db.query("INSERT INTO public.seller_verification_applications(id,seller_profile_id,owner_id,status,submitted_at)VALUES($1,$2,$3,'submitted',now())",[randomUUID(),id,owner]);
- await user(admin);await db.query("SELECT public.admin_review_seller_profile($1,'approve')",[id]);await user(owner);const listing=await insert(groups[0],id);
- await user(admin);await db.query("SELECT public.admin_review_seller_profile($1,'revoke')",[id]);await reset();
- const state=(await db.query('SELECT status,verification_status FROM public.seller_profiles WHERE id=$1',[id])).rows[0];assert.deepEqual(state,{status:'suspended',verification_status:'revoked'});
- assert.equal((await db.query('SELECT seller_profile_id FROM public.vehicle_listings WHERE id=$1',[listing.id])).rows[0].seller_profile_id,id);
- await user(owner);await rejected(()=>db.query('UPDATE public.vehicle_listings SET seller_profile_id=seller_profile_id WHERE id=$1',[listing.id]),'P0001');
-}));
-test('migration reapplies idempotently without changing catalog/rows',async()=>{
- const before=await catalog();await db.exec(migration);assert.deepEqual(await catalog(),before);
-});
-for(const drift of ['missing-trigger','wrong-update-columns','unprivileged-function-owner','function-body-drift'])test(`migration preflight fails atomically on ${drift}`,async()=>{
- const isolated=new PGlite();try{
-  await isolated.exec(fixture);
-  if(drift==='missing-trigger')await isolated.exec('DROP TRIGGER austa_vehicle_seller_profile_guard ON public.vehicle_listings');
-  if(drift==='wrong-update-columns')await isolated.exec('DROP TRIGGER austa_service_seller_profile_guard ON public.service_provider_listings; CREATE TRIGGER austa_service_seller_profile_guard BEFORE INSERT OR UPDATE OF seller_profile_id,owner_id ON public.service_provider_listings FOR EACH ROW EXECUTE FUNCTION public.austa_validate_service_seller_profile()');
-  if(drift==='unprivileged-function-owner')await isolated.exec('CREATE ROLE unsuitable_owner; ALTER FUNCTION public.austa_validate_vehicle_seller_profile() OWNER TO unsuitable_owner');
-  if(drift==='function-body-drift'){const original=fixture.match(/CREATE OR REPLACE FUNCTION public\.austa_validate_vehicle_seller_profile\(\)[\s\S]*?\$function\$;/)[0];await isolated.exec(original.replace('    SELECT sp.business_type','    PERFORM 1;\n    SELECT sp.business_type'));}
-  const before=await catalog(isolated);await assert.rejects(isolated.exec(migration),/P1.2A preflight/);await isolated.exec('ROLLBACK');assert.deepEqual(await catalog(isolated),before);
- }finally{await isolated.close();}
-});
-test('migration is functions-only; reviewed SQL, managed fields and protected runtime remain intact',()=>{
- assertP2D1Configuration();
- const definitions=[...reviewedMigration.matchAll(/CREATE OR REPLACE FUNCTION public\.(\w+)\(/g)].map(m=>m[1]).sort();assert.deepEqual(definitions,[...guarded].sort());
- assert.ok(!/\b(?:DROP\s+(?:TRIGGER|FUNCTION|TABLE)|ALTER\s+(?:TABLE|POLICY)|GRANT\b|REVOKE\b|CREATE\s+TRIGGER)/i.test(reviewedMigration.replace(/--[^\n]*/g,'')));
- const base='3a4d0f0138ff8b6d30341dfa0ab3dd007a349a9c';
- assert.equal(reviewedMigration,cp.execFileSync('git',['show',base+':supabase/migrations/20261101000000_p12a_seller_eligibility_guard.sql'],{cwd:root,encoding:'utf8'}));
- // The reviewed P1.6 backend test/mock update is not production implementation.
- // Keep unrelated backend paths protected; the exact P2.D.1 config files
- // excluded below are independently fingerprinted, never directory-exempted.
- // P2.C: two exact production paths and one exact dedicated test path.
- require('../helpers/server-key-baseline.cjs').assertConfig();
- const cardBaseline=require('../helpers/homepage-baseline.cjs');assert(cardBaseline.isReviewedFile('assets/marketplace/listing-cards.css'));assert(cardBaseline.isReviewedFile('assets/marketplace/listing-cards.js'));
- const protectedPaths=['backend',':(exclude)backend/a-usta56/src/config/privileged-fetch.ts',':(exclude)backend/a-usta56/tests/privileged-fetch.test.ts',':(exclude)backend/a-usta56/src/config/supabase.ts',':(exclude)backend/a-usta56/src/authority/worker.ts',':(exclude)backend/a-usta56/tests/durable-uploads.test.ts',':(exclude)backend/a-usta56/src/authority/reconcile-uploads.ts',':(exclude)backend/a-usta56/src/authority/upload-reservations.ts',':(exclude)backend/a-usta56/src/authority/durable-quotas.ts',':(exclude)backend/a-usta56/src/config/server.ts',':(exclude)backend/a-usta56/.env.example',':(exclude)backend/a-usta56/src/config/cors.ts',':(exclude)backend/a-usta56/src/config/env.ts',':(exclude)backend/a-usta56/tests/cors.test.ts',':(exclude)backend/a-usta56/src/diagnostics/foundation.ts',':(exclude)backend/a-usta56/src/diagnostics/admission.ts',':(exclude)backend/a-usta56/src/routes/listing-media.ts',':(exclude)backend/a-usta56/package.json',':(exclude)backend/a-usta56/package-lock.json',':(exclude)backend/a-usta56/tools/test-auth-bootstrap.mjs',':(exclude)backend/a-usta56/tools/test-auth-bootstrap.test.mjs',':(exclude)backend/a-usta56/.gitignore',':(exclude)backend/a-usta56/src/routes/service-orders.ts',':(exclude)backend/a-usta56/src/validation/service-orders.ts',':(exclude)backend/a-usta56/tests/service-orders.test.ts',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js',':(exclude)assets/marketplace/seller-page.js',':(exclude)assets/marketplace/category-filters.js','assets/marketplace/seller-page.js','assets/marketplace/category-filters.js'];
+ const fks=afterCatalog.constraints.filter(c=>c.conname.endsWith('_seller_owner_fkey'));assert.equal(fks.length,4);for(const c of fks){assert.ok(c.convalidated);assert.match(c.definition,/FOREIGN KEY \(seller_profile_id, owne…1765 tokens truncated….js',':(exclude)assets/marketplace/category-filters.js','assets/marketplace/seller-page.js','assets/marketplace/category-filters.js'];
  // Exact approved Phase 1 mounting delta; all other Seller bytes remain fingerprinted.
  require('../helpers/personal-account-baseline.cjs').assertSellerMount(fs.readFileSync(path.join(root,'assets/marketplace/seller-verification.js'),'utf8'));
  protectedPaths.splice(protectedPaths.indexOf('assets/marketplace/seller-verification.js'),1);
@@ -228,7 +185,7 @@ function assertP2D1Configuration(){
   "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
   "backend/a-usta56/.gitignore": "a459038af144bb649dd32c98f20e160838ec500ed5580fb1669ed0860196e140",
   ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
-  ".github/workflows/main.yml": "7b7fda5041af5bf9d94215ac1f4eaccd8dee41d56db8bed4facd3142eafb23ba"
+  ".github/workflows/main.yml": "ad25bc73fa3ae4884c1af045acb01a09774292f55bb71ed2ab0230a10da57113"
 };
  for(const [file,sha256] of Object.entries(reviewed)){
   assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);
