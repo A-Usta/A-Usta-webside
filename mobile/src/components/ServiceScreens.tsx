@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import MapView, { Marker, Region } from 'react-native-maps';
+import type { Region } from 'react-native-maps';
 import { getSupabaseClient } from '../lib/supabase';
 import { createServiceOrder, customerPriceAction, dispatchServiceOrder, loadCustomerOrders, loadProviderAssignments, newClientOrderId, ORDER_STATUSES, providerAction, providerPriceOffer, reconcileOrder, ServiceApiError, type OrderAnswer, type ServiceOrder, uploadProviderEvidence } from '../lib/service-orders';
 
@@ -75,6 +75,9 @@ function PriceOffer({client,assignment,onSaved}:{client:NonNullable<ReturnType<t
 type PublicProvider={listing_id:string;provider_type:string;public_name:string;public_area:string;public_address:string|null;public_phone:string|null;latitude:number|null;longitude:number|null;location_kind:'business'|'service_area';services:string[]};
 const mapFilters:[string,string][]=[['all','Hamısı'],['usta','Ustalar'],['service','Servislər'],['repair','Təmir'],['wash','Avtoyuma'],['tyre','Təkər'],['alignment','Razval']];
 export function ServiceLocationsScreen(){
+ // The map native module is deferred until this route mounts; cold-start does not initialize Google Maps.
+ // eslint-disable-next-line @typescript-eslint/no-require-imports
+ const {default:MapView,Marker}=require('react-native-maps') as typeof import('react-native-maps');
  const client=useMemo(()=>getSupabaseClient(),[]);const [position,setPosition]=useState({latitude:40.4093,longitude:49.8671}),[area,setArea]=useState('Bakı'),[city,setCity]=useState('Bakı'),[query,setQuery]=useState(''),[filter,setFilter]=useState('all'),[rows,setRows]=useState<PublicProvider[]>([]),[selected,setSelected]=useState<PublicProvider|null>(null),[loading,setLoading]=useState(false),[error,setError]=useState(''),[permission,setPermission]=useState<'unknown'|'granted'|'denied'>('unknown'),[region,setRegion]=useState<Region>({latitude:40.4093,longitude:49.8671,latitudeDelta:.22,longitudeDelta:.22}),[offset,setOffset]=useState(0),[hasMore,setHasMore]=useState(false);
  const discover=useCallback(async(next=0,category=filter)=>{if(!client){setError('Supabase anon konfiqurasiyası tapılmadı.');return;}setLoading(true);setError('');try{const h=Math.min(region.latitudeDelta,.48)/2,w=Math.min(region.longitudeDelta,.48)/2;const {data,error:e}=await client.rpc('discover_public_providers',{south:region.latitude-h,west:region.longitude-w,north:region.latitude+h,east:region.longitude+w,query:clean(query).slice(0,120),area:clean(area).slice(0,100),countrywide:false,result_offset:next,category});if(e)throw e;const list=(Array.isArray(data)?data:[]) as PublicProvider[];setRows(current=>next?[...current,...list]:list);setOffset(next);setHasMore(list.length===40&&next<80);setSelected(null);}catch(e){setError(errorText(e));}finally{setLoading(false);}},[client,region,area,query,filter]);
  // Fetch once on mount and whenever the explicit category filter changes; map pans/search text are sent only after the user presses Search.

@@ -56,7 +56,7 @@ export function ServiceDrawer({ navigation }: { navigation: { closeDrawer: () =>
       <Feather name={open ? 'chevron-up' : 'chevron-down'} size={19} color={MUTED} />
     </Pressable>
     {open && <View style={styles.serviceList}>{serviceItems.map(item => <Pressable key={item.key} accessibilityRole="button" onPress={() => go(item.key, item.title)} style={({ pressed }) => [styles.serviceLink, pressed && styles.pressed]}>
-      <View style={styles.serviceIcon}><Feather name={item.icon} size={18} color={GREEN} /></View><View style={styles.serviceCopy}><Text style={styles.serviceTitle}>{item.title}</Text><Text numberOfLines={1} style={styles.serviceNote}>{item.note}</Text></View><Feather name="chevron-right" size={17} color="#A1A8B1" />
+      <View style={styles.serviceIcon}><Feather name={item.icon} size={18} color={GREEN} /></View><View style={styles.serviceCopy}><Text style={styles.serviceTitle}>{item.title}</Text><Text style={styles.serviceNote}>{item.note}</Text></View><Feather name="chevron-right" size={17} color="#A1A8B1" />
     </Pressable>)}</View>}
     <View style={styles.drawerDivider} />
     <Pressable accessibilityRole="button" onPress={() => { navigation.closeDrawer(); setOpen(false); }} style={styles.drawerNav}><Feather name="home" size={19} color={INK} /><Text style={styles.drawerNavText}>Əsas səhifə</Text></Pressable>
@@ -92,7 +92,7 @@ export function HomeScreen() {
     <View style={styles.searchBox}><Feather name="search" size={19} color={MUTED} /><TextInput accessibilityLabel="Axtarış" placeholder="Marka, model və ya elan axtar" placeholderTextColor="#98A1AB" value={query} onChangeText={setQuery} style={styles.searchInput} returnKeyType="search" /><Pressable accessibilityLabel="Filtrlər" onPress={() => Alert.alert('Filtrlər', 'Axtarış filtrləri M3 mərhələsində qoşulacaq.')}><Feather name="sliders" size={20} color={GREEN} /></Pressable></View>
     <View style={styles.brandBanner}><Image source={require('./assets/austa-top-static-banner.webp')} style={styles.bannerImage} resizeMode="contain" accessibilityLabel="A-USTA reklamı" /></View>
     <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Kateqoriyalar</Text><Text style={styles.sectionHint}>Hamısına bax</Text></View>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryStrip}>{categories.slice(0, 6).map(([key, title, icon]) => <Pressable key={key} onPress={() => openCategory(key, title)} style={styles.categoryTile}><View style={styles.categoryIcon}><Feather name={icon as keyof typeof Feather.glyphMap} size={20} color={GREEN} /></View><Text numberOfLines={2} style={styles.categoryLabel}>{title}</Text></Pressable>)}</ScrollView>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryStrip}>{categories.slice(0, 6).map(([key, title, icon]) => <Pressable key={key} onPress={() => openCategory(key, title)} style={styles.categoryTile}><View style={styles.categoryIcon}><Feather name={icon as keyof typeof Feather.glyphMap} size={20} color={GREEN} /></View><Text style={styles.categoryLabel}>{title}</Text></Pressable>)}</ScrollView>
     <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Son avtomobil elanları</Text><Pressable onPress={() => openCategory('cars', 'Avtomobillər')}><Text style={styles.moreText}>Hamısına bax</Text></Pressable></View>
     {loading ? <StateCard icon="loader" title="Elanlar yüklənir" body="A-USTA elanları yoxlanılır…" /> : error ? <StateCard icon="wifi-off" title="Elanlar hazırda əlçatan deyil" body={error} action="Yenidən yoxla" onAction={() => { setLoading(true); void load(); }} /> : listings.length === 0 ? <StateCard icon="search" title="Aktiv elan tapılmadı" body="Yeni elanlar dərc edildikdə burada görünəcək." /> : <View style={styles.listingGrid}>{listings.filter(item => !query || `${item.brand} ${item.model}`.toLowerCase().includes(query.toLowerCase())).slice(0, 8).map(item => <ListingCard key={item.id} item={item} onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id } })} />)}</View>}
     <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Bütün elan kateqoriyaları</Text></View>
@@ -103,10 +103,10 @@ export function HomeScreen() {
 function ListingCard({ item, onPress }: { item: Listing; onPress: () => void }) {
   return <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.listingCard, pressed && styles.pressed]}>
     <View style={styles.listingImage}><Feather name="truck" size={30} color="#A6AFB9" /><Text style={styles.noMedia}>Şəkil mövcud deyil</Text></View>
-    <Text numberOfLines={1} style={styles.listingPrice}>{item.price == null ? 'Qiymət soruşun' : `${Number(item.price).toLocaleString('az-AZ')} AZN`}</Text>
-    <Text numberOfLines={1} style={styles.listingTitle}>{item.brand} {item.model}</Text>
-    <Text numberOfLines={1} style={styles.listingMeta}>{[item.year, item.engine_volume ? `${item.engine_volume} L` : '', item.mileage ? `${Number(item.mileage).toLocaleString('az-AZ')} km` : ''].filter(Boolean).join(' · ')}</Text>
-    <Text numberOfLines={1} style={styles.listingLocation}>{item.region || 'Azərbaycan'}</Text>
+    <Text style={styles.listingPrice}>{item.price == null ? 'Qiymət soruşun' : `${Number(item.price).toLocaleString('az-AZ')} AZN`}</Text>
+    <Text style={styles.listingTitle}>{item.brand} {item.model}</Text>
+    <Text style={styles.listingMeta}>{[item.year, item.engine_volume ? `${item.engine_volume} L` : '', item.mileage ? `${Number(item.mileage).toLocaleString('az-AZ')} km` : ''].filter(Boolean).join(' · ')}</Text>
+    <Text style={styles.listingLocation}>{item.region || 'Azərbaycan'}</Text>
   </Pressable>;
 }
 
@@ -136,7 +136,7 @@ function StateCard({ icon, title, body, action, onAction }: { icon: keyof typeof
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#F4F6F8' }, homeContent: { paddingBottom: 28 },
-  wordmark: { color: GREEN, fontSize: 22, fontWeight: '900', letterSpacing: 1.1 }, wordmarkSmall: { fontSize: 19 },
+  wordmark: { color: GREEN, fontSize: 22, fontWeight: '900', letterSpacing: 1.1, flexShrink: 0 }, wordmarkSmall: { fontSize: 19 },
   homeHeader: { backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingTop: 12, paddingBottom: 14, gap: 16 }, menuButton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' }, notification: { marginLeft: 'auto', width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   searchBox: { marginHorizontal: 16, marginTop: 14, height: 50, borderRadius: 13, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: LINE, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }, searchInput: { flex: 1, paddingVertical: 0, color: INK, fontSize: 14 },
   brandBanner: { width: '100%', aspectRatio: 1920 / 210, overflow: 'hidden', backgroundColor: '#16120F' }, bannerImage: { width: '100%', height: '100%' },

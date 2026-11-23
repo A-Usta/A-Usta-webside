@@ -43,5 +43,6 @@ module.exports = ({ config }) => ({
         ? { androidGoogleMapsApiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY }
         : {},
     ],
+    './plugins/with-workmanager-r8',
   ],
 });

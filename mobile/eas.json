@@ -26,6 +26,33 @@
       "env": {
         "EXPO_PUBLIC_APP_ENV": "test"
       }
+    },
+    "test-android": {
+      "distribution": "internal",
+      "environment": "preview",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "test"
+      }
+    },
+    "test-ios-simulator": {
+      "distribution": "internal",
+      "environment": "preview",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "test"
+      }
+    },
+    "test-ios-device": {
+      "distribution": "internal",
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "test"
+      }
     }
   }
 }

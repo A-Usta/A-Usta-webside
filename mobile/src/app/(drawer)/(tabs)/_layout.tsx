@@ -12,8 +12,8 @@ export default function TabLayout() {
     headerShown: false,
     tabBarActiveTintColor: GREEN,
     tabBarInactiveTintColor: MUTED,
-    tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginBottom: 2 },
-    tabBarStyle: { height: 57 + insets.bottom, paddingTop: 5, paddingBottom: Math.max(insets.bottom, 5), borderTopColor: '#E8EBEF', backgroundColor: '#FFFFFF' },
+    tabBarLabelStyle: { fontSize: 9, fontWeight: '600', marginBottom: 2, flexShrink: 1, textAlign: 'center' },
+    tabBarStyle: { minHeight: 61 + insets.bottom, paddingTop: 5, paddingBottom: Math.max(insets.bottom, 5), borderTopColor: '#E8EBEF', backgroundColor: '#FFFFFF' },
   }}>
     <Tabs.Screen name="index" options={{ title: 'Əsas', tabBarIcon: ({ color, size }) => <Feather name="home" color={String(color)} size={size} /> }} />
     <Tabs.Screen name="favorites" options={{ title: 'Seçilmişlər', tabBarIcon: ({ color, size }) => <Feather name="heart" color={String(color)} size={size} /> }} />

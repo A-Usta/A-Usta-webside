@@ -22,15 +22,28 @@ function loadConfig(env) {
   });
 }
 
-test('M6 EAS profiles are TEST-only, create Android APKs and provide an iOS simulator build', () => {
-  assert.deepEqual(Object.keys(eas.build).sort(), ['development', 'preview']);
+test('M6 EAS profiles are TEST-only, create Android APKs and provide iOS simulator and device builds', () => {
+  assert.deepEqual(Object.keys(eas.build).sort(), [
+    'development',
+    'preview',
+    'test-android',
+    'test-ios-device',
+    'test-ios-simulator',
+  ]);
   for (const profile of Object.values(eas.build)) {
     assert.equal(profile.environment, 'preview');
     assert.equal(profile.env.EXPO_PUBLIC_APP_ENV, 'test');
     assert.equal(profile.distribution, 'internal');
-    assert.equal(profile.android.buildType, 'apk');
   }
+  assert.equal(eas.build.development.android.buildType, 'apk');
+  assert.equal(eas.build.preview.android.buildType, 'apk');
+  assert.equal(eas.build['test-android'].android.buildType, 'apk');
   assert.equal(eas.build.development.ios.simulator, true);
+  assert.equal(eas.build['test-ios-simulator'].ios.simulator, true);
+  assert.notEqual(eas.build['test-ios-device'].ios?.simulator, true);
+  assert.equal(app.owner, 'austa-az');
+  assert.equal(app.slug, 'a-usta-mobile-fo0dl5bou9jy0p3h7snjv');
+  assert.equal(app.extra.eas.projectId, '1b6dc2f0-e7df-4a1f-bc85-05c6a144101c');
   assert.equal(app.android.package, 'az.austa.mobile');
   assert.equal(app.ios.bundleIdentifier, 'az.austa.mobile');
   assert.equal(app.scheme, 'austa');
