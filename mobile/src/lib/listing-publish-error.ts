@@ -48,7 +48,7 @@ export function listingPublishError(error: unknown, phase: PublishPhase): string
     return 'Sessiyanın vaxtı bitib. Hesabınıza yenidən daxil olun.';
   }
   if (code === '42501' || /row.level security|permission denied|not authorized|unauthorized/.test(technical)) {
-    return 'Bu əməliyyat üçün hesab icazəsi təsdiqlənmədi. Hesabınıza yenidən daxil olun və təkrar cəhd edin.';
+    return `${phaseText[phase]} Server bu hesab üçün əməliyyata icazə vermədi. Sessiya aktivdirsə, dəstəyə müraciət edin.`;
   }
   if (code === '23503' || /seller profile|seller_profile|foreign key/.test(technical)) {
     return 'Satıcı profili və ya elan sahibi uyğun gəlmir. Profil seçimini yoxlayın.';

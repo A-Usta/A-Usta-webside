@@ -162,4 +162,8 @@ test('mobile equipment choices and detail values match the website category cata
     require: name => name === '../data/listing-equipment.json' ? mobileCatalog : {},
   });
   const { equipmentValue, selectedEquipment } = helperModule.exports;
-  
+  assert.deepEqual(Array.from(selectedEquipment('["ABS","ABS","not-an-option",7]', 'cars')), ['ABS']);
+  assert.equal(equipmentValue('["ABS"]', 'cars', 'ABS'), '[]');
+  assert.deepEqual(JSON.parse(equipmentValue('[]', 'cars', 'ABS')), ['ABS']);
+  assert.equal(equipmentValue('["ABS"]', 'cars', 'not-an-option'), '["ABS"]');
+});

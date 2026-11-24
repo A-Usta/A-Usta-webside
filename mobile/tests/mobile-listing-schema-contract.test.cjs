@@ -73,6 +73,14 @@ test('vehicle equipment remains a JSONB details value as the website and migrati
   assert.equal(Object.hasOwn(vehicle, 'equipment'), false);
 });
 
+test('vehicle details column privileges cover website public reads and authenticated owner writes without changing RLS', () => {
+  const migration = fs.readFileSync(path.resolve(__dirname, '../../supabase/migrations/20261125090000_v42_vehicle_details_column_grants.sql'), 'utf8');
+  assert.match(migration, /GRANT SELECT \(details\)[\s\S]*TO anon/);
+  assert.match(migration, /GRANT SELECT \(details\), INSERT \(details\), UPDATE \(details\)[\s\S]*TO authenticated/);
+  assert.doesNotMatch(migration, /GRANT\s+(?:ALL|SELECT|INSERT|UPDATE)\s+ON TABLE public\.vehicle_listings\s+TO/i);
+  assert.doesNotMatch(migration, /CREATE POLICY|ALTER POLICY|DISABLE ROW LEVEL SECURITY/i);
+});
+
 test('dealer required flags are false instead of explicit NULL when the form does not offer them', () => {
   const dealer = context.buildPayload({ key: 'dealer', source: 'auto_dealer', title: 'Dealer' }, values, 'owner', null);
   for (const field of ['credit_available','leasing_available','barter_available','delivery_available']) assert.equal(dealer[field], false);

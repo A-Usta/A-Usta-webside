@@ -19,7 +19,9 @@ test('maps PostgREST plain-object constraint errors to safe Azerbaijani guidance
     listingPublishError({ code: '23514', message: 'new row violates check constraint "vehicle_listings_price_by_type"' }, 'draft'),
     'Satış elanı üçün qiyməti, icarə elanı üçün günlük qiyməti düzgün daxil edin.',
   );
-  assert.match(listingPublishError({ code: '42501', message: 'new row violates row-level security policy' }, 'media-upload'), /icazəsi təsdiqlənmədi/);
+  assert.match(listingPublishError({ code: '42501', message: 'permission denied for table vehicle_listings' }, 'draft'), /qaralaması yaradılmadı.*Server bu hesab üçün əməliyyata icazə vermədi/);
+  assert.doesNotMatch(listingPublishError({ code: '42501', message: 'permission denied for table vehicle_listings' }, 'draft'), /yenidən daxil olun/);
+  assert.match(listingPublishError({ code: 'PGRST301', message: 'JWT expired' }, 'draft'), /Sessiyanın vaxtı bitib.*yenidən daxil olun/);
 });
 
 test('reports the actual failed publication stage in Azerbaijani', () => {
