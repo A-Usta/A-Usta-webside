@@ -122,6 +122,10 @@ test('marketplace form has data, media, preview, draft, and publish steps', () =
   assert.match(appSource, /get_my_seller_profiles/);
   assert.match(appSource, /eq\('owner_id',auth\.user\.id\)/);
   assert.match(appSource, /eq\('status',conf\.staging\)/);
+  assert.match(appSource, /uploadListingMedia\(sb,conf\.bucket,path,file,key/);
+  assert.doesNotMatch(appSource, /fetch\(file\.uri\).*response\.blob\(\)/);
+  assert.match(appSource, /publishFlight=useRef\(false\)/);
+  assert.match(appSource, /if\(saving\|\|publishFlight\.current\)return/);
 });
 
 test('Avtoservis category separates company subtypes and retains server-owned seller checks', () => {
