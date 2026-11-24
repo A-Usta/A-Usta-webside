@@ -28,6 +28,10 @@ test('reports the actual failed publication stage in Azerbaijani', () => {
   assert.match(listingPublishError({ message: 'server error' }, 'activation'), /aktivləşdirilmədi.*Qaralamanız saxlanılıb/);
 });
 
+test('network timeouts tell the user to retry the same draft', () => {
+  assert.match(listingPublishError({ code: 'LISTING_TIMEOUT' }, 'draft'), /Eyni qaralama üzərindən yenidən cəhd edin/);
+});
+
 test('publication maps vehicle detail fields and cleans a failed new staged listing', () => {
   assert.match(screen, /body_type:values\.body_type\|\|null/);
   assert.match(screen, /vin:values\.vin\?\.trim\(\)\.toUpperCase\(\)\|\|null/);
@@ -39,6 +43,12 @@ test('publication maps vehicle detail fields and cleans a failed new staged list
   assert.match(screen, /createdThisAttempt&&currentListingId/);
   assert.match(screen, /\.delete\(\)\.eq\('id',currentListingId\).*\.eq\('status',conf\.staging\)/);
   assert.match(screen, /setError\(listingPublishError\(e,phase\)\)/);
+});
+
+test('a timed-out draft insert keeps its UUID and reconciles duplicate-key retries by owner', () => {
+  assert.match(screen, /id=newUuid\(\);currentListingId=id;setDraftId\(id\)/);
+  assert.match(screen, /async function insertListingDraft[\s\S]*insert\(\{id,\.\.\.payload\}\)[\s\S]*code==='23505'[\s\S]*eq\('id',id\)\.eq\('owner_id',owner\)/);
+  assert.match(screen, /abortSignal\(signal\).*timeoutMs:20_000/);
 });
 
 test('maps server constraint failures to an editable field', () => {

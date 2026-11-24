@@ -1,6 +1,7 @@
 import { File } from 'expo-file-system';
 import type { ImagePickerAsset } from 'expo-image-picker';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { withListingTimeout } from './listing-request';
 
 const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
 const MIME_BY_EXTENSION: Record<string, string> = {
@@ -51,12 +52,15 @@ export async function uploadListingMedia(
   const localFile = new File(asset.uri);
   const descriptor = describeListingMedia({ ...asset, fileSize: asset.fileSize ?? localFile.size ?? undefined }, categoryKey);
   onProgress?.('Media faylı hazırlanır…');
-  const bytes = await readBytes(asset.uri);
+  const bytes = await withListingTimeout(readBytes(asset.uri), 20_000);
   if (bytes.byteLength === 0 || bytes.byteLength > MAX_MEDIA_BYTES || (descriptor.size !== null && bytes.byteLength !== descriptor.size)) {
     throw new Error('Media faylı tam oxunmadı. Faylı yenidən seçib cəhd edin.');
   }
   onProgress?.('Media serverə yüklənir…');
-  const { data, error } = await client.storage.from(bucket).upload(path, bytes, { contentType: descriptor.mimeType, upsert: false });
+  const upload = client.storage.from(bucket).upload(path, bytes, { contentType: descriptor.mimeType, upsert: false });
+  const { data, error } = await withListingTimeout(upload, 60_000, async result => {
+    if (result.data?.path && !result.error) await client.storage.from(bucket).remove([path]);
+  });
   if (error) throw error;
   if (!data?.path) throw new Error('Media serverdə saxlandığı təsdiqlənmədi. Təkrar cəhd edin.');
   return descriptor;

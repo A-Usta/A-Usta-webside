@@ -9,13 +9,22 @@ const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'src/lib/listing-media-upload.ts'), 'utf8');
 const js = ts.transpile(source, { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
 const testModule = { exports: {} };
+const requestSource = fs.readFileSync(path.join(root, 'src/lib/listing-request.ts'), 'utf8');
+const requestJs = ts.transpile(requestSource, { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
+const requestModule = { exports: {} };
+vm.runInNewContext(`(function(exports,module,require){${requestJs}\n})(module.exports,module,require)`, {
+  module: requestModule,
+  setTimeout,
+  clearTimeout,
+  require: () => ({}),
+});
 class FakeFile {
   constructor(uri) { this.uri = uri; this.size = 4; }
   async bytes() { return new Uint8Array([1, 2, 3, 4]); }
 }
 vm.runInNewContext(`(function(exports,module,require){${js}\n})(module.exports,module,require)`, {
   module: testModule,
-  require: name => name === 'expo-file-system' ? { File: FakeFile } : {},
+  require: name => name === 'expo-file-system' ? { File: FakeFile } : name === './listing-request' ? requestModule.exports : {},
 });
 const { describeListingMedia, uploadListingMedia } = testModule.exports;
 

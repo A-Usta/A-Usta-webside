@@ -37,6 +37,8 @@ export function listingPublishError(error: unknown, phase: PublishPhase): string
   const code = String(failure.code || '');
   const technical = [failure.message, failure.details, failure.constraint].filter(v => typeof v === 'string').join(' ').toLowerCase();
 
+  if (code === 'LISTING_TIMEOUT') return 'Server cavabı gecikdi. Eyni qaralama üzərindən yenidən cəhd edin; təkrar elan yaratmayın.';
+
   if (typeof failure.message === 'string' && /[əğıöşüçƏĞİÖŞÜÇ]/.test(failure.message)) return failure.message;
 
   if (/internet|network request failed|failed to fetch|network error|connection|offline/.test(technical)) {
