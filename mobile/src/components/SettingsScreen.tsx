@@ -3,7 +3,7 @@ import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'r
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-const GREEN = '#176244';
+const RED = '#D92D20';
 const BG = '#F4F6F8';
 const INK = '#202A35';
 const MUTED = '#7A8491';
@@ -11,7 +11,7 @@ const LINE = '#E8EBEF';
 
 function Row({ icon, title, detail, action, disabled = false }: { icon: keyof typeof Feather.glyphMap; title: string; detail?: string; action?: () => void; disabled?: boolean }) {
   return <Pressable accessibilityRole="button" disabled={disabled} onPress={action} style={({ pressed }) => [s.row, pressed && !disabled && { backgroundColor: '#F8F9FA' }, disabled && { opacity: 0.65 }]}>
-    <Feather name={icon} size={19} color={title === 'Qaranlıq rejim' ? MUTED : GREEN}/>
+    <Feather name={icon} size={19} color={title === 'Qaranlıq rejim' ? MUTED : RED}/>
     <View style={{ flex: 1, minWidth: 0 }}><Text style={s.title}>{title}</Text>{detail ? <Text style={s.detail}>{detail}</Text> : null}</View>
     {disabled ? <Text style={s.detail}>Hazır deyil</Text> : <Feather name="chevron-right" size={18} color={MUTED}/>}
   </Pressable>;
@@ -54,5 +54,5 @@ const s = StyleSheet.create({
   section: { paddingTop: 15, paddingBottom: 4, color: INK, fontSize: 16, fontWeight: '800' },
   row: { minHeight: 61, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: LINE, paddingVertical: 10 },
   title: { color: INK, fontSize: 14, fontWeight: '700', flexShrink: 1 }, detail: { color: MUTED, fontSize: 11, lineHeight: 16, flexShrink: 1 },
-  notice: { paddingVertical: 10, color: GREEN, fontSize: 12 }, foot: { marginHorizontal: 16, color: MUTED, fontSize: 11, lineHeight: 17 },
+  notice: { paddingVertical: 10, color: RED, fontSize: 12 }, foot: { marginHorizontal: 16, color: MUTED, fontSize: 11, lineHeight: 17 },
 });

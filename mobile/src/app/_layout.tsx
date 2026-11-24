@@ -17,7 +17,7 @@ export function ErrorBoundary({ retry }: { error: Error; retry: () => void }) {
 export default function RootLayout() {
   return <SafeAreaProvider>
     <StatusBar style="dark" />
-    <Stack screenOptions={{ headerBackTitle: 'Geri', headerTintColor: '#176244', contentStyle: { backgroundColor: '#F4F6F8' } }}>
+    <Stack screenOptions={{ headerBackTitle: 'Geri', headerTintColor: '#D92D20', contentStyle: { backgroundColor: '#F4F6F8' } }}>
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
       <Stack.Screen name="service/[key]" options={{ title: 'Xidmət' }} />
       <Stack.Screen name="locations" options={{ title: 'Yaxın məntəqələr' }} />

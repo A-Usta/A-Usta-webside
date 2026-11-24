@@ -42,7 +42,8 @@ test('public nearby search uses the bounded provider RPC and native permission c
   assert.match(screens, /result_offset:next/);
   assert.match(screens, /Math\.min\(region\.latitudeDelta,\.48\)/);
   assert.match(screens, /requestForegroundPermissionsAsync/);
-  assert.match(screens, /Google Maps və ya brauzer/);
+  assert.match(screens, /Xəritədə göstər/);
+  assert.doesNotMatch(screens, /google\.com\/maps\/dir/);
   assert.doesNotMatch(screens, /geoapify\.com|api\.geoapify/i);
   assert.match(config, /expo-location/);
   assert.match(config, /react-native-maps/);

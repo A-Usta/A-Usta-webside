@@ -2,7 +2,8 @@ name: A-USTA Full Regression CI
 
 on:
   pull_request:
-    branches: [main]
+    # PR #319 and other staged PRs can target a feature branch. The previous
+    # main-only filter silently skipped all checks for those PRs.
   push:
     branches: [main]
 
@@ -14,6 +15,45 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  mobile-regression:
+    name: Mobile typecheck, lint, tests and Android JS bundle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout event commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.22.2
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install mobile dependencies
+        run: npm ci --prefix mobile --ignore-scripts
+
+      - name: Typecheck mobile
+        run: npm run typecheck --prefix mobile
+
+      - name: Lint mobile
+        run: npm run lint --prefix mobile
+
+      - name: Mobile regression tests
+        run: npm test --prefix mobile
+
+      - name: Export Android JavaScript bundle
+        run: npm run build:android-js --prefix mobile
+
+      - name: Assert repository cleanliness
+        if: always()
+        run: |
+          git status --short
+          test -z "$(git status --porcelain)"
+
   backend-static:
     name: Backend Build
     runs-on: ubuntu-24.04
@@ -248,6 +288,11 @@ jobs:
 
       - name: Install pinned Playwright Chromium
         run: npm run browser:install --prefix tests
+
+      - name: Fetch pinned listing detail contract baseline
+        run: |
+          git fetch --no-tags origin efffe4a7804f6ad1ca17001ba096970c8f5f692b
+          git cat-file -e efffe4a7804f6ad1ca17001ba096970c8f5f692b:index.html
 
       - name: Complete frontend including real Chromium and P2.A
         env:

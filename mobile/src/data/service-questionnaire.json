@@ -1,0 +1,393 @@
+{
+  "questions": {
+    "Sükan sistemi – Hidravlik": [
+      "Avtomobil marka / modeli",
+      "Sükan problemi",
+      "Əlamət",
+      "Hidravlik yağ / sızma vəziyyəti",
+      "Problemin başlama vaxtı",
+      "Şəkil / video"
+    ],
+    "Filtr təmizlənməsi": [
+      "Avtomobil marka / modeli",
+      "Filtr növü",
+      "Əlamət / problem",
+      "Son dəyişmə və ya təmizləmə vaxtı",
+      "Təmizləmə üsulu",
+      "Şəkil / video"
+    ],
+    "Bufer təmiri": [
+      "Avtomobil marka / modeli",
+      "Ön və ya arxa bufer",
+      "Zədə növü",
+      "Rəngləmə lazımdır?",
+      "Bərkidici / sensor vəziyyəti",
+      "Şəkil / video"
+    ],
+    "Benzin nasosu təmiri": [
+      "Avtomobil marka / modeli",
+      "Əlamət",
+      "Yanacaq təzyiqi ölçülüb?",
+      "Nasos səsi",
+      "Yanacaq sistemi barədə əlavə məlumat",
+      "Şəkil / video"
+    ],
+    "Elektrik": [
+      "Avtomobil marka / modeli",
+      "Elektrik hissəsi",
+      "Əlamət",
+      "Nə vaxt başlayıb?",
+      "Paneldə xəta işığı varmı?",
+      "Şəkil / video"
+    ],
+    "Çilingər": [
+      "Avtomobil marka / modeli",
+      "Xidmət növü",
+      "Açar / qapı / kilid problemi",
+      "Açar yanınızdadır?",
+      "Avtomobilin dəqiq yeri",
+      "Şəkil / video"
+    ],
+    "Fara təmiri": [
+      "Avtomobil marka / modeli",
+      "Fara hissəsi",
+      "Problem",
+      "Faranın vəziyyəti",
+      "LED / driver / naqil barədə məlumat",
+      "Şəkil / video"
+    ],
+    "Tuning": [
+      "Avtomobil marka / modeli",
+      "Mühərrik və yanacaq tipi",
+      "Hazırkı ECU / proqram / mexaniki dəyişikliklər",
+      "Tuning ilə avtomobildə nə yığılmasını istəyirsiniz?",
+      "İstənilən quruluş",
+      "Quraşdırılacaq hissələr",
+      "İstənilən nəticə: güc / tork / səs / görünüş",
+      "Büdcə (AZN)",
+      "Dyno ölçümü istəyirsiniz?",
+      "Şəkil / video"
+    ],
+    "Kuzov": [
+      "Avtomobil marka / modeli",
+      "Kuzovun hansı hissəsi",
+      "Zədə növü",
+      "Zədənin ölçüsü və vəziyyəti",
+      "Dəmirçi / malyar / dəyişmə seçimi",
+      "Rəng kodu məlumdursa",
+      "Şəkil / video"
+    ],
+    "Görünüş": [
+      "Avtomobil marka / modeli",
+      "Görünüş xidməti",
+      "İstədiyiniz nəticə",
+      "Material / rəng / effekt seçimi",
+      "Avtomobilin hazırkı vəziyyəti",
+      "Şəkil / video"
+    ],
+    "Açar təmiri": [
+      "Avtomobil marka / modeli",
+      "Açar növü",
+      "Xidmət növü",
+      "Açarın vəziyyəti",
+      "Açar yanınızdadır?",
+      "Avtomobilin yeri",
+      "Şəkil / video"
+    ],
+    "Avtoyuma": [
+      "Ad / soyad",
+      "Telefon",
+      "Avtomobil marka / modeli",
+      "Xidmət növü",
+      "Yuma paketi",
+      "Tarix",
+      "Saat",
+      "Ünvan",
+      "GPS / xəritə ünvanı",
+      "Avtomobilin xüsusi vəziyyəti",
+      "Şəkil / video"
+    ],
+    "Mühərrik": [
+      "Avtomobil marka / modeli",
+      "Mühərrik problemi / əlaməti",
+      "Səs / tüstü / yağ / temperatur vəziyyəti",
+      "Problemin başlama vaxtı",
+      "Diaqnostika nəticəsi varsa",
+      "Şəkil / video"
+    ],
+    "Karopka": [
+      "Avtomobil marka / modeli",
+      "Karopka tipi",
+      "Problem / əlamət",
+      "Keçid zamanı vəziyyət",
+      "Yağ vəziyyəti / son dəyişmə",
+      "Şəkil / video"
+    ],
+    "Fren sistemi": [
+      "Avtomobil marka / modeli",
+      "Problem",
+      "Əyləc zamanı əlamət",
+      "Disk / kolodka vəziyyəti",
+      "ABS / panel xətası",
+      "Şəkil / video"
+    ],
+    "Təkər": [
+      "Avtomobil marka / modeli",
+      "Təkər ölçüsü",
+      "Problem",
+      "Təkərin vəziyyəti",
+      "Təkər sayı",
+      "Şəkil / video"
+    ],
+    "Razval": [
+      "Avtomobil marka / modeli",
+      "Problem / əlamət",
+      "Sükan vəziyyəti",
+      "Təkər yeyilməsi",
+      "Son razval vaxtı",
+      "Şəkil / video"
+    ],
+    "Balans": [
+      "Avtomobil marka / modeli",
+      "Problem / titrəmə sürəti",
+      "Təkər ölçüsü",
+      "Təkər sayı",
+      "Son balans vaxtı",
+      "Şəkil / video"
+    ],
+    "Akkumulyator": [
+      "Avtomobil marka / modeli",
+      "Akkumulyator problemi",
+      "Starter necə işləyir?",
+      "Akkumulyatorun yaşı",
+      "Gərginlik ölçülüb?",
+      "Şəkil / video"
+    ],
+    "Katalizator təmiri": [
+      "Avtomobil marka / modeli",
+      "Əlamət",
+      "Katalizatorun vəziyyəti",
+      "Check Engine varmı?",
+      "Təmizləmə / təmir / dəyişmə seçimi",
+      "Şəkil / video"
+    ],
+    "Press təmiri": [
+      "Avtomobil marka / modeli",
+      "Press / mexanizm hissəsi",
+      "Problem",
+      "Səs / boşluq / qırılma vəziyyəti",
+      "Təmir və ya dəyişmə seçimi",
+      "Şəkil / video"
+    ],
+    "Polirovka": [
+      "Avtomobil marka / modeli",
+      "Polirovka sahəsi",
+      "Cızıq / matlıq / oksidləşmə səviyyəsi",
+      "İstədiyiniz parlaqlıq",
+      "Keramika / qoruyucu örtük istəyirsiniz?",
+      "Şəkil / video"
+    ],
+    "PPF / Wrap": [
+      "Avtomobil marka / modeli",
+      "PPF / Wrap sahəsi",
+      "Tam və ya hissəvi örtük",
+      "Material / marka istəyiniz",
+      "Rəng / şəffaf seçim",
+      "Şəkil / video"
+    ],
+    "Malyar": [
+      "Avtomobil marka / modeli",
+      "Boyanacaq hissə",
+      "Zədə / hazırlıq vəziyyəti",
+      "Rəng kodu",
+      "Tam və ya hissəvi rəngləmə",
+      "Şəkil / video"
+    ],
+    "Dəmirçi": [
+      "Avtomobil marka / modeli",
+      "Kuzov hissəsi",
+      "Əzilmə / deformasiya növü",
+      "Zədənin ölçüsü",
+      "Rəngləmə də lazımdır?",
+      "Şəkil / video"
+    ],
+    "Yağ dəyişimi": [
+      "Avtomobil marka / modeli",
+      "Yağ növü",
+      "Mühərrik / karopka",
+      "Hazırkı yağın markası və viskozitesi",
+      "Filtr dəyişdirilsin?",
+      "Şəkil / video"
+    ],
+    "Kondisioner": [
+      "Avtomobil marka / modeli",
+      "Problem",
+      "Soyutma səviyyəsi",
+      "Qaz doldurulubmu?",
+      "Sızma / kompressor vəziyyəti",
+      "Şəkil / video"
+    ],
+    "Proqramlaşdırma": [
+      "Avtomobil marka / modeli",
+      "Proqramlaşdırma növü",
+      "Hazırkı ECU vəziyyəti",
+      "İstənilən nəticə",
+      "Kod / xəta varsa",
+      "Şəkil / video"
+    ],
+    "Diaqnostika": [
+      "Avtomobil marka / modeli",
+      "Şikayət / əlamət",
+      "Paneldə xəta kodu",
+      "Diaqnostika cihazı ilə yoxlanılıb?",
+      "Yoxlanılacaq sistem",
+      "Şəkil / video"
+    ]
+  },
+  "options": {
+    "Xidmət növü": [
+      "Stasionar",
+      "Mobil — usta ünvana gəlir",
+      "Yerində xidmət"
+    ],
+    "Yuma paketi": [
+      "Standart",
+      "Premium",
+      "Dərin təmizləmə / xımçıstka",
+      "Salon + kuzov",
+      "Ustanın təklifi"
+    ],
+    "Yuma xidməti": [
+      "Stasionar avtoyuma",
+      "Mobil avtoyuma — usta ünvana gəlir"
+    ],
+    "Ön və ya arxa bufer": [
+      "Ön",
+      "Arxa"
+    ],
+    "Zədə növü": [
+      "Çat",
+      "Qırıq",
+      "Cızıq",
+      "Deformasiya",
+      "Bərkidici qırılıb",
+      "Digər"
+    ],
+    "Rəngləmə lazımdır?": [
+      "Bəli",
+      "Xeyr",
+      "Usta müəyyən etsin"
+    ],
+    "Filtr növü": [
+      "Hava",
+      "Kabin",
+      "DPF",
+      "Yanacaq",
+      "EGR / hava sistemi",
+      "Digər"
+    ],
+    "Təmizləmə üsulu": [
+      "Yerdə",
+      "Sökülüb",
+      "Usta müəyyən etsin"
+    ],
+    "Elektrik hissəsi": [
+      "Starter",
+      "Generator",
+      "Akkumulyator xətti",
+      "İşıq sistemi",
+      "Şüşəqaldıran",
+      "Sensorlar",
+      "ECU",
+      "Digər"
+    ],
+    "Açar növü": [
+      "Adi açar",
+      "Smart key",
+      "Keyless",
+      "Kart açar",
+      "İmmobilayzer"
+    ],
+    "Açar yanınızdadır?": [
+      "Bəli",
+      "Xeyr",
+      "Qırıqdır",
+      "İçəridə qalıb"
+    ],
+    "Fara hissəsi": [
+      "Sol ön",
+      "Sağ ön",
+      "Arxa",
+      "Duman",
+      "Gündüz işığı"
+    ],
+    "İstənilən quruluş": [
+      "Street Performance",
+      "Track",
+      "Drift",
+      "Drag",
+      "Power",
+      "Torque",
+      "Sound",
+      "Görünüş + performans",
+      "Kompleks",
+      "Usta təklifi"
+    ],
+    "Dyno ölçümü istəyirsiniz?": [
+      "Bəli",
+      "Xeyr",
+      "Sonra qərar verəcəyəm"
+    ],
+    "Kuzovun hansı hissəsi": [
+      "Qapı",
+      "Kapot",
+      "Bağaj",
+      "Bufer",
+      "Qanad",
+      "Dam",
+      "Eşik",
+      "Arxa hissə",
+      "Digər"
+    ],
+    "Görünüş xidməti": [
+      "Polirovka",
+      "PPF",
+      "Wrap",
+      "Detailing",
+      "Keramika",
+      "Xımçıstka",
+      "Fara",
+      "Bufer",
+      "Digər"
+    ],
+    "Təkər sayı": [
+      "1",
+      "2",
+      "4"
+    ],
+    "Rəngləmə də lazımdır?": [
+      "Bəli",
+      "Xeyr",
+      "Usta müəyyən etsin"
+    ],
+    "Filtr dəyişdirilsin?": [
+      "Bəli",
+      "Xeyr"
+    ],
+    "Check Engine varmı?": [
+      "Bəli",
+      "Xeyr",
+      "Bilmirəm"
+    ],
+    "Paneldə xəta işığı varmı?": [
+      "Bəli",
+      "Xeyr",
+      "Bilmirəm"
+    ],
+    "Yanacaq təzyiqi ölçülüb?": [
+      "Bəli — normal deyil",
+      "Bəli — normaldır",
+      "Xeyr"
+    ]
+  }
+}

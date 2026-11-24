@@ -9,6 +9,7 @@ import { attachMedia, categoryConfig, listCategory, type Listing } from '../lib/
 import { getMostViewedActiveCars, getVerifiedDealerDirectory, OFFICIAL_AUTO_CUSTOMS_CALCULATOR, type DealerDirectoryEntry } from '../lib/marketTools';
 
 const GREEN = '#176244';
+const RED = '#D92D20';
 const INK = '#202A35';
 const MUTED = '#7A8491';
 const LINE = '#E8EBEF';
@@ -28,11 +29,11 @@ const styles = StyleSheet.create({
   iconBox: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#EAF2ED', alignItems: 'center', justifyContent: 'center' },
   result: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: LINE, paddingVertical: 8 },
   cardImage: { width: 78, height: 66, borderRadius: 10, backgroundColor: '#EDF0F2' },
-  action: { minHeight: 44, borderRadius: 10, backgroundColor: GREEN, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+  action: { minHeight: 44, borderRadius: 10, backgroundColor: RED, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
   actionText: { color: '#fff', fontWeight: '800', fontSize: 13 },
   secondary: { minHeight: 42, borderRadius: 10, backgroundColor: '#fff', borderWidth: 1, borderColor: LINE, paddingHorizontal: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
   chip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: LINE, backgroundColor: '#fff' },
-  chipOn: { backgroundColor: GREEN, borderColor: GREEN },
+  chipOn: { backgroundColor: RED, borderColor: RED },
 });
 
 type QuickTool = { title: string; icon: keyof typeof Feather.glyphMap; route: '/tools/most-viewed' | '/tools/customs' | '/tools/catalog' };
