@@ -58,7 +58,7 @@ test('listing media step supports direct camera capture and safe native permissi
   assert.match(screen, /requestCameraPermissionsAsync\(\)/);
   assert.match(screen, /launchCameraAsync\(\{mediaTypes:\['images','videos'\]/);
   assert.match(screen, /Kamera ilə çək/);
-  assert.match(screen, /setAssets\(current=>\[\.\.\.current,result\.assets\[0\]\]\.slice\(0,10\)\)/);
+  assert.match(screen, /setAssets\(current=>\[\.\.\.current,result\.assets\[0\]\]\)/);
   assert.match(app, /"cameraPermission":\s*"A-USTA elanınıza birbaşa kameradan/);
   assert.match(app, /"microphonePermission":\s*"A-USTA elanınıza kameradan video çəkərkən/);
 });

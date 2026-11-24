@@ -11,7 +11,7 @@ const errorModule = new Module(errorPath, module);
 errorModule.filename = errorPath;
 errorModule.paths = Module._nodeModulePaths(path.dirname(errorPath));
 errorModule._compile(compiled, errorPath);
-const { listingPublishError } = errorModule.exports;
+const { listingPublishError, listingPublishField } = errorModule.exports;
 const screen = fs.readFileSync(path.resolve(__dirname, '../src/components/MarketplaceScreens.tsx'), 'utf8');
 
 test('maps PostgREST plain-object constraint errors to safe Azerbaijani guidance', () => {
@@ -30,6 +30,7 @@ test('reports the actual failed publication stage in Azerbaijani', () => {
 
 test('publication maps vehicle detail fields and cleans a failed new staged listing', () => {
   assert.match(screen, /body_type:values\.body_type\|\|null/);
+  assert.match(screen, /vin:values\.vin\?\.trim\(\)\.toUpperCase\(\)\|\|null/);
   assert.match(screen, /replace\(',',\s*'\.'\)/);
   assert.match(screen, /phase='draft'/);
   assert.match(screen, /phase='media-upload'/);
@@ -38,4 +39,20 @@ test('publication maps vehicle detail fields and cleans a failed new staged list
   assert.match(screen, /createdThisAttempt&&currentListingId/);
   assert.match(screen, /\.delete\(\)\.eq\('id',currentListingId\).*\.eq\('status',conf\.staging\)/);
   assert.match(screen, /setError\(listingPublishError\(e,phase\)\)/);
+});
+
+test('maps server constraint failures to an editable field', () => {
+  assert.equal(listingPublishField({ code: '23514', constraint: 'vehicle_listings_price_by_type' }), 'price');
+  assert.equal(listingPublishField({ code: '23514', constraint: 'vehicle_listings_year_check' }), 'year');
+  assert.equal(listingPublishField({ code: '23514', constraint: 'vehicle_listings_vin_format_check' }), 'vin');
+  assert.equal(listingPublishField({ code: '23514', constraint: 'vehicle_listings_mileage_check' }), 'mileage');
+});
+
+test('validation returns to and focuses the affected field; media follows the web no-count-limit behavior', () => {
+  assert.match(screen, /jumpToField\(field\)/);
+  assert.match(screen, /formScroll\.current\?\.scrollTo/);
+  assert.match(screen, /fieldInputs\.current\[field\]\?\.focus/);
+  assert.match(screen, /selectionLimit:0/);
+  assert.doesNotMatch(screen, /slice\(0,10\)/);
+  assert.doesNotMatch(screen, /assets\.length>=10/);
 });
