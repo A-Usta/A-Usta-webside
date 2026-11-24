@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import vehicleCatalog from '../data/vehicle-catalog.json';
 import { getSupabaseClient } from '../lib/supabase';
+import { userErrorMessage } from '../lib/user-error';
 import { attachMedia, categoryConfig, listCategory, type Listing } from '../lib/marketplace';
 import { getMostViewedActiveCars, getVerifiedDealerDirectory, OFFICIAL_AUTO_CUSTOMS_CALCULATOR, type DealerDirectoryEntry } from '../lib/marketTools';
 
@@ -146,7 +147,7 @@ export function AutoCatalogScreen() {
     try {
       const found: Listing[] = await listCategory(client, category, { from: 0, to: 39, brand: selectedBrand, model: selectedModel });
       setRows(await Promise.all(found.map((row: Listing) => attachMedia(client, category, row))));
-    } catch (e) { setError(e instanceof Error ? e.message : 'Aktiv elanlar alınmadı.'); setRows([]); }
+    } catch (e) { setError(userErrorMessage(e, 'Aktiv elanlar alınmadı.')); setRows([]); }
     finally { setLoading(false); }
   }, [client]);
   useEffect(() => { let live = true; queueMicrotask(() => { if (!live) return; if (brand && model) void load(brand, model); else setRows([]); }); return () => { live = false; }; }, [brand, model, load]);
@@ -186,7 +187,7 @@ export function DealerDirectoryScreen() {
     if (!client) { setError('TEST Supabase public konfiqurasiyası yoxdur.'); setLoading(false); return; }
     setLoading(true); setError('');
     try { setEntries(await getVerifiedDealerDirectory(client)); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Təsdiqlənmiş salonlar alınmadı.'); }
+    catch (e) { setError(userErrorMessage(e, 'Təsdiqlənmiş salonlar alınmadı.')); }
     finally { setLoading(false); }
   }, [client]);
   useEffect(() => { let live = true; queueMicrotask(() => { if (live) void load(); }); return () => { live = false; }; }, [load]);
@@ -209,7 +210,7 @@ export function DealerDirectoryScreen() {
       setSelectedRows(current => [...current, ...hydrated]);
       setListingOffset(value => value + next.length);
       setHasMoreListings(listingOffset + next.length < selected.activeListingCount);
-    } catch (e) { Alert.alert('Elanlar yüklənmədi', e instanceof Error ? e.message : 'Yenidən cəhd edin.'); }
+    } catch (e) { Alert.alert('Elanlar yüklənmədi', userErrorMessage(e, 'Yenidən cəhd edin.')); }
     finally { setLoadingMore(false); }
   };
   return <ScrollView style={styles.page} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
@@ -233,7 +234,7 @@ export function MostViewedScreen() {
     if (!client) { setError('TEST Supabase public konfiqurasiyası yoxdur.'); setLoading(false); return; }
     setLoading(true); setError('');
     try { setRows(await getMostViewedActiveCars(client)); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Baxış göstəriciləri alınmadı.'); }
+    catch (e) { setError(userErrorMessage(e, 'Baxış göstəriciləri alınmadı.')); }
     finally { setLoading(false); }
   }, [client]);
   useEffect(() => { let live = true; queueMicrotask(() => { if (live) void load(); }); return () => { live = false; }; }, [load]);

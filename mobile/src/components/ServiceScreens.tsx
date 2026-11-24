@@ -7,6 +7,7 @@ import { File } from 'expo-file-system';
 import * as Location from 'expo-location';
 import type { Region } from 'react-native-maps';
 import { getSupabaseClient } from '../lib/supabase';
+import { userErrorMessage } from '../lib/user-error';
 import { createServiceOrder, customerPriceAction, dispatchServiceOrder, loadCustomerOrders, loadProviderAssignments, newClientOrderId, ORDER_STATUSES, providerAction, providerPriceOffer, reconcileOrder, ServiceApiError, type OrderAnswer, type ServiceOrder, uploadProviderEvidence } from '../lib/service-orders';
 import serviceQuestionnaire from '../data/service-questionnaire.json';
 
@@ -22,7 +23,7 @@ const mechanicServices=Object.keys(serviceQuestionnaire.questions);
 const serviceQuestions=(name:string)=>serviceQuestionnaire.questions[name as keyof typeof serviceQuestionnaire.questions]||[];
 const serviceOptions=(label:string)=>serviceQuestionnaire.options[label as keyof typeof serviceQuestionnaire.options]||[];
 const uid=()=>newClientOrderId();
-const errorText=(e:unknown)=>e instanceof Error?e.message:'Əməliyyat tamamlanmadı.';
+const errorText=(e:unknown)=>userErrorMessage(e,'Əməliyyat tamamlanmadı.');
 const clean=(s:string)=>s.trim();
 const numeric=(s:string)=>s.trim()===''?null:Number(s);
 const validNumber=(s:string)=>s.trim()===''||Number.isFinite(Number(s));

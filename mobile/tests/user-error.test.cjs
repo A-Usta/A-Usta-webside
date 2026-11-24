@@ -22,3 +22,12 @@ test('app-authored Azerbaijani validation is preserved and raw server English is
   assert.equal(userErrorMessage(new Error('Marka və model daxil edin.')), 'Marka və model daxil edin.');
   assert.equal(userErrorMessage(new Error('Unexpected error from storage backend')), 'Xəta baş verdi. Yenidən cəhd edin.');
 });
+
+test('service and marketplace tool failures use the localized error mapper', () => {
+  const service = fs.readFileSync(path.resolve(__dirname, '../src/components/ServiceScreens.tsx'), 'utf8');
+  const tools = fs.readFileSync(path.resolve(__dirname, '../src/components/MarketTools.tsx'), 'utf8');
+  assert.match(service, /const errorText=\(e:unknown\)=>userErrorMessage\(e/);
+  assert.doesNotMatch(service, /e instanceof Error\?e\.message/);
+  assert.match(tools, /userErrorMessage\(e, 'Aktiv elanlar alınmadı\.'/);
+  assert.doesNotMatch(tools, /e instanceof Error \? e\.message/);
+});
