@@ -14,6 +14,10 @@ const tsModule = { exports: {} };
 const js = ts.transpile(marketplaceSource, { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
 vm.runInNewContext(`(function(exports,module){${js}\n})(module.exports,module)`, { module: tsModule });
 const { CATEGORIES, CATEGORY_FILTERS, categoryFilterError, categoryFilterValues, categoryConfig, listCategory, promotionRank, sortListings } = tsModule.exports;
+const formOptionsModule = { exports: {} };
+const formOptionsJs = ts.transpile(read('src/lib/listing-form-options.ts'), { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
+vm.runInNewContext(`(function(exports,module){${formOptionsJs}\n})(module.exports,module)`, { module: formOptionsModule });
+const { listingFieldChoices } = formOptionsModule.exports;
 
 test('17 active categories route to the existing public source and media bucket', () => {
   assert.equal(CATEGORIES.length, 17);
@@ -162,4 +166,23 @@ test('mobile equipment choices and detail values match the website category cata
   assert.deepEqual(Array.from(selectedEquipment(selected, 'cars')), ['ABS']);
   assert.deepEqual(Array.from(selectedEquipment(JSON.stringify(['ABS', 'uydurma']), 'cars')), ['ABS']);
   assert.deepEqual(Array.from(selectedEquipment(JSON.stringify(['ABS']), 'rent')), []);
+});
+
+test('mobile category form choices match website listing options and use selectors', () => {
+  const source = path.resolve(root, '../assets/vehicle/technical.js');
+  const vehicleContext = { window: {} };
+  vm.runInNewContext(fs.readFileSync(source, 'utf8'), vehicleContext);
+  const technical = vehicleContext.window.AUSTA_VEHICLE_TECHNICAL;
+  assert.deepEqual(Array.from(listingFieldChoices('cars', 'fuel_type'), item => item.value), ['Benzin','Dizel','Hibrid','Elektrik','Qaz','Digər']);
+  assert.deepEqual(Array.from(listingFieldChoices('cars', 'drivetrain'), item => [item.value,item.label]), technical.choices.drivetrain ? Object.entries(technical.choices.drivetrain) : []);
+  assert.deepEqual(Array.from(listingFieldChoices('rent', 'rental_type'), item => item.label), ['Günlük','Həftəlik','Aylıq','Uzunmüddətli']);
+  assert.deepEqual(Array.from(listingFieldChoices('parts', 'condition'), item => item.label), ['Yeni','İşlənmiş','Original','Universal']);
+  assert.deepEqual(Array.from(listingFieldChoices('moto', 'moto_type'), item => item.label), ['Motosiklet','Moped','Skuter']);
+  assert.deepEqual(Array.from(listingFieldChoices('special', 'sale_rent'), item => item.label), ['Satış','İcarə','Hər ikisi']);
+  assert.deepEqual(Array.from(listingFieldChoices('water', 'water_type'), item => item.label), ['Qayıq','Yaxta','Kater','Jet-ski','Digər']);
+  assert.deepEqual(Array.from(listingFieldChoices('caravan', 'caravan_type'), item => item.label), ['Motorlu karavan','Qoşqu karavan','Kampervan','Digər']);
+  assert.deepEqual(Array.from(listingFieldChoices('plate', 'document_status'), item => item.label), ['Tam sənədlidir','Yoxlanılmalıdır']);
+  assert.match(appSource, /ChoicePicker title=\{label\} value=\{values\[field\]\|\|''\}/);
+  assert.match(appSource, /\['contact_name','Ad \/ soyad'\]/);
+  assert.match(appSource, /\['address','Tam ünvan'\]/);
 });

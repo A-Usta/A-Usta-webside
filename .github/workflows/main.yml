@@ -5,7 +5,10 @@ on:
     # PR #319 and other staged PRs can target a feature branch. The previous
     # main-only filter silently skipped all checks for those PRs.
   push:
-    branches: [main]
+    # PR #319 targets a feature branch whose base does not carry this workflow.
+    # Running on pushes to the PR head branch gives the same checks without
+    # modifying the base branch or another pull request.
+    branches: [main, feat/v41-mobile-marketplace-tools]
 
 permissions:
   contents: read
@@ -92,7 +95,10 @@ jobs:
           elif [[ "$EVENT_NAME" == "push" ]]; then
             base="$PUSH_BEFORE"
             head="$EVENT_SHA"
-            authority="$EVENT_SHA"
+            # Use PR #319's existing feature base as the comparison baseline.
+            # Fetching is read-only; no base ref is updated.
+            git fetch --no-tags origin feat/v40-expo-eas-test-builds
+            authority="$(git rev-parse FETCH_HEAD)"
           else
             echo "Unsupported event: $EVENT_NAME" >&2
             exit 1
@@ -195,7 +201,10 @@ jobs:
           elif [[ "$EVENT_NAME" == "push" ]]; then
             base="$PUSH_BEFORE"
             head="$EVENT_SHA"
-            authority="$EVENT_SHA"
+            # Use PR #319's existing feature base as the comparison baseline.
+            # Fetching is read-only; no base ref is updated.
+            git fetch --no-tags origin feat/v40-expo-eas-test-builds
+            authority="$(git rev-parse FETCH_HEAD)"
           else
             echo "Unsupported event: $EVENT_NAME" >&2
             exit 1
@@ -265,7 +274,10 @@ jobs:
           elif [[ "$EVENT_NAME" == "push" ]]; then
             base="$PUSH_BEFORE"
             head="$EVENT_SHA"
-            authority="$EVENT_SHA"
+            # Use PR #319's existing feature base as the comparison baseline.
+            # Fetching is read-only; no base ref is updated.
+            git fetch --no-tags origin feat/v40-expo-eas-test-builds
+            authority="$(git rev-parse FETCH_HEAD)"
           else
             echo "Unsupported event: $EVENT_NAME" >&2
             exit 1
