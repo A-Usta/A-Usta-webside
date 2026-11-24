@@ -138,3 +138,28 @@ test('message retry keeps the same idempotency key until success', () => {
   assert.match(appSource, /messageRequestId\|\|newUuid\(\)/);
   assert.match(appSource, /setMessageRequestId\(''\)/);
 });
+
+test('mobile equipment choices and detail values match the website category catalog', () => {
+  const source = fs.readFileSync(path.resolve(root, '../assets/marketplace/listing-detail-v36.js'), 'utf8');
+  const start = source.indexOf('/* Category-specific optional equipment for V3.6 listing create/edit forms. */');
+  const context = { window: {} };
+  vm.runInNewContext(source.slice(start), context);
+  const mobileCatalog = JSON.parse(read('src/data/listing-equipment.json'));
+  assert.equal(JSON.stringify(mobileCatalog), JSON.stringify(context.window.AUSTA_LISTING_EQUIPMENT_V36.catalog));
+  assert.match(appSource, /details\.equipment=JSON\.stringify\(selectedEquipment\(values\.equipment,category\.key\)\)/);
+  assert.match(appSource, /accessibilityRole="checkbox"/);
+  assert.match(appSource, /<Equipment item=\{item\}\/?>/);
+
+  const helperSource = read('src/lib/listing-equipment.ts');
+  const helperJs = ts.transpile(helperSource, { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
+  const helperModule = { exports: {} };
+  vm.runInNewContext(`(function(exports,module,require){${helperJs}\n})(module.exports,module,require)`, {
+    module: helperModule,
+    require: name => name === '../data/listing-equipment.json' ? mobileCatalog : {},
+  });
+  const { equipmentValue, selectedEquipment } = helperModule.exports;
+  const selected = equipmentValue('[]', 'cars', 'ABS');
+  assert.deepEqual(Array.from(selectedEquipment(selected, 'cars')), ['ABS']);
+  assert.deepEqual(Array.from(selectedEquipment(JSON.stringify(['ABS', 'uydurma']), 'cars')), ['ABS']);
+  assert.deepEqual(Array.from(selectedEquipment(JSON.stringify(['ABS']), 'rent')), []);
+});
