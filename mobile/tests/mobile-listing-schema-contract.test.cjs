@@ -85,3 +85,43 @@ test('dealer required flags are false instead of explicit NULL when the form doe
   const dealer = context.buildPayload({ key: 'dealer', source: 'auto_dealer', title: 'Dealer' }, values, 'owner', null);
   for (const field of ['credit_available','leasing_available','barter_available','delivery_available']) assert.equal(dealer[field], false);
 });
+
+test('each of the 17 forms has a matching public payload path for every declared field', () => {
+  const forms={
+    cars:['contact_name','brand','model','year','body_type','engine','engine_volume','horsepower','mileage','price','fuel_type','transmission','drivetrain','vehicle_condition','seats','damage_accident','damage_paint','damage_repair','market','color','vin','region','district','address','phone','description','credit_available','barter_available','equipment'],
+    rent:['contact_name','brand','model','year','body_type','engine','engine_volume','horsepower','mileage','price','rental_type','fuel_type','transmission','drivetrain','vehicle_condition','seats','damage_accident','damage_paint','damage_repair','market','color','vin','region','district','address','phone','description','equipment'],
+    dealer:['title','contact_name','order_type','phone','region','district','address','brands','condition','working_hours','description'],
+    service:['title','name','phone','message_contact','specialty','services','experience','working_hours','region','district','address','description','company_name','city','service_area','brands','price_policy'],
+    usta:['title','name','phone','message_contact','specialty','services','experience','working_hours','region','district','address','description','service_area','brands'],
+    leasing:['title','name','phone','message_contact','specialty','services','experience','working_hours','region','district','address','description','company_name','tax_id','legal_name','email','website','city','service_area','vehicle_categories','vehicle_condition','customer_types','minimum_down_payment','minimum_term','maximum_term','rate','interest_type','currency','minimum_financing','maximum_financing','guarantor_required','income_proof_required','required_documents','terms','license_reference','license_disclosure'],
+    insurance:['title','name','phone','message_contact','specialty','services','experience','working_hours','region','district','address','description','company_name','tax_id','email','website','city','service_area','insurance_types','coverage','franchise','contract_months','payment_methods','installments_available','online_application','claims_support','repair_network','exclusions','license_reference','license_disclosure'],
+    sober_driver:['title','name','phone','message_contact','specialty','services','experience','working_hours','region','district','address','description','company_name','tax_id','city','service_area','service_24_7','minimum_order_price','rate_per_km','rate_per_hour','night_rate','city_service','intercity_service','advance_booking','urgent_service','driver_experience','payment_methods','waiting_fee','special_conditions'],
+    parts:['title','description','price','region','district','address','phone','part_name','part_category','brand','model','oem','compatibility','condition','stock'],
+    accessories:['title','description','price','region','district','address','phone','accessory_name','accessory_type','brand','model','condition','stock'],
+    moto:['title','description','price','region','district','address','phone','moto_type','brand','model','year','mileage'],
+    special:['title','description','price','region','district','address','phone','special_type','brand','model','year','sale_rent','work_hours'],
+    bus:['title','description','price','region','district','address','phone','brand','model','year','capacity','sale_rent'],
+    water:['title','description','price','region','district','address','phone','water_type','vessel_type','brand','model','year','length','engine'],
+    caravan:['title','description','price','region','district','address','phone','caravan_type','brand','model','year','beds','sale_rent'],
+    trailer:['title','description','price','region','district','address','phone','trailer_type','brand','model','year','load_capacity'],
+    plate:['title','description','price','region','district','address','phone','plate_number','plate_series','document_status'],
+  };
+  const sample=Object.fromEntries([...new Set(Object.values(forms).flat())].map(field=>[field,field==='equipment'?'["ABS"]':field==='credit_available'||field==='barter_available'?'true':'10']));
+  sample.brand='Toyota';sample.model='Camry';sample.year='2020';sample.price='12500';sample.description='Paritet sınağı';sample.title='Paritet sınağı';sample.phone='+994500000000';sample.address='Bakı';sample.region='Bakı';sample.district='Nəsimi';sample.vin='1HGCM82633A004352';sample.rental_type='Günlük';sample.order_type='order';sample.condition='Yeni';sample.damage_accident='no_accident';sample.damage_paint='original_paint';sample.damage_repair='no_repair_needed';
+  const sourceFor={cars:'vehicle',rent:'vehicle',dealer:'auto_dealer',service:'service_provider',usta:'service_provider',leasing:'service_provider',insurance:'service_provider',sober_driver:'service_provider',parts:'marketplace',accessories:'marketplace',moto:'marketplace',special:'marketplace',bus:'marketplace',water:'marketplace',caravan:'marketplace',trailer:'marketplace',plate:'marketplace'};
+  for(const [categoryKey,fields] of Object.entries(forms)){
+    const payload=context.buildPayload({key:categoryKey,source:sourceFor[categoryKey],title:categoryKey},sample,'owner',null);
+    for(const field of fields){
+      let persisted=field==='price'&&categoryKey==='rent'?payload.daily_price:payload[field];
+      if(persisted===undefined)persisted=payload.details?.[field];
+      if(persisted===undefined&&field==='title'&&categoryKey==='dealer')persisted=payload.dealer_name;
+      if(persisted===undefined&&field==='description'&&(sourceFor[categoryKey]==='service_provider'||categoryKey==='dealer'))persisted=payload.about;
+      if(persisted===undefined&&field==='condition'&&categoryKey==='dealer')persisted=payload.vehicle_condition;
+      if(persisted===undefined&&field==='price'&&categoryKey==='rent')persisted=payload.daily_price;
+      if(persisted===undefined&&field.startsWith('damage_'))persisted=payload.damage_condition?.[field.slice(7)];
+      if(persisted===undefined&&field==='equipment')persisted=payload.details?.equipment;
+      assert.notEqual(persisted,undefined,`${categoryKey}.${field} has a form→payload/DB mapping`);
+      assert.notEqual(persisted,null,`${categoryKey}.${field} retains a nonempty input`);
+    }
+  }
+});

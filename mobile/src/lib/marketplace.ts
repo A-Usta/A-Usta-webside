@@ -4,7 +4,7 @@ export type CategoryKey = 'cars' | 'dealer' | 'service' | 'rent' | 'parts' | 'ac
 export type ListingSource = 'vehicle' | 'marketplace' | 'service_provider' | 'auto_dealer';
 export type Category = { key: CategoryKey; title: string; icon: string; source: ListingSource; table: string; mediaTable: string; bucket: string; status: string; sourceValue?: string };
 export type Listing = Record<string, any> & { id: string; _category: CategoryKey; _source: ListingSource; _media?: Media[] };
-export type Media = { id: string; media_type: 'image' | 'video'; storage_path: string; sort_order: number; is_cover: boolean; created_at?: string; url?: string };
+export type Media = { id: string; media_type: 'image' | 'video'; storage_path: string; poster_path?: string | null; sort_order: number; is_cover: boolean; created_at?: string; url?: string; poster_url?: string };
 export type CategoryFilter = { key: string; label: string; column: string; kind?: 'text' | 'number'; operator?: 'gte' | 'lte' };
 
 // Mirrors the canonical web V157 promotion catalog. Mobile displays these
@@ -136,7 +136,7 @@ export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<
     // hidden behind recent uploads that belong to drafts or inactive listings.
     for(let page=0;page<16&&found.size<perSourceTarget;page++){
       const offset=page*80;
-      const mediaResult=await client.from(source.mediaTable).select('id,listing_id,storage_path,media_type,sort_order,is_cover,created_at').eq('media_type','video').order('created_at',{ascending:false}).range(offset,offset+79);
+      const mediaResult=await client.from(source.mediaTable).select('id,listing_id,storage_path,poster_path,media_type,sort_order,is_cover,created_at').eq('media_type','video').order('created_at',{ascending:false}).range(offset,offset+79);
       if(mediaResult.error)throw mediaResult.error;
       const media=(mediaResult.data||[]).filter((row:Record<string,any>)=>typeof row.listing_id==='string'&&typeof row.storage_path==='string');
       if(!media.length)break;
@@ -151,7 +151,12 @@ export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<
       await Promise.all(media.filter((row:Record<string,any>)=>parents.has(String(row.listing_id))).map(async(row:Record<string,any>)=>{
         const signed=await client.storage.from(source.bucket).createSignedUrl(row.storage_path,3600);
         if(signed.error||!signed.data?.signedUrl)return;
-        const list=grouped.get(String(row.listing_id))||[];list.push({...row,url:signed.data.signedUrl} as Media);grouped.set(String(row.listing_id),list);
+        let poster_url:string|undefined;
+        if(typeof row.poster_path==='string'){
+          const poster=await client.storage.from(source.bucket).createSignedUrl(row.poster_path,3600);
+          if(!poster.error&&poster.data?.signedUrl)poster_url=poster.data.signedUrl;
+        }
+        const list=grouped.get(String(row.listing_id))||[];list.push({...row,url:signed.data.signedUrl,poster_url} as Media);grouped.set(String(row.listing_id),list);
       }));
       for(const row of parentResult.data||[]){
         const videos=grouped.get(String(row.id));if(!videos?.length)continue;
@@ -209,13 +214,18 @@ export async function listCategory(client: SupabaseClient, category: Category, o
 }
 
 export async function attachMedia(client: SupabaseClient, category: Category, listing: Listing): Promise<Listing> {
-  const {data,error}=await client.from(category.mediaTable).select('id,listing_id,storage_path,media_type,sort_order,is_cover,created_at').eq('listing_id',listing.id).order('sort_order',{ascending:true}).order('created_at',{ascending:true});
+  const {data,error}=await client.from(category.mediaTable).select('id,listing_id,storage_path,poster_path,media_type,sort_order,is_cover,created_at').eq('listing_id',listing.id).order('sort_order',{ascending:true}).order('created_at',{ascending:true});
   if(error) throw error;
   const rows=(data||[]).filter((item:Record<string,any>)=>item.listing_id===listing.id&&typeof item.storage_path==='string'&&['image','video'].includes(item.media_type));
   const media=await Promise.all(rows.map(async (item:Record<string,any>)=>{
     const {data:signed,error:signedError}=await client.storage.from(category.bucket).createSignedUrl(item.storage_path,3600);
     if(signedError||!signed?.signedUrl) return null;
-    return {...item,url:signed.signedUrl} as Media;
+    let poster_url:string|undefined;
+    if(item.media_type==='video'&&typeof item.poster_path==='string'){
+      const poster=await client.storage.from(category.bucket).createSignedUrl(item.poster_path,3600);
+      if(!poster.error&&poster.data?.signedUrl)poster_url=poster.data.signedUrl;
+    }
+    return {...item,url:signed.signedUrl,poster_url} as Media;
   }));
   return {...listing,_media:media.filter(Boolean) as Media[]};
 }
@@ -236,10 +246,10 @@ export async function deleteOwnedListing(client: SupabaseClient, category: Categ
   const parent = await client.from(config.table).select('id,owner_id').eq('id', listing.id).eq('owner_id', ownerId).maybeSingle();
   if (parent.error) throw parent.error;
   if (!parent.data || parent.data.owner_id !== ownerId) throw new Error('Elan tapılmadı və ya artıq silinib.');
-  const media = await client.from(config.mediaTable).select('id,storage_path').eq('listing_id', listing.id).eq('owner_id', ownerId);
+  const media = await client.from(config.mediaTable).select('id,storage_path,poster_path').eq('listing_id', listing.id).eq('owner_id', ownerId);
   if (media.error) throw media.error;
   const rows = media.data || [];
-  const paths = [...new Set(rows.map((row: Record<string, any>) => row.storage_path))];
+  const paths = [...new Set(rows.flatMap((row: Record<string, any>) => [row.storage_path,row.poster_path].filter((path):path is string=>typeof path==='string'&&path.length>0)))];
   if (paths.some(path => typeof path !== 'string' || !path.startsWith(`${ownerId}/${listing.id}/`) || path.split('/').length !== 3 || !path.split('/')[2])) {
     throw new Error('Elan mediasının sahibliyi təsdiqlənmədi; elan silinmədi.');
   }

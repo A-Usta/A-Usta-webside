@@ -130,7 +130,9 @@ test('home video cards render a first-frame preview and open the video viewer, n
   const screen = read('src/components/MarketplaceScreens.tsx');
   const feed = read('src/components/VideoFeedScreen.tsx');
   assert.match(screen, /function VideoPoster/);
-  assert.match(screen, /onFirstFrameRender=\{capturePoster\}/);
+  assert.match(screen, /function VideoPoster\(\{url,style\}:\{url\?:string/);
+  assert.match(screen, /poster_url/);
+  assert.doesNotMatch(screen, /onFirstFrameRender=\{capturePoster\}/);
   assert.match(screen, /pathname:'\/videos',params:\{listingId:item\.id\}/);
   assert.match(screen, /videoStrip:\{gap:9,paddingHorizontal:14/);
   assert.match(feed, /initialNumToRender=\{1\}/);
