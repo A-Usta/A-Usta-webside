@@ -140,7 +140,7 @@ test('Avtoservis category separates company subtypes and retains server-owned se
 });
 
 test('message retry keeps the same idempotency key until success', () => {
-  assert.match(appSource, /messageRequestId\|\|newUuid\(\)/);
+  assert.match(appSource, /messageRequestBody===message&&messageRequestId\?messageRequestId:newUuid\(\)/);
   assert.match(appSource, /setMessageRequestId\(''\)/);
 });
 

@@ -37,8 +37,9 @@ test('all category filters collapse, retain values, and expose apply/reset', () 
   assert.match(marketplace, /setFiltersOpen\(value=>!value\)/);
   assert.match(marketplace, /CATEGORY_FILTERS\[category\.key\]/);
   assert.match(marketplace, /categoryFilterError\(category\.key,filterDraft\)/);
-  assert.match(marketplace, /setAppliedFilters\(categoryFilterValues\(category\.key,filterDraft\)\)/);
-  assert.match(marketplace, /setFilterDraft\(\{\}\);setAppliedFilters\(\{\}\)/);
+  assert.match(marketplace, /setAppliedByCategory\(current=>\(\{\.\.\.current,\[category\.key\]:categoryFilterValues\(category\.key,filterDraft\)\}\)\)/);
+  assert.match(marketplace, /setDraftByCategory/);
+  assert.match(marketplace, /setAppliedByCategory\(current=>\(\{\.\.\.current,\[category\.key\]:\{\}\}\)\)/);
   assert.match(marketplace, /category\.source==='vehicle'&&field\.key==='brand'\?\{model:''\}/);
   assert.match(marketplace, /contentContainerStyle=\{\{paddingBottom:160\}\}/);
   assert.match(marketplace, /half:\{flex:1,minWidth:120\}/);

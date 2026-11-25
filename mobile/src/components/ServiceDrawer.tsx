@@ -57,7 +57,7 @@ export function ServiceDrawer({ navigation }: Props) {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 22 },
   brand: { paddingVertical: 19, paddingHorizontal: 8 },
-  wordmark: { color: RED, fontSize: 22, fontWeight: '900', letterSpacing: 1.1, flexShrink: 0 },
+  wordmark: { color: '#FFFFFF', backgroundColor: RED, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 5, overflow: 'hidden', fontSize: 22, fontWeight: '900', letterSpacing: 1.1, flexShrink: 0, alignSelf: 'flex-start' },
   caption: { color: MUTED, fontSize: 12, marginTop: 5 },
   divider: { height: 1, backgroundColor: LINE, marginVertical: 8 },
   accordion: { minHeight: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 9, borderRadius: 10 },
