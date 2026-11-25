@@ -159,6 +159,7 @@ export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<
       }));
       for(const row of parentResult.data||[]){
         const videos=grouped.get(String(row.id));if(!videos?.length)continue;
+        videos.sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0)||(Date.parse(String(a.created_at||''))||0)-(Date.parse(String(b.created_at||''))||0)||String(a.id).localeCompare(String(b.id)));
         let key:CategoryKey;
         if(source.source==='vehicle')key=row.listing_type==='rent'?'rent':'cars';
         else key='dealer';
@@ -168,7 +169,24 @@ export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<
     }
     return [...found.values()];
   }));
-  return result.flat().sort((a,b)=>Date.parse(String(b._media?.[0]?.created_at||b.created_at||''))-Date.parse(String(a._media?.[0]?.created_at||a.created_at||''))).slice(0,limit);
+  return sortHomeVideos(result.flat()).slice(0,limit);
+}
+
+/** Keep the carousel and full-screen viewer on a stable shared video order. */
+export function sortHomeVideos(rows:Listing[]):Listing[]{
+  return [...rows].sort((a,b)=>{
+    const aTime=Math.max(...(a._media||[]).map(media=>Date.parse(String(media.created_at||''))||0));
+    const bTime=Math.max(...(b._media||[]).map(media=>Date.parse(String(media.created_at||''))||0));
+    return bTime-aTime||`${a._source}:${a.id}`.localeCompare(`${b._source}:${b.id}`);
+  });
+}
+
+/** Resolve by stable listing identity; a route index is accepted only when it matches that identity. */
+export function resolveHomeVideoIndex(rows:Listing[],listingId:string,source?:string,requestedIndex?:string):number{
+  const resolved=rows.findIndex(row=>row.id===listingId&&(!source||row._source===source));
+  const index=Number(requestedIndex);
+  if(Number.isInteger(index)&&index>=0&&rows[index]?.id===listingId&&(!source||rows[index]?._source===source))return index;
+  return resolved;
 }
 
 export async function listCategory(client: SupabaseClient, category: Category, options: {from?:number;to?:number;search?:string;brand?:string;model?:string;region?:string;minPrice?:string;maxPrice?:string;yearMin?:string;yearMax?:string;promotionsOnly?:boolean;filters?:Record<string,string>} = {}) {

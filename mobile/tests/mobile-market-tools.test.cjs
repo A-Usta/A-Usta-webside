@@ -133,10 +133,10 @@ test('home video cards render a first-frame preview and open the video viewer, n
   assert.match(screen, /function VideoPoster\(\{url,style\}:\{url\?:string/);
   assert.match(screen, /poster_url/);
   assert.doesNotMatch(screen, /onFirstFrameRender=\{capturePoster\}/);
-  assert.match(screen, /pathname:'\/videos',params:\{listingId:item\.id\}/);
+  assert.match(screen, /pathname:'\/videos',params:\{listingId:item\.id,source:item\._source,index:String\(index\),direct:'1'\}/);
   assert.match(screen, /videoStrip:\{gap:9,paddingHorizontal:14/);
   assert.match(feed, /initialNumToRender=\{1\}/);
   assert.match(feed, /active=\{viewerOpen&&index===selectedIndex\}/);
-  assert.match(feed, /onCloseViewer=\{\(\)=>setViewerOpen\(false\)\}/);
+  assert.match(feed, /onCloseViewer=\{closeViewer\}/);
   assert.match(feed, /onOpenListing=\{\(\)=>openListing\(item\)\}/);
 });

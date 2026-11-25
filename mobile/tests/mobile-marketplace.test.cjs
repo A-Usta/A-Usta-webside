@@ -13,7 +13,7 @@ const supabaseSource = read('src/lib/supabase.ts');
 const tsModule = { exports: {} };
 const js = ts.transpile(marketplaceSource, { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
 vm.runInNewContext(`(function(exports,module){${js}\n})(module.exports,module)`, { module: tsModule });
-const { CATEGORIES, CATEGORY_FILTERS, categoryFilterError, categoryFilterValues, categoryConfig, listCategory, promotionRank, sortListings } = tsModule.exports;
+const { CATEGORIES, CATEGORY_FILTERS, categoryFilterError, categoryFilterValues, categoryConfig, listCategory, promotionRank, sortListings, sortHomeVideos, resolveHomeVideoIndex } = tsModule.exports;
 const formOptionsModule = { exports: {} };
 const formOptionsJs = ts.transpile(read('src/lib/listing-form-options.ts'), { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
 vm.runInNewContext(`(function(exports,module){${formOptionsJs}\n})(module.exports,module)`, { module: formOptionsModule });
@@ -96,6 +96,20 @@ test('active Premium/VIP/boost promotions sort separately and expired promotions
   rows.push({ id:'scheduled', promotion_type:'premium', promotion_started_at:future, promotion_until:new Date(Date.now()+172_800_000).toISOString() });
   assert.deepEqual(rows.map(promotionRank), [0,2,0,3,1,0]);
   assert.deepEqual(Array.from(sortListings(rows), item => item.id), ['premium','vip','boost','standard','scheduled','premium-expired']);
+});
+
+test('home carousel and viewer share stable video ordering and identity-safe index resolution',()=>{
+  const rows=[
+    {_source:'vehicle',id:'video-3',_media:[{created_at:'2026-11-25T12:00:00Z'}]},
+    {_source:'auto_dealer',id:'video-2',_media:[{created_at:'2026-11-25T12:00:00Z'}]},
+    {_source:'vehicle',id:'video-1',_media:[{created_at:'2026-11-26T12:00:00Z'}]},
+    {_source:'vehicle',id:'video-4',_media:[{created_at:'2026-11-24T12:00:00Z'}]},
+  ];
+  const ordered=sortHomeVideos(rows);
+  assert.deepEqual(Array.from(ordered,row=>`${row._source}:${row.id}`),['vehicle:video-1','auto_dealer:video-2','vehicle:video-3','vehicle:video-4']);
+  assert.equal(resolveHomeVideoIndex(ordered,'video-3','vehicle','2'),2);
+  assert.equal(resolveHomeVideoIndex(ordered,'video-3','vehicle','1'),2,'a stale index cannot select a different clip');
+  assert.equal(resolveHomeVideoIndex(ordered,'video-2','vehicle','1'),-1,'source identity prevents cross-source ID confusion');
 });
 
 test('mobile uses owner-scoped listing updates, staging statuses, CAS publish and signed media', () => {

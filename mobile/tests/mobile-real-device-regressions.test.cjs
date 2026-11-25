@@ -67,3 +67,33 @@ test('message and phone actions remain wired and mobile wordmarks use approved r
   assert.match(drawer, /wordmark: \{ color: '#FFFFFF', backgroundColor: RED/);
   assert.match(screens, /backgroundColor:RED,paddingHorizontal:8,paddingVertical:3/);
 });
+
+test('home video opens its selected item directly and closes to the retained home route', () => {
+  assert.match(screens, /pathname:'\/videos',params:\{listingId:item\.id,source:item\._source,index:String\(index\),direct:'1'\}/);
+  assert.match(videoFeed, /if\(directOpen\)\{router\.back\(\);return;\}setViewerOpen\(false\)/);
+  assert.match(videoFeed, /onRequestClose=\{closeViewer\}/);
+  assert.match(videoFeed, /directOpen\?\(loading\|\|\(!viewerOpen&&!error&&!directUnavailable\)\?</);
+  assert.match(videoFeed, /!directOpen&&<View style=\{s\.header\}/);
+  assert.match(videoFeed, /resolveHomeVideoIndex\(rows,params\.listingId,params\.source,params\.index\)/);
+});
+
+test('video viewer resolves the requested identity and stable sequence index', () => {
+  assert.match(marketplace, /rows\[index\]\?\.id===listingId/);
+  assert.match(marketplace, /rows\[index\]\?\._source===source/);
+  assert.match(videoFeed, /resolveHomeVideoIndex\(rows,params\.listingId,params\.source,params\.index\)/);
+  assert.match(videoFeed, /Seçilmiş video artıq aktiv deyil və ya video lentində tapılmadı/);
+  assert.match(videoFeed, /onMomentumScrollEnd=\{onMomentumEnd\}/);
+  assert.match(videoFeed, /active=\{viewerOpen&&index===selectedIndex\}/);
+  assert.match(marketplace, /videos\.sort\(\(a,b\)=>\(Number\(a\.sort_order\)\|\|0\)/);
+  assert.match(marketplace, /export function sortHomeVideos\(rows:Listing\[\]\)/);
+  assert.match(marketplace, /return bTime-aTime\|\|`\$\{a\._source\}:\$\{a\.id\}`\.localeCompare\(`\$\{b\._source\}:\$\{b\.id\}`\)/);
+});
+
+test('mobile home brand preserves requested case on red with no uppercase transform', () => {
+  const header = screens.match(/headerBrand[^\n]*A-Usta\.az/);
+  assert.ok(header);
+  assert.match(header[0], /color:'#FFFFFF'/);
+  assert.match(header[0], /backgroundColor:RED/);
+  assert.match(header[0], /textTransform:'none'/);
+  assert.doesNotMatch(header[0], /A-USTA\.az/);
+});
