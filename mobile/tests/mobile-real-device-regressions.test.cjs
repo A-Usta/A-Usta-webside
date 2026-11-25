@@ -8,6 +8,7 @@ const marketplace = fs.readFileSync(path.join(root, 'src/lib/marketplace.ts'), '
 const screens = fs.readFileSync(path.join(root, 'src/components/MarketplaceScreens.tsx'), 'utf8');
 const videoFeed = fs.readFileSync(path.join(root, 'src/components/VideoFeedScreen.tsx'), 'utf8');
 const drawer = fs.readFileSync(path.join(root, 'src/components/ServiceDrawer.tsx'), 'utf8');
+const account = fs.readFileSync(path.join(root, 'src/components/AccountScreens.tsx'), 'utf8');
 
 test('public video query is restricted to car/rent and dealer source tables', () => {
   const sourceBlock = marketplace.match(/export async function listHomeVideos[\s\S]*?const perSourceTarget/);
@@ -96,4 +97,25 @@ test('mobile home brand preserves requested case on red with no uppercase transf
   assert.match(header[0], /backgroundColor:'transparent'/);
   assert.match(header[0], /textTransform:'none'/);
   assert.doesNotMatch(header[0], /A-USTA\.az/);
+});
+
+test('account navigation keeps its auth listener stable and hardware back returns safely', () => {
+  assert.match(account, /onAuthStateChange\(\(event,session\)=>/);
+  assert.match(account, /\},\[sb\]\);/);
+  assert.doesNotMatch(account, /onAuthStateChange[\s\S]{0,280}\},\[sb,sync\]\)/);
+  assert.match(account, /pageHistory=useRef<Page\[]>\(\[\]\)/);
+  assert.match(account, /const navigatePage=useCallback/);
+  const backHandler = account.match(/useEffect\(\(\)=>\{const subscription=BackHandler\.addEventListener\('hardwareBackPress'[\s\S]*?\},\[page,formVisible,preview,back\]\);/);
+  assert.ok(backHandler);
+  assert.match(backHandler[0], /back\(\);return true/);
+  assert.match(account, /accessibilityLabel="Geri" onPress=\{back\}/);
+  assert.match(account, /router\.replace\('\/\(drawer\)\/\(tabs\)\/index'\)/);
+  assert.doesNotMatch(backHandler[0], /signOut\(/);
+});
+
+test('listing detail uses balance scale icon, circular blue up arrow, and exact owner edit label', () => {
+  assert.match(screens, /MaterialCommunityIcons name="scale-balance"/);
+  assert.match(screens, /accessibilityLabel="Satıcıya mesaj göndər"[\s\S]*?borderRadius:25[\s\S]*?backgroundColor:'#4884EF'[\s\S]*?<Feather name="arrow-up" color="#fff"/);
+  assert.match(screens, />Elanı redaktə et<\/Text>/);
+  assert.match(screens, /isOwner&&<>[\s\S]*?Elanı redaktə et[\s\S]*?Elanı sil/);
 });
