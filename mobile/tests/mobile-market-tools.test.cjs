@@ -78,7 +78,7 @@ test('listing detail provides paged full-screen media and truthful A-USTA listin
 test('mobile detail page uses real price history, masks VIN and offers seller contact and safety actions', () => {
   const screen = read('src/components/MarketplaceScreens.tsx');
   assert.match(screen, /austa_get_listing_price_history/);
-  assert.match(screen, /key!=='vin'/);
+  assert.match(screen, /!\['equipment','vin','service_category'\]\.includes\(key\)/);
   assert.match(screen, /VIN/);
   assert.match(screen, /const summary=category==='cars'/);
   assert.match(screen, /const isVehicleSale=category==='cars'/);

@@ -88,13 +88,14 @@ test('active Premium/VIP/boost promotions sort separately and expired promotions
   const past = new Date(Date.now() - 86_400_000).toISOString();
   const rows = [
     { id:'standard', created_at:'2026-11-21T09:00:00Z' },
-    { id:'vip', promotion_type:'vip', promotion_until:future },
-    { id:'premium-expired', promotion_type:'premium', promotion_until:past },
-    { id:'premium', promotion_type:'premium', promotion_until:future },
-    { id:'boost', promotion_type:'standard', last_boosted_at:future, promotion_until:future },
+    { id:'vip', promotion_type:'vip', promotion_started_at:past, promotion_until:future },
+    { id:'premium-expired', promotion_type:'premium', promotion_started_at:past, promotion_until:past },
+    { id:'premium', promotion_type:'premium', promotion_started_at:past, promotion_until:future },
+    { id:'boost', promotion_type:'standard', promotion_started_at:past, last_boosted_at:future, promotion_until:future },
   ];
-  assert.deepEqual(rows.map(promotionRank), [0,2,0,3,1]);
-  assert.deepEqual(Array.from(sortListings(rows), item => item.id), ['premium','vip','boost','standard','premium-expired']);
+  rows.push({ id:'scheduled', promotion_type:'premium', promotion_started_at:future, promotion_until:new Date(Date.now()+172_800_000).toISOString() });
+  assert.deepEqual(rows.map(promotionRank), [0,2,0,3,1,0]);
+  assert.deepEqual(Array.from(sortListings(rows), item => item.id), ['premium','vip','boost','standard','scheduled','premium-expired']);
 });
 
 test('mobile uses owner-scoped listing updates, staging statuses, CAS publish and signed media', () => {

@@ -54,7 +54,8 @@ export const FAVORITE_SOURCE: Record<ListingSource,string> = {vehicle:'vehicle',
 const FAVORITE_FK: Record<ListingSource,string> = {vehicle:'vehicle_listing_id',marketplace:'marketplace_listing_id',service_provider:'service_provider_listing_id',auto_dealer:'auto_dealer_listing_id'};
 const now = () => Date.now();
 export function promotionRank(row: Listing): number {
-  if (!row.promotion_until || new Date(row.promotion_until).getTime() <= now()) return 0;
+  const current=now(), starts=Date.parse(String(row.promotion_started_at||'')), ends=Date.parse(String(row.promotion_until||''));
+  if (!Number.isFinite(starts) || !Number.isFinite(ends) || starts>current || ends<=current) return 0;
   return row.promotion_type === 'premium' ? 3 : row.promotion_type === 'vip' ? 2 : row.promotion_type === 'top' || row.last_boosted_at ? 1 : 0;
 }
 export function sortListings(rows: Listing[]): Listing[] {
@@ -77,7 +78,7 @@ export async function listHome(client: SupabaseClient, search = ''): Promise<Lis
     read('auto_dealer_listings',query=>{let q=query;if(term)q=q.or(`dealer_name.ilike.%${term}%,brands.ilike.%${term}%,about.ilike.%${term}%`);return q.order('created_at',{ascending:false}).limit(40);}),
   ];
   const promotionQueries=['vehicle_listings','marketplace_listings','public_service_provider_listings','auto_dealer_listings'].map(table=>
-    client.from(table).select('*').eq('status','active').in('promotion_type',['premium','vip','top']).gt('promotion_until',new Date().toISOString()).order('promotion_until',{ascending:false}).limit(24)
+    client.from(table).select('*').eq('status','active').in('promotion_type',['premium','vip','top']).lte('promotion_started_at',new Date().toISOString()).gt('promotion_until',new Date().toISOString()).order('promotion_until',{ascending:false}).limit(24)
   );
   const results=await Promise.all([...recentQueries,...promotionQueries]);
   for(const result of results) if(result.error) throw result.error;
@@ -144,7 +145,7 @@ export async function listCategory(client: SupabaseClient, category: Category, o
     if(category.sourceValue==='service') query=query.or('details->>service_category.is.null,details->>service_category.not.in.(insurance,leasing,sober_driver)');
     if(['insurance','sober_driver','leasing'].includes(category.sourceValue||'')) query=query.contains('details',{service_category:category.sourceValue});
   }
-  if(promotionsOnly) query=query.in('promotion_type',['premium','vip','top']).gt('promotion_until',new Date().toISOString());
+  if(promotionsOnly) query=query.in('promotion_type',['premium','vip','top']).lte('promotion_started_at',new Date().toISOString()).gt('promotion_until',new Date().toISOString());
   if(brand && ['vehicle','marketplace'].includes(category.source)) query=query.ilike('brand',`%${escapeLike(brand)}%`);
   if(model && ['vehicle','marketplace'].includes(category.source)) query=query.ilike('model',`%${escapeLike(model)}%`);
   if(region && category.source!=='service_provider') query=query.ilike('region',`%${escapeLike(region)}%`);
@@ -239,6 +240,34 @@ export async function toggleFavorite(client:SupabaseClient, listing:Listing) {
   const result=await client.from('listing_favorites').insert({user_id:auth.user.id,[fk]:listing.id});
   if(result.error) throw result.error;
   return true;
+}
+
+export type VideoEngagement={view_count:number;like_count:number;comment_count:number;viewer_liked:boolean};
+export type VideoComment={comment_id:string;body:string;created_at:string;is_mine:boolean};
+export async function getVideoEngagement(client:SupabaseClient,listing:Listing):Promise<VideoEngagement>{
+  const {data,error}=await client.rpc('austa_get_video_engagement',{p_source:listing._source,p_listing_id:listing.id});
+  if(error)throw error;const row=Array.isArray(data)?data[0]:data;
+  if(!row)throw new Error('Video statistikası hazırda əlçatan deyil.');
+  return {view_count:Number(row.view_count)||0,like_count:Number(row.like_count)||0,comment_count:Number(row.comment_count)||0,viewer_liked:Boolean(row.viewer_liked)};
+}
+export async function recordVideoView(client:SupabaseClient,listing:Listing,visitorId:string):Promise<number>{
+  const {data,error}=await client.rpc('austa_record_video_view',{p_source:listing._source,p_listing_id:listing.id,p_visitor_id:visitorId});
+  if(error)throw error;return Number(data)||0;
+}
+export async function toggleVideoLike(client:SupabaseClient,listing:Listing):Promise<boolean>{
+  const {data,error}=await client.rpc('austa_toggle_video_like',{p_source:listing._source,p_listing_id:listing.id});
+  if(error)throw error;return Boolean(data);
+}
+export async function listVideoComments(client:SupabaseClient,listing:Listing):Promise<VideoComment[]>{
+  const {data,error}=await client.rpc('austa_list_video_comments',{p_source:listing._source,p_listing_id:listing.id});
+  if(error)throw error;return Array.isArray(data)?data as VideoComment[]:[];
+}
+export async function addVideoComment(client:SupabaseClient,listing:Listing,body:string):Promise<VideoComment>{
+  const {data,error}=await client.rpc('austa_add_video_comment',{p_source:listing._source,p_listing_id:listing.id,p_body:body});
+  if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(!row)throw new Error('Şərh göndərilmədi. Yenidən cəhd edin.');return row as VideoComment;
+}
+export async function deleteVideoComment(client:SupabaseClient,commentId:string):Promise<boolean>{
+  const {data,error}=await client.rpc('austa_delete_video_comment',{p_comment_id:commentId});if(error)throw error;return Boolean(data);
 }
 
 function escapeLike(value:string) { return value.replace(/[\\%_,()]/g, '\\$&'); }
