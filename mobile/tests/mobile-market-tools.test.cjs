@@ -108,7 +108,8 @@ test('video feed reads only attached video rows that resolve to active public li
   assert.match(core, /\.eq\('media_type','video'\)/);
   assert.match(core, /\.eq\('status','active'\)/);
   assert.match(core, /createSignedUrl\(row\.storage_path,3600\)/);
-  assert.match(core, /limit\(Math\.min\(8,limit\)\)/);
+  assert.match(core, /\.range\(offset,offset\+79\)/);
+  assert.match(core, /for\(let page=0;page<16&&found\.size<perSourceTarget;page\+\+\)/);
   assert.match(core, /Promise\.all\(media\.filter/);
   assert.match(screen, /listHomeVideos\(sb\)/);
   assert.match(screen, /A-USTA mobil elan/);
@@ -129,7 +130,7 @@ test('home video cards render a first-frame preview and open the video viewer, n
   const screen = read('src/components/MarketplaceScreens.tsx');
   const feed = read('src/components/VideoFeedScreen.tsx');
   assert.match(screen, /function VideoPoster/);
-  assert.match(screen, /onFirstFrameRender=\{\(\)=>\{setReady\(true\);player\.pause\(\);\}\}/);
+  assert.match(screen, /onFirstFrameRender=\{capturePoster\}/);
   assert.match(screen, /pathname:'\/videos',params:\{listingId:item\.id\}/);
   assert.match(screen, /videoStrip:\{gap:9,paddingHorizontal:14/);
   assert.match(feed, /initialNumToRender=\{1\}/);

@@ -4,7 +4,7 @@ export type CategoryKey = 'cars' | 'dealer' | 'service' | 'rent' | 'parts' | 'ac
 export type ListingSource = 'vehicle' | 'marketplace' | 'service_provider' | 'auto_dealer';
 export type Category = { key: CategoryKey; title: string; icon: string; source: ListingSource; table: string; mediaTable: string; bucket: string; status: string; sourceValue?: string };
 export type Listing = Record<string, any> & { id: string; _category: CategoryKey; _source: ListingSource; _media?: Media[] };
-export type Media = { id: string; media_type: 'image' | 'video'; storage_path: string; sort_order: number; is_cover: boolean; url?: string };
+export type Media = { id: string; media_type: 'image' | 'video'; storage_path: string; sort_order: number; is_cover: boolean; created_at?: string; url?: string };
 export type CategoryFilter = { key: string; label: string; column: string; kind?: 'text' | 'number'; operator?: 'gte' | 'lte' };
 
 // Mirrors the canonical web V157 promotion catalog. Mobile displays these
@@ -129,31 +129,42 @@ export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<
     {source:'service_provider' as const,mediaTable:'service_provider_media',table:'public_service_provider_listings',bucket:'provider-media'},
     {source:'auto_dealer' as const,mediaTable:'auto_dealer_media',table:'auto_dealer_listings',bucket:'auto-dealer-media'},
   ];
+  const perSourceTarget=Math.max(4,Math.ceil(limit/4));
   const result=await Promise.all(sources.map(async source=>{
-    // Keep startup work bounded on low-memory phones; the four sources contribute
-    // at most eight candidates each before the final cross-source sort.
-    const mediaResult=await client.from(source.mediaTable).select('id,listing_id,storage_path,media_type,sort_order,is_cover,created_at').eq('media_type','video').order('created_at',{ascending:false}).limit(Math.min(8,limit));
-    if(mediaResult.error)throw mediaResult.error;
-    const media=(mediaResult.data||[]).filter((row:Record<string,any>)=>typeof row.listing_id==='string'&&typeof row.storage_path==='string');
-    if(!media.length)return [] as Listing[];
-    let query:any=client.from(source.table).select('*').eq('status','active').in('id',[...new Set(media.map((row:Record<string,any>)=>row.listing_id))]);
-    if(source.source==='vehicle')query=query.in('listing_type',['sale','rent']);
-    if(source.source==='marketplace')query=query.in('category',CATEGORIES.filter(c=>c.source==='marketplace').map(c=>c.key));
-    if(source.source==='service_provider')query=query.in('provider_type',['service','usta']);
-    const parentResult=await query;
-    if(parentResult.error)throw parentResult.error;
-    const parents=new Map((parentResult.data||[]).map((row:Record<string,any>)=>[String(row.id),row]));
-    const grouped=new Map<string,Media[]>();
-    await Promise.all(media.filter((row:Record<string,any>)=>parents.has(String(row.listing_id))).map(async(row:Record<string,any>)=>{const signed=await client.storage.from(source.bucket).createSignedUrl(row.storage_path,3600);if(signed.error||!signed.data?.signedUrl)return;const list=grouped.get(String(row.listing_id))||[];list.push({...row,url:signed.data.signedUrl} as Media);grouped.set(String(row.listing_id),list);}));
-    return (parentResult.data||[]).flatMap((row:Record<string,any>)=>{
-      const videos=grouped.get(String(row.id));if(!videos?.length)return [];
-      let key:CategoryKey;
-      if(source.source==='vehicle')key=row.listing_type==='rent'?'rent':'cars';
-      else if(source.source==='marketplace')key=row.category;
-      else if(source.source==='auto_dealer')key='dealer';
-      else key=row.provider_type==='usta'?'usta':['leasing','insurance','sober_driver'].includes(row.details?.service_category)?row.details.service_category:'service';
-      return categoryConfig(key)?[{...row,_category:key,_source:source.source,_media:videos} as Listing]:[];
-    });
+    const found=new Map<string,Listing>();
+    // Page media before filtering parent listings so old public videos are not
+    // hidden behind recent uploads that belong to drafts or inactive listings.
+    for(let page=0;page<16&&found.size<perSourceTarget;page++){
+      const offset=page*80;
+      const mediaResult=await client.from(source.mediaTable).select('id,listing_id,storage_path,media_type,sort_order,is_cover,created_at').eq('media_type','video').order('created_at',{ascending:false}).range(offset,offset+79);
+      if(mediaResult.error)throw mediaResult.error;
+      const media=(mediaResult.data||[]).filter((row:Record<string,any>)=>typeof row.listing_id==='string'&&typeof row.storage_path==='string');
+      if(!media.length)break;
+      let query:any=client.from(source.table).select('*').eq('status','active').in('id',[...new Set(media.map((row:Record<string,any>)=>row.listing_id))]);
+      if(source.source==='vehicle')query=query.in('listing_type',['sale','rent']);
+      if(source.source==='marketplace')query=query.in('category',CATEGORIES.filter(c=>c.source==='marketplace').map(c=>c.key));
+      if(source.source==='service_provider')query=query.in('provider_type',['service','usta']);
+      const parentResult=await query;
+      if(parentResult.error)throw parentResult.error;
+      const parents=new Map((parentResult.data||[]).map((row:Record<string,any>)=>[String(row.id),row]));
+      const grouped=new Map<string,Media[]>();
+      await Promise.all(media.filter((row:Record<string,any>)=>parents.has(String(row.listing_id))).map(async(row:Record<string,any>)=>{
+        const signed=await client.storage.from(source.bucket).createSignedUrl(row.storage_path,3600);
+        if(signed.error||!signed.data?.signedUrl)return;
+        const list=grouped.get(String(row.listing_id))||[];list.push({...row,url:signed.data.signedUrl} as Media);grouped.set(String(row.listing_id),list);
+      }));
+      for(const row of parentResult.data||[]){
+        const videos=grouped.get(String(row.id));if(!videos?.length)continue;
+        let key:CategoryKey;
+        if(source.source==='vehicle')key=row.listing_type==='rent'?'rent':'cars';
+        else if(source.source==='marketplace')key=row.category;
+        else if(source.source==='auto_dealer')key='dealer';
+        else key=row.provider_type==='usta'?'usta':['leasing','insurance','sober_driver'].includes(row.details?.service_category)?row.details.service_category:'service';
+        if(categoryConfig(key))found.set(String(row.id),{...row,_category:key,_source:source.source,_media:videos} as Listing);
+      }
+      if(media.length<80)break;
+    }
+    return [...found.values()];
   }));
   return result.flat().sort((a,b)=>Date.parse(String(b._media?.[0]?.created_at||b.created_at||''))-Date.parse(String(a._media?.[0]?.created_at||a.created_at||''))).slice(0,limit);
 }
@@ -207,6 +218,61 @@ export async function attachMedia(client: SupabaseClient, category: Category, li
     return {...item,url:signed.signedUrl} as Media;
   }));
   return {...listing,_media:media.filter(Boolean) as Media[]};
+}
+
+/** Delete a listing and its media using the same owner/path checks as the web lifecycle. */
+export async function deleteOwnedListing(client: SupabaseClient, category: Category, listing: Listing): Promise<void> {
+  const { data: auth, error: authError } = await client.auth.getUser();
+  if (authError) throw authError;
+  const ownerId = auth.user?.id;
+  if (!ownerId || listing.owner_id !== ownerId) throw new Error('Elanı silmək üçün sahiblik təsdiqlənməlidir.');
+  const sourceConfig: Record<ListingSource, { table: string; mediaTable: string; bucket: string }> = {
+    vehicle: { table: 'vehicle_listings', mediaTable: 'listing_media', bucket: 'listing-media' },
+    marketplace: { table: 'marketplace_listings', mediaTable: 'marketplace_listing_media', bucket: 'marketplace-media' },
+    service_provider: { table: 'service_provider_listings', mediaTable: 'service_provider_media', bucket: 'provider-media' },
+    auto_dealer: { table: 'auto_dealer_listings', mediaTable: 'auto_dealer_media', bucket: 'auto-dealer-media' },
+  };
+  const config = sourceConfig[category.source];
+  const parent = await client.from(config.table).select('id,owner_id').eq('id', listing.id).eq('owner_id', ownerId).maybeSingle();
+  if (parent.error) throw parent.error;
+  if (!parent.data || parent.data.owner_id !== ownerId) throw new Error('Elan tapılmadı və ya artıq silinib.');
+  const media = await client.from(config.mediaTable).select('id,storage_path').eq('listing_id', listing.id).eq('owner_id', ownerId);
+  if (media.error) throw media.error;
+  const rows = media.data || [];
+  const paths = [...new Set(rows.map((row: Record<string, any>) => row.storage_path))];
+  if (paths.some(path => typeof path !== 'string' || !path.startsWith(`${ownerId}/${listing.id}/`) || path.split('/').length !== 3 || !path.split('/')[2])) {
+    throw new Error('Elan mediasının sahibliyi təsdiqlənmədi; elan silinmədi.');
+  }
+  for (let offset = 0; offset < paths.length; offset += 100) {
+    const batch = paths.slice(offset, offset + 100);
+    const removed = await client.storage.from(config.bucket).remove(batch);
+    if (removed.error || !Array.isArray(removed.data) || batch.some(path => !removed.data.some((file: Record<string, any>) => file.name === path))) {
+      throw new Error('Elan mediası tam silinmədi. Elan dəyişdirilmədi; yenidən yoxlayın.');
+    }
+  }
+  if (rows.length) {
+    const deletedMedia = await client.from(config.mediaTable).delete().eq('listing_id', listing.id).eq('owner_id', ownerId).select('id');
+    if (deletedMedia.error || !Array.isArray(deletedMedia.data) || deletedMedia.data.length !== rows.length) {
+      throw new Error('Elan mediasının qeydləri təmizlənmədi. Elan silinmədi; yenidən yoxlayın.');
+    }
+  }
+  const deleted = await client.from(config.table).delete().eq('id', listing.id).eq('owner_id', ownerId).select('id');
+  if (deleted.error || !Array.isArray(deleted.data) || deleted.data.length !== 1 || deleted.data[0].id !== listing.id) {
+    throw new Error('Elan silinmədi. Sahiblik və statusu yeniləyib yoxlayın.');
+  }
+}
+
+/** Create only a server-priced, idempotent pending intent. It never charges or activates. */
+export async function createPromotionPaymentIntent(client: SupabaseClient, listing: Listing, planCode: string, requestId: string) {
+  const { data, error } = await client.rpc('austa_create_promotion_payment_intent', {
+    p_source: listing._source, p_listing_id: listing.id, p_plan_code: planCode, p_request_id: requestId,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row || row.status !== 'pending' || row.currency !== 'AZN' || !Number.isInteger(Number(row.amount_minor)) || Number(row.amount_minor) < 1) {
+    throw new Error('Ödəniş sorğusunun təhlükəsiz statusu təsdiqlənmədi.');
+  }
+  return { id: String(row.intent_id), amountMinor: Number(row.amount_minor), currency: row.currency as 'AZN', status: 'pending' as const };
 }
 
 export async function getListing(client: SupabaseClient, category: Category, id: string) {

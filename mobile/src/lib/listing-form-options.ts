@@ -15,7 +15,7 @@ const choices: Record<string, ListingChoice[]> = {
   market: pairs([['official_dealer', 'Azərbaycan / Rəsmi diler'], ['europe', 'Avropa'], ['usa', 'ABŞ'], ['canada', 'Kanada'], ['korea', 'Koreya'], ['japan', 'Yaponiya'], ['china', 'Çin'], ['gulf', 'Körfəz ölkələri'], ['russia_cis', 'Rusiya / MDB'], ['other', 'Digər']]),
   rental_type: strings(['Günlük', 'Həftəlik', 'Aylıq', 'Uzunmüddətli']),
   condition: strings(['Yeni', 'İşlənmiş']),
-  part_condition: strings(['Yeni', 'İşlənmiş', 'Original', 'Universal']),
+  part_condition: strings(['Yeni', 'İşlənmiş', 'Orijinal', 'Universal']),
   moto_type: strings(['Motosiklet', 'Moped', 'Skuter']),
   special_condition: strings(['Yeni', 'İşlənmiş']),
   sale_rent: strings(['Satış', 'İcarə', 'Hər ikisi']),
@@ -23,6 +23,8 @@ const choices: Record<string, ListingChoice[]> = {
   caravan_type: strings(['Motorlu karavan', 'Qoşqu karavan', 'Kampervan', 'Digər']),
   document_status: strings(['Tam sənədlidir', 'Yoxlanılmalıdır']),
   order_type: pairs([['sale', 'Satış'], ['order', 'Sifarişlə']]),
+  interest_type: pairs([['annual', 'İllik'], ['monthly', 'Aylıq']]),
+  license_disclosure: pairs([['company_reported_unverified', 'Şirkət tərəfindən təqdim edilib; platforma tərəfindən yoxlanılmayıb']]),
 };
 
 export function listingFieldChoices(category: string, field: string): ListingChoice[] | undefined {
