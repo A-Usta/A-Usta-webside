@@ -24,7 +24,7 @@ test('V4.3.4 sends seller questions through the message RPC for every category',
   assert.match(source, /<Text style=\{styles\.heading\}>Satıcıdan soruşun/);
   assert.doesNotMatch(source, /item\._source==='vehicle'&&<View style=\{styles\.detailPad\}><Text style=\{styles\.heading\}>Satıcıdan soruşun/);
   assert.match(source, /austa_send_listing_message/);
-  assert.match(source, /const requestId=chatRequestId\|\|newUuid\(\)/);
+  assert.match(source, /questionRequest\.current\?\.body===questionBody/);
   assert.match(source, /p_client_message_id:requestId/);
   assert.match(source, /questionSending\.current/);
   assert.match(source, /const sellerQuestions=item\._category/);
