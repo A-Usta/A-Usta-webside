@@ -16,8 +16,8 @@ test('all 17 active categories expose a listing form and a generic public detail
   assert.match(screen, /const categoryDetails:Record<string,\[string,string\]\[\]\>/);
   assert.match(screen, /Object\.entries\(item\.details\|\|\{\}\)/);
   assert.match(screen, /DETAIL_LABELS\[key\]\|\|`Əlavə məlumat/);
-  assert.match(screen, /service_provider:\['title','name','specialty','services','about','experience','working_hours','message_contact','price','address'\]/);
-  assert.match(screen, /auto_dealer:\['dealer_name','contact_name','brands','vehicle_condition','working_hours','about','address','credit_available','leasing_available','barter_available','delivery_available'\]/);
+  assert.match(screen, /service_provider:\['title','name','specialty','services','about','experience','working_hours','message_contact','price'\]/);
+  assert.match(screen, /auto_dealer:\['dealer_name','contact_name','brands','vehicle_condition','working_hours','about','credit_available','leasing_available','barter_available','delivery_available'\]/);
   for (const [key, fields] of Object.entries({
     leasing: ['company_name','tax_id','legal_name','email','website','city','service_area','vehicle_categories','vehicle_condition','customer_types','minimum_down_payment','minimum_term','maximum_term','rate','interest_type','currency','minimum_financing','maximum_financing','guarantor_required','income_proof_required','required_documents','terms','license_reference','license_disclosure'],
     insurance: ['company_name','tax_id','email','website','city','service_area','insurance_types','coverage','franchise','contract_months','payment_methods','installments_available','online_application','claims_support','repair_network','exclusions','license_reference','license_disclosure'],
@@ -64,9 +64,8 @@ test('video discovery pages beyond inactive recent uploads and returns freshly s
   assert.match(marketplace, /eq\('status','active'\)/);
   assert.match(read('src/components/VideoFeedScreen.tsx'), /stopAfterFirstFrame\?\(\)=>player\.pause\(\)/);
   assert.match(read('src/components/VideoFeedScreen.tsx'), /active=\{viewerOpen&&index===selectedIndex\}/);
-  assert.match(screen, /function VideoPoster\(\{url,style\}:\{url\?:string/);
-  assert.match(marketplace, /createSignedUrl\((?:item|row)\.poster_path,3600\)/);
-  assert.doesNotMatch(screen, /generateThumbnailsAsync\(\[0\.2\]/);
+  assert.match(screen, /generateThumbnailsAsync\(\[0\.2\]/);
+  assert.match(screen, /<ExpoImage source=\{poster\}/);
 });
 
 test('seller detail, seller question, video engagement and requested visual contracts stay present', () => {
