@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const RED = '#D92D20';
 const BG = '#F4F6F8';
@@ -19,6 +20,7 @@ function Row({ icon, title, detail, action, disabled = false }: { icon: keyof ty
 
 export function SettingsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [notice, setNotice] = useState('');
   const open = (url: string) => void Linking.openURL(url).catch(() => Alert.alert('Keçid açılmadı', 'İnternet bağlantısını yoxlayın və yenidən cəhd edin.'));
   const notificationSettings = async () => {
@@ -26,7 +28,7 @@ export function SettingsScreen() {
     catch { Alert.alert('Parametrlər açılmadı', 'Telefonun Parametrlər bölməsindən A-USTA tətbiqinə daxil olub bildiriş icazələrini yoxlayın.'); }
   };
   return <ScrollView style={s.screen} contentContainerStyle={s.content}>
-    <View style={s.header}><Pressable accessibilityRole="button" accessibilityLabel="Geri" onPress={() => router.back()} style={s.back}><Feather name="arrow-left" size={21} color={INK}/></Pressable><Text style={s.headerTitle}>Parametrlər</Text><View style={{ width: 32 }}/></View>
+    <View style={[s.header,{paddingTop:Math.max(insets.top,0)}]}><Pressable accessibilityRole="button" accessibilityLabel="Geri" onPress={() => router.back()} style={s.back}><Feather name="arrow-left" size={21} color={INK}/></Pressable><Text style={s.headerTitle}>Parametrlər</Text><View style={{ width: 32 }}/></View>
     <View style={s.panel}>
       <Text style={s.section}>Parametrlər</Text>
       <Row icon="sun" title="Tərtibat rejimi · Açıq" detail="Açıq tema hazırda istifadə olunur." disabled/>
