@@ -52,6 +52,9 @@ test('video screen exposes native play/pause, real seek progress, sound, sharing
 
 test('listing marketplace cards use four-to-three imagery and detail exposes freeform seller questions', () => {
   assert.match(detail, /media:\{aspectRatio:4\/3/);
+  assert.match(detail, /item\.engine_volume!=null\?`\$\{item\.engine_volume\} L`/);
+  assert.match(detail, /item\.horsepower!=null\?`\$\{item\.horsepower\} a\.g\.`/);
+  assert.doesNotMatch(detail, /item\.engine\|\|item\.engine_volume/);
   assert.match(detail, /accessibilityLabel="Satıcıya mesaj yaz"/);
   assert.match(detail, /accessibilityLabel="Satıcıya mesaj göndər"/);
   assert.match(detail, /openMessage\(message\.trim\(\)\)/);
