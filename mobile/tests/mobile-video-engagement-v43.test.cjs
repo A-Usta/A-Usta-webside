@@ -57,7 +57,9 @@ test('listing marketplace cards use four-to-three imagery and detail exposes fre
   assert.doesNotMatch(detail, /item\.engine\|\|item\.engine_volume/);
   assert.match(detail, /accessibilityLabel="Satıcıya mesaj yaz"/);
   assert.match(detail, /accessibilityLabel="Satıcıya mesaj göndər"/);
-  assert.match(detail, /openMessage\(message\.trim\(\)\)/);
+  assert.match(detail, /sendSellerQuestion\(message\.trim\(\)\)/);
+  assert.match(detail, /p_client_message_id:requestId/);
+  assert.match(detail, /const sellerQuestions=item\._category/);
 });
 
 test('promotions rank only after start and before expiry in all marketplace queries', () => {
