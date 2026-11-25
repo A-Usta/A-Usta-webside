@@ -21,6 +21,6 @@ test('listing card keeps 4:3 media and Turbo.az content order', () => {
   assert.match(screen, /media:\{aspectRatio:4\/3/);
   assert.match(screen, /<View style=\{styles\.priceRow\}>[\s\S]*?<Text style=\{styles\.price\}/);
   assert.match(screen, /<Text style=\{styles\.title\}/);
-  assert.match(screen, /videoCover:\{aspectRatio:9\/16/);
+  assert.match(screen, /videoCover:\{width:'100%',aspectRatio:9\/16/);
   assert.match(screen, /\['boost','vip','premium'\] as PromotionType\[\]/);
 });

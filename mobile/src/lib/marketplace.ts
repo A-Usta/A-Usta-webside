@@ -123,13 +123,14 @@ export async function listHome(client: SupabaseClient, search = ''): Promise<Lis
 
 /** Public video feed, sourced only from active listings and their already-published video media. */
 export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<Listing[]> {
+  // The public video feed is intentionally limited at query-source level to
+  // cars/rent and dealer listings. Other category videos remain attached to
+  // their own listing details and are never deleted or moved.
   const sources=[
     {source:'vehicle' as const,mediaTable:'listing_media',table:'vehicle_listings',bucket:'listing-media'},
-    {source:'marketplace' as const,mediaTable:'marketplace_listing_media',table:'marketplace_listings',bucket:'marketplace-media'},
-    {source:'service_provider' as const,mediaTable:'service_provider_media',table:'public_service_provider_listings',bucket:'provider-media'},
     {source:'auto_dealer' as const,mediaTable:'auto_dealer_media',table:'auto_dealer_listings',bucket:'auto-dealer-media'},
   ];
-  const perSourceTarget=Math.max(4,Math.ceil(limit/4));
+  const perSourceTarget=Math.max(4,Math.ceil(limit/sources.length));
   const result=await Promise.all(sources.map(async source=>{
     const found=new Map<string,Listing>();
     // Page media before filtering parent listings so old public videos are not
@@ -142,8 +143,6 @@ export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<
       if(!media.length)break;
       let query:any=client.from(source.table).select('*').eq('status','active').in('id',[...new Set(media.map((row:Record<string,any>)=>row.listing_id))]);
       if(source.source==='vehicle')query=query.in('listing_type',['sale','rent']);
-      if(source.source==='marketplace')query=query.in('category',CATEGORIES.filter(c=>c.source==='marketplace').map(c=>c.key));
-      if(source.source==='service_provider')query=query.in('provider_type',['service','usta']);
       const parentResult=await query;
       if(parentResult.error)throw parentResult.error;
       const parents=new Map((parentResult.data||[]).map((row:Record<string,any>)=>[String(row.id),row]));
@@ -162,9 +161,7 @@ export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<
         const videos=grouped.get(String(row.id));if(!videos?.length)continue;
         let key:CategoryKey;
         if(source.source==='vehicle')key=row.listing_type==='rent'?'rent':'cars';
-        else if(source.source==='marketplace')key=row.category;
-        else if(source.source==='auto_dealer')key='dealer';
-        else key=row.provider_type==='usta'?'usta':['leasing','insurance','sober_driver'].includes(row.details?.service_category)?row.details.service_category:'service';
+        else key='dealer';
         if(categoryConfig(key))found.set(String(row.id),{...row,_category:key,_source:source.source,_media:videos} as Listing);
       }
       if(media.length<80)break;

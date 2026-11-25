@@ -32,20 +32,17 @@ test('V4.1 keeps the website advertisement untouched and removes the mobile TOP 
   assert.match(marketplace, /Sizin üçün videolar/);
 });
 
-test('vehicle filter panels collapse without discarding filters and expose apply/reset', () => {
+test('all category filters collapse, retain values, and expose apply/reset', () => {
   assert.match(marketplace, /accessibilityState=\{\{expanded:filtersOpen\}\}/);
-  assert.match(marketplace, /accessibilityLabel=\"Avtomobil filtrlərini aç\"/);
-  assert.match(marketplace, /\(activeCategory\.source!=='vehicle'\|\|filtersOpen\)/);
-  assert.match(marketplace, /setDraftFilters\(current=>\(\{\.\.\.current,\[field\.key\]:value\}\)\)/);
-  assert.match(marketplace, /setAppliedFilters\(values\)/);
-  assert.match(marketplace, /setDraftFilters\(\{\}\);setAppliedFilters\(\{\}\);setSearch\(''\)/);
-  assert.match(marketplace, /category\.source==='vehicle'&&<Pressable/);
-  assert.match(marketplace, /\(category\.source!=='vehicle'\|\|filtersOpen\)/);
-  assert.match(marketplace, /setBrand\(value\);setModel\(''\)/);
-  assert.match(marketplace, /setSearch\(''\);setBrand\(''\);setModel\(''\);setRegion\(''\);setMin\(''\);setMax\(''\);setYearMin\(''\)/);
+  assert.match(marketplace, /setFiltersOpen\(value=>!value\)/);
+  assert.match(marketplace, /CATEGORY_FILTERS\[category\.key\]/);
+  assert.match(marketplace, /categoryFilterError\(category\.key,filterDraft\)/);
+  assert.match(marketplace, /setAppliedFilters\(categoryFilterValues\(category\.key,filterDraft\)\)/);
+  assert.match(marketplace, /setFilterDraft\(\{\}\);setAppliedFilters\(\{\}\)/);
+  assert.match(marketplace, /category\.source==='vehicle'&&field\.key==='brand'\?\{model:''\}/);
+  assert.match(marketplace, /contentContainerStyle=\{\{paddingBottom:160\}\}/);
   assert.match(marketplace, /half:\{flex:1,minWidth:120\}/);
 });
-
 test('client auth uses secure storage and contains no privileged credential', () => {
   assert.match(client, /expo-secure-store|SecureStore/);
   assert.match(client, /EXPO_PUBLIC_SUPABASE_ANON_KEY/);
