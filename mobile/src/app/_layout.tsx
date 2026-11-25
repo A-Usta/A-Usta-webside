@@ -23,6 +23,7 @@ export default function RootLayout() {
       <Stack.Screen name="locations" options={{ title: 'Yaxın məntəqələr' }} />
       <Stack.Screen name="category/[key]" options={{ title: 'Kateqoriya' }} />
       <Stack.Screen name="listing/[id]" options={{ title: 'Elan məlumatı' }} />
+      <Stack.Screen name="seller/[id]" options={{ title: 'Satıcı profili' }} />
       <Stack.Screen name="tools/customs" options={{ title: 'Gömrük kalkulyatoru' }} />
       <Stack.Screen name="tools/catalog" options={{ title: 'Avtokataloq' }} />
       <Stack.Screen name="tools/dealers" options={{ title: 'Dilerlər' }} />

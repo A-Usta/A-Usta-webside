@@ -48,12 +48,13 @@ test('adaptive and launch wordmarks use the existing brand assets with a configu
   }
 });
 
-test('marketplace titles, prices, metadata and category labels are allowed to wrap instead of ellipsize', () => {
+test('marketplace titles, prices and metadata fit the shared two-column layout without truncation', () => {
   const screens = read('src/components/MarketplaceScreens.tsx');
   const card = screens.slice(screens.indexOf('function ListingCard'), screens.indexOf('export function MarketplaceHomeScreen'));
   assert.match(card, /<Text style=\{styles\.price\}>/);
   assert.match(card, /<Text style=\{styles\.title\}>/);
   assert.match(card, /<Text style=\{styles\.meta\}>/);
   assert.doesNotMatch(card, /numberOfLines=/);
-  assert.match(screens, /flexBasis:'48%'/);
+  assert.match(card, /width:cardWidth,flexBasis:cardWidth,flexGrow:0,flexShrink:0/);
+  assert.match(screens, /listingCardWidth\(viewportWidth\)/);
 });

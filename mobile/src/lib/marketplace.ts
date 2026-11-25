@@ -282,6 +282,26 @@ export async function getListing(client: SupabaseClient, category: Category, id:
   return attachMedia(client,category,{...data,_category:category.key,_source:category.source} as Listing);
 }
 
+/** Public, verified seller profile listings only; respects each category's existing read policy. */
+export async function listSellerProfileListings(client: SupabaseClient, sellerProfileId: string): Promise<Listing[]> {
+  const results = await Promise.all(CATEGORIES.map(async category => {
+    let query: any = client.from(category.table).select('*').eq('seller_profile_id', sellerProfileId).eq('status', 'active');
+    if (category.source === 'vehicle') query = query.eq('listing_type', category.sourceValue);
+    else if (category.source === 'marketplace') query = query.eq('category', category.sourceValue);
+    else if (category.source === 'service_provider') {
+      query = query.eq('provider_type', category.sourceValue === 'usta' ? 'usta' : 'service');
+      if (['leasing', 'insurance', 'sober_driver'].includes(category.sourceValue || '')) query = query.contains('details', { service_category: category.sourceValue });
+    }
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(12);
+    if (error) return [] as Listing[];
+    const rows = (data || []).filter((row: Listing) => category.source !== 'service_provider' || category.sourceValue !== 'service' || !['leasing', 'insurance', 'sober_driver'].includes(String(row.details?.service_category || '')));
+    return Promise.all(rows.map((row: Listing) => attachMedia(client, category, {
+      ...row, _category: category.key, _source: category.source,
+    })));
+  }));
+  return results.flat().sort((a, b) => Date.parse(String(b.published_at || b.created_at || '')) - Date.parse(String(a.published_at || a.created_at || '')));
+}
+
 export async function getFavorites(client: SupabaseClient) {
   const {data:auth}=await client.auth.getUser();
   if(!auth.user) return {signedOut:true,listings:[] as Listing[]};
