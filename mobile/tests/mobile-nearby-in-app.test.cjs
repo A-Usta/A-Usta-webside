@@ -20,4 +20,10 @@ test('nearby services gracefully handle location denial and service-area-only pr
   assert.match(source, /Xidmət ərazisi/);
   assert.match(source, /mapLoadError=/);
   assert.match(source, /Siyahı görünüşü/);
+  assert.match(source, /googleMapsAndroidConfigured===true/);
+  assert.match(source, /Google Maps Android TEST açarı konfiqurasiya edilmədiyi üçün xəritə açılmadı/);
+  assert.match(source, /if\(!androidMapConfigured\)\{mapLoadError=/);
+  const config = fs.readFileSync(path.resolve(__dirname, '../app.config.js'), 'utf8');
+  assert.match(config, /googleMapsAndroidConfigured: Boolean\(mapsKey\)/);
+  assert.match(config, /GOOGLE_MAPS_ANDROID_API_KEY/);
 });

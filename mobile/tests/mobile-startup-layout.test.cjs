@@ -40,8 +40,8 @@ test('root route has a user-facing JS error recovery boundary without logging ex
 test('adaptive and launch wordmarks use the existing brand assets with a configured safe background', () => {
   const app = JSON.parse(read('app.json')).expo;
   assert.equal(app.android.adaptiveIcon.foregroundImage, './assets/android-icon-foreground.png');
-  assert.equal(app.android.adaptiveIcon.backgroundColor, '#D92D20');
-  assert.equal(app.plugins.find(plugin => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen')[1].backgroundColor, '#D92D20');
+  assert.equal(app.android.adaptiveIcon.backgroundColor, '#F00000');
+  assert.equal(app.plugins.find(plugin => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen')[1].backgroundColor, '#F00000');
   assert.equal(app.icon, './assets/icon.png');
   assert.equal(app.plugins.find(plugin => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen')[1].image, './assets/splash-icon.png');
   for (const relative of ['assets/android-icon-foreground.png', 'assets/android-icon-monochrome.png', 'assets/icon.png', 'assets/splash-icon.png']) {

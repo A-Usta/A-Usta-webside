@@ -47,10 +47,10 @@ test('similar-listing errors and empty results have visible detail states', () =
   assert.match(screens, /row\.id!==found\.id&&row\._source===found\._source&&row\._category===found\._category&&row\.status==='active'/);
   assert.match(screens, /onOpen=\{\(\)=>router\.push\(\{pathname:'\/listing\/\[id\]'/);
   assert.ok(screens.indexOf('<Equipment item={item}/>') < screens.indexOf('<Text style={styles.heading}>Satıcı</Text>'));
-  assert.ok(screens.indexOf('<Text style={styles.heading}>Satıcı</Text>') < screens.indexOf('<Text style={styles.heading}>Satıcıdan soruşun</Text>'));
-  assert.ok(screens.indexOf('<Text style={styles.heading}>Satıcıdan soruşun</Text>') < screens.indexOf('Paylaş</Text>'));
-  assert.ok(screens.indexOf('Paylaş</Text>') < screens.indexOf('<Section title="Oxşar elanlar"'));
-  assert.ok(screens.indexOf('Müqayisə et</Text>') < screens.indexOf('<Section title="Oxşar elanlar"'));
+  assert.ok(screens.indexOf('<Text style={styles.heading}>Satıcıdan soruşun</Text>') < screens.indexOf('<Text style={styles.heading}>Satıcı</Text>'));
+  assert.ok(screens.indexOf('<Text style={styles.heading}>Satıcı</Text>') < screens.indexOf('Elanı irəli çəkin'));
+  assert.ok(screens.indexOf('Elanı irəli çəkin') < screens.indexOf('Elanı sil</Text>'));
+  assert.ok(screens.indexOf('Elanı sil</Text>') < screens.indexOf('<Section title="Oxşar elanlar"'));
 });
 
 test('message send does not show success without persisted RPC row and inbox refreshes replies', () => {
@@ -65,7 +65,7 @@ test('message and phone actions remain wired and mobile wordmarks use approved r
   assert.match(screens, /austa_open_listing_conversation/);
   assert.match(screens, /austa_send_listing_message/);
   assert.match(drawer, /wordmark: \{ color: '#FFFFFF', backgroundColor: RED/);
-  assert.match(screens, /backgroundColor:RED,paddingHorizontal:8,paddingVertical:3/);
+  assert.match(screens, /color:RED,backgroundColor:'transparent'/);
 });
 
 test('home video opens its selected item directly and closes to the retained home route', () => {
@@ -92,8 +92,8 @@ test('video viewer resolves the requested identity and stable sequence index', (
 test('mobile home brand preserves requested case on red with no uppercase transform', () => {
   const header = screens.match(/headerBrand[^\n]*A-Usta\.az/);
   assert.ok(header);
-  assert.match(header[0], /color:'#FFFFFF'/);
-  assert.match(header[0], /backgroundColor:RED/);
+  assert.match(header[0], /color:RED/);
+  assert.match(header[0], /backgroundColor:'transparent'/);
   assert.match(header[0], /textTransform:'none'/);
   assert.doesNotMatch(header[0], /A-USTA\.az/);
 });

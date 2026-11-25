@@ -35,13 +35,15 @@ test('V4.1 keeps the website advertisement untouched and removes the mobile TOP 
 test('all category filters collapse, retain values, and expose apply/reset', () => {
   assert.match(marketplace, /accessibilityState=\{\{expanded:filtersOpen\}\}/);
   assert.match(marketplace, /setFiltersOpen\(value=>!value\)/);
+  assert.match(marketplace, /setFiltersOpen\(false\);setLoading\(true\);/);
+  assert.match(marketplace, /filtersOpen&&<>[\s\S]*?CATEGORY_FILTERS/);
   assert.match(marketplace, /CATEGORY_FILTERS\[category\.key\]/);
   assert.match(marketplace, /categoryFilterError\(category\.key,filterDraft\)/);
   assert.match(marketplace, /setAppliedByCategory\(current=>\(\{\.\.\.current,\[category\.key\]:categoryFilterValues\(category\.key,filterDraft\)\}\)\)/);
   assert.match(marketplace, /setDraftByCategory/);
   assert.match(marketplace, /setAppliedByCategory\(current=>\(\{\.\.\.current,\[category\.key\]:\{\}\}\)\)/);
   assert.match(marketplace, /category\.source==='vehicle'&&field\.key==='brand'\?\{model:''\}/);
-  assert.match(marketplace, /contentContainerStyle=\{\{paddingBottom:160\}\}/);
+  assert.match(marketplace, /contentContainerStyle=\{\{paddingTop:56\+insets\.top,paddingBottom:160\}\}/);
   assert.match(marketplace, /half:\{flex:1,minWidth:120\}/);
 });
 test('client auth uses secure storage and contains no privileged credential', () => {

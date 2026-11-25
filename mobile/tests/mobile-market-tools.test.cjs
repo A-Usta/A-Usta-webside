@@ -10,7 +10,9 @@ test('official vehicle customs calculator is embedded and navigation is restrict
   const tools = read('src/components/MarketTools.tsx');
   const core = read('src/lib/marketTools.ts');
   assert.match(core, /https:\/\/www\.e\.customs\.gov\.az\/for-individuals\/calculator\/auto/);
-  assert.match(tools, /onShouldStartLoadWithRequest=\{allowOfficialNavigation\}/);
+  assert.match(tools, /onShouldStartLoadWithRequest=\{request =>/);
+  assert.match(tools, /if \(!allowed\) setFailed\(true\); return allowed;/);
+  assert.match(tools, /onRenderProcessGone=\{\(\) => setFailed\(true\)\}/);
   assert.match(tools, /hostname\.endsWith\('\.customs\.gov\.az'\)/);
   assert.match(tools, /Gömrük dəyəri və yekun ödəniş rəsmiləşdirmə zamanı dəyişə bilər/);
   assert.doesNotMatch(tools, /aksizRate\s*=|vatRate\s*=|customsDutyRate\s*=/i);
@@ -86,9 +88,20 @@ test('mobile detail page uses real price history, masks VIN and offers seller co
   assert.match(screen, /Satıcıdan soruşun/);
   assert.match(screen, /austa_open_listing_conversation/);
   assert.match(screen, /austa_send_listing_message/);
-  assert.match(screen, /Təhlükəsizlik məsləhəti/);
-  assert.match(screen, /Müqayisə et/);
+  assert.match(screen, /Elana baxış keçirmədən öncə beh göndərməyin/);
+  assert.match(screen, /Diqqət!/);
+  assert.match(screen, /accessibilityLabel=\"Elanları müqayisə et\"/);
   assert.match(screen, /Zəng et/);
+  assert.match(screen, /Bütün şəkillər/);
+  assert.match(screen, /detailTopBar/);
+  assert.match(screen, /accessibilityLabel=\"Elanı paylaş\"/);
+  assert.match(screen, /accessibilityLabel=\"Elanları müqayisə et\"/);
+  assert.match(screen, /backgroundColor:'#36B45C'/);
+  assert.match(screen, /backgroundColor:'#4884EF'/);
+  assert.match(screen, /Maşın satışdadır\?/);
+  assert.match(screen, /austa_get_public_seller_avatar/);
+  assert.match(screen, /seller-profile-avatars'\)\.createSignedUrl/);
+  assert.match(screen, /Telefon nömrəsini göstər/);
 });
 
 test('mobile settings show supported language and currency and do not fabricate unsupported options', () => {

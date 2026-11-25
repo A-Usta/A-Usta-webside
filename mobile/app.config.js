@@ -26,24 +26,28 @@ if (process.env.EXPO_PUBLIC_APP_ENV === 'test') {
   }
 }
 
-module.exports = ({ config }) => ({
-  ...config,
-  plugins: [
-    ...(config.plugins || []),
-    'expo-image',
-    [
-      'expo-location',
-      {
-        locationWhenInUsePermission:
-          'Yaxın xidmət məntəqələrini göstərmək və xidmət sifarişinizə yer əlavə etmək üçün lokasiya icazəsi tələb olunur.',
-      },
+module.exports = ({ config }) => {
+  const mapsKey = process.env.EXPO_PUBLIC_APP_ENV === 'test'
+    ? process.env.GOOGLE_MAPS_ANDROID_API_KEY
+    : undefined;
+  const extra = { ...(config.extra || {}), googleMapsAndroidConfigured: Boolean(mapsKey) };
+  return {
+    ...config,
+    extra,
+    plugins: [
+      ...(config.plugins || []),
+      'expo-image',
+      [
+        'expo-location',
+        {
+          locationWhenInUsePermission:
+            'Yaxın xidmət məntəqələrini göstərmək və xidmət sifarişinizə yer əlavə etmək üçün lokasiya icazəsi tələb olunur.',
+        },
+      ],
+      ...(mapsKey
+        ? [['react-native-maps', { androidGoogleMapsApiKey: mapsKey }]]
+        : ['react-native-maps']),
+      './plugins/with-workmanager-r8',
     ],
-    [
-      'react-native-maps',
-      process.env.GOOGLE_MAPS_ANDROID_API_KEY
-        ? { androidGoogleMapsApiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY }
-        : {},
-    ],
-    './plugins/with-workmanager-r8',
-  ],
-});
+  };
+};
