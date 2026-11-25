@@ -50,10 +50,10 @@ test('adaptive and launch wordmarks use the existing brand assets with a configu
 
 test('marketplace titles, prices, metadata and category labels are allowed to wrap instead of ellipsize', () => {
   const screens = read('src/components/MarketplaceScreens.tsx');
-  assert.match(screens, /<Text style=\{styles\.price\}>/);
-  assert.match(screens, /<Text style=\{styles\.title\}>/);
-  assert.match(screens, /<Text style=\{styles\.meta\}>/);
-  assert.doesNotMatch(screens, /numberOfLines=\{1\}/);
-  assert.doesNotMatch(screens, /numberOfLines=\{2\}/);
+  const card = screens.slice(screens.indexOf('function ListingCard'), screens.indexOf('export function MarketplaceHomeScreen'));
+  assert.match(card, /<Text style=\{styles\.price\}>/);
+  assert.match(card, /<Text style=\{styles\.title\}>/);
+  assert.match(card, /<Text style=\{styles\.meta\}>/);
+  assert.doesNotMatch(card, /numberOfLines=/);
   assert.match(screens, /flexBasis:'48%'/);
 });

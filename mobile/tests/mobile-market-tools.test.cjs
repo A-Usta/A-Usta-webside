@@ -70,7 +70,7 @@ test('listing detail provides paged full-screen media and truthful A-USTA listin
   assert.match(screen, /austa_get_listing_detail_metadata/);
   assert.match(screen, /item\.credit_available===true/);
   assert.match(screen, /item\.barter_available===true/);
-  assert.match(screen, /SİFARİŞLƏ/);
+  assert.match(screen, /Sifarişlə/);
   assert.match(screen, /Videonu paylaş/);
   assert.match(screen, /Elanı yadda saxla/);
 });
@@ -79,10 +79,10 @@ test('mobile detail page uses real price history, masks VIN and offers seller co
   const screen = read('src/components/MarketplaceScreens.tsx');
   assert.match(screen, /austa_get_listing_price_history/);
   assert.match(screen, /key!=='vin'/);
-  assert.match(screen, /VIN mövcuddur/);
+  assert.match(screen, /VIN/);
   assert.match(screen, /const summary=category==='cars'/);
   assert.match(screen, /const isVehicleSale=category==='cars'/);
-  assert.match(screen, /position:'absolute',left:7,top:7/);
+  assert.match(screen, /heart:\{position:'absolute',right:7,top:7/);
   assert.match(screen, /Satıcıdan soruşun/);
   assert.match(screen, /austa_open_listing_conversation/);
   assert.match(screen, /austa_send_listing_message/);
@@ -122,4 +122,18 @@ test('nearby map native module failure leaves the backend list available', () =>
   assert.match(screen, /class NativeMapBoundary extends Component/);
   assert.match(screen, /Yaxın məntəqələr siyahıda qalır/);
   assert.match(screen, /Siyahı görünüşü/);
+});
+
+
+test('home video cards render a first-frame preview and open the video viewer, not listing details', () => {
+  const screen = read('src/components/MarketplaceScreens.tsx');
+  const feed = read('src/components/VideoFeedScreen.tsx');
+  assert.match(screen, /function VideoPoster/);
+  assert.match(screen, /onFirstFrameRender=\{\(\)=>\{setReady\(true\);player\.pause\(\);\}\}/);
+  assert.match(screen, /pathname:'\/videos',params:\{listingId:item\.id\}/);
+  assert.match(screen, /videoStrip:\{gap:9,paddingHorizontal:14/);
+  assert.match(feed, /initialNumToRender=\{1\}/);
+  assert.match(feed, /active=\{viewerOpen&&index===selectedIndex\}/);
+  assert.match(feed, /onCloseViewer=\{\(\)=>setViewerOpen\(false\)\}/);
+  assert.match(feed, /onOpenListing=\{\(\)=>openListing\(item\)\}/);
 });

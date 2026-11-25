@@ -219,6 +219,16 @@ export async function getFavorites(client: SupabaseClient) {
   return {signedOut:false,listings:items};
 }
 
+/** Fetch the authenticated user's compact favorite key set for consistent card hearts. */
+export async function getFavoriteKeys(client: SupabaseClient): Promise<Set<string>> {
+  const {data:auth,error:authError}=await client.auth.getUser();
+  if(authError)throw authError;
+  if(!auth.user)return new Set();
+  const {data,error}=await client.from('listing_favorites').select('listing_source,listing_id').eq('user_id',auth.user.id);
+  if(error)throw error;
+  return new Set((data||[]).map((row:any)=>`${row.listing_source}:${row.listing_id}`));
+}
+
 export async function toggleFavorite(client:SupabaseClient, listing:Listing) {
   const {data:auth,error:authError}=await client.auth.getUser();
   if(authError||!auth.user) throw new Error('Seçilmişlər üçün əvvəlcə hesabınıza daxil olun.');
