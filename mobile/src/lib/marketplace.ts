@@ -7,6 +7,30 @@ export type Listing = Record<string, any> & { id: string; _category: CategoryKey
 export type Media = { id: string; media_type: 'image' | 'video'; storage_path: string; sort_order: number; is_cover: boolean; url?: string };
 export type CategoryFilter = { key: string; label: string; column: string; kind?: 'text' | 'number'; operator?: 'gte' | 'lte' };
 
+// Mirrors the canonical web V157 promotion catalog. Mobile displays these
+// tariffs only; client values never activate a promotion or authorize payment.
+export const PROMOTION_CATALOG = {
+  boost: { name: 'İrəli çək', icon: '↑', badge: 'Sürətli görünürlük', description: 'Elanınızı müəyyən intervallarla siyahıda yenidən yuxarı qaldırın.', plans: [
+    { code: 'boost_3', label: '3 dəfə', detail: '8 saat intervalı ilə', price: 0.99 },
+    { code: 'boost_9', label: '9 dəfə', detail: '8 saat intervalı ilə', price: 1.49, popular: true },
+    { code: 'boost_15', label: '15 dəfə', detail: '8 saat intervalı ilə', price: 1.99 },
+    { code: 'boost_30', label: '30 dəfə', detail: '8 saat intervalı ilə', price: 2.99 },
+  ] },
+  vip: { name: 'VIP', icon: '★', badge: 'Daha çox diqqət', description: 'Elanınıza VIP görünüş verin və daha çox istifadəçinin diqqətini cəlb edin.', plans: [
+    { code: 'vip_1d', label: '1 gün', detail: 'VIP görünürlük', price: 1.49 },
+    { code: 'vip_5d', label: '5 gün', detail: 'VIP görünürlük', price: 3.99, popular: true },
+    { code: 'vip_15d', label: '15 gün', detail: 'VIP görünürlük', price: 7.99 },
+    { code: 'vip_30d', label: '30 gün', detail: 'VIP görünürlük', price: 12.99 },
+  ] },
+  premium: { name: 'Premium', icon: '◆', badge: 'Maksimum görünürlük', description: 'VIP üstünlükləri və əlavə önə çıxarma imkanları ilə maksimum görünürlük.', plans: [
+    { code: 'premium_1d', label: '1 gün', detail: 'Premium görünürlük', price: 2.49 },
+    { code: 'premium_5d', label: '5 gün', detail: 'Premium görünürlük', price: 6.99 },
+    { code: 'premium_15d', label: '15 gün', detail: 'Premium görünürlük', price: 14.99, popular: true },
+    { code: 'premium_30d', label: '30 gün', detail: 'Premium görünürlük', price: 24.99 },
+  ] },
+} as const;
+export type PromotionType = keyof typeof PROMOTION_CATALOG;
+
 // Only columns exposed by the public listing DTOs and the documented JSON details
 // are used. JSON detail fields are text searched so no unsafe numeric casts occur.
 const f=(key:string,label:string,column=key,kind:'text'|'number'='text'):CategoryFilter=>({key,label,column,kind});
