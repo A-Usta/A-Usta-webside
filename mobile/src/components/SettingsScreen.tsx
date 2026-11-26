@@ -6,6 +6,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Pressable, ScrollView, Text, View } from '../lib/themed-native';
 import { useAppSettings, type ThemeMode } from '../lib/app-settings';
+import type { CurrencyCode } from '../lib/currency';
 
 const RED = '#D92D20';
 const BG = '#F4F6F8';
@@ -22,7 +23,7 @@ const themeOptions: { value: ThemeMode; title: string; detail: string; icon: key
 export function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { themeMode, setThemeMode } = useAppSettings();
+  const { themeMode, setThemeMode, currency, setCurrency, exchangeRates, exchangeRateError, refreshExchangeRates } = useAppSettings();
   const [notice, setNotice] = useState('');
   const [locationPermission, setLocationPermission] = useState<Location.PermissionStatus | 'unknown'>('unknown');
   const version = Constants.nativeApplicationVersion || Constants.expoConfig?.version || 'Məlum deyil';
@@ -97,7 +98,9 @@ export function SettingsScreen() {
     <View style={s.panel}>
       <Text style={s.section}>Dil və valyuta</Text>
       <View style={s.staticRow}><Feather name="globe" size={19} color={RED}/><View style={{ flex: 1 }}><Text style={s.title}>Azərbaycan dili</Text><Text style={s.detail}>Hazırda tam dəstəklənən yeganə interfeys dilidir.</Text></View><Feather name="check" size={18} color={RED}/></View>
-      <View style={s.staticRow}><Feather name="dollar-sign" size={19} color={RED}/><View style={{ flex: 1 }}><Text style={s.title}>AZN</Text><Text style={s.detail}>Elan qiymətləri DB-dəki ilkin valyutada saxlanır. USD/EUR üçün təsdiqlənmiş canlı məzənnə xidməti yoxdur.</Text></View></View>
+      <Text style={s.detail}>Elanların ilkin məbləği DB-də dəyişməz qalır. Konvertasiya Azərbaycan Mərkəzi Bankının rəsmi gündəlik XML məzənnəsi ilə hesablanır.</Text>
+      <View style={s.currencyOptions}>{(['AZN','USD','EUR'] as CurrencyCode[]).map(code=><Pressable key={code} accessibilityRole="radio" accessibilityState={{checked:currency===code}} onPress={()=>void setCurrency(code).then(()=>setNotice(`${code} göstərim valyutası saxlanıldı.`)).catch(error=>Alert.alert('Valyuta saxlanmadı',error instanceof Error?error.message:'Yenidən cəhd edin.'))} style={[s.currencyChoice,currency===code&&s.currencyChoiceOn]}><Text style={[s.currencyText,currency===code&&s.currencyTextOn]}>{code}</Text></Pressable>)}</View>
+      <View style={s.staticRow}><Feather name="dollar-sign" size={19} color={RED}/><View style={{flex:1}}><Text style={s.title}>{exchangeRates?`Məzənnə tarixi: ${exchangeRates.date}`:'Rəsmi məzənnə əlçatan deyil'}</Text><Text style={s.detail}>{exchangeRateError|| (exchangeRates?`1 USD = ${exchangeRates.aznPerUnit.USD.toFixed(4)} AZN · 1 EUR = ${exchangeRates.aznPerUnit.EUR.toFixed(4)} AZN`:'Qiymətlər ilkin valyutada göstəriləcək; çevirmə aparılmır.')}</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Rəsmi məzənnəni yenilə" onPress={()=>void refreshExchangeRates()}><Feather name="refresh-cw" size={18} color={RED}/></Pressable></View>
     </View>
 
     <View style={s.panel}>
@@ -132,6 +135,7 @@ const s = StyleSheet.create({
   section: { paddingTop: 15, paddingBottom: 5, color: INK, fontSize: 16, fontWeight: '800' },
   choice: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 11, borderBottomWidth: 1, borderBottomColor: LINE, paddingVertical: 8 },
   choiceSelected: { backgroundColor: '#FFF8F7' }, choiceIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#F4F6F8', alignItems: 'center', justifyContent: 'center' }, choiceIconSelected: { backgroundColor: '#FFF0EE' },
+  currencyOptions: { flexDirection: 'row', gap: 8, paddingVertical: 10 }, currencyChoice: { flex: 1, minHeight: 42, borderRadius: 10, borderWidth: 1, borderColor: LINE, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }, currencyChoiceOn: { borderColor: RED, backgroundColor: '#FFF6F5' }, currencyText: { color: MUTED, fontWeight: '700' }, currencyTextOn: { color: RED, fontWeight: '900' },
   staticRow: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 11, borderBottomWidth: 1, borderBottomColor: LINE, paddingVertical: 10 },
   title: { color: INK, fontSize: 13, fontWeight: '700' }, detail: { color: MUTED, fontSize: 11, lineHeight: 16, flexShrink: 1 },
   notice: { paddingVertical: 10, color: RED, fontSize: 12, lineHeight: 17 }, privacyNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 9, paddingVertical: 12 },

@@ -22,7 +22,7 @@ vm.runInContext(`${executable}\nglobalThis.buildPayload = parentPayload;`, conte
 
 // Snapshot of the read-only TEST Supabase information_schema after migration 20261119120000.
 const columns = {
-  vehicle_listings: new Set('id owner_id listing_type status brand model year mileage body_type fuel_type transmission engine color price daily_price deposit region district address latitude longitude description phone has_video created_at updated_at published_at promotion_type promotion_started_at promotion_until last_boosted_at engine_volume horsepower drivetrain vehicle_condition seats damage_condition market barter_available credit_available seller_profile_id vin rental_type contact_name details'.split(' ')),
+  vehicle_listings: new Set('id owner_id listing_type status brand model year mileage body_type fuel_type transmission engine color price daily_price currency deposit region district address latitude longitude description phone has_video created_at updated_at published_at promotion_type promotion_started_at promotion_until last_boosted_at engine_volume horsepower drivetrain vehicle_condition seats damage_condition market barter_available credit_available seller_profile_id vin rental_type contact_name details'.split(' ')),
   auto_dealer_listings: new Set('id owner_id status dealer_name contact_name phone message_contact region district address latitude longitude working_hours brands vehicle_condition credit_available leasing_available barter_available delivery_available about details promotion_type promotion_started_at promotion_until last_boosted_at created_at updated_at published_at seller_profile_id'.split(' ')),
   service_provider_listings: new Set('id owner_id provider_type status title name phone message_contact specialty services about experience working_hours region district address latitude longitude rating reviews_count promotion_type promotion_started_at promotion_until last_boosted_at created_at updated_at published_at details seller_profile_id'.split(' ')),
   marketplace_listings: new Set('id owner_id category status title description price currency brand model year condition region district address phone latitude longitude promotion_type promotion_started_at promotion_until last_boosted_at has_video created_at updated_at published_at details seller_profile_id'.split(' ')),
@@ -84,6 +84,18 @@ test('vehicle details column privileges cover website public reads and authentic
 test('dealer required flags are false instead of explicit NULL when the form does not offer them', () => {
   const dealer = context.buildPayload({ key: 'dealer', source: 'auto_dealer', title: 'Dealer' }, values, 'owner', null);
   for (const field of ['credit_available','leasing_available','barter_available','delivery_available']) assert.equal(dealer[field], false);
+});
+
+test('vehicle and marketplace payloads retain the selected amount currency and TEST migration constrains it',()=>{
+  const migration=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations/20261126120000_v4311_vehicle_price_currency.sql'),'utf8');
+  assert.match(migration,/ADD COLUMN IF NOT EXISTS currency text NOT NULL DEFAULT 'AZN'/);
+  assert.match(migration,/CHECK \(currency IN \('AZN', 'USD', 'EUR'\)\)/);
+  assert.match(migration,/old_currency:=COALESCE\(OLD\.currency,'AZN'\); new_currency:=COALESCE\(NEW\.currency,'AZN'\)/);
+  const values={...Object.fromEntries(['price','brand','model','year','mileage','equipment'].map(field=>[field,field==='equipment'?'[]':'100'])),currency:'EUR',title:'Test',phone:'123',region:'Bakı',address:'Bakı'};
+  const vehicle=context.buildPayload({key:'cars',source:'vehicle'},values,'owner',null);
+  const part=context.buildPayload({key:'parts',source:'marketplace'},values,'owner',null);
+  assert.equal(vehicle.price,100);assert.equal(vehicle.currency,'EUR');
+  assert.equal(part.price,100);assert.equal(part.currency,'EUR');
 });
 
 test('each of the 17 forms has a matching public payload path for every declared field', () => {

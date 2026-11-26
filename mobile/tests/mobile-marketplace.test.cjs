@@ -10,9 +10,12 @@ const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const marketplaceSource = read('src/lib/marketplace.ts');
 const appSource = read('src/components/MarketplaceScreens.tsx');
 const supabaseSource = read('src/lib/supabase.ts');
+const currencyModule = { exports: {} };
+const currencyJs = ts.transpile(read('src/lib/currency.ts'), { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
+vm.runInNewContext(`(function(exports,module){${currencyJs}\n})(module.exports,module)`, { module: currencyModule, Intl, Date, Number, String, RegExp });
 const tsModule = { exports: {} };
 const js = ts.transpile(marketplaceSource, { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
-vm.runInNewContext(`(function(exports,module){${js}\n})(module.exports,module)`, { module: tsModule });
+vm.runInNewContext(`(function(exports,module,require){${js}\n})(module.exports,module,require)`, { module: tsModule, require: name => name === './currency' ? currencyModule.exports : require(name) });
 const { CATEGORIES, CATEGORY_FILTERS, categoryFilterError, categoryFilterValues, categoryConfig, listCategory, promotionRank, sortListings, sortHomeVideos, resolveHomeVideoIndex } = tsModule.exports;
 const formOptionsModule = { exports: {} };
 const formOptionsJs = ts.transpile(read('src/lib/listing-form-options.ts'), { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
@@ -63,10 +66,19 @@ test('each category filter is applied to its configured live query column', asyn
   }
 });
 
+test('selected-currency price range builds a bounded source-currency OR predicate',()=>{
+  const {currencyPriceOr}=tsModule.exports;
+  const rates={date:'26.11.2026',aznPerUnit:{AZN:1,USD:1.7,EUR:1.97}};
+  const query=currencyPriceOr('price','1000','2000','USD',rates);
+  assert.match(query,/currency\.eq\.AZN,price\.gte\.1700\.000000,price\.lte\.3400\.000000/);
+  assert.match(query,/currency\.eq\.USD,price\.gte\.1000\.000000,price\.lte\.2000\.000000/);
+  assert.match(query,/currency\.eq\.EUR,price\.gte\.862\.944162,price\.lte\.1725\.888325/);
+});
+
 test('homepage switches the selected category above adaptive search and queries its real table', () => {
   assert.match(appSource, /CATEGORIES\.map\(c=>/);
   assert.match(appSource, /setHomeCategory\(c\.key\);setSearch\(''\);setHomeBrand\(''\);setHomeModel\(''\);setDraftFilters\(\{\}\);setAppliedFilters\(\{\}\)/);
-  assert.match(appSource, /listCategory\(sb,activeCategory,\{from:0,to:39,search,brand:homeBrand,model:homeModel,filters:appliedFilters\}\)/);
+  assert.match(appSource, /listCategory\(sb,activeCategory,\{from:0,to:39,search,brand:homeBrand,model:homeModel,filters:appliedFilters,displayCurrency\}\)/);
   assert.match(appSource, /CATEGORY_FILTERS\[homeCategory\]/);
 });
 

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getCurrencySnapshot, type CurrencyCode } from './currency';
 
 export type CategoryKey = 'cars' | 'dealer' | 'service' | 'rent' | 'parts' | 'accessories' | 'moto' | 'special' | 'bus' | 'trailer' | 'water' | 'caravan' | 'plate' | 'usta' | 'insurance' | 'sober_driver' | 'leasing';
 export type ListingSource = 'vehicle' | 'marketplace' | 'service_provider' | 'auto_dealer';
@@ -189,7 +190,21 @@ export function resolveHomeVideoIndex(rows:Listing[],listingId:string,source?:st
   return resolved;
 }
 
-export async function listCategory(client: SupabaseClient, category: Category, options: {from?:number;to?:number;search?:string;brand?:string;model?:string;region?:string;minPrice?:string;maxPrice?:string;yearMin?:string;yearMax?:string;promotionsOnly?:boolean;filters?:Record<string,string>} = {}) {
+export function currencyPriceOr(field:string,min:string|number|undefined,max:string|number|undefined,display:CurrencyCode,rates:ReturnType<typeof getCurrencySnapshot>['rates']) {
+  if(min==null&&max==null)return '';
+  if(!rates)throw new Error('Qiymət filtrini seçilmiş valyutada tətbiq etmək üçün Mərkəzi Bankın məzənnəsini yeniləyin.');
+  const clauses: string[]=[];
+  for(const source of ['AZN','USD','EUR'] as const){
+    const sourceRate=rates.aznPerUnit[source],displayRate=rates.aznPerUnit[display];
+    if(!(sourceRate>0&&displayRate>0))continue;
+    const lower=min==null?'':`,${field}.gte.${(Number(min)*displayRate/sourceRate).toFixed(6)}`;
+    const upper=max==null?'':`,${field}.lte.${(Number(max)*displayRate/sourceRate).toFixed(6)}`;
+    clauses.push(`and(currency.eq.${source}${lower}${upper})`);
+  }
+  return clauses.join(',');
+}
+
+export async function listCategory(client: SupabaseClient, category: Category, options: {from?:number;to?:number;search?:string;brand?:string;model?:string;region?:string;minPrice?:string;maxPrice?:string;yearMin?:string;yearMax?:string;promotionsOnly?:boolean;filters?:Record<string,string>;displayCurrency?:CurrencyCode} = {}) {
   const {from=0,to=19,search='',brand='',model='',region='',minPrice='',maxPrice='',yearMin='',yearMax='',promotionsOnly=false,filters={}}=options;
   let query:any=client.from(category.table).select('*').eq('status','active');
   if(category.source==='vehicle') query=query.eq('listing_type',category.sourceValue);
@@ -205,12 +220,23 @@ export async function listCategory(client: SupabaseClient, category: Category, o
   if(model && ['vehicle','marketplace'].includes(category.source)) query=query.ilike('model',`%${escapeLike(model)}%`);
   if(region && category.source!=='service_provider') query=query.ilike('region',`%${escapeLike(region)}%`);
   const priceField=category.key==='rent'?'daily_price':'price';
-  if(minPrice && ['vehicle','marketplace'].includes(category.source)) query=query.gte(priceField,Number(minPrice));
-  if(maxPrice && ['vehicle','marketplace'].includes(category.source)) query=query.lte(priceField,Number(maxPrice));
+  const hasDirectPriceFilter=Boolean(minPrice||maxPrice);
+  if(hasDirectPriceFilter && ['vehicle','marketplace'].includes(category.source)){
+    const snapshot=getCurrencySnapshot();const currency=options.displayCurrency||snapshot.currency,rates=snapshot.rates;
+    query=query.or(currencyPriceOr(priceField,minPrice,maxPrice,currency,rates));
+  }
   if(yearMin && category.source==='vehicle') query=query.gte('year',Number(yearMin));
   if(yearMax && category.source==='vehicle') query=query.lte('year',Number(yearMax));
-  for(const field of CATEGORY_FILTERS[category.key]||[]){
+  const categoryFilters=CATEGORY_FILTERS[category.key]||[];
+  const filterPriceMin=categoryFilters.some(field=>field.key==='daily_price')?filters.daily_price:filters.price;
+  const filterPriceMax=categoryFilters.some(field=>field.key==='daily_price')?filters.daily_price_max:filters.price_max;
+  if((filterPriceMin||filterPriceMax)&&['vehicle','marketplace'].includes(category.source)){
+    const snapshot=getCurrencySnapshot();const currency=options.displayCurrency||snapshot.currency,rates=snapshot.rates;
+    query=query.or(currencyPriceOr(priceField,filterPriceMin,filterPriceMax,currency,rates));
+  }
+  for(const field of categoryFilters){
     const value=String(filters[field.key]||'').trim();if(!value)continue;
+    if(['price','price_max','daily_price','daily_price_max'].includes(field.key))continue;
     if(field.kind==='number'){
       const amount=Number(value);if(Number.isFinite(amount)&&amount>=0)query=field.operator==='lte'?query.lte(field.column,amount):query.gte(field.column,amount);
     }else query=query.ilike(field.column,`%${escapeLike(value)}%`);

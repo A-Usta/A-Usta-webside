@@ -98,10 +98,15 @@ function ScreenState({ title, detail, retry, busy = false }: { title: string; de
 
 export function CustomsCalculatorScreen() {
   const [failed, setFailed] = useState(false);
+  const [tlsFailed, setTlsFailed] = useState(false);
   const [reload, setReload] = useState(0);
   const openOfficialCalculator = useCallback(async () => {
     try { await Linking.openURL(OFFICIAL_AUTO_CUSTOMS_CALCULATOR); }
     catch { Alert.alert('Rəsmi kalkulyator açılmadı', 'Brauzer əlçatan deyil. İnternet bağlantısını yoxlayıb yenidən cəhd edin.'); }
+  }, []);
+  const openOfficialPortal = useCallback(async () => {
+    try { await Linking.openURL('https://customs.gov.az/az/'); }
+    catch { Alert.alert('Rəsmi DGK səhifəsi açılmadı', 'Brauzer əlçatan deyil. Dövlət Gömrük Komitəsinin rəsmi saytına əl ilə daxil olun.'); }
   }, []);
   const allowOfficialNavigation = useCallback((request: { url: string }) => {
     try {
@@ -114,14 +119,14 @@ export function CustomsCalculatorScreen() {
       <Text style={styles.title}>Gömrük kalkulyatoru</Text>
       <Text style={styles.subtitle}>Hesablama Dövlət Gömrük Komitəsinin rəsmi kalkulyatorunda aparılır. İstehsal tarixi, mühərrik, yanacaq, invoys və daşınma dəyərini orada daxil edin.</Text>
     </View>
-    {failed ? <View style={{ padding: 16 }}><ScreenState title="Rəsmi kalkulyator yüklənmədi" detail="İnternet bağlantısını yoxlayın və ya Dövlət Gömrük Komitəsinin kalkulyatorunu brauzerdə açın." retry={() => { setFailed(false); setReload(v => v + 1); }}/><Pressable onPress={() => void openOfficialCalculator()} style={[styles.secondary, { marginTop: 10 }]}><Text style={styles.text}>Rəsmi saytı aç</Text><Feather name="external-link" size={16} color={GREEN}/></Pressable></View> : <WebView
+    {failed ? <View style={{ padding: 16 }}><ScreenState title={tlsFailed?'Rəsmi saytda HTTPS sertifikat xətası':'Rəsmi kalkulyator yüklənmədi'} detail={tlsFailed?'Android rəsmi kalkulyatorun TLS sertifikatını təsdiqləmədi. Təhlükəsizlik xəbərdarlığını keçməyin; hesablamanı başqa saytda aparmayın. DGK-nın rəsmi məlumat səhifəsini açın və ya rəsmi sayt düzəliş etdikdən sonra yenidən yoxlayın.':'İnternet bağlantısını yoxlayın. WebView xətası olduqda rəsmi kalkulyatoru təhlükəsiz HTTPS brauzerdə sınaya bilərsiniz.'} retry={() => { setFailed(false); setTlsFailed(false); setReload(v => v + 1); }}/>{!tlsFailed&&<Pressable onPress={() => void openOfficialCalculator()} style={[styles.secondary, { marginTop: 10 }]}><Text style={styles.text}>Kalkulyatorı brauzerdə yoxla</Text><Feather name="external-link" size={16} color={GREEN}/></Pressable>}<Pressable onPress={() => void openOfficialPortal()} style={[styles.secondary,{marginTop:10}]}><Text style={styles.text}>DGK-nın rəsmi məlumat səhifəsi</Text><Feather name="external-link" size={16} color={GREEN}/></Pressable></View> : <WebView
       key={reload}
       source={{ uri: OFFICIAL_AUTO_CUSTOMS_CALCULATOR }}
       originWhitelist={['https://*']}
       javaScriptEnabled
       domStorageEnabled
       onShouldStartLoadWithRequest={request => { const allowed = allowOfficialNavigation(request); if (!allowed) setFailed(true); return allowed; }}
-      onError={() => setFailed(true)}
+      onError={event => {const description=String(event.nativeEvent.description||'');setTlsFailed(/ssl|certificate|certificat|cert_error/i.test(description));setFailed(true);}}
       onRenderProcessGone={() => setFailed(true)}
       onHttpError={event => { if (event.nativeEvent.statusCode >= 400) setFailed(true); }}
       startInLoadingState

@@ -111,15 +111,18 @@ test('mobile settings show supported language and currency and do not fabricate 
   const tabs = read('src/app/(drawer)/(tabs)/_layout.tsx');
   assert.match(settings, /Azərbaycan dili/);
   assert.match(settings, /AZN/);
+  assert.match(settings, /USD/);
+  assert.match(settings, /EUR/);
   assert.match(settings, /value: 'dark'/);
   assert.match(settings, /value: 'system'/);
-  assert.match(settings, /canlı məzənnə/);
+  assert.match(settings, /Azərbaycan Mərkəzi Bankının rəsmi gündəlik XML məzənnəsi/);
   assert.match(settings, /Linking\.openSettings/);
   assert.match(settings, /nativeApplicationVersion/);
   assert.match(settings, /Hesabın əsas səhifəsinə qayıt/);
   assert.match(provider, /AsyncStorage\.getItem\(STORAGE_KEY\)/);
   assert.match(provider, /AsyncStorage\.setItem\(STORAGE_KEY/);
   assert.match(provider, /Appearance\.setColorScheme/);
+  assert.match(provider, /austa:cbar-rates:v1/);
   assert.match(root, /AppSettingsProvider><AppNavigation \/><\/AppSettingsProvider>/);
   assert.match(root, /StatusBar style=\{dark \? 'light' : 'dark'\}/);
   assert.match(tabs, /backgroundColor: dark \? '#151D26' : '#FFFFFF'/);
@@ -129,9 +132,20 @@ test('mobile settings show supported language and currency and do not fabricate 
 test('supported theme mode is persisted before the active app theme changes', () => {
   const provider = read('src/lib/app-settings.tsx');
   assert.match(provider, /if \(!hydrated\) return;/);
-  assert.match(provider, /await AsyncStorage\.setItem\(STORAGE_KEY, JSON\.stringify\(\{ themeMode: mode \}\)\);\s*setThemeModeState\(mode\);/);
+  assert.match(provider, /await savePreference\(\{ themeMode: mode \}\);\s*setThemeModeState\(mode\);/);
   assert.match(provider, /systemScheme === 'dark' \? 'dark' : 'light'/);
   assert.match(provider, /value === 'light' \|\| value === 'dark' \|\| value === 'system'/);
+});
+
+test('selected listing currency is validated, persisted, restored, and keeps source prices intact', () => {
+  const provider = read('src/lib/app-settings.tsx');
+  const currency = read('src/lib/currency.ts');
+  assert.match(provider, /isCurrencyCode\(\(saved as \{ currency\?: unknown \}\)\.currency\)/);
+  assert.match(provider, /await savePreference\(\{ currency: value \}\);\s*setCurrencyState\(value\);/);
+  assert.match(provider, /austa:cbar-rates:v1/);
+  assert.match(currency, /return amount \* rates\.aznPerUnit\[from\] \/ rates\.aznPerUnit\[to\]/);
+  assert.match(currency, /let shown = source;/);
+  assert.match(currency, /if \(rates && rates\.aznPerUnit\[source\] > 0 && rates\.aznPerUnit\[selected\] > 0\)/);
 });
 
 test('video feed reads only attached video rows that resolve to active public listings', () => {
