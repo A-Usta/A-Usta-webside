@@ -88,6 +88,46 @@ test('TEST app config accepts only the separate Supabase project and rejects the
   assert.match(unknownTestApi.stderr, /verified TEST Render API origin/);
 });
 
+test('TEST Android EAS preview forwards the map key only to the native map plugin without printing it', () => {
+  const script = [
+    "const config=require('./app.config.js')({config:require('./app.json').expo});",
+    "const maps=config.plugins.find(plugin=>Array.isArray(plugin)&&plugin[0]==='react-native-maps');",
+    "if(!maps||maps[1]?.androidGoogleMapsApiKey!==process.env.GOOGLE_MAPS_ANDROID_API_KEY||config.extra.googleMapsAndroidConfigured!==true)process.exit(2);",
+    "process.stdout.write('config-guard-passed');",
+  ].join('');
+  const configured = spawnSync(process.execPath, ['-e', script], {
+    cwd: root,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      EXPO_PUBLIC_APP_ENV: 'test',
+      EXPO_PUBLIC_SUPABASE_URL: TEST_URL,
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
+      EXPO_PUBLIC_SERVICE_API_URL: TEST_API_URL,
+      GOOGLE_MAPS_ANDROID_API_KEY: 'test-only-map-key-sentinel',
+    },
+  });
+  assert.equal(configured.status, 0, configured.stderr);
+  assert.equal(configured.stdout, 'config-guard-passed');
+  assert.equal(eas.build['test-android'].environment, 'preview');
+  assert.equal(eas.build['test-android'].env.EXPO_PUBLIC_APP_ENV, 'test');
+
+  const production = spawnSync(process.execPath, ['-e', script.replace(
+    "if(!maps||maps[1]?.androidGoogleMapsApiKey!==process.env.GOOGLE_MAPS_ANDROID_API_KEY||config.extra.googleMapsAndroidConfigured!==true)process.exit(2);",
+    "if((maps&&maps[1]?.androidGoogleMapsApiKey)||config.extra.googleMapsAndroidConfigured!==false)process.exit(2);",
+  )], {
+    cwd: root,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      EXPO_PUBLIC_APP_ENV: 'production',
+      GOOGLE_MAPS_ANDROID_API_KEY: 'must-not-enter-production-config',
+    },
+  });
+  assert.equal(production.status, 0, production.stderr);
+  assert.equal(production.stdout, 'config-guard-passed');
+});
+
 test('service-orders client allows the verified TEST host only in TEST runtime', () => {
   assert.match(serviceApi, /TEST_SERVICE_API_HOST = 'austa-v40-m7-test-api\.onrender\.com'/);
   assert.match(appConfig, /TEST_SERVICE_API_URL = 'https:\/\/austa-v40-m7-test-api\.onrender\.com'/);
