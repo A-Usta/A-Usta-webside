@@ -1,7 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { attachMedia, categoryConfig, listCategory, type Listing } from './marketplace';
 
-export const OFFICIAL_AUTO_CUSTOMS_CALCULATOR = 'https://www.e.customs.gov.az/for-individuals/calculator/auto';
+// The official bare portal host serves the calculator over a verified TLS
+// connection on Android, while the www alias can return an upstream error.
+export const OFFICIAL_AUTO_CUSTOMS_CALCULATOR = 'https://e.customs.gov.az/for-individuals/calculator/auto';
 
 export function getBakuDayBounds(now = new Date()) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {

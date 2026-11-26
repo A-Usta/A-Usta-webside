@@ -37,3 +37,14 @@ test('nearby category expansion retains the consented public DTO policy and does
   assert.match(migration,/sp\.verification_status='verified'/);
   assert.doesNotMatch(migration,/DISABLE ROW LEVEL SECURITY|CREATE POLICY|DROP POLICY|GRANT\s+ALL/i);
 });
+
+test('Google Places requests use authenticated TEST backend only and never embed the server key',()=>{
+  const client=fs.readFileSync(path.resolve(__dirname,'../src/lib/service-orders.ts'),'utf8');
+  assert.match(client,/export async function searchGooglePlaces/);
+  assert.match(client,/EXPO_PUBLIC_APP_ENV\?\.trim\(\)\.toLowerCase\(\) !== 'test'/);
+  assert.match(client,/\/places\/nearby-search/);
+  assert.match(client,/serviceRequest<\{ places: GooglePlaceResult\[\]/);
+  assert.doesNotMatch(client,/GOOGLE_PLACES_API_KEY|X-Goog-Api-Key/);
+  const screen=fs.readFileSync(path.resolve(__dirname,'../src/components/ServiceScreens.tsx'),'utf8');
+  assert.match(screen,/Platform\.OS==='android'&&process\.env\.EXPO_PUBLIC_APP_ENV\?\.trim\(\)\.toLowerCase\(\)==='test'\?searchGooglePlaces/);
+});

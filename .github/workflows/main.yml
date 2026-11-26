@@ -131,6 +131,10 @@ jobs:
         working-directory: backend/a-usta56
         run: npm run typecheck
 
+      - name: Test authenticated Google Places proxy contract
+        working-directory: backend/a-usta56
+        run: node --import tsx --test --test-reporter=tap tests/google-places.test.ts
+
       - name: Test M7.6 TEST Auth bootstrap safety
         working-directory: backend/a-usta56
         run: node --test --test-reporter=tap tools/test-auth-bootstrap.test.mjs

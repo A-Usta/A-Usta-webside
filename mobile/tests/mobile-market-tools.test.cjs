@@ -9,7 +9,7 @@ const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 test('official vehicle customs calculator is embedded and navigation is restricted to official customs domains', () => {
   const tools = read('src/components/MarketTools.tsx');
   const core = read('src/lib/marketTools.ts');
-  assert.match(core, /https:\/\/www\.e\.customs\.gov\.az\/for-individuals\/calculator\/auto/);
+  assert.match(core, /https:\/\/e\.customs\.gov\.az\/for-individuals\/calculator\/auto/);
   assert.match(tools, /onShouldStartLoadWithRequest=\{request =>/);
   assert.match(tools, /if \(!allowed\) setFailed\(true\); return allowed;/);
   assert.match(tools, /onRenderProcessGone=\{\(\) => setFailed\(true\)\}/);

@@ -216,19 +216,21 @@ test('trusted SQL with no JWT retains eligible attachment without broadening pub
 function assertP2D1Configuration(){
  require('../helpers/e2b-baseline.cjs').assertScope();
  const reviewed={
-  "backend/a-usta56/src/diagnostics/admission.ts": "36b8b740be70381182abe322ed197b24a1db7ed19ba48da6b8c0f544082a5666",
+  "backend/a-usta56/src/diagnostics/admission.ts": "02d2cee6a650ffd3962ba39b4a284bd62540b756c7ece2ba8b3390e0f6b4ee8b",
   "backend/a-usta56/src/routes/listing-media.ts": "c5856ed33bac19d6f0a30b4cb4dc30e0a8831712af949350a1fc61021b9bdbe8",
-  "backend/a-usta56/src/config/server.ts": "3fb77bdc61be35b843e929963cdfb857c5bfa4c4bf376069414b5e512361c923",
+  "backend/a-usta56/src/config/server.ts": "94a52b6cd6ce78eeae8879cb5d455a4cb161d8b07ec70f18105171503e05a8a4",
   "backend/a-usta56/.env.example": "ec156a5a9081202759d5576019c3c998997dc15fef2edfa7be70196d9f932078",
   "backend/a-usta56/src/config/cors.ts": "24b3ffa59a096bfb74c42e26fa2c76e1a8e95dbe747e9383deb0a3eb65082c7e",
-  "backend/a-usta56/src/config/env.ts": "a5b15ce9875c6fb165f5339cd64b049e2e607964357f6caaa46d81d1b3fc225e",
+  "backend/a-usta56/src/config/env.ts": "18043abbd03da353f481e46674563b2de063a47cfd63c0f819ab5a3c804ebe83",
   "backend/a-usta56/tests/cors.test.ts": "bb91f9f8bc1c02146ab6819d14615019e889d9f9494bebdae8ade6bd3587763c",
   "backend/a-usta56/src/diagnostics/foundation.ts": "fc6a6cdeda3f510326baf785c3c779d3ccc1719f52e1f1bdffde73437700acee",
   "backend/a-usta56/package.json": "cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802",
   "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
   "backend/a-usta56/.gitignore": "a459038af144bb649dd32c98f20e160838ec500ed5580fb1669ed0860196e140",
   ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
-  ".github/workflows/main.yml": "a5a2a39259a1bb6f485582e4ef56ab977f7c0448fcfc329a48e9c14406a6839b"
+  "backend/a-usta56/src/routes/google-places.ts": "bb88badf37ff61d21a21dcd7525a1e9b77299592b743ca765ea0ed27e59fd8c8",
+  "backend/a-usta56/tests/google-places.test.ts": "0dd78bb377995f1f258bbff410256239860a1484d5f3f85564da309819e06295",
+  ".github/workflows/main.yml": "72b56783efd9e44cf81e857580d5fa8d19a32712d44f1bb259029e5672a25e39"
 };
  for(const [file,sha256] of Object.entries(reviewed)){
   assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);

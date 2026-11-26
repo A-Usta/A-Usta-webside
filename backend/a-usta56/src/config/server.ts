@@ -8,6 +8,7 @@ import { env } from "./env.js";
 import { serviceOrderRoutes } from "../routes/service-orders.js";
 import { authRoutes } from "../routes/auth.js";
 import { listingMediaRoutes } from "../routes/listing-media.js";
+import { googlePlacesRoutes } from "../routes/google-places.js";
 import { diagnosticsOptions, installDiagnostics } from "../diagnostics/foundation.js";
 
 import { installAdmission, admissionPolicy } from "../diagnostics/admission.js";
@@ -42,6 +43,8 @@ await app.register(serviceOrderRoutes);
 await app.register(authRoutes);
 
 await app.register(listingMediaRoutes);
+
+await app.register(googlePlacesRoutes);
 
 const port = Number(process.env.PORT || 3000);
 

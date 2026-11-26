@@ -4,18 +4,18 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 // Best-effort, process-local load shedding. Restart resets state; instances do
 // not share counters. This provides neither per-client fairness nor durable
 // count/byte quotas. Direct browser -> Supabase traffic bypasses this layer.
-type Policy = "create" | "discover" | "dispatch" | "assignment" | "location" | "pricing" | "lifecycle" | "read" | "upload" | "sign" | "auth";
+type Policy = "create" | "discover" | "dispatch" | "assignment" | "location" | "pricing" | "lifecycle" | "read" | "upload" | "sign" | "auth" | "places";
 type Window = readonly [limit: number, milliseconds: number];
 const minute = 60_000;
 export const admissionPolicy = {
   maxKeys: 4096,
   cleanupMs: minute,
-  global: { create: 120, discover: 120, dispatch: 120, assignment: 300, location: 600, pricing: 300, lifecycle: 600, read: 600, upload: 120, sign: 600, auth: 300 },
+  global: { create: 120, discover: 120, dispatch: 120, assignment: 300, location: 600, pricing: 300, lifecycle: 600, read: 600, upload: 120, sign: 600, auth: 300, places: 60 },
   actor: {
     create: [[5, 10 * minute], [30, 1440 * minute]],
     discover: [[10, minute]], dispatch: [[10, minute]], assignment: [[30, minute]],
     location: [[30, minute]], pricing: [[20, minute]], lifecycle: [[30, minute]],
-    read: [[30, minute]], upload: [[12, minute]], sign: [[60, minute]], auth: [[60, minute]],
+    read: [[30, minute]], upload: [[12, minute]], sign: [[60, minute]], auth: [[60, minute]], places: [[8, minute]],
   } as Record<Policy, readonly Window[]>,
   resource: { discover: 3, dispatch: 3, assignment: 10, pricing: 6, lifecycle: 10, location: 30, upload: 12 },
   slots: { auth: 8, "auth-lifecycle": 4, discover: 2, dispatch: 2, upload: 2, "upload-actor": 1, sign: 8 },
@@ -76,6 +76,7 @@ function policy(method: string, route: string): Policy | undefined {
   if (route === "/service-order-uploads/:reservationId" || route === "/service-order-upload-operations/:key") return "read";
   if (route === "/listing-media/signed-url") return "sign";
   if (route === "/auth/me") return "auth";
+  if (route === "/places/nearby-search") return "places";
   if (route === "/provider/location") return "location";
   if (!/^\/service-order(?:s|s?[-]assignments)(?:\/|$)/.test(route)) return;
   if (method === "GET" || method === "HEAD") return "read";
