@@ -106,12 +106,32 @@ test('mobile detail page uses real price history, masks VIN and offers seller co
 
 test('mobile settings show supported language and currency and do not fabricate unsupported options', () => {
   const settings = read('src/components/SettingsScreen.tsx');
+  const provider = read('src/lib/app-settings.tsx');
+  const root = read('src/app/_layout.tsx');
+  const tabs = read('src/app/(drawer)/(tabs)/_layout.tsx');
   assert.match(settings, /Azərbaycan dili/);
   assert.match(settings, /AZN/);
-  assert.match(settings, /qaranlıq tema yoxdur/);
+  assert.match(settings, /value: 'dark'/);
+  assert.match(settings, /value: 'system'/);
   assert.match(settings, /canlı məzənnə/);
   assert.match(settings, /Linking\.openSettings/);
-  assert.match(settings, /Bizimlə əlaqə/);
+  assert.match(settings, /nativeApplicationVersion/);
+  assert.match(settings, /Hesabın əsas səhifəsinə qayıt/);
+  assert.match(provider, /AsyncStorage\.getItem\(STORAGE_KEY\)/);
+  assert.match(provider, /AsyncStorage\.setItem\(STORAGE_KEY/);
+  assert.match(provider, /Appearance\.setColorScheme/);
+  assert.match(root, /AppSettingsProvider><AppNavigation \/><\/AppSettingsProvider>/);
+  assert.match(root, /StatusBar style=\{dark \? 'light' : 'dark'\}/);
+  assert.match(tabs, /backgroundColor: dark \? '#151D26' : '#FFFFFF'/);
+  assert.match(read('app.json'), /"userInterfaceStyle": "automatic"/);
+});
+
+test('supported theme mode is persisted before the active app theme changes', () => {
+  const provider = read('src/lib/app-settings.tsx');
+  assert.match(provider, /if \(!hydrated\) return;/);
+  assert.match(provider, /await AsyncStorage\.setItem\(STORAGE_KEY, JSON\.stringify\(\{ themeMode: mode \}\)\);\s*setThemeModeState\(mode\);/);
+  assert.match(provider, /systemScheme === 'dark' \? 'dark' : 'light'/);
+  assert.match(provider, /value === 'light' \|\| value === 'dark' \|\| value === 'system'/);
 });
 
 test('video feed reads only attached video rows that resolve to active public listings', () => {

@@ -1,7 +1,7 @@
 import { Component, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, Platform, StyleSheet } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Pressable, RefreshControl, ScrollView, Switch, Text, TextInput, View, Feather } from '../lib/themed-native';
 import { useLocalSearchParams } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import { File } from 'expo-file-system';

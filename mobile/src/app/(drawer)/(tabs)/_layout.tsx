@@ -1,19 +1,21 @@
 import { Tabs } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Feather, View } from '../../../lib/themed-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppSettings } from '../../../lib/app-settings';
 
 const RED = '#D92D20';
 const MUTED = '#87919E';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const dark = useAppSettings().colorScheme === 'dark';
   return <Tabs screenOptions={{
     headerShown: false,
     tabBarActiveTintColor: RED,
-    tabBarInactiveTintColor: MUTED,
+    tabBarInactiveTintColor: dark ? '#AAB5C0' : MUTED,
     tabBarLabelStyle: { fontSize: 9, fontWeight: '600', marginBottom: 2, flexShrink: 1, textAlign: 'center' },
-    tabBarStyle: { minHeight: 61 + insets.bottom, paddingTop: 5, paddingBottom: Math.max(insets.bottom, 5), borderTopColor: '#E8EBEF', backgroundColor: '#FFFFFF' },
+    tabBarStyle: { minHeight: 61 + insets.bottom, paddingTop: 5, paddingBottom: Math.max(insets.bottom, 5), borderTopColor: dark ? '#34414E' : '#E8EBEF', backgroundColor: dark ? '#151D26' : '#FFFFFF' },
   }}>
     <Tabs.Screen name="index" options={{ title: 'Əsas', tabBarIcon: ({ color, size }) => <Feather name="home" color={String(color)} size={size} /> }} />
     <Tabs.Screen name="favorites" options={{ title: 'Seçilmişlər', tabBarIcon: ({ color, size }) => <Feather name="heart" color={String(color)} size={size} /> }} />

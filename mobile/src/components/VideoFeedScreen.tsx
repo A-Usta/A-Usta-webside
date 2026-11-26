@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Image, Modal, Pressable, Share, StyleSheet, Text, TextInput, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { Alert, Share, StyleSheet, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, Pressable, Text, TextInput, View, Feather } from '../lib/themed-native';
+import type { FlatList as NativeFlatList, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSupabaseClient } from '../lib/supabase';
 import { addVideoComment, getFavoriteKeys, getVideoEngagement, listHomeVideos, listVideoComments, recordVideoView, resolveHomeVideoIndex, toggleFavorite, toggleVideoLike, type Listing, type VideoComment, type VideoEngagement } from '../lib/marketplace';
@@ -56,7 +57,7 @@ export function VideoFeedScreen(){
  const client=useMemo(()=>getSupabaseClient(),[]),router=useRouter(),params=useLocalSearchParams<{listingId?:string;source?:string;index?:string;direct?:string}>(),{height,width}=useWindowDimensions();
  const directOpen=params.direct==='1';
  const [rows,setRows]=useState<Listing[]>([]),[favoriteKeys,setFavoriteKeys]=useState<Set<string>>(new Set()),[engagements,setEngagements]=useState<Record<string,VideoEngagement>>({}),[comments,setComments]=useState<VideoComment[]>([]),[commentText,setCommentText]=useState(''),[commentsOpen,setCommentsOpen]=useState(false),[commentsBusy,setCommentsBusy]=useState(false),[commentError,setCommentError]=useState(''),[selectedIndex,setSelectedIndex]=useState(0),[viewerOpen,setViewerOpen]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState('');
- const listRef=useRef<FlatList<Listing>>(null);
+ const listRef=useRef<NativeFlatList<Listing>>(null);
  const load=useCallback(async()=>{if(!client){setError('Supabase konfiqurasiyası yoxdur.');setLoading(false);return;}setError('');try{const [videos,favorites]=await Promise.all([listHomeVideos(client),getFavoriteKeys(client).catch(()=>new Set<string>())]);setRows(videos);setFavoriteKeys(favorites);}catch{setError('Video elanları yüklənmədi. İnternet bağlantısını yoxlayıb yenidən cəhd edin.');}finally{setLoading(false);}},[client]);
  useEffect(()=>{queueMicrotask(()=>{void load();});},[load]);
  useEffect(()=>{if(loading||!params.listingId||!rows.length)return;const index=resolveHomeVideoIndex(rows,params.listingId,params.source,params.index);if(index>=0){queueMicrotask(()=>{setSelectedIndex(index);setViewerOpen(true);requestAnimationFrame(()=>listRef.current?.scrollToIndex({index,animated:false}));});}},[rows,params.listingId,params.source,params.index,loading]);

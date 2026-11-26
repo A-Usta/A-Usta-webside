@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, BackHandler, Image, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, BackHandler, Platform, StyleSheet } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Pressable, RefreshControl, ScrollView, Text, TextInput, View, Feather } from '../lib/themed-native';
 import { useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';

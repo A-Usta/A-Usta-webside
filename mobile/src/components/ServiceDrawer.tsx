@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Alert, Linking, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, Text, View, Feather } from '../lib/themed-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

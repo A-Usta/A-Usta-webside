@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, StyleSheet } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, TextInput, View, Feather } from '../lib/themed-native';
 import { WebView } from 'react-native-webview';
-import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import vehicleCatalog from '../data/vehicle-catalog.json';
 import { getSupabaseClient } from '../lib/supabase';
