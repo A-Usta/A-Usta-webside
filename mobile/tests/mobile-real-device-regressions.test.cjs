@@ -113,6 +113,12 @@ test('account navigation keeps its auth listener stable and hardware back return
   assert.doesNotMatch(backHandler[0], /signOut\(/);
 });
 
+test('adding a vehicle clears the previously selected vehicle so the save inserts a new row', () => {
+  assert.match(account, /const newVehicle=\(\)=>\{setVehicle\(null\);/);
+  assert.match(account, /const newVehicle=[\s\S]*?setFormVisible\(true\)/);
+  assert.match(account, /const q=vehicle\?sb\.from\('vehicles'\)\.update\(payload\)[\s\S]*?:sb\.from\('vehicles'\)\.insert\(\{\.\.\.payload,user_id:user\.id\}\)/);
+});
+
 test('listing detail uses balance scale icon, circular blue up arrow, and exact owner edit label', () => {
   assert.match(screens, /MaterialCommunityIcons name="scale-balance"/);
   assert.match(screens, /accessibilityLabel="Satıcıya mesaj göndər"[\s\S]*?borderRadius:25[\s\S]*?backgroundColor:'#4884EF'[\s\S]*?<Feather name="arrow-up" color="#fff"/);
