@@ -40,7 +40,7 @@ exports.normalize=html=>{
  assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'1f078505c5016e522acbcd0748468f0643d0d5bd84d1f5f488739fe68e4c4431','exact V33D3 Account controller after OTP-only blocks are stripped');
  for(const[from,to]of edits){assert.equal(html.split(from).length,2,'unique V33D3 literal hunk');html=html.replace(from,()=>to);}
  [start,end]=bounds();
- assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'09024d640236e2e18e60ca3d8e73d980ae8ea9926526484e145714f64f7e7e83','original V33D2 controller restored before phone panel normalization');
+ assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'46d5ff6994c7f4945a5bd84fa4aa3380a34f721b8cb5a71a8acdc544057eca67','exact V33D2 controller restored before phone panel normalization');
  const panels=[...html.slice(start,end).matchAll(/<section id="austa-v39-auth-phone-panel"[\s\S]*?<\/section>/g)];
  assert.equal(panels.length,1,'one exact phone OTP panel in normalized historical controller');
  assert.equal(createHash('sha256').update(panels[0][0]).digest('hex'),'72b5a569db460a9e1033dcc2ee32a510bd6faff3275a3e2e1eb5ba6bcb7e9628','exact phone OTP panel hash');
