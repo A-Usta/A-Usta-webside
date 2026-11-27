@@ -141,7 +141,9 @@ test('selected listing currency is validated, persisted, restored, and keeps sou
   const provider = read('src/lib/app-settings.tsx');
   const currency = read('src/lib/currency.ts');
   assert.match(provider, /isCurrencyCode\(\(saved as \{ currency\?: unknown \}\)\.currency\)/);
-  assert.match(provider, /await savePreference\(\{ currency: value \}\);\s*setCurrencyState\(value\);/);
+  assert.match(provider, /await savePreference\(\{ currency: value \}\);\s*setCurrencySnapshot\(value, exchangeRates\);\s*setCurrencyState\(value\);/);
+  assert.match(read('src/lib/themed-native.tsx'), /useAppTheme\(\)/);
+  assert.doesNotMatch(read('src/lib/themed-native.tsx'), /useAppSettings\(\)/);
   assert.match(provider, /austa:cbar-rates:v1/);
   assert.match(currency, /return amount \* rates\.aznPerUnit\[from\] \/ rates\.aznPerUnit\[to\]/);
   assert.match(currency, /let shown = source;/);

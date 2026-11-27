@@ -7,10 +7,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSupabaseClient } from '../lib/supabase';
 import { addVideoComment, getFavoriteKeys, getVideoEngagement, listHomeVideos, listVideoComments, recordVideoView, resolveHomeVideoIndex, toggleFavorite, toggleVideoLike, type Listing, type VideoComment, type VideoEngagement } from '../lib/marketplace';
 import { formatListingPrice } from '../lib/currency';
+import { useAppSettings } from '../lib/app-settings';
 
 const RED='#D92D20',INK='#202A35',MUTED='#7A8491',BG='#F4F6F8',LINE='#E8EBEF';
 const newVisitorId=()=> 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16);});
-const money=(value:any,currency:unknown='AZN')=>formatListingPrice(value,currency);
 const title=(row:Listing)=>row.brand||row.model?`${row.brand||''} ${row.model||''}`.trim():row.title||row.dealer_name||row.name||row.specialty||'A-USTA elanı';
 
 function VideoFrame({url,style,muted=true,stopAfterFirstFrame=false,controls=false}:{url:string;style?:any;muted?:boolean;stopAfterFirstFrame?:boolean;controls?:boolean}){
@@ -31,26 +31,30 @@ function VideoFrame({url,style,muted=true,stopAfterFirstFrame=false,controls=fal
 }
 
 function VideoCard({row,onOpen,onFavorite,isFavorite}:{row:Listing;onOpen:()=>void;onFavorite:()=>void;isFavorite:boolean}){
+ const {currency:displayCurrency,exchangeRates}=useAppSettings();
+ const displayPrice=(amount:unknown,original:unknown='AZN')=>formatListingPrice(amount as number|string|null|undefined,original,exchangeRates,displayCurrency);
  const video=row._media?.find(media=>media.media_type==='video'&&media.url);
  const image=row._media?.find(media=>media.media_type==='image'&&media.url);
  return <Pressable accessibilityRole="button" accessibilityLabel={`${title(row)} videosunu izlə`} onPress={onOpen} style={s.card}>
   <View style={s.cover}>{image?.url?<Image source={{uri:image.url}} style={StyleSheet.absoluteFill} resizeMode="cover"/>:video?.url?<VideoFrame url={video.url} style={StyleSheet.absoluteFill} stopAfterFirstFrame/>:<View style={s.fallback}><Feather name="video" size={25} color={RED}/><Text style={s.body}>Önizləmə yoxdur</Text></View>}
    <View style={s.play}><Feather name="play" size={13} color="#fff"/></View>
    <Pressable accessibilityRole="button" accessibilityLabel="Elanı seçilmişlərə əlavə et" onPress={event=>{event.stopPropagation();onFavorite();}} style={s.heart}><Feather name="heart" size={17} color={isFavorite?'#FF4D5A':'#fff'} fill={isFavorite?'#FF4D5A':'transparent'}/></Pressable>
-   <View style={s.caption}><Text style={s.price} numberOfLines={1}>{money(row.daily_price??row.price,row.currency||'AZN')}</Text><Text style={s.cardTitle} numberOfLines={2}>{title(row)}</Text><Text style={s.body} numberOfLines={1}>{[row.region,row.year].filter(Boolean).join(' · ')}</Text></View>
+   <View style={s.caption}><Text style={s.price} numberOfLines={1}>{displayPrice(row.daily_price??row.price,row.currency||'AZN')}</Text><Text style={s.cardTitle} numberOfLines={2}>{title(row)}</Text><Text style={s.body} numberOfLines={1}>{[row.region,row.year].filter(Boolean).join(' · ')}</Text></View>
   </View>
  </Pressable>;
 }
 
 function ReelPage({row,active,height,width,onCloseViewer,onOpenListing,onFavorite,isFavorite,engagement,onLike,onComments}:{row:Listing;active:boolean;height:number;width:number;onCloseViewer:()=>void;onOpenListing:()=>void;onFavorite:()=>void;isFavorite:boolean;engagement?:VideoEngagement;onLike:()=>void;onComments:()=>void}){
+ const {currency:displayCurrency,exchangeRates}=useAppSettings();
+ const displayPrice=(amount:unknown,original:unknown='AZN')=>formatListingPrice(amount as number|string|null|undefined,original,exchangeRates,displayCurrency);
  const video=row._media?.find(media=>media.media_type==='video'&&media.url);
  const cover=row._media?.find(media=>media.media_type==='image'&&media.url);
  const [muted,setMuted]=useState(true);
  return <View style={[s.reel,{height,width}]}>{active&&video?.url?<VideoFrame url={video.url} style={StyleSheet.absoluteFill} muted={muted} controls/>:cover?.url?<Image source={{uri:cover.url}} style={StyleSheet.absoluteFill} resizeMode="cover"/>:video?.url?<VideoFrame url={video.url} style={StyleSheet.absoluteFill} stopAfterFirstFrame/>:<View style={s.fallback}><Feather name="video" size={30} color="#fff"/><Text style={s.body}>Video əlçatan deyil.</Text></View>}
   <View style={s.topBar}><Pressable accessibilityLabel="Video lentini bağla" onPress={onCloseViewer} style={s.darkIcon}><Feather name="arrow-left" size={21} color="#fff"/></Pressable><Text style={s.reelHeading}>A-USTA · Video</Text><View style={{width:42}}/></View>
   <Pressable accessibilityLabel={muted?'Səsi aç':'Səsi bağla'} onPress={()=>setMuted(value=>!value)} style={s.sound}><Feather name={muted?'volume-x':'volume-2'} size={20} color="#fff"/></Pressable>
-  <View style={s.actions}><View style={s.avatar}><Feather name="user" size={19} color={INK}/></View><Pressable accessibilityLabel="Videolu elanı seçilmişlərə əlavə et" onPress={onFavorite} style={s.action}><Feather name="heart" color={isFavorite?'#FF4D5A':'#fff'} fill={isFavorite?'#FF4D5A':'transparent'} size={27}/></Pressable><Pressable accessibilityLabel="Şərhləri aç" onPress={onComments} style={s.action}><Feather name="message-square" color="#fff" size={25}/><Text style={s.actionText}>{engagement?.comment_count??'—'}</Text></Pressable><Pressable accessibilityLabel="Videonu paylaş" onPress={()=>void Share.share({message:`${title(row)} — ${money(row.daily_price??row.price,row.currency||'AZN')} | A-USTA`})} style={s.action}><Feather name="share-2" color="#fff" size={24}/><Text style={s.actionText}>Paylaş</Text></Pressable><Pressable accessibilityLabel={engagement?.viewer_liked?'Bəyənməni geri götür':'Videonu bəyən'} onPress={onLike} style={s.action}><Feather name="heart" color={engagement?.viewer_liked?'#FF4D5A':'#fff'} fill={engagement?.viewer_liked?'#FF4D5A':'transparent'} size={24}/><Text style={s.actionText}>{engagement?.like_count??'—'}</Text></Pressable><Text style={s.actionText}>{engagement?.view_count??'—'} baxış</Text></View>
-  <Pressable accessibilityRole="button" accessibilityLabel="Elanın detalına keç" onPress={onOpenListing} style={s.listing}><View style={s.thumb}>{cover?.url?<Image source={{uri:cover.url}} style={StyleSheet.absoluteFill} resizeMode="cover"/>:<Feather name="video" size={22} color="#fff"/>}</View><View style={{flex:1,minWidth:0}}><Text style={s.listingPrice} numberOfLines={1}>{money(row.daily_price??row.price,row.currency||'AZN')}</Text><Text style={s.listingTitle} numberOfLines={1}>{title(row)}</Text><Text style={s.body} numberOfLines={1}>{[row.region,row.year,row.mileage!=null?`${Number(row.mileage).toLocaleString('az-AZ')} km`:null].filter(Boolean).join(' · ')}</Text></View><Feather name="chevron-right" size={20} color="#fff"/></Pressable>
+  <View style={s.actions}><View style={s.avatar}><Feather name="user" size={19} color={INK}/></View><Pressable accessibilityLabel="Videolu elanı seçilmişlərə əlavə et" onPress={onFavorite} style={s.action}><Feather name="heart" color={isFavorite?'#FF4D5A':'#fff'} fill={isFavorite?'#FF4D5A':'transparent'} size={27}/></Pressable><Pressable accessibilityLabel="Şərhləri aç" onPress={onComments} style={s.action}><Feather name="message-square" color="#fff" size={25}/><Text style={s.actionText}>{engagement?.comment_count??'—'}</Text></Pressable><Pressable accessibilityLabel="Videonu paylaş" onPress={()=>void Share.share({message:`${title(row)} — ${displayPrice(row.daily_price??row.price,row.currency||'AZN')} | A-USTA`})} style={s.action}><Feather name="share-2" color="#fff" size={24}/><Text style={s.actionText}>Paylaş</Text></Pressable><Pressable accessibilityLabel={engagement?.viewer_liked?'Bəyənməni geri götür':'Videonu bəyən'} onPress={onLike} style={s.action}><Feather name="heart" color={engagement?.viewer_liked?'#FF4D5A':'#fff'} fill={engagement?.viewer_liked?'#FF4D5A':'transparent'} size={24}/><Text style={s.actionText}>{engagement?.like_count??'—'}</Text></Pressable><Text style={s.actionText}>{engagement?.view_count??'—'} baxış</Text></View>
+  <Pressable accessibilityRole="button" accessibilityLabel="Elanın detalına keç" onPress={onOpenListing} style={s.listing}><View style={s.thumb}>{cover?.url?<Image source={{uri:cover.url}} style={StyleSheet.absoluteFill} resizeMode="cover"/>:<Feather name="video" size={22} color="#fff"/>}</View><View style={{flex:1,minWidth:0}}><Text style={s.listingPrice} numberOfLines={1}>{displayPrice(row.daily_price??row.price,row.currency||'AZN')}</Text><Text style={s.listingTitle} numberOfLines={1}>{title(row)}</Text><Text style={s.body} numberOfLines={1}>{[row.region,row.year,row.mileage!=null?`${Number(row.mileage).toLocaleString('az-AZ')} km`:null].filter(Boolean).join(' · ')}</Text></View><Feather name="chevron-right" size={20} color="#fff"/></Pressable>
  </View>;
 }
 

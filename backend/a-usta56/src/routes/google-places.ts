@@ -6,7 +6,7 @@ import { requireAuth, type AuthenticatedRequest } from "../middleware/auth.js";
 const API_ROOT = "https://places.googleapis.com/v1/places";
 const FIELD_MASK = [
   "places.id", "places.displayName", "places.formattedAddress", "places.location",
-  "places.types", "places.nationalPhoneNumber", "places.regularOpeningHours.weekdayDescriptions",
+  "places.types", "places.primaryType", "places.nationalPhoneNumber", "places.regularOpeningHours.weekdayDescriptions",
   "places.rating", "places.userRatingCount",
 ].join(",");
 const MAX_RADIUS_KM = 50;
@@ -14,30 +14,29 @@ const MAX_RESULTS = 20;
 const EARTH_RADIUS_KM = 6371;
 
 type CategorySpec =
-  | { method: "nearby"; includedTypes: string[] }
-  | { method: "text"; textQuery: string }
-  | { method: "multi"; includedTypes: string[]; textQuery: string };
+  | { method: "nearby"; includedTypes: string[]; allowedTypes: string[] }
+  | { method: "text"; textQuery: string; allowedTypes: string[] };
 
 // Queries are code-owned and fixed. Client input can select only these keys,
 // so it cannot turn this endpoint into a general-purpose paid search proxy.
 const CATEGORIES: Record<string, CategorySpec> = {
-  all: { method: "multi", includedTypes: ["gas_station", "electric_vehicle_charging_station", "car_repair", "car_wash", "tire_shop", "parking"], textQuery: "automotive parts store" },
-  fuel: { method: "nearby", includedTypes: ["gas_station"] },
-  charging: { method: "nearby", includedTypes: ["electric_vehicle_charging_station"] },
-  service: { method: "nearby", includedTypes: ["car_repair"] },
-  tyre: { method: "nearby", includedTypes: ["tire_shop"] },
-  wash: { method: "nearby", includedTypes: ["car_wash"] },
-  parts_shop: { method: "text", textQuery: "automotive parts store" },
-  auto_electrician: { method: "text", textQuery: "automotive electrician" },
-  oil_change: { method: "text", textQuery: "automotive oil change service" },
-  diagnostics: { method: "text", textQuery: "automotive diagnostic service" },
-  inspection: { method: "text", textQuery: "vehicle technical inspection station" },
-  towing: { method: "text", textQuery: "vehicle towing service" },
-  parking: { method: "nearby", includedTypes: ["parking"] },
-  repair: { method: "nearby", includedTypes: ["car_repair"] },
-  alignment: { method: "text", textQuery: "vehicle wheel alignment service" },
-  other_auto: { method: "text", textQuery: "automotive services and repair" },
-  usta: { method: "nearby", includedTypes: ["car_repair"] },
+  all: { method: "nearby", includedTypes: ["gas_station", "electric_vehicle_charging_station", "car_repair", "car_wash", "tire_shop", "parking", "parking_garage", "parking_lot", "auto_parts_store"], allowedTypes: ["gas_station", "electric_vehicle_charging_station", "car_repair", "car_wash", "tire_shop", "parking", "parking_garage", "parking_lot", "auto_parts_store"] },
+  fuel: { method: "nearby", includedTypes: ["gas_station"], allowedTypes: ["gas_station"] },
+  charging: { method: "nearby", includedTypes: ["electric_vehicle_charging_station"], allowedTypes: ["electric_vehicle_charging_station"] },
+  service: { method: "nearby", includedTypes: ["car_repair"], allowedTypes: ["car_repair"] },
+  tyre: { method: "nearby", includedTypes: ["tire_shop"], allowedTypes: ["tire_shop"] },
+  wash: { method: "nearby", includedTypes: ["car_wash"], allowedTypes: ["car_wash"] },
+  parts_shop: { method: "nearby", includedTypes: ["auto_parts_store"], allowedTypes: ["auto_parts_store"] },
+  auto_electrician: { method: "text", textQuery: "automotive electrician", allowedTypes: ["car_repair"] },
+  oil_change: { method: "text", textQuery: "automotive oil change service", allowedTypes: ["car_repair"] },
+  diagnostics: { method: "text", textQuery: "automotive diagnostic service", allowedTypes: ["car_repair"] },
+  inspection: { method: "text", textQuery: "vehicle technical inspection station", allowedTypes: ["car_repair"] },
+  towing: { method: "text", textQuery: "vehicle towing service", allowedTypes: ["car_repair"] },
+  parking: { method: "nearby", includedTypes: ["parking", "parking_garage", "parking_lot"], allowedTypes: ["parking", "parking_garage", "parking_lot"] },
+  repair: { method: "nearby", includedTypes: ["car_repair"], allowedTypes: ["car_repair"] },
+  alignment: { method: "text", textQuery: "vehicle wheel alignment service", allowedTypes: ["car_repair"] },
+  other_auto: { method: "text", textQuery: "automotive services and repair", allowedTypes: ["car_repair"] },
+  usta: { method: "nearby", includedTypes: ["car_repair"], allowedTypes: ["car_repair"] },
 };
 
 type SearchBody = { category?: unknown; latitude?: unknown; longitude?: unknown; radiusKm?: unknown };
@@ -47,6 +46,7 @@ type PlaceRecord = {
   formattedAddress?: unknown;
   location?: { latitude?: unknown; longitude?: unknown };
   types?: unknown;
+  primaryType?: unknown;
   nationalPhoneNumber?: unknown;
   regularOpeningHours?: { weekdayDescriptions?: unknown };
   rating?: unknown;
@@ -101,10 +101,7 @@ export async function registerGooglePlacesRoutes(app: FastifyInstance, options: 
     const spec = CATEGORIES[category];
     const center = { latitude: body.latitude as number, longitude: body.longitude as number };
     const radiusKm = body.radiusKm as number;
-    const requests = spec.method === "multi"
-      ? [requestFor({ method: "nearby", includedTypes: spec.includedTypes }, center.latitude, center.longitude, radiusKm),
-         requestFor({ method: "text", textQuery: spec.textQuery }, center.latitude, center.longitude, radiusKm)]
-      : [requestFor(spec, center.latitude, center.longitude, radiusKm)];
+    const requests = [requestFor(spec, center.latitude, center.longitude, radiusKm)];
     let responses: Response[];
     try {
       responses = await Promise.all(requests.map(upstream => fetchImpl(upstream.url, {
@@ -160,13 +157,17 @@ export async function registerGooglePlacesRoutes(app: FastifyInstance, options: 
         const id = stringOrNull(place.id), name = stringOrNull(place.displayName?.text);
         const latitude = place.location?.latitude, longitude = place.location?.longitude;
         if (!id || !name || !finiteIn(latitude, -90, 90) || !finiteIn(longitude, -180, 180) || seen.has(id)) return [];
+        const types = Array.isArray(place.types) ? place.types.filter((item): item is string => typeof item === "string") : [];
+        const primaryType = stringOrNull(place.primaryType);
+        if (primaryType && !types.includes(primaryType)) types.unshift(primaryType);
+        if (!types.some(type => spec.allowedTypes.includes(type))) return [];
         const distance = distanceKm(center, { latitude, longitude });
         if (distance > radiusKm) return [];
         seen.add(id);
         const hours = place.regularOpeningHours?.weekdayDescriptions;
         return [{
           id, name, address: stringOrNull(place.formattedAddress), latitude, longitude,
-          types: Array.isArray(place.types) ? place.types.filter((item): item is string => typeof item === "string").slice(0, 20) : [],
+          types: types.slice(0, 20),
           phone: stringOrNull(place.nationalPhoneNumber),
           opening_hours: Array.isArray(hours) ? hours.filter((item): item is string => typeof item === "string").slice(0, 7) : [],
           rating: finiteIn(place.rating, 0, 5) ? place.rating : null,

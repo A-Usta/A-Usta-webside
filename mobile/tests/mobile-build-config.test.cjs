@@ -54,35 +54,43 @@ test('M6 EAS profiles are TEST-only, create Android APKs and provide iOS simulat
 test('TEST app config accepts only the separate Supabase project and rejects the known production API', () => {
   const valid = loadConfig({
     EXPO_PUBLIC_APP_ENV: 'test',
+    EAS_BUILD_PLATFORM: 'android',
     EXPO_PUBLIC_SUPABASE_URL: TEST_URL,
     EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
     EXPO_PUBLIC_SERVICE_API_URL: TEST_API_URL,
+    GOOGLE_MAPS_ANDROID_API_KEY: 'test-only-map-key-sentinel',
   });
   assert.equal(valid.status, 0, valid.stderr);
 
   const productionSupabase = loadConfig({
     EXPO_PUBLIC_APP_ENV: 'test',
+    EAS_BUILD_PLATFORM: 'android',
     EXPO_PUBLIC_SUPABASE_URL: 'https://yafpnqcoyvoclmxdlxxc.supabase.co',
     EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
     EXPO_PUBLIC_SERVICE_API_URL: TEST_API_URL,
+    GOOGLE_MAPS_ANDROID_API_KEY: 'test-only-map-key-sentinel',
   });
   assert.notEqual(productionSupabase.status, 0);
   assert.match(productionSupabase.stderr, /verified A-USTA-TEST Supabase URL/);
 
   const productionApi = loadConfig({
     EXPO_PUBLIC_APP_ENV: 'test',
+    EAS_BUILD_PLATFORM: 'android',
     EXPO_PUBLIC_SUPABASE_URL: TEST_URL,
     EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
     EXPO_PUBLIC_SERVICE_API_URL: 'https://a-usta-webside.onrender.com',
+    GOOGLE_MAPS_ANDROID_API_KEY: 'test-only-map-key-sentinel',
   });
   assert.notEqual(productionApi.status, 0);
   assert.match(productionApi.stderr, /verified TEST Render API origin/);
 
   const unknownTestApi = loadConfig({
     EXPO_PUBLIC_APP_ENV: 'test',
+    EAS_BUILD_PLATFORM: 'android',
     EXPO_PUBLIC_SUPABASE_URL: TEST_URL,
     EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
     EXPO_PUBLIC_SERVICE_API_URL: 'https://unverified-test-api.example.invalid',
+    GOOGLE_MAPS_ANDROID_API_KEY: 'test-only-map-key-sentinel',
   });
   assert.notEqual(unknownTestApi.status, 0);
   assert.match(unknownTestApi.stderr, /verified TEST Render API origin/);
@@ -101,6 +109,7 @@ test('TEST Android EAS preview forwards the map key only to the native map plugi
     env: {
       ...process.env,
       EXPO_PUBLIC_APP_ENV: 'test',
+      EAS_BUILD_PLATFORM: 'android',
       EXPO_PUBLIC_SUPABASE_URL: TEST_URL,
       EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
       EXPO_PUBLIC_SERVICE_API_URL: TEST_API_URL,
@@ -111,6 +120,31 @@ test('TEST Android EAS preview forwards the map key only to the native map plugi
   assert.equal(configured.stdout, 'config-guard-passed');
   assert.equal(eas.build['test-android'].environment, 'preview');
   assert.equal(eas.build['test-android'].env.EXPO_PUBLIC_APP_ENV, 'test');
+
+  const missing = spawnSync(process.execPath, ['-e', script], {
+    cwd: root, encoding: 'utf8', env: {
+      ...process.env, EXPO_PUBLIC_APP_ENV: 'test', EAS_BUILD_PLATFORM: 'android',
+      EXPO_PUBLIC_SUPABASE_URL: TEST_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
+      EXPO_PUBLIC_SERVICE_API_URL: TEST_API_URL,
+    },
+  });
+  assert.notEqual(missing.status, 0);
+  assert.match(missing.stderr, /requires GOOGLE_MAPS_ANDROID_API_KEY/);
+
+  const ios = loadConfig({ EXPO_PUBLIC_APP_ENV: 'test', EAS_BUILD_PLATFORM: 'ios',
+    EXPO_PUBLIC_SUPABASE_URL: TEST_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY: 'public-test-key-placeholder',
+    EXPO_PUBLIC_SERVICE_API_URL: TEST_API_URL });
+  assert.equal(ios.status, 0, ios.stderr);
+
+  const preflightMissing = spawnSync(process.execPath, ['./scripts/require-android-maps-key.cjs'], {
+    cwd: root, encoding: 'utf8', env: { ...process.env, EXPO_PUBLIC_APP_ENV: 'test' },
+  });
+  assert.notEqual(preflightMissing.status, 0);
+  const preflightConfigured = spawnSync(process.execPath, ['./scripts/require-android-maps-key.cjs'], {
+    cwd: root, encoding: 'utf8', env: { ...process.env, EXPO_PUBLIC_APP_ENV: 'test', GOOGLE_MAPS_ANDROID_API_KEY: 'sentinel' },
+  });
+  assert.equal(preflightConfigured.status, 0, preflightConfigured.stderr);
+  assert.doesNotMatch(preflightConfigured.stdout, /sentinel/);
 
   const production = spawnSync(process.execPath, ['-e', script.replace(
     "if(!maps||maps[1]?.androidGoogleMapsApiKey!==process.env.GOOGLE_MAPS_ANDROID_API_KEY||config.extra.googleMapsAndroidConfigured!==true)process.exit(2);",

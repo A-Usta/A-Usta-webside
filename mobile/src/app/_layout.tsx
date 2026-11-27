@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Pressable, Text, View } from '../lib/themed-native';
-import { AppSettingsProvider, useAppSettings } from '../lib/app-settings';
+import { AppSettingsProvider, useAppTheme } from '../lib/app-settings';
 
 export function ErrorBoundary({ retry }: { error: Error; retry: () => void }) {
   return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#F4F6F8' }}>
@@ -16,7 +16,7 @@ export function ErrorBoundary({ retry }: { error: Error; retry: () => void }) {
 }
 
 function AppNavigation() {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   const dark = colorScheme === 'dark';
   return <>
     <StatusBar style={dark ? 'light' : 'dark'} />

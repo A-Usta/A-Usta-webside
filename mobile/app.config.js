@@ -27,9 +27,13 @@ if (process.env.EXPO_PUBLIC_APP_ENV === 'test') {
 }
 
 module.exports = ({ config }) => {
-  const mapsKey = process.env.EXPO_PUBLIC_APP_ENV === 'test'
-    ? process.env.GOOGLE_MAPS_ANDROID_API_KEY
+  const isAndroidBuild = process.env.EAS_BUILD_PLATFORM === 'android';
+  const mapsKey = process.env.EXPO_PUBLIC_APP_ENV === 'test' && isAndroidBuild
+    ? process.env.GOOGLE_MAPS_ANDROID_API_KEY?.trim()
     : undefined;
+  if (process.env.EXPO_PUBLIC_APP_ENV === 'test' && isAndroidBuild && !mapsKey) {
+    throw new Error('TEST Android build requires GOOGLE_MAPS_ANDROID_API_KEY; the TEST map cannot be built without its Android Maps SDK key.');
+  }
   const extra = { ...(config.extra || {}), googleMapsAndroidConfigured: Boolean(mapsKey) };
   return {
     ...config,

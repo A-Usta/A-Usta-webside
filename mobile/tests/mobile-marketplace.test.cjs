@@ -82,6 +82,12 @@ test('homepage switches the selected category above adaptive search and queries 
   assert.match(appSource, /CATEGORY_FILTERS\[homeCategory\]/);
 });
 
+test('home and category screens each mount a single filter panel', () => {
+  assert.equal((appSource.match(/<View style=\{styles\.filters\}>/g) || []).length, 2);
+  assert.equal((appSource.match(/accessibilityLabel=\{`\$\{activeCategory\.title\} filtrlərini aç`\}/g) || []).length, 1);
+  assert.equal((appSource.match(/CATEGORY_FILTERS\[category\.key\]/g) || []).length, 2);
+});
+
 test('mobile vehicle brand/model choices match the canonical repository catalog', () => {
   const source = path.resolve(root, '../assets/vehicle/catalog.js');
   const context = { window: {} };

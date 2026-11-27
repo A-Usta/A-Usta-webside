@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import type { ColorValue, FlatListProps, ImageProps } from 'react-native';
 import { Feather as NativeFeather, MaterialCommunityIcons as NativeMaterialCommunityIcons } from '@expo/vector-icons';
-import { useAppSettings } from './app-settings';
+import { useAppTheme } from './app-settings';
 
 const darkSurface: Record<string, string> = {
   '#fff': '#151D26', '#ffffff': '#151D26', '#f4f6f8': '#0C1218', '#fafbfc': '#19232D',
@@ -51,61 +51,61 @@ function themedStyle(style: any, scheme: 'light' | 'dark', mode: 'surface' | 'te
 }
 
 export function View(props: ComponentProps<typeof NativeView>) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeView {...props} style={themedStyle(props.style, colorScheme)} />;
 }
 export function Text(props: ComponentProps<typeof NativeText>) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeText {...props} style={themedStyle(props.style, colorScheme, 'text')} />;
 }
 export function Pressable(props: ComponentProps<typeof NativePressable>) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativePressable {...props} style={themedStyle(props.style, colorScheme)} />;
 }
 export function ScrollView(props: ComponentProps<typeof NativeScrollView>) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeScrollView {...props} style={themedStyle(props.style, colorScheme)} contentContainerStyle={themedStyle(props.contentContainerStyle, colorScheme)} />;
 }
 export function TextInput(props: ComponentProps<typeof NativeTextInput>) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeTextInput {...props} style={themedStyle(props.style, colorScheme)} placeholderTextColor={foreground(props.placeholderTextColor, colorScheme)} />;
 }
 export function Modal(props: ComponentProps<typeof NativeModal>) {
   return <NativeModal {...props} />;
 }
 export function KeyboardAvoidingView(props: ComponentProps<typeof NativeKeyboardAvoidingView>) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeKeyboardAvoidingView {...props} style={themedStyle(props.style, colorScheme)} />;
 }
 export function ActivityIndicator(props: ComponentProps<typeof NativeActivityIndicator>) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeActivityIndicator {...props} color={foreground(props.color, colorScheme)} />;
 }
 export function RefreshControl(props: ComponentProps<typeof NativeRefreshControl>) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeRefreshControl {...props} tintColor={foreground(props.tintColor, colorScheme)} />;
 }
 export function Switch(props: ComponentProps<typeof NativeSwitch>) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   const trackColor = props.trackColor ? Object.fromEntries(Object.entries(props.trackColor).map(([state, color]) => [state, background(color as ColorValue, colorScheme)])) : undefined;
   return <NativeSwitch {...props} trackColor={trackColor} thumbColor={foreground(props.thumbColor, colorScheme)} />;
 }
 export function FlatList<T>(props: FlatListProps<T> & { ref?: React.Ref<NativeFlatList<T>> }) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeFlatList<T> {...props} style={themedStyle(props.style, colorScheme)} contentContainerStyle={themedStyle(props.contentContainerStyle, colorScheme)} />;
 }
 export function Image(props: ImageProps) {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeImage {...props} style={themedStyle(props.style, colorScheme, 'image')} />;
 }
 type ThemedIconProps = ComponentProps<typeof NativeFeather> & { fill?: string };
 const ThemedFeather = ({ fill: _fill, ...props }: ThemedIconProps) => {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeFeather {...props} color={foreground(props.color, colorScheme) as ComponentProps<typeof NativeFeather>['color']} />;
 };
 export const Feather = Object.assign(ThemedFeather, { glyphMap: NativeFeather.glyphMap });
 const ThemedMaterialCommunityIcons = (props: ComponentProps<typeof NativeMaterialCommunityIcons>) => {
-  const { colorScheme } = useAppSettings();
+  const { colorScheme } = useAppTheme();
   return <NativeMaterialCommunityIcons {...props} color={foreground(props.color, colorScheme) as ComponentProps<typeof NativeMaterialCommunityIcons>['color']} />;
 };
 export const MaterialCommunityIcons = Object.assign(ThemedMaterialCommunityIcons, { glyphMap: NativeMaterialCommunityIcons.glyphMap });

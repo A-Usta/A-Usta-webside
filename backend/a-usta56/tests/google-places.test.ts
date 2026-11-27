@@ -12,9 +12,9 @@ const { registerGooglePlacesRoutes } = await import("../src/routes/google-places
 
 const userId = "11111111-1111-4111-8111-111111111111";
 const key = "TEST_GOOGLE_KEY_NEVER_LOG";
-const point = (id: string, name: string, latitude: number, longitude: number) => ({
+const point = (id: string, name: string, latitude: number, longitude: number, types = ["gas_station"]) => ({
   id, displayName: { text: name }, formattedAddress: "Bakı, Azərbaycan",
-  location: { latitude, longitude }, types: ["gas_station"], nationalPhoneNumber: "+994 12 000 00 00",
+  location: { latitude, longitude }, types, nationalPhoneNumber: "+994 12 000 00 00",
   regularOpeningHours: { weekdayDescriptions: ["Bazar ertəsi: 09:00–18:00"] }, rating: 4.4, userRatingCount: 123,
 });
 
@@ -61,7 +61,7 @@ test("Nearby Search validates scope and uses fixed type filters, field mask and 
     assert.equal(captured.url, "https://places.googleapis.com/v1/places:searchNearby");
     assert.equal((captured.init?.headers as Record<string, string>)["X-Goog-Api-Key"], key);
     assert.equal((captured.init?.headers as Record<string, string>)["X-Goog-FieldMask"],
-      "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.nationalPhoneNumber,places.regularOpeningHours.weekdayDescriptions,places.rating,places.userRatingCount");
+      "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.primaryType,places.nationalPhoneNumber,places.regularOpeningHours.weekdayDescriptions,places.rating,places.userRatingCount");
     assert.deepEqual(JSON.parse(String(captured.init?.body)).includedTypes, ["gas_station"]);
     assert.equal(captured.init?.signal instanceof AbortSignal, true);
     assert.ok(!f.logs.join("").includes(key));
@@ -132,13 +132,32 @@ test("Google TEST permission failures are classified without leaking upstream de
   }
 });
 
+test("category results require an allowed Google Places type and preserve only real place data", async () => {
+  const f = await fixture({ apiKey: key, fetchImpl: async () => Response.json({ places: [
+    point("places/fuel-1", "Bakı yanacaqdoldurma", 40.41, 49.87, ["gas_station", "point_of_interest"]),
+    point("places/wash-1", "Avtoyuma", 40.411, 49.871, ["car_wash"]),
+    point("places/restaurant-1", "Yad restoran", 40.412, 49.872, ["restaurant"]),
+    { ...point("places/parts-1", "Ehtiyat hissələri", 40.413, 49.873, ["point_of_interest"]), primaryType: "auto_parts_store" },
+  ] }) });
+  try {
+    const fuel = await send(f, validBody, "valid-test-token");
+    assert.deepEqual(fuel.json().places.map((place: any) => place.id), ["places/fuel-1"]);
+    assert.equal(fuel.json().places[0].name, "Bakı yanacaqdoldurma");
+    assert.equal(fuel.json().places[0].address, "Bakı, Azərbaycan");
+    assert.equal(typeof fuel.json().places[0].latitude, "number");
+    assert.equal(typeof fuel.json().places[0].longitude, "number");
+    const parts = await send(f, { ...validBody, category: "parts_shop" }, "valid-test-token");
+    assert.deepEqual(parts.json().places.map((place: any) => place.id), ["places/parts-1"]);
+  } finally { await f.app.close(); f.restore(); }
+});
+
 test("all 17 mobile map filter keys have a bounded backend query policy", async () => {
   assert.ok(admissionPolicy.actor.places[0][0] <= 10);
   const categories = ["all", "fuel", "charging", "service", "tyre", "wash", "parts_shop", "auto_electrician", "oil_change", "diagnostics", "inspection", "towing", "parking", "repair", "alignment", "other_auto", "usta"];
   for (const category of categories) {
     let calls = 0;
     const f = await fixture({ apiKey: key, fetchImpl: async () => { calls++; return Response.json({ places: [] }); } });
-    try { const response = await send(f, { ...validBody, category }, "valid-test-token"); assert.equal(response.statusCode, 200, category); assert.equal(calls, category === "all" ? 2 : 1); }
+    try { const response = await send(f, { ...validBody, category }, "valid-test-token"); assert.equal(response.statusCode, 200, category); assert.equal(calls, 1); }
     finally { await f.app.close(); f.restore(); }
   }
 });

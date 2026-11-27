@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appearance, useColorScheme } from 'react-native';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { cbarDailyUrl, isCurrencyCode, parseCbarRates, setCurrencySnapshot, type CurrencyCode, type ExchangeRates } from './currency';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -28,6 +28,9 @@ const AppSettingsContext = createContext<AppSettingsValue>({
   setThemeMode: async () => {},
 });
 
+type ThemeSettingsValue = { colorScheme: 'light' | 'dark'; setThemeMode: (mode: ThemeMode) => Promise<void> };
+const ThemeSettingsContext = createContext<ThemeSettingsValue>({ colorScheme: 'light', setThemeMode: async () => {} });
+
 export function isThemeMode(value: unknown): value is ThemeMode {
   return value === 'light' || value === 'dark' || value === 'system';
 }
@@ -39,6 +42,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(null);
   const [exchangeRateError, setExchangeRateError] = useState('');
   const [hydrated, setHydrated] = useState(false);
+  const preferenceWrites = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     let mounted = true;
@@ -62,14 +66,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const savePreference = useCallback(async (patch: Partial<{ themeMode: ThemeMode; currency: CurrencyCode }>) => {
-    try {
+    const write = preferenceWrites.current.then(async () => {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       let existing: Record<string, unknown> = {};
       try { const parsed = raw ? JSON.parse(raw) : {}; if (parsed && typeof parsed === 'object') existing = parsed; } catch { /* recover by replacing malformed local data */ }
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...patch }));
-    } catch {
-      throw new Error('Seçim cihazda saxlanmadı. Yenidən cəhd edin.');
-    }
+    });
+    preferenceWrites.current = write.catch(() => {});
+    try { await write; } catch { throw new Error('Seçim cihazda saxlanmadı. Yenidən cəhd edin.'); }
   }, []);
   const setThemeMode = useCallback(async (mode: ThemeMode) => {
     await savePreference({ themeMode: mode });
@@ -77,8 +81,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   }, [savePreference]);
   const setCurrency = useCallback(async (value: CurrencyCode) => {
     await savePreference({ currency: value });
+    setCurrencySnapshot(value, exchangeRates);
     setCurrencyState(value);
-  }, [savePreference]);
+  }, [exchangeRates, savePreference]);
 
   const refreshExchangeRates = useCallback(async () => {
     try {
@@ -123,9 +128,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
 
   const colorScheme = themeMode === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : themeMode;
   const value = useMemo(() => ({ themeMode, colorScheme, currency, exchangeRates, exchangeRateError, setCurrency, refreshExchangeRates, setThemeMode }), [themeMode, colorScheme, currency, exchangeRates, exchangeRateError, setCurrency, refreshExchangeRates, setThemeMode]);
-  return <AppSettingsContext.Provider value={value}>{children}</AppSettingsContext.Provider>;
+  const themeValue = useMemo(() => ({ colorScheme, setThemeMode }), [colorScheme, setThemeMode]);
+  return <ThemeSettingsContext.Provider value={themeValue}><AppSettingsContext.Provider value={value}>{children}</AppSettingsContext.Provider></ThemeSettingsContext.Provider>;
 }
 
 export function useAppSettings() {
   return useContext(AppSettingsContext);
+}
+
+export function useAppTheme() {
+  return useContext(ThemeSettingsContext);
 }
