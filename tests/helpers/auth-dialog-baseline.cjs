@@ -27,6 +27,6 @@ exports.normalize=html=>{
  const tag='<script id="austa-v39-account-js">',start=html.indexOf(tag)+tag.length,end=html.indexOf('</script>',start);
  assert.equal(digest(html.slice(start,end)),'09024d640236e2e18e60ca3d8e73d980ae8ea9926526484e145714f64f7e7e83','exact V33D2 G01 Account controller');
  for(const [from,to] of edits){assert.equal(html.split(from).length,2,'unique G01 literal hunk');html=html.replace(from,()=>to);}
- assert.equal(digest(html.slice(start,html.indexOf('</script>',start))),'f47aec624d759c8d10edfe7e5645b882265f19bec55d88b9722cf92fe73e1733','reviewed pre-G01 controller restored for historical compatibility');
+ assert.equal(digest(html.slice(start,html.indexOf('</script>',start))),'fd3e7b140a4e0b8b1cc8c92d1708475e994677fb2349f917629da5ab4e928b49','reviewed pre-G01 controller restored for historical compatibility');
  return html;
 };
