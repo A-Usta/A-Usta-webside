@@ -30,9 +30,9 @@ exports.normalize=html=>{
  const tag='<script id="austa-v39-account-js">',bounds=()=>{const start=html.indexOf(tag)+tag.length;return[start,html.indexOf('</script>',start)];};
  let [start,end]=bounds();
  assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'273b59e177882f6f4d98bded928f93bce011051695d7267eb06f3b63f0e84958','exact reviewed V33D3 Account controller including phone OTP');
- const strip=(pattern,label)=>{const matches=html.match(pattern)||[];assert.equal(matches.length,1,label);html=html.replace(pattern,'\\n');};
- strip(/\\n      const otpPhoneInput=[\\s\\S]*?let otpLastSentAt=0;\\n/,'one exact phone OTP binding block');
- strip(/\\n      const normalizeAZOtpPhone=value=>\\{[\\s\\S]*?(?=\\n      \\\/\\\/ Native top layer makes the Account and page inert without z-index races\\.)/,'one exact phone OTP flow block');
+ const strip=(pattern,label)=>{const matches=html.match(pattern)||[];assert.equal(matches.length,1,label);html=html.replace(pattern,'\n');};
+ strip(/\n      const otpPhoneInput=[\s\S]*?let otpLastSentAt=0;\n/,'one exact phone OTP binding block');
+ strip(/\n      const normalizeAZOtpPhone=value=>\{[\s\S]*?(?=\n      \/\/ Native top layer makes the Account and page inert without z-index races\.)/,'one exact phone OTP flow block');
  [start,end]=bounds();
  assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'aa80c40bbeb71c3877112494227c17e92635a7f604a6189cdd073187d5ff9680','phone OTP removal restores reviewed V33D3 Account controller');
  for(const[from,to]of edits){assert.equal(html.split(from).length,2,'unique V33D3 literal hunk');html=html.replace(from,()=>to);}
