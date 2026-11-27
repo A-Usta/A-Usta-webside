@@ -20572,6 +20572,25 @@ function bindPage(page, role) {
 
           </form>
 
+          <section id="austa-v39-auth-phone-panel" aria-label="Telefonla giriş" style="margin-top:20px;padding:16px;border:1px solid #343434;border-radius:12px;background:#161616;color:#fff">
+            <h3 style="margin:0 0 6px;font-size:16px">Telefonla WhatsApp kodu</h3>
+            <p style="margin:0 0 12px;color:#9aa7b2;font-size:13px;line-height:1.5">Altırəqəmli kod WhatsApp ilə göndərilir. E-poçt və şifrə ilə giriş yuxarıdakı formda qalır.</p>
+            <label for="austa-v39-auth-phone-otp-phone" style="display:block;margin-bottom:6px;color:#dce3e8;font-size:13px">Mobil nömrə</label>
+            <input id="austa-v39-auth-phone-otp-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+994 10 399 92 17" style="width:100%;box-sizing:border-box;padding:13px;border-radius:10px;border:1px solid #333;background:#181818;color:#fff">
+            <div id="austa-v39-auth-phone-code-wrap" style="display:none;margin-top:12px">
+              <label for="austa-v39-auth-phone-otp-code" style="display:block;margin-bottom:6px;color:#dce3e8;font-size:13px">6 rəqəmli təsdiq kodu</label>
+              <input id="austa-v39-auth-phone-otp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" style="width:100%;box-sizing:border-box;padding:13px;border-radius:10px;border:1px solid #333;background:#181818;color:#fff">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button id="austa-v39-auth-phone-send" type="button" style="flex:1;padding:12px;border:0;border-radius:10px;background:#176244;color:#fff;font-weight:700;cursor:pointer">WhatsApp ilə kod al</button>
+              <button id="austa-v39-auth-phone-verify" type="button" hidden style="flex:1;padding:12px;border:0;border-radius:10px;background:#176244;color:#fff;font-weight:700;cursor:pointer">Kodu təsdiqlə</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:13px">
+              <button id="austa-v39-auth-phone-resend" type="button" hidden style="border:0;background:none;color:#9fd1b5;cursor:pointer">Kodu yenidən göndər</button>
+              <button id="austa-v39-auth-phone-change" type="button" style="border:0;background:none;color:#9fd1b5;cursor:pointer">Mövcud hesaba nömrə bağla</button>
+            </div>
+          </section>
+
           <div
             id="austa-v39-auth-message"
             style="
@@ -20668,6 +20687,16 @@ function bindPage(page, role) {
         document.getElementById(
           'austa-v39-auth-message'
         );
+
+      const otpPhoneInput=document.getElementById('austa-v39-auth-phone-otp-phone');
+      const otpCodeWrap=document.getElementById('austa-v39-auth-phone-code-wrap');
+      const otpCodeInput=document.getElementById('austa-v39-auth-phone-otp-code');
+      const otpSendButton=document.getElementById('austa-v39-auth-phone-send');
+      const otpVerifyButton=document.getElementById('austa-v39-auth-phone-verify');
+      const otpResendButton=document.getElementById('austa-v39-auth-phone-resend');
+      const otpLinkButton=document.getElementById('austa-v39-auth-phone-change');
+      let otpLinkMode=false;
+      let otpLastSentAt=0;
 
       const subtitle =
         document.getElementById(
@@ -20780,6 +20809,102 @@ function bindPage(page, role) {
 
         passwordInput.autocomplete =
           'new-password';
+      };
+
+      const normalizeAZOtpPhone=value=>{
+        let raw=String(value||'').trim().replace(/[^\d+]/g,'');
+        if(raw.startsWith('00'))raw='+'+raw.slice(2);
+        if(raw.startsWith('0'))raw='+994'+raw.slice(1);
+        else if(raw.startsWith('994'))raw='+'+raw;
+        else if(!raw.startsWith('+'))raw='+994'+raw;
+        return /^\+994\d{9}$/.test(raw)?raw:null;
+      };
+      const setOtpSent=()=>{
+        otpCodeWrap.style.display='block';
+        otpVerifyButton.hidden=false;
+        otpResendButton.hidden=false;
+        otpSendButton.textContent='Kodu yenidən göndər';
+        otpCodeInput.focus();
+      };
+      const requestPhoneOtp=async()=>{
+        clearMessage();
+        const phoneNumber=normalizeAZOtpPhone(otpPhoneInput.value);
+        if(!phoneNumber){showMessage('Azərbaycan mobil nömrəsini düzgün daxil edin. Məsələn: 0103999217 və ya +994103999217.','error');return;}
+        const now=Date.now();
+        if(now-otpLastSentAt<60000){showMessage('Təhlükəsizlik üçün kod istəkləri arasında 60 saniyə gözləyin.','info');return;}
+        otpSendButton.disabled=true;
+        otpResendButton.disabled=true;
+        try{
+          if(otpLinkMode){
+            const session=(await supabaseClient.auth.getSession()).data?.session;
+            if(!session)throw new Error('Nömrəni hesaba bağlamaq üçün əvvəlcə həmin e-poçt hesabına daxil olun.');
+            const updated=await supabaseClient.auth.updateUser({phone:phoneNumber});
+            if(updated.error)throw updated.error;
+          }else{
+            const result=await supabaseClient.auth.signInWithOtp({
+              phone:phoneNumber,
+              options:{
+                channel:'sms',
+                shouldCreateUser:mode==='register',
+                ...(mode==='register'?{data:{austa_role:roleInput.value,phone_verified:false,account_status:'active'}}:{})
+              }
+            });
+            if(result.error)throw result.error;
+          }
+          otpPhoneInput.value=phoneNumber;
+          otpLastSentAt=Date.now();
+          setOtpSent();
+          showMessage('Kod sorğusu qəbul edildi. WhatsApp-da gələn 6 rəqəmli kodu daxil edin.','success');
+        }catch(error){
+          showMessage(error?.message||'WhatsApp kodu üçün sorğu alınmadı.','error');
+        }finally{
+          otpSendButton.disabled=false;
+          otpResendButton.disabled=false;
+        }
+      };
+      const verifyPhoneOtp=async()=>{
+        clearMessage();
+        const phoneNumber=normalizeAZOtpPhone(otpPhoneInput.value);
+        const token=String(otpCodeInput.value||'').replace(/\D/g,'');
+        if(!phoneNumber||!/^\d{6}$/.test(token)){showMessage('Düzgün nömrə və 6 rəqəmli kod daxil edin.','error');return;}
+        otpVerifyButton.disabled=true;
+        try{
+          const verified=await supabaseClient.auth.verifyOtp({
+            phone:phoneNumber,
+            token,
+            type:otpLinkMode?'phone_change':'sms'
+          });
+          if(verified.error)throw verified.error;
+          const user=verified.data?.user;
+          if(!user)throw new Error('Kod qəbul edildi, lakin Supabase Auth istifadəçi sessiyası qaytarmadı.');
+          if(otpLinkMode){
+            showMessage('Telefon nömrəsi mövcud hesaba təsdiqlənərək bağlandı.','success');
+            setTimeout(()=>{if(authModal.isConnected)closeAuth();},700);
+            return;
+          }
+          const roleResult=await supabaseClient.from('profiles').select('role,is_active').eq('id',user.id).maybeSingle();
+          if(roleResult.error)throw roleResult.error;
+          if(roleResult.data?.is_active===false)throw new Error('A-USTA hesabı aktiv deyil.');
+          const savedRole=roleResult.data?.role||user.user_metadata?.austa_role||'customer';
+          localStorage.setItem('austa-account-role-v39',savedRole);
+          localStorage.setItem('austa-auth-user-id',user.id);
+          showMessage('✓ Telefon təsdiqləndi və Supabase sessiyası yaradıldı.','success');
+          setTimeout(()=>{if(!authModal.isConnected)return;showRole(savedRole);closeAuth();},700);
+        }catch(error){
+          showMessage(error?.message||'Təsdiq kodu düzgün deyil və ya vaxtı bitib.','error');
+        }finally{
+          otpVerifyButton.disabled=false;
+        }
+      };
+      otpSendButton.onclick=()=>void requestPhoneOtp();
+      otpResendButton.onclick=()=>void requestPhoneOtp();
+      otpVerifyButton.onclick=()=>void verifyPhoneOtp();
+      otpLinkButton.onclick=async()=>{
+        otpLinkMode=!otpLinkMode;
+        otpLinkButton.textContent=otpLinkMode?'Telefon girişi/qeydiyyatı seç':'Mövcud hesaba nömrə bağla';
+        const session=(await supabaseClient.auth.getSession()).data?.session;
+        if(otpLinkMode&&!session){otpLinkMode=false;otpLinkButton.textContent='Mövcud hesaba nömrə bağla';showMessage('Nömrə bağlamaq üçün əvvəlcə e-poçt və şifrə ilə daxil olun.','info');}
+        else showMessage(otpLinkMode?'Təsdiqlənmiş nömrə bu hesabın mövcud user ID-sinə bağlanacaq.':'Telefonla giriş rejimi seçilib.','info');
       };
 
       // Native top layer makes the Account and page inert without z-index races.
