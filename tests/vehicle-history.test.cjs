@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),path=require('path'),vm=require('vm');
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),cp=require('node:child_process');
 const root=path.resolve(__dirname,'..'),source=p=>fs.readFileSync(path.join(root,p),'utf8');
 const A='11111111-1111-4111-8111-111111111111',B='22222222-2222-4222-8222-222222222222',V='33333333-3333-4333-8333-333333333333',R='44444444-4444-4444-8444-444444444444';
 const vehicle={make:'Toyota',model:'Corolla',year:'2020',plate_number:'10-AA-100',vin:'',mileage:'50000'};
@@ -28,12 +28,13 @@ test('no public file URL, legacy import, scheduler or service-order backend link
 test('Baku calendar flips at 20:00 UTC and validates leap days',()=>{const m=fixture().window.AUSTA_MAINTENANCE;assert.equal(m.calendarDate(new Date('2026-11-11T19:59:59Z')),'2026-11-11');assert.equal(m.calendarDate(new Date('2026-11-11T20:00:00Z')),'2026-11-12');assert.equal(m.validDate('2024-02-29'),true);assert.equal(m.validDate('2023-02-29'),false);});
 for(const [r,km,expected] of [[{},100,null],[{next_service_date:'2026-11-11'},100,'overdue'],[{next_service_date:'2026-11-12'},100,'due'],[{next_service_date:'2026-11-13'},100,'upcoming'],[{next_service_mileage_km:0},0,'due'],[{next_service_mileage_km:100},101,'overdue'],[{next_service_mileage_km:100},99,'upcoming'],[{next_service_mileage_km:100},null,'unknown'],[{next_service_date:'2026-11-13',next_service_mileage_km:100},101,'overdue']])test('reminder boundary '+JSON.stringify([r,km]),()=>{const value=fixture().window.AUSTA_MAINTENANCE.status(r,km,'2026-11-12');assert.equal(value?.state||null,expected);});
 
-test('approved Phase 1 shell, CSS, dashboard and controller remain exact outside garage integration',()=>{
+test('approved Account shell and exact V4.3.15 page remain unchanged outside phone OTP',()=>{
  const hash=s=>require('node:crypto').createHash('sha256').update(s).digest('hex');
  assert.equal(hash(require('./helpers/account-polish-baseline.cjs').normalizeAsset('personal-account.css',source('assets/account/personal-account.css'))),'c760e9d86ca185d6256bb8f3aada7e833cfa3cb084028b87e86681079a06a0db');
  const js=require('./helpers/account-polish-baseline.cjs').normalizeAsset('personal-account.js',source('assets/account/personal-account.js')).replace('Phase 1 approved presentation; Phase 2 garage mount adapter.','Phase 1: presentation only; no vehicle persistence.').replace('function vehicles(){return window.AUSTA_MY_VEHICLES.shell();}',()=>require('./helpers/approved-vehicle-placeholder.cjs')).replace("window.AUSTA_MY_VEHICLES?.mount(document.querySelector('#austaV39Main [data-my-vehicles]'));",'');
  assert.equal(hash(js),'3d7a5294115d32d07c3cc238d0f6bcb15477351a14b00bae14446d603b591afa');
- assert.equal(hash(require('./helpers/vehicle-history-baseline.cjs').normalize(source('index.html'))),'899ad495ac5efbf894552ef746eca4875aeff040e51a64399dd5d06da7323a0c');
+ const v4315=cp.execFileSync('git',['show','aed5d72^:index.html'],{cwd:root,encoding:'utf8',maxBuffer:10_000_000});
+ assert.equal(require('./helpers/account-polish-baseline.cjs').normalizeToV4315(source('index.html')),v4315,'only exact reviewed OTP blocks differ from the actual V4.3.15 branch page');
 });
 
 test('pagination fetches more than 1000 rows in bounded API batches',async()=>{const f=fixture(),c=await f.api.context();f.state.tables.vehicles=Array.from({length:1100},(_,i)=>({id:String(i),user_id:A,is_active:true}));const rows=await f.api.vehicles(c,{limit:1100});assert.equal(rows.length,1100);assert.equal(f.state.ops.filter(x=>x.operation==='read').length,12);});
