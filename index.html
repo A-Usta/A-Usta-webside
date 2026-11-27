@@ -20572,7 +20572,7 @@ function bindPage(page, role) {
 
           </form>
 
-          <section id="austa-v39-auth-phone-panel" aria-label="Telefonla giriş" style="margin-top:20px;padding:16px;border:1px solid #343434;border-radius:12px;background:#161616;color:#fff">
+          <section id="austa-v39-auth-phone-panel" aria-label="Telefonla giriş" style="display:none;margin-top:20px;padding:16px;border:1px solid #343434;border-radius:12px;background:#161616;color:#fff">
             <h3 style="margin:0 0 6px;font-size:16px">Telefonla WhatsApp kodu</h3>
             <p style="margin:0 0 12px;color:#9aa7b2;font-size:13px;line-height:1.5">Altırəqəmli kod WhatsApp ilə göndərilir. E-poçt və şifrə ilə giriş yuxarıdakı formda qalır.</p>
             <label for="austa-v39-auth-phone-otp-phone" style="display:block;margin-bottom:6px;color:#dce3e8;font-size:13px">Mobil nömrə</label>
@@ -20697,6 +20697,23 @@ function bindPage(page, role) {
       const otpLinkButton=document.getElementById('austa-v39-auth-phone-change');
       let otpLinkMode=false;
       let otpLastSentAt=0;
+      let otpAuthEnabled=false;
+      const otpPhonePanel=document.getElementById('austa-v39-auth-phone-panel');
+      const refreshOtpAvailability=async()=>{
+        try{
+          let base=String(supabaseClient?.supabaseUrl||'');
+          if(base.endsWith('/'))base=base.slice(0,-1);
+          if(!base)throw new Error('Supabase URL unavailable');
+          const response=await fetch(base+'/functions/v1/whatsapp-send-sms',{headers:{accept:'application/json'},cache:'no-store'});
+          const status=response.ok?await response.json():null;
+          otpAuthEnabled=status?.enabled===true;
+        }catch{otpAuthEnabled=false;}
+        otpPhonePanel.style.display=otpAuthEnabled?'block':'none';
+        otpPhonePanel.setAttribute('aria-hidden',String(!otpAuthEnabled));
+        if(!otpAuthEnabled)otpPhonePanel.querySelectorAll('input').forEach(input=>{input.value='';});
+      };
+      void refreshOtpAvailability();
+      const otpAvailabilityTimer=setInterval(()=>void refreshOtpAvailability(),30000);
 
       const subtitle =
         document.getElementById(
@@ -20827,6 +20844,7 @@ function bindPage(page, role) {
         otpCodeInput.focus();
       };
       const requestPhoneOtp=async()=>{
+        if(!otpAuthEnabled){showMessage('Telefonla giriş hazırda aktiv deyil. E-poçt və şifrə ilə daxil olun.','info');return;}
         clearMessage();
         const phoneNumber=normalizeAZOtpPhone(otpPhoneInput.value);
         if(!phoneNumber){showMessage('Azərbaycan mobil nömrəsini düzgün daxil edin. Məsələn: 0103999217 və ya +994103999217.','error');return;}
@@ -20900,6 +20918,7 @@ function bindPage(page, role) {
       otpResendButton.onclick=()=>void requestPhoneOtp();
       otpVerifyButton.onclick=()=>void verifyPhoneOtp();
       otpLinkButton.onclick=async()=>{
+        if(!otpAuthEnabled)return;
         otpLinkMode=!otpLinkMode;
         otpLinkButton.textContent=otpLinkMode?'Telefon girişi/qeydiyyatı seç':'Mövcud hesaba nömrə bağla';
         const session=(await supabaseClient.auth.getSession()).data?.session;
