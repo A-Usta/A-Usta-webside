@@ -102,7 +102,7 @@ test('inactive marketplace home hides its filter when a category route is on top
 });
 
 test('rendered category screens fit 320, 360, 390 and 412 dp without horizontal overflow', async t => {
-  if (!fs.existsSync(chromium.executablePath())) return t.skip('Chromium is installed by the frontend CI job; this environment blocks the Playwright browser download.');
+  if (!process.env.CI && !fs.existsSync(chromium.executablePath())) return t.skip('Chromium is installed by the frontend CI job; this environment blocks the Playwright browser download.');
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
