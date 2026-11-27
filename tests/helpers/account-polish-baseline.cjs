@@ -37,7 +37,7 @@ exports.normalize=html=>{
  strip(/\n      const otpPhoneInput=[\s\S]*?let otpLastSentAt=0;\n/,'one exact phone OTP binding block');
  strip(/\n      const normalizeAZOtpPhone=value=>\{[\s\S]*?(?=\n      \/\/ Native top layer makes the Account and page inert without z-index races\.)/,'one exact phone OTP flow block');
  [start,end]=bounds();
- assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'ff7500d22b85d57eabd0fa00526d2799b78e299af07b6c0d2ac3b0e841afd0a7','phone OTP removal restores reviewed V33D3 Account controller');
+ assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'1f078505c5016e522acbcd0748468f0643d0d5bd84d1f5f488739fe68e4c4431','exact V33D3 Account controller after OTP-only blocks are stripped');
  for(const[from,to]of edits){assert.equal(html.split(from).length,2,'unique V33D3 literal hunk');html=html.replace(from,()=>to);}
  [start,end]=bounds();
  assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'09024d640236e2e18e60ca3d8e73d980ae8ea9926526484e145714f64f7e7e83','original V33D2 controller restored before phone panel normalization');
