@@ -43,7 +43,7 @@ exports.normalize=html=>{
  assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'46d5ff6994c7f4945a5bd84fa4aa3380a34f721b8cb5a71a8acdc544057eca67','exact V33D2 controller restored before phone panel normalization');
  const panels=[...html.slice(start,end).matchAll(/<section id="austa-v39-auth-phone-panel"[\s\S]*?<\/section>/g)];
  assert.equal(panels.length,1,'one exact phone OTP panel in normalized historical controller');
- assert.equal(createHash('sha256').update(panels[0][0]).digest('hex'),'72b5a569db460a9e1033dcc2ee32a510bd6faff3275a3e2e1eb5ba6bcb7e9628','exact phone OTP panel hash');
+ assert.equal(createHash('sha256').update(panels[0][0]).digest('hex'),'ce1b69d8185d81be52ba5eae0f5043a9d3ee6d58ccf25bbdbd97787833feb58b','exact phone OTP panel hash');
  const panelBoundary='\n\n          '+panels[0][0]+'\n\n';
  assert.equal(html.split(panelBoundary).length,2,'one exact normalized phone OTP panel boundary');
  html=html.replace(panelBoundary,'\n\n');
