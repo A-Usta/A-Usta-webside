@@ -59,7 +59,14 @@ Deno.serve(async (request: Request) => {
       Boolean(accessToken) &&
       /^[a-z0-9_]{3,512}$/.test(templateName) &&
       /^[a-z]{2,3}(?:_[A-Z]{2,3})?$/.test(templateLanguage);
-    return json(200, { enabled });
+    return new Response(JSON.stringify({ enabled }), {
+      status: 200,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "*",
+      },
+    });
   }
   if (request.method !== "POST") return json(405, { error: "method_not_allowed" });
   const declaredLength = Number(request.headers.get("content-length") || "0");
