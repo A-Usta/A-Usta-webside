@@ -29,8 +29,11 @@ exports.normalize=html=>{
  if(!html.includes("authModal.dataset.accountAuth='v33d3'"))return html;
  const tag='<script id="austa-v39-account-js">',bounds=()=>{const start=html.indexOf(tag)+tag.length;return[start,html.indexOf('</script>',start)];};
  let [start,end]=bounds();
- assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'273b59e177882f6f4d98bded928f93bce011051695d7267eb06f3b63f0e84958','exact reviewed V33D3 Account controller including phone OTP');
+ assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'66e5b6e683b157e9109738090e09162ddb975d50004c7cea33b875f3e74e8c6d','exact reviewed V33D3 Account controller including the server OTP readiness gate');
  const strip=(pattern,label)=>{const matches=html.match(pattern)||[];assert.equal(matches.length,1,label);html=html.replace(pattern,'\n');};
+ strip(/\n      let otpAuthEnabled=false;\n      const otpPhonePanel=document.getElementById\('austa-v39-auth-phone-panel'\);\n      const refreshOtpAvailability=async\(\)=>\{[\s\S]*?\n      const otpAvailabilityTimer=setInterval\(\(\)=>void refreshOtpAvailability\(\),30000\);\n/,'one exact server-controlled OTP readiness gate');
+ [start,end]=bounds();
+ assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'273b59e177882f6f4d98bded928f93bce011051695d7267eb06f3b63f0e84958','removing only the pinned OTP readiness gate restores the reviewed V33D3 Account controller');
  strip(/\n      const otpPhoneInput=[\s\S]*?let otpLastSentAt=0;\n/,'one exact phone OTP binding block');
  strip(/\n      const normalizeAZOtpPhone=value=>\{[\s\S]*?(?=\n      \/\/ Native top layer makes the Account and page inert without z-index races\.)/,'one exact phone OTP flow block');
  [start,end]=bounds();
