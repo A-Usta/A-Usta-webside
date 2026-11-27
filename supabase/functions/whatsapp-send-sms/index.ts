@@ -46,7 +46,7 @@ Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return json(405, { error: "method_not_allowed" });
   const declaredLength = Number(request.headers.get("content-length") || "0");
   if (declaredLength > MAX_BODY_BYTES) return json(413, { error: "payload_too_large" });
-  const secret = Deno.env.get("SUPABASE_SMS_HOOK_SECRET") || "";
+  const secret = Deno.env.get("SEND_SMS_HOOK_SECRET") || "";
   if (!secret) return json(503, { error: "whatsapp_auth_not_configured" });
   let rawBody: string;
   try {
