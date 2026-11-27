@@ -83,7 +83,11 @@ exports.normalizeToV4315=html=>{
  assert(start>=tag.length&&end>start,'V4.3.15 Account controller bounds');
  let controller=html.slice(start,end);
  const digest=s=>createHash('sha256').update(s).digest('hex');
- assert.equal(digest(controller),'273b59e177882f6f4d98bded928f93bce011051695d7267eb06f3b63f0e84958','exact V4.3.16 Account controller before OTP-only normalization');
+ assert.equal(digest(controller),'66e5b6e683b157e9109738090e09162ddb975d50004c7cea33b875f3e74e8c6d','exact V4.3.16 Account controller with OTP readiness gate');
+ const readiness=/\n      let otpAuthEnabled=false;\n      const otpPhonePanel=document.getElementById\('austa-v39-auth-phone-panel'\);\n      const refreshOtpAvailability=async\(\)=>\{[\s\S]*?\n      const otpAvailabilityTimer=setInterval\(\(\)=>void refreshOtpAvailability\(\),30000\);\n/;
+ const readinessMatch=controller.match(readiness);assert.equal(readinessMatch?.length,1,'one exact OTP readiness gate');
+ controller=controller.replace(readinessMatch[0],'\n');
+ assert.equal(digest(controller),'5035838694991f607a15f2ae7997fb5cd25f71cf96e54c32767daa5f97e80dbd','exact Account controller after readiness-only removal');
  const strip=(pattern,expected,label,replacement='\n')=>{
   const match=controller.match(pattern);assert(match,label);
   assert.equal(digest(match[0]),expected,label+' exact hash');
@@ -93,7 +97,7 @@ exports.normalizeToV4315=html=>{
  strip(/\n      const normalizeAZOtpPhone=value=>\{[\s\S]*?(?=\n      \/\/ Native top layer makes the Account and page inert without z-index races\.)/,'38874d8e31d9b52da99db2b293b192270ee46b98b16707eada69fca9cc3510ef','one phone OTP flow block');
  const panels=[...controller.matchAll(/<section id="austa-v39-auth-phone-panel"[\s\S]*?<\/section>/g)];
  assert.equal(panels.length,1,'one exact phone OTP panel');
- assert.equal(digest(panels[0][0]),'72b5a569db460a9e1033dcc2ee32a510bd6faff3275a3e2e1eb5ba6bcb7e9628','exact phone OTP panel hash');
+ assert.equal(digest(panels[0][0]),'ce1b69d8185d81be52ba5eae0f5043a9d3ee6d58ccf25bbdbd97787833feb58b','exact phone OTP panel hash');
  const wrapped='\n\n          '+panels[0][0]+'\n\n';assert.equal(controller.split(wrapped).length,2,'exact phone OTP panel insertion boundary');controller=controller.replace(wrapped,'\n\n');
  for(const[from,to]of [["        );\n\n\n      const subtitle =","        );\n\n      const subtitle ="],["      };\n\n\n      // Native top layer makes the Account and page inert without z-index races.","      };\n\n      // Native top layer makes the Account and page inert without z-index races."]]){assert.equal(controller.split(from).length,2,'exact phone OTP whitespace boundary');controller=controller.replace(from,to);}
  assert.equal(digest(controller),'aa80c40bbeb71c3877112494227c17e92635a7f604a6189cdd073187d5ff9680','exact V4.3.15 Account controller restored');
