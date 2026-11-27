@@ -148,6 +148,10 @@ test('selected listing currency is validated, persisted, restored, and keeps sou
   assert.match(currency, /return amount \* rates\.aznPerUnit\[from\] \/ rates\.aznPerUnit\[to\]/);
   assert.match(currency, /let shown = source;/);
   assert.match(currency, /if \(rates && rates\.aznPerUnit\[source\] > 0 && rates\.aznPerUnit\[selected\] > 0\)/);
+  const tabs = read('src/app/(drawer)/(tabs)/_layout.tsx');
+  assert.match(tabs, /useAppTheme\(\)\.colorScheme/);
+  assert.doesNotMatch(tabs, /useAppSettings\(\)/);
+  assert.match(read('src/components/AccountScreens.tsx'), /formatListingPrice\(price\.amount,price\.currency,exchangeRates,displayCurrency\)/);
 });
 
 test('video feed reads only attached video rows that resolve to active public listings', () => {

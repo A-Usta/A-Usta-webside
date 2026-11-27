@@ -302,6 +302,9 @@ jobs:
       - name: Install frontend test dependencies
         run: npm ci --prefix tests --ignore-scripts
 
+      - name: Install mobile React runtime for navigation render regression
+        run: npm ci --prefix mobile --ignore-scripts
+
       - name: Install pinned Playwright Chromium
         run: npm run browser:install --prefix tests
 

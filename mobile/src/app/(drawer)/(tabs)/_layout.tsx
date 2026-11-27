@@ -2,14 +2,17 @@ import { Tabs } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { Feather, View } from '../../../lib/themed-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppSettings } from '../../../lib/app-settings';
+import { useAppTheme } from '../../../lib/app-settings';
 
 const RED = '#D92D20';
 const MUTED = '#87919E';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const dark = useAppSettings().colorScheme === 'dark';
+  // Currency lives in AppSettingsContext. Tabs only need theme state; keeping
+  // the navigation layout subscribed to currency changes can rebuild native
+  // tab descriptors while an account/settings route is active.
+  const dark = useAppTheme().colorScheme === 'dark';
   return <Tabs screenOptions={{
     headerShown: false,
     tabBarActiveTintColor: RED,

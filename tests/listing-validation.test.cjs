@@ -235,7 +235,7 @@ function assertP2D1Configuration(){
   ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
   "backend/a-usta56/src/routes/google-places.ts": "9ce9199937878bc8b872d0754d02bf84347da8bcab5bc9e41814c95513d2772f",
   "backend/a-usta56/tests/google-places.test.ts": "d9c142e527c6c59960124e5769218fb26362c4164e8695e3102be588484b374f",
-  ".github/workflows/main.yml": "72b56783efd9e44cf81e857580d5fa8d19a32712d44f1bb259029e5672a25e39",
+  ".github/workflows/main.yml": "a5ece0f7c62fa2664cb787f395b15adb90f496ec0be69771534c172fe8bb1cb7",
 };
  for(const [file,sha256] of Object.entries(reviewed)){
   assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);

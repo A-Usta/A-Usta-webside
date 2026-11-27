@@ -86,6 +86,8 @@ test('homepage switches the selected category above adaptive search and queries 
 
 test('home and category screens each mount a single filter panel', () => {
   assert.equal((appSource.match(/<View style=\{styles\.filters\}>/g) || []).length, 2);
+  assert.match(appSource, /const isFocused=useIsFocused\(\)/);
+  assert.match(appSource, /\{isFocused&&<View style=\{styles\.filters\}>/);
   assert.equal((appSource.match(/accessibilityLabel=\{`\$\{activeCategory\.title\} filtrlərini aç`\}/g) || []).length, 1);
   assert.equal((appSource.match(/CATEGORY_FILTERS\[category\.key\]/g) || []).length, 2);
 });
