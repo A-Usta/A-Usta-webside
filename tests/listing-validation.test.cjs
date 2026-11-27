@@ -172,7 +172,7 @@ test('P0.3.1 helper, visibility, public queries and protected runtime assets rem
  assert.equal(normalized,detail(main));
 });
 test('legacy num()/integer() unchanged and no arbitrary text maximum added',()=>{
- const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
+ const html=require('./helpers/account-polish-baseline.cjs').normalizeToV4315(fs.readFileSync(path.join(root,'index.html'),'utf8')),main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  const part=s=>s.slice(s.indexOf('function num(value) {'),s.indexOf('function bool(value) {',s.indexOf('function num(value) {')));assert.equal(part(html),part(main));
  assert.deepEqual(html.match(/maxlength\s*=[^ >]+/g),main.match(/maxlength\s*=[^ >]+/g));
 });

@@ -100,7 +100,7 @@ test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
  const old=blocks(main),now=blocks(normalized);assert.equal(now.length,old.length);
  const accountController=now.find(block=>block[1].includes('id="austa-v39-account-js"'));
  assert.ok(accountController,'reviewed Account controller is present');
- assert.equal(require('node:crypto').createHash('sha256').update(accountController[2]).digest('hex'),'44613fc06a3657e91a7486e1bef9218f5dd1c50dad1698c691277f4dc5dc79c6','exact Account controller after approved phone-auth normalization');
+ assert.equal(require('node:crypto').createHash('sha256').update(accountController[2]).digest('hex'),'123cc5a925eac0cb62027f42884177cf71de0215a10832a4872a159f7d350825','exact Account controller after OTP-only normalization to V4.3.15 history');
  for(let i=0;i<old.length;i++){
   if(now[i][1].includes('id="austa-v39-account-js"'))continue;
   if(['austa-v153b-all-real-listing-router','austa-v153c-real-listing-form-js','austa-v153d-14-category-media-js'].some(id=>now[i][1].includes(id)))continue;

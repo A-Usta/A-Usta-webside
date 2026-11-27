@@ -56,7 +56,7 @@ exports.normalize=html=>{
  html=require('./vehicle-history-baseline.cjs').normalize(html);
  if(!html.includes('<script src="assets/account/personal-account.js"></script>'))return html;
  const tag='<script id="austa-v39-account-js">',start=html.indexOf(tag)+tag.length,end=html.indexOf('</script>',start);
- assert.equal(digest(html.slice(start,end)),'fd3e7b140a4e0b8b1cc8c92d1708475e994677fb2349f917629da5ab4e928b49','exact V33D2 reviewed Account controller');
+ assert.equal(digest(html.slice(start,end)),'f47aec624d759c8d10edfe7e5645b882265f19bec55d88b9722cf92fe73e1733','exact V4.3.15 Account controller after OTP and G01 normalization');
  for(const [from,to] of [...edits].reverse()){assert.equal(html.split(from).length,2,'unique V33D2 literal hunk');html=html.replace(from,()=>to);}
  for(const ref of ['<script src="assets/account/personal-account.js"></script>\n','<link rel="stylesheet" href="assets/account/personal-account.css">\n']){assert.equal(html.split(ref).length,2);html=html.replace(ref,'');}
  // The stylesheet reference is appended after the original final newline.

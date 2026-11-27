@@ -37,7 +37,16 @@ exports.normalize=html=>{
  assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'ff7500d22b85d57eabd0fa00526d2799b78e299af07b6c0d2ac3b0e841afd0a7','phone OTP removal restores reviewed V33D3 Account controller');
  for(const[from,to]of edits){assert.equal(html.split(from).length,2,'unique V33D3 literal hunk');html=html.replace(from,()=>to);}
  [start,end]=bounds();
- assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'09024d640236e2e18e60ca3d8e73d980ae8ea9926526484e145714f64f7e7e83','original V33D2 controller restored');
+ assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'09024d640236e2e18e60ca3d8e73d980ae8ea9926526484e145714f64f7e7e83','original V33D2 controller restored before phone panel normalization');
+ const panels=[...html.slice(start,end).matchAll(/<section id="austa-v39-auth-phone-panel"[\s\S]*?<\/section>/g)];
+ assert.equal(panels.length,1,'one exact phone OTP panel in normalized historical controller');
+ assert.equal(createHash('sha256').update(panels[0][0]).digest('hex'),'72b5a569db460a9e1033dcc2ee32a510bd6faff3275a3e2e1eb5ba6bcb7e9628','exact phone OTP panel hash');
+ const panelBoundary='\n\n          '+panels[0][0]+'\n\n';
+ assert.equal(html.split(panelBoundary).length,2,'one exact normalized phone OTP panel boundary');
+ html=html.replace(panelBoundary,'\n\n');
+ for(const[from,to]of [["        );\n\n\n      const subtitle =","        );\n\n      const subtitle ="],["      };\n\n\n      // Native top layer makes the Account and page inert without z-index races.","      };\n\n      // Native top layer makes the Account and page inert without z-index races."]]){assert.equal(html.split(from).length,2,'exact Account OTP whitespace boundary');html=html.replace(from,to);}
+ [start,end]=bounds();
+ assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'862e2cff9663dba4b0e5e095c571be34fbe5f64f41463fd85817666cff0c90e8','exact V4.3.15 historical controller after OTP-only removal');
  return html;
 };
 
