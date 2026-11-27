@@ -30,7 +30,7 @@ function AppNavigation() {
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
       <Stack.Screen name="service/[key]" options={{ title: 'Xidmət' }} />
       <Stack.Screen name="locations" options={{ title: 'Yaxın məntəqələr' }} />
-      <Stack.Screen name="category/[key]" options={{ title: 'Kateqoriya' }} />
+      <Stack.Screen name="category/[key]" options={{ headerShown: false }} />
       <Stack.Screen name="listing/[id]" options={{ title: 'Elan məlumatı' }} />
       <Stack.Screen name="seller/[id]" options={{ title: 'Satıcı profili' }} />
       <Stack.Screen name="tools/customs" options={{ title: 'Gömrük kalkulyatoru' }} />

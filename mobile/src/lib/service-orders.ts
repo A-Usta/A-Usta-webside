@@ -29,6 +29,7 @@ export type ServiceOrderInput = {
   service_description: string;
   urgency: 'normal' | 'urgent';
   service_mode: 'mobile' | 'shop';
+  payment_method: 'card' | 'cash';
   address: string;
   region: string;
   district?: string;

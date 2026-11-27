@@ -9,6 +9,7 @@ const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const marketplaceSource = read('src/lib/marketplace.ts');
 const appSource = read('src/components/MarketplaceScreens.tsx');
+const rootLayoutSource = read('src/app/_layout.tsx');
 const supabaseSource = read('src/lib/supabase.ts');
 const currencyModule = { exports: {} };
 const currencyJs = ts.transpile(read('src/lib/currency.ts'), { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 });
@@ -24,6 +25,7 @@ const { listingFieldChoices } = formOptionsModule.exports;
 
 test('17 active categories route to the existing public source and media bucket', () => {
   assert.equal(CATEGORIES.length, 17);
+  for (const item of CATEGORIES) assert.ok((CATEGORY_FILTERS[item.key] || []).length > 0, `${item.key} has category questions`);
   assert.equal(new Set(CATEGORIES.map(item => item.key)).size, 17);
   for (const item of CATEGORIES) {
     assert.equal(item.status, 'active');
@@ -199,4 +201,22 @@ test('mobile equipment choices and detail values match the website category cata
   assert.equal(equipmentValue('["ABS"]', 'cars', 'ABS'), '[]');
   assert.deepEqual(JSON.parse(equipmentValue('[]', 'cars', 'ABS')), ['ABS']);
   assert.equal(equipmentValue('["ABS"]', 'cars', 'not-an-option'), '["ABS"]');
+});
+
+test('all category listings render one shared filter surface with a non-card trigger at supported phone widths', () => {
+  assert.equal(CATEGORIES.length, 17);
+  const categoryScreen = appSource.slice(appSource.indexOf('export function MarketplaceCategoryScreen()'), appSource.indexOf('const DETAIL_LABELS'));
+  assert.equal((categoryScreen.match(/<View style={styles\.filters}>/g) || []).length, 1, 'category route has one filter container');
+  const filterStyle = appSource.match(/filters:\{margin:14,padding:13,backgroundColor:'#fff',borderRadius:13,borderColor:LINE,borderWidth:1,gap:8\}/);
+  const triggerStyle = appSource.match(/filterToggle:\{([^}]+)\}/)?.[1] || '';
+  assert.ok(filterStyle, 'one shared white filter surface remains');
+  assert.doesNotMatch(triggerStyle, /backgroundColor|borderWidth|borderColor/,'the nested trigger no longer looks like a second filter card');
+  for (const width of [320, 360, 390, 412]) {
+    const fieldWidth = Math.floor((width - 28 - 26 - 8) * 0.48);
+    assert.ok(fieldWidth > 110, `filter field remains usable at ${width}dp`);
+  }
+  assert.match(categoryScreen, /CATEGORY_FILTERS\[category\.key\]/);
+  assert.match(categoryScreen, /categoryFilterError\(category\.key,filterDraft\)/);
+  assert.match(categoryScreen, /categoryFilterValues\(category\.key,filterDraft\)/);
+  assert.match(rootLayoutSource, /Stack\.Screen name="category\/\[key\]" options=\{\{ headerShown: false \}\}/);
 });

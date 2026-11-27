@@ -16,6 +16,10 @@ function priceSnapshot(order: Record<string, unknown>) {
   return Object.fromEntries(["price_status","proposed_price","final_price","price_offered_at","price_responded_at"].map(k => [k, order[k] ?? null]));
 }
 function rpcFailure(reply: import("fastify").FastifyReply, error: RpcError, message: string) {
+  if (error?.code === "PT001") return reply.code(503).send({ error: "Service Unavailable", message: "Ödəniş provayderi və ya təsdiqlənmiş komissiya tarifi hazır deyil; maliyyə əməliyyatı aparılmadı." });
+  if (error?.code === "PT004") return sendConflict(reply, "Usta balansı komissiya rezervi üçün kifayət etmir; sifariş qəbul edilmədi.");
+  if (error?.code === "PT002") return sendConflict(reply, "Sifarişin təsdiqlənmiş qiyməti və statusu komissiya rezervinə uyğun deyil.");
+  if (error?.code === "PT003") return sendConflict(reply, "Mövcud sifariş rezervi dəyişdirilə bilmədi; maliyyə əməliyyatı aparılmadı.");
   if (error?.code === "22003" || error?.code === "22023") return sendBadRequest(reply, message);
   if (error?.code === "42501") return sendForbidden(reply, message);
   return sendConflict(reply, message);
@@ -127,6 +131,7 @@ type CreateServiceOrderBody = {
   service_description?: unknown;
   urgency?: unknown;
   service_mode?: unknown;
+  payment_method?: unknown;
   address?: unknown;
   region?: unknown;
   district?: unknown;
@@ -791,6 +796,11 @@ export async function serviceOrderRoutes(
         );
       }
 
+      const paymentMethod = body.payment_method === undefined || body.payment_method === null || body.payment_method === "" ? "cash" : body.payment_method;
+      if (!isAllowed(paymentMethod, ["card", "cash"] as const)) {
+        return sendBadRequest(reply, "payment_method must be card or cash");
+      }
+
       const priceStatus: PriceStatus =
         body.price_status === undefined ||
         body.price_status === null ||
@@ -1034,6 +1044,7 @@ if (evidenceFiles === null) {
             urgency,
             service_mode:
               serviceMode,
+            payment_method: paymentMethod,
             address:
               optionalString(
                 body.address,
@@ -2328,11 +2339,10 @@ if (evidenceFiles === null) {
 
       if (acceptError) {
         logDiagnostic(request, "database_or_rpc", acceptError);
-
-        return sendServerError(
-          reply,
-          "Service order assignment could not be accepted",
-        );
+        if (["PT001", "PT002", "PT003", "PT004"].includes(String(acceptError.code))) {
+          return rpcFailure(reply, acceptError, "Service order assignment could not be accepted");
+        }
+        return sendServerError(reply, "Service order assignment could not be accepted");
       }
 
       const acceptResult =

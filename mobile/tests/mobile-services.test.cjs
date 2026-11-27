@@ -34,6 +34,11 @@ test('service orders use the owner-authenticated API and existing idempotency fi
   assert.match(screens, /evidence_files:files/);
   assert.match(screens, /Təsdiqlə/);
   assert.match(screens, /price_status==='confirmed'/);
+  assert.match(screens, /values=\{\[\["card","Bank kartı"\],\["cash","Nağd"\]\]\}/);
+  assert.match(screens, /payment_method:paymentMethod/);
+  assert.match(screens, /Kartdan pul tutulmur/);
+  assert.match(api, /payment_method: 'card' \| 'cash'/);
+  assert.doesNotMatch(screens, /card_number|cvv|cvc/i);
   assert.match(screens, /BEFORE|AFTER/);
 });
 
