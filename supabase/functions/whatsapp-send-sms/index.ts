@@ -53,9 +53,9 @@ Deno.serve(async (request: Request) => {
     const enabled = Deno.env.get("WHATSAPP_OTP_ENABLED") === "true" &&
       Deno.env.get("WHATSAPP_OTP_TEMPLATE_STATUS") === "APPROVED" &&
       Boolean(Deno.env.get("SEND_SMS_HOOK_SECRET")) &&
-      /^v\\d+\\.\\d+$/.test(graphVersion) &&
-      /^\\d{6,30}$/.test(phoneNumberId) &&
-      /^\\d{6,30}$/.test(wabaId) &&
+      /^v\d+\.\d+$/.test(graphVersion) &&
+      /^\d{6,30}$/.test(phoneNumberId) &&
+      /^\d{6,30}$/.test(wabaId) &&
       Boolean(accessToken) &&
       /^[a-z0-9_]{3,512}$/.test(templateName) &&
       /^[a-z]{2,3}(?:_[A-Z]{2,3})?$/.test(templateLanguage);
