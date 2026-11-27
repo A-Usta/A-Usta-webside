@@ -94,7 +94,7 @@ exports.normalizeToV4315=html=>{
   controller=controller.replace(match[0],replacement);
  };
  strip(/\n      const otpPhoneInput=[\s\S]*?let otpLastSentAt=0;\n/,'a8b3154f5cfd34437b0380b508a3eea20ddf3217da7749164e5e5cdf87498909','one phone OTP binding block');
- strip(/\n      const normalizeAZOtpPhone=value=>\{[\s\S]*?(?=\n      \/\/ Native top layer makes the Account and page inert without z-index races\.)/,'38874d8e31d9b52da99db2b293b192270ee46b98b16707eada69fca9cc3510ef','one phone OTP flow block');
+ strip(/\n      const normalizeAZOtpPhone=value=>\{[\s\S]*?(?=\n      \/\/ Native top layer makes the Account and page inert without z-index races\.)/,'c0f6678b052d272d424422b5b265fc814856f4e3b7ab5f6fb8882014c0f7dc85','one phone OTP flow block');
  const panels=[...controller.matchAll(/<section id="austa-v39-auth-phone-panel"[\s\S]*?<\/section>/g)];
  assert.equal(panels.length,1,'one exact phone OTP panel');
  assert.equal(digest(panels[0][0]),'ce1b69d8185d81be52ba5eae0f5043a9d3ee6d58ccf25bbdbd97787833feb58b','exact phone OTP panel hash');
