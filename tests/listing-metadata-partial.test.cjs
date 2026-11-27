@@ -98,7 +98,11 @@ test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
  const newV48Ready='document.addEventListener("DOMContentLoaded",()=>{addUstaListingType();renderUstaListings();setTimeout(addUstaListingType,500);setTimeout(renderUstaListings,900)});';
  assert.equal(historicalV48.replace(legacyV48Binding,'').replace(oldV48Ready,newV48Ready),currentV48,'only the obsolete V48 click binding and its invocation were removed');
  const old=blocks(main),now=blocks(normalized);assert.equal(now.length,old.length);
+ const accountController=now.find(block=>block[1].includes('id="austa-v39-account-js"'));
+ assert.ok(accountController,'reviewed Account controller is present');
+ assert.equal(require('node:crypto').createHash('sha256').update(accountController[2]).digest('hex'),'bbe55fdc409f24d59d85eaf558a3ea4794ded181658012671c19990f83af14e5','exact Account controller after approved phone-auth normalization');
  for(let i=0;i<old.length;i++){
+  if(now[i][1].includes('id="austa-v39-account-js"'))continue;
   if(['austa-v153b-all-real-listing-router','austa-v153c-real-listing-form-js','austa-v153d-14-category-media-js'].some(id=>now[i][1].includes(id)))continue;
   assert.equal(now[i][0],old[i][0]);
  }
