@@ -25,6 +25,7 @@ function transpileModule(file, customRequire) {
 
 let routeKey = 'cars';
 let homeFocused = true;
+let viewportWidth = 390;
 const currency = { getCurrencySnapshot: () => ({ currency: 'AZN', rates: null }) };
 const actualMarketplace = transpileModule(path.join(mobile, 'src/lib/marketplace.ts'), name => name === './currency' ? currency : requireMobile(name));
 const categories = actualMarketplace.CATEGORIES;
@@ -46,7 +47,7 @@ const themedNative = {
 const dependencies = {
   react: React,
   'react/jsx-runtime': requireMobile('react/jsx-runtime'),
-  'react-native': { Alert: { alert() {} }, Linking: {}, Platform: { OS: 'web' }, Share: {}, StyleSheet: { ...RNW.StyleSheet, create: value => value, absoluteFill: {} }, useWindowDimensions: () => ({ width: 390, height: 844 }) },
+  'react-native': { Alert: { alert() {} }, Linking: {}, Platform: { OS: 'web' }, Share: {}, StyleSheet: { ...RNW.StyleSheet, create: value => value, absoluteFill: {} }, useWindowDimensions: () => ({ width: viewportWidth, height: 844 }) },
   '../lib/themed-native': themedNative,
   'expo-router': { useIsFocused: () => homeFocused, useLocalSearchParams: () => ({ key: routeKey, title: categoryIndex.get(routeKey)?.title }), useRouter: () => ({ push() {}, back() {} }) },
   'expo-image': { Image: RNW.Image },
@@ -105,9 +106,10 @@ test('rendered category screens fit 320, 360, 390 and 412 dp without horizontal 
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
-    for (const { category, html } of renderCategoryScreens()) {
-      await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1"/><style>html,body{margin:0;width:100%;min-height:100%;}*{box-sizing:border-box}</style>${html}`);
-      for (const width of [320, 360, 390, 412]) {
+    for (const width of [320, 360, 390, 412]) {
+      viewportWidth = width;
+      for (const { category, html } of renderCategoryScreens()) {
+        await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1"/><style>html,body{margin:0;width:100%;min-height:100%;}*{box-sizing:border-box}</style>${html}`);
         await page.setViewportSize({ width, height: 844 });
         const state = await page.evaluate(() => ({
           panels: document.querySelectorAll('[data-filter-panel="true"]').length,
