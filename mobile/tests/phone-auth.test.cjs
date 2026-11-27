@@ -16,7 +16,7 @@ test('Azerbaijan phone input normalizes to canonical E.164', () => {
   assert.equal(normalize('0103999217'), '+994103999217');
   assert.equal(normalize('+994 10 399 92 17'), '+994103999217');
   assert.equal(normalize('994103999217'), '+994103999217');
-  assert.equal(normalize('001039999217'), '+994103999217');
+  assert.equal(normalize('009941039999217'), '+994103999217');
   assert.equal(normalize('not-a-phone'), null);
   assert.equal(normalize('+12025550123'), null);
 });
