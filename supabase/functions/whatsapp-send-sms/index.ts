@@ -43,6 +43,24 @@ async function validSignature(rawBody: string, headers: Headers, secret: string)
 }
 
 Deno.serve(async (request: Request) => {
+  if (request.method === "GET") {
+    const graphVersion = Deno.env.get("META_GRAPH_API_VERSION") || "";
+    const phoneNumberId = Deno.env.get("META_WA_PHONE_NUMBER_ID") || "";
+    const wabaId = Deno.env.get("META_WA_WABA_ID") || "";
+    const accessToken = Deno.env.get("META_WA_ACCESS_TOKEN") || "";
+    const templateName = Deno.env.get("META_WA_OTP_TEMPLATE_NAME") || "";
+    const templateLanguage = Deno.env.get("META_WA_OTP_TEMPLATE_LANGUAGE") || "";
+    const enabled = Deno.env.get("WHATSAPP_OTP_ENABLED") === "true" &&
+      Deno.env.get("WHATSAPP_OTP_TEMPLATE_STATUS") === "APPROVED" &&
+      Boolean(Deno.env.get("SEND_SMS_HOOK_SECRET")) &&
+      /^v\\d+\\.\\d+$/.test(graphVersion) &&
+      /^\\d{6,30}$/.test(phoneNumberId) &&
+      /^\\d{6,30}$/.test(wabaId) &&
+      Boolean(accessToken) &&
+      /^[a-z0-9_]{3,512}$/.test(templateName) &&
+      /^[a-z]{2,3}(?:_[A-Z]{2,3})?$/.test(templateLanguage);
+    return json(200, { enabled });
+  }
   if (request.method !== "POST") return json(405, { error: "method_not_allowed" });
   const declaredLength = Number(request.headers.get("content-length") || "0");
   if (declaredLength > MAX_BODY_BYTES) return json(413, { error: "payload_too_large" });
