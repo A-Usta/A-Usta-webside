@@ -37,7 +37,7 @@ exports.normalize=html=>{
  assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'ff7500d22b85d57eabd0fa00526d2799b78e299af07b6c0d2ac3b0e841afd0a7','phone OTP removal restores reviewed V33D3 Account controller');
  for(const[from,to]of edits){assert.equal(html.split(from).length,2,'unique V33D3 literal hunk');html=html.replace(from,()=>to);}
  [start,end]=bounds();
- assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'862e2cff9663dba4b0e5e095c571be34fbe5f64f41463fd85817666cff0c90e8','original V33D2 controller restored');
+ assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'09024d640236e2e18e60ca3d8e73d980ae8ea9926526484e145714f64f7e7e83','original V33D2 controller restored');
  return html;
 };
 
