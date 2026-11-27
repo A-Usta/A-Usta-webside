@@ -13,6 +13,8 @@ Veb və mobil müştərilər Supabase Auth telefon OTP istifadə edir. OTP-ni Su
 
 ## Server-only Edge Function dəyişənləri
 
-SUPABASE_SMS_HOOK_SECRET, WHATSAPP_OTP_ENABLED, WHATSAPP_OTP_TEMPLATE_STATUS, META_GRAPH_API_VERSION, META_WA_PHONE_NUMBER_ID, META_WA_WABA_ID, META_WA_ACCESS_TOKEN, META_WA_OTP_TEMPLATE_NAME, META_WA_OTP_TEMPLATE_LANGUAGE.
+SEND_SMS_HOOK_SECRET, WHATSAPP_OTP_ENABLED, WHATSAPP_OTP_TEMPLATE_STATUS, META_GRAPH_API_VERSION, META_WA_PHONE_NUMBER_ID, META_WA_WABA_ID, META_WA_ACCESS_TOKEN, META_WA_OTP_TEMPLATE_NAME, META_WA_OTP_TEMPLATE_LANGUAGE.
+
+Veb və mobil tətbiqlər `GET /functions/v1/whatsapp-send-sms` readiness cavabını oxuyur. Yalnız `enabled: true` olanda WhatsApp OTP giriş UI-si görünür; status söndürülmüş və ya əldə olunmamış halda e-poçt/parol girişində dəyişiklik olmur. Buna görə təsdiqdən sonra activation server-side `WHATSAPP_OTP_ENABLED=true`, `WHATSAPP_OTP_TEMPLATE_STATUS=APPROVED`, Meta template/provider secrets və Supabase Phone Auth konfiqurasiyası ilə edilir; mobil APK yenidən build edilmir. Readiness endpoint açar/token dəyərlərini qaytarmır.
 
 Meta real nömrə, təsdiqlənmiş şablon və server sirləri hazır olmadan canlı OTP göndərilməyəcək. Dəyişənlər çatışmazsa funksiyadan mesaj getməyəcək.
