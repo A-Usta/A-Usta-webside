@@ -25,7 +25,7 @@ vm.runInNewContext(`(function(exports,module,require){${js}\n})(module.exports,m
 });
 const { loadOwnedListings, ownedListingDirectPrice, ownedListingServiceDetails } = mod.exports;
 
-function mockedClient({ failCategory, includeOtherOwner = false } = {}) {
+function mockedClient({ failCategory, includeOtherOwner = false, serviceProviderStatuses = null } = {}) {
   const calls = [];
   return {
     calls,
@@ -52,7 +52,9 @@ function mockedClient({ failCategory, includeOtherOwner = false } = {}) {
           const row = category === 'rent' ? { ...base, daily_price: 75, currency: 'EUR' }
             : category === 'service' ? { ...base, specialty: 'Əyləc', details: { price_policy: 'Razılaşma ilə' } }
             : { ...base, price: 1200, currency: 'AZN' };
-          const data = [row, ...(includeOtherOwner ? [{ ...row, id: `foreign-${category}`, owner_id: 'owner-b' }] : [])];
+          const data = category === 'service' && serviceProviderStatuses
+            ? serviceProviderStatuses.map((status, index) => ({ ...row, id: `service-${index}`, status }))
+            : [row, ...(includeOtherOwner ? [{ ...row, id: `foreign-${category}`, owner_id: 'owner-b' }] : [])];
           return resolve({ data, error: null });
         },
       };
@@ -83,6 +85,18 @@ test('a category failure is isolated and rows returned for a different owner are
   assert.ok(result.rows.length > 0);
   assert.ok(result.rows.every(row => row.owner_id === 'owner-a'));
   assert.ok(!result.rows.some(row => row._category === 'service'));
+});
+
+test('owner view queries retain every TEST-supported service listing status without a status filter', async () => {
+  const statuses = ['active', 'draft', 'inactive', 'archived'];
+  const client = mockedClient({ serviceProviderStatuses: statuses });
+  const result = await loadOwnedListings(client, 'owner-a');
+  const serviceRows = result.rows.filter(row => row._category === 'service');
+  const serviceQuery = client.calls.find(call => call.table === 'public_service_provider_listings' && call.filters.some(([column]) => column === 'or'));
+  assert.deepEqual(Array.from(serviceRows, row => row.status), statuses);
+  assert.ok(serviceQuery.filters.some(([column, value]) => column === 'owner_id' && value === 'owner-a'));
+  assert.ok(!serviceQuery.filters.some(([column]) => column === 'status'));
+  assert.equal(result.errors.length, 0);
 });
 
 test('rent shows its daily price and provider details come from the real details object', () => {

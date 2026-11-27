@@ -92,7 +92,7 @@ export function SettingsScreen() {
           <Feather name={selected ? 'check-circle' : 'circle'} size={20} color={selected ? RED : MUTED}/>
         </Pressable>;
       })}
-      {notice ? <Text accessibilityRole="status" style={s.notice}>{notice}</Text> : null}
+      {notice ? <Text accessibilityLiveRegion="polite" style={s.notice}>{notice}</Text> : null}
     </View>
 
     <View style={s.panel}>
