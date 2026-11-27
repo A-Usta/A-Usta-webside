@@ -97,7 +97,7 @@ if(!process.env.P2C_MUTATION)for(const [name,m] of Object.entries(mutations))tes
 // Feed the real historical guards a tracked-candidate discovery result. The
 // temporary child-process fixture changes no source/index and exercises exact
 // allowlists even for files not yet tracked in this uncommitted candidate.
-const approvedPaths=['backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts'];
+const approvedPaths=['backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts','backend/a-usta56/src/payments/provider.ts','backend/a-usta56/tests/payment-provider.test.ts'];
 const protectedPaths=['backend/a-usta56/src/middleware/auth.ts','backend/a-usta56/src/config/supabase.ts','backend/a-usta56/package.json','backend/a-usta56/tests/p2c-unauthorized-probe.test.ts'];
 if(!process.env.P2C_MUTATION)for(const candidate of [...approvedPaths,...protectedPaths])test('P2.C exact tracked-path guard proof: '+candidate,()=>{
  // P2.D.1 authorizes only this exact manifest; child guards also fingerprint it.
@@ -105,6 +105,11 @@ if(!process.env.P2C_MUTATION)for(const candidate of [...approvedPaths,...protect
  if(reviewedManifest)assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,candidate))).digest('hex'),'cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802');
  const reviewedServerKey=candidate==='backend/a-usta56/src/config/supabase.ts';
  if(reviewedServerKey)require('../helpers/server-key-baseline.cjs').assertConfig();
+ const paymentFingerprints={
+  'backend/a-usta56/src/payments/provider.ts':'ce539a560a8c385e2a00436f9d5c02c841e5796e9b0bc70e4a80768735873d46',
+  'backend/a-usta56/tests/payment-provider.test.ts':'156fd276bd21a95719c0ee9451ee70ab4b395042996dc6829868dad3e3564fd8'
+ };
+ if(paymentFingerprints[candidate])assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,candidate))).digest('hex'),paymentFingerprints[candidate]);
  const accepted=approvedPaths.includes(candidate)||reviewedManifest||reviewedServerKey;
  const bootstrap=`const cp=require('node:child_process'),old=cp.execFileSync;
  cp.execFileSync=function(cmd,args,opts){
