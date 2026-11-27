@@ -25,7 +25,21 @@ const edits=[
     " // Retain V39 as the single Account entry; restore focus on every close path.\n let opener=null;\n function closeAccount(){modal.classList.remove('open');modal.style.removeProperty('display');document.body.classList.remove('austa-account-open');opener?.focus?.();}\n const link=$('#headerAccountLink'); if(link&&!link.dataset.v39Bound){link.dataset.v39Bound='1';link.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();opener=document.activeElement;modal.classList.add('open');document.body.classList.add('austa-account-open');showRole(localStorage.getItem('austa-account-role-v39'));$('.austa-v39-close',modal).focus();},true)}\n $('.austa-v39-close',modal).onclick=closeAccount;\n modal.addEventListener('click',e=>{if(e.target===modal)closeAccount();});\n modal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();closeAccount();}if(e.key==='Tab'){const controls=[...modal.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary')].filter(el=>el.getClientRects().length);const first=controls[0],last=controls.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}});\n"
   ]
 ];
-exports.normalize=html=>{if(!html.includes("authModal.dataset.accountAuth='v33d3'"))return html;const tag='<script id=\"austa-v39-account-js\">',start=html.indexOf(tag)+tag.length,end=html.indexOf('</script>',start);assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'aa80c40bbeb71c3877112494227c17e92635a7f604a6189cdd073187d5ff9680','exact reviewed V33D3 Account controller');for(const[from,to]of edits){assert.equal(html.split(from).length,2,'unique V33D3 literal hunk');html=html.replace(from,()=>to);}assert.equal(createHash('sha256').update(html.slice(start,html.indexOf('</script>',start))).digest('hex'),'862e2cff9663dba4b0e5e095c571be34fbe5f64f41463fd85817666cff0c90e8','original V33D2 controller restored');return html;};
+exports.normalize=html=>{
+ if(!html.includes("authModal.dataset.accountAuth='v33d3'"))return html;
+ const tag='<script id="austa-v39-account-js">',bounds=()=>{const start=html.indexOf(tag)+tag.length;return[start,html.indexOf('</script>',start)];};
+ let [start,end]=bounds();
+ assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'273b59e177882f6f4d98bded928f93bce011051695d7267eb06f3b63f0e84958','exact reviewed V33D3 Account controller including phone OTP');
+ const strip=(pattern,label)=>{const matches=html.match(pattern)||[];assert.equal(matches.length,1,label);html=html.replace(pattern,'\\n');};
+ strip(/\\n      const otpPhoneInput=[\\s\\S]*?let otpLastSentAt=0;\\n/,'one exact phone OTP binding block');
+ strip(/\\n      const normalizeAZOtpPhone=value=>\\{[\\s\\S]*?(?=\\n      \\\/\\\/ Native top layer makes the Account and page inert without z-index races\\.)/,'one exact phone OTP flow block');
+ [start,end]=bounds();
+ assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'aa80c40bbeb71c3877112494227c17e92635a7f604a6189cdd073187d5ff9680','phone OTP removal restores reviewed V33D3 Account controller');
+ for(const[from,to]of edits){assert.equal(html.split(from).length,2,'unique V33D3 literal hunk');html=html.replace(from,()=>to);}
+ [start,end]=bounds();
+ assert.equal(createHash('sha256').update(html.slice(start,end)).digest('hex'),'862e2cff9663dba4b0e5e095c571be34fbe5f64f41463fd85817666cff0c90e8','original V33D2 controller restored');
+ return html;
+};
 
 const assets={
   "personal-account.js": {
