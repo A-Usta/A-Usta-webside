@@ -23,7 +23,7 @@ vm.runInNewContext(`(function(exports,module,require){${js}\n})(module.exports,m
   require: name => name === './marketplace' ? { CATEGORIES: categories } : require(name),
   Map, Set, Promise, String, Number, Object, Array, JSON,
 });
-const { loadOwnedListings, ownedListingDirectPrice, ownedListingServiceDetails } = mod.exports;
+const { loadOwnedListings, ownedListingDirectPrice, ownedListingServiceDetails, renewOwnedListing, filterOwnedListings } = mod.exports;
 
 function mockedClient({ failCategory, includeOtherOwner = false, serviceProviderStatuses = null } = {}) {
   const calls = [];
@@ -103,4 +103,28 @@ test('rent shows its daily price and provider details come from the real details
   assert.deepEqual(JSON.parse(JSON.stringify(ownedListingDirectPrice({ _category: 'rent', daily_price: 70, price: 9000, currency: 'EUR' }))), { amount: 70, currency: 'EUR', perDay: true });
   assert.equal(ownedListingDirectPrice({ _category: 'service', price: 999 }), null);
   assert.deepEqual(JSON.parse(JSON.stringify(ownedListingServiceDetails({ _category: 'service', specialty: 'Əyləc', details: { price_policy: 'Razılaşma ilə' } }))), ['Əyləc', 'Razılaşma ilə']);
+});
+
+test('owned listing status filters distinguish active promotions and expired rows', () => {
+  const now = Date.parse('2026-11-28T12:00:00Z');
+  const rows = [
+    { id: 'ordinary', status: 'active' },
+    { id: 'vip', status: 'active', promotion_type: 'vip', promotion_started_at: '2026-11-27T00:00:00Z', promotion_until: '2026-11-29T00:00:00Z' },
+    { id: 'expired-vip', status: 'active', promotion_type: 'vip', promotion_started_at: '2026-11-25T00:00:00Z', promotion_until: '2026-11-27T00:00:00Z' },
+    { id: 'expired', status: 'expired' }, { id: 'draft', status: 'draft' }, { id: 'sold', status: 'sold' },
+  ];
+  assert.deepEqual(Array.from(filterOwnedListings(rows, 'vip', now), row => row.id), ['vip']);
+  assert.deepEqual(Array.from(filterOwnedListings(rows, 'expired', now), row => row.id), ['expired']);
+  assert.deepEqual(Array.from(filterOwnedListings(rows, 'draft', now), row => row.id), ['draft']);
+  assert.deepEqual(Array.from(filterOwnedListings(rows, 'inactive', now), row => row.id), ['sold']);
+});
+
+test('renewal is owner scoped, validates server response and forwards an idempotency key', async () => {
+  const calls = [];
+  const client = { auth: { getUser: async () => ({ data: { user: { id: 'owner-a' } }, error: null }) },
+    rpc: async (name, args) => { calls.push({ name, args }); return { data: { listing_id: 'listing-1', status: 'active', expires_at: '2026-12-28T12:00:00Z', replayed: false }, error: null }; } };
+  const result = await renewOwnedListing(client, { id: 'listing-1', owner_id: 'owner-a', status: 'expired', _source: 'vehicle' }, 'request-1');
+  assert.equal(result.status, 'active');
+  assert.deepEqual(calls, [{ name: 'austa_renew_listing', args: { p_source: 'vehicle', p_listing_id: 'listing-1', p_request_id: 'request-1' } }]);
+  await assert.rejects(() => renewOwnedListing(client, { id: 'listing-1', owner_id: 'owner-b', status: 'expired', _source: 'vehicle' }, 'request-2'), /sahibi təsdiqlənmədi/);
 });

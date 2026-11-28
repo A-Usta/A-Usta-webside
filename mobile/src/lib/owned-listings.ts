@@ -2,12 +2,13 @@ import { CATEGORIES, type Category, type CategoryKey, type Listing, type Listing
 
 type OwnedListingError = { key: CategoryKey; title: string; code?: string };
 export type OwnedListingResult = { rows: Listing[]; errors: OwnedListingError[] };
+export type OwnedListingFilter = 'all'|'active'|'vip'|'premium'|'expired'|'draft'|'inactive';
 
 const OWNED_SELECT: Record<ListingSource, string> = {
-  vehicle: 'id,owner_id,status,brand,model,created_at,listing_type,price,daily_price,currency,details,promotion_type,promotion_started_at,promotion_until,last_boosted_at',
-  marketplace: 'id,owner_id,status,title,brand,model,created_at,category,details,price,currency,promotion_type,promotion_started_at,promotion_until,last_boosted_at',
-  service_provider: 'id,owner_id,status,title,name,specialty,services,experience,working_hours,region,district,created_at,provider_type,details,promotion_type,promotion_started_at,promotion_until,last_boosted_at',
-  auto_dealer: 'id,owner_id,status,dealer_name,brands,about,created_at,details,promotion_type,promotion_started_at,promotion_until,last_boosted_at',
+  vehicle: 'id,owner_id,status,brand,model,created_at,listing_type,price,daily_price,currency,details,promotion_type,promotion_started_at,promotion_until,last_boosted_at,published_at,first_published_at,expires_at',
+  marketplace: 'id,owner_id,status,title,brand,model,created_at,category,details,price,currency,promotion_type,promotion_started_at,promotion_until,last_boosted_at,published_at,first_published_at,expires_at',
+  service_provider: 'id,owner_id,status,title,name,specialty,services,experience,working_hours,region,district,created_at,provider_type,details,promotion_type,promotion_started_at,promotion_until,last_boosted_at,published_at,first_published_at,expires_at',
+  auto_dealer: 'id,owner_id,status,dealer_name,brands,about,created_at,details,promotion_type,promotion_started_at,promotion_until,last_boosted_at,published_at,first_published_at,expires_at',
 };
 
 function queryForCategory(client: any, ownerId: string, category: Category) {
@@ -51,12 +52,43 @@ export async function loadOwnedListings(client: any, ownerId: string): Promise<O
     for (const row of (result.data || []) as Record<string, any>[]) {
       // Even if a faulty/mock API returns another owner's row, never render it.
       if (row.owner_id !== ownerId) continue;
-      rows.push({ ...row, _category: category.key, _source: category.source } as Listing);
+      rows.push({ ...row, _category: category.key, _categoryTitle: category.title, _source: category.source } as Listing);
     }
   }
 
   const unique = [...new Map(rows.map(row => [`${row._source}:${row.id}`, row])).values()];
   return { rows: unique, errors };
+}
+
+/** One stable category/source mapping for the owner renewal RPC. */
+export async function renewOwnedListing(client: any, row: Listing, requestId: string) {
+  if (!row?.owner_id || !row.id || !row._source || row.status !== 'expired') {
+    throw new Error('Yalnız sahibinə aid vaxtı bitmiş elan yenilənə bilər.');
+  }
+  const session = await client.auth.getUser();
+  if (session.error) throw session.error;
+  if (session.data?.user?.id !== row.owner_id) throw new Error('Elanın sahibi təsdiqlənmədi.');
+  const result = await client.rpc('austa_renew_listing', {
+    p_source: row._source,
+    p_listing_id: row.id,
+    p_request_id: requestId,
+  });
+  if (result.error) throw result.error;
+  const renewed = Array.isArray(result.data) ? result.data[0] : result.data;
+  if (renewed?.listing_id !== row.id || renewed?.status !== 'active' || !renewed?.expires_at) {
+    throw new Error('Elan yenilənməsi server tərəfindən təsdiqlənmədi.');
+  }
+  return renewed as { listing_id: string; status: string; expires_at: string; replayed: boolean };
+}
+
+export function filterOwnedListings(rows: Listing[], filter: OwnedListingFilter, now = Date.now()): Listing[] {
+  return rows.filter(item => {
+    const promoActive = Boolean(item.promotion_until && Date.parse(String(item.promotion_until)) > now &&
+      (!item.promotion_started_at || Date.parse(String(item.promotion_started_at)) <= now));
+    if (filter === 'vip' || filter === 'premium') return item.promotion_type === filter && promoActive;
+    if (filter === 'inactive') return ['inactive', 'archived', 'sold', 'rented'].includes(String(item.status));
+    return filter === 'all' || item.status === filter;
+  });
 }
 
 function detailObject(value: unknown): Record<string, any> {
