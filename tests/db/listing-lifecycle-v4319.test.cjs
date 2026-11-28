@@ -1,11 +1,16 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '../..');
 const migration = fs.readFileSync(path.join(root, 'supabase/migrations/20261128121026_v4319_listing_lifecycle.sql'), 'utf8');
 const mobileMarketplace = fs.readFileSync(path.join(root, 'mobile/src/lib/marketplace.ts'), 'utf8');
+
+test('V4.3.19 migration source remains the exact reviewed TEST-applied version', () => {
+  assert.equal(crypto.createHash('sha256').update(migration).digest('hex'), '053e75324a07aa88a09992431dc9857723d2295f0ffc94e7f6279ebeaec7f1e9');
+});
 
 test('V4.3.19 adds server-owned publication and expiry dates to every listing source without resetting dates', () => {
   for (const table of ['vehicle_listings', 'marketplace_listings', 'service_provider_listings', 'auto_dealer_listings']) {
