@@ -66,7 +66,7 @@ test('promotions rank only after start and before expiry in all marketplace quer
   assert.match(marketplace, /Date\.parse\(String\(row\.promotion_started_at/);
   assert.match(marketplace, /starts>current \|\| ends<=current/);
   assert.match(marketplace, /rpc\('austa_public_listing_page'/);
-  const feed=fs.readFileSync(path.resolve(root,'../supabase/migrations/20261128140000_v4322_public_feed_cursor.sql'),'utf8');
+  const feed=fs.readFileSync(path.resolve(root,'../supabase/migrations/20261128121026_v4319_listing_lifecycle.sql'),'utf8');
   assert.match(feed, /promotion_started_at<=statement_timestamp\(\)/);
   assert.match(feed, /promotion_until>statement_timestamp\(\)/);
 });

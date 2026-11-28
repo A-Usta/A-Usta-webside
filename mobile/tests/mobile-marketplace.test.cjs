@@ -192,7 +192,9 @@ test('marketplace form has data, media, preview, draft, and publish steps', () =
 });
 
 test('Avtoservis category separates company subtypes and retains server-owned seller checks', () => {
-  assert.match(marketplaceSource, /details->>service_category\.is\.null,details->>service_category\.not\.in\.\(insurance,leasing,sober_driver\)/);
+  assert.match(marketplaceSource, /p_category:category/);
+  const feed = fs.readFileSync(path.resolve(root, '../supabase/migrations/20261128121026_v4319_listing_lifecycle.sql'), 'utf8');
+  assert.match(feed, /coalesce\(p\.details->>'service_category','service'\)/);
   assert.match(marketplaceSource, /createSignedUrl\(item\.storage_path,3600\)/);
   assert.match(appSource, /rpc\('get_my_seller_profiles'\)/);
 });
