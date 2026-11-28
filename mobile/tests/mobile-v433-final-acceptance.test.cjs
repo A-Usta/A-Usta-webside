@@ -61,7 +61,8 @@ test('video discovery pages beyond inactive recent uploads and returns freshly s
   assert.match(marketplace, /for\(let page=0;page<16&&found\.size<perSourceTarget;page\+\+\)/);
   assert.match(marketplace, /\.range\(offset,offset\+79\)/);
   assert.match(marketplace, /createSignedUrl\(row\.storage_path,3600\)/);
-  assert.match(marketplace, /eq\('status','active'\)/);
+  assert.match(marketplace, /from\('austa_public_listing_feed'\)/);
+  assert.match(marketplace, /eq\('source',source\.source\)/);
   assert.match(read('src/components/VideoFeedScreen.tsx'), /stopAfterFirstFrame\?\(\)=>player\.pause\(\)/);
   assert.match(read('src/components/VideoFeedScreen.tsx'), /active=\{viewerOpen&&index===selectedIndex\}/);
   assert.match(screen, /function VideoPoster\(\{url,style\}:\{url\?:string/);

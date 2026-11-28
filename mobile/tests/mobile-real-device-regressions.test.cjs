@@ -15,7 +15,8 @@ test('public video query is restricted to car/rent and dealer source tables', ()
   assert.ok(sourceBlock);
   assert.match(sourceBlock[0], /source:'vehicle'[\s\S]*source:'auto_dealer'/);
   assert.doesNotMatch(sourceBlock[0], /source:'marketplace'|source:'service_provider'/);
-  assert.match(marketplace, /query=query\.in\('listing_type',\['sale','rent'\]\)/);
+  assert.match(marketplace, /eq\('source',source\.source\)/);
+  assert.match(marketplace, /from\('austa_public_listing_feed'\)/);
   assert.match(videoFeed, /listHomeVideos\(client\)/);
 });
 

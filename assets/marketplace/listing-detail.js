@@ -50,7 +50,21 @@ async function actor(c){
 }
 async function read(c){
  await actor(c);
- const {data,error}=await c.client.from(c.source==='service_provider'?'public_service_provider_listings':c.config.table).select('*').eq('id',c.id).maybeSingle();check(c);
+ let data=null,error=null;
+ if(c.user){
+  const owned=await c.client.from(c.config.table).select('*').eq('id',c.id).eq('owner_id',c.user.id).maybeSingle();check(c);
+  if(owned.error)throw new Error('Unavailable');
+  data=owned.data;
+ }
+ if(!data){
+  const result=await c.client.from('austa_public_listing_feed').select('*').eq('source',c.source).eq('id',c.id).maybeSingle();check(c);
+  error=result.error;
+  if(result.data)data={...result.data.payload,id:result.data.id,owner_id:result.data.owner_id,status:result.data.status,
+   created_at:result.data.created_at,updated_at:result.data.updated_at,published_at:result.data.published_at,expires_at:result.data.expires_at,
+   promotion_type:result.data.promotion_type,promotion_started_at:result.data.promotion_started_at,
+   promotion_until:result.data.promotion_until,last_boosted_at:result.data.last_boosted_at};
+ }
+ check(c);
  if(error||!data||String(data.id)!==c.id)return null;
  const baseType=c.config.field?c.config.types[data[c.config.field]]:'dealer';
  const subtype=baseType==='service'&&['leasing','insurance','sober_driver'].includes(data.details?.service_category)?data.details.service_category:null;

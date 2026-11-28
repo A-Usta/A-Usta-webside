@@ -159,7 +159,8 @@ test('video feed reads only attached video rows that resolve to active public li
   const screen = read('src/components/MarketplaceScreens.tsx');
   assert.match(core, /export async function listHomeVideos/);
   assert.match(core, /\.eq\('media_type','video'\)/);
-  assert.match(core, /\.eq\('status','active'\)/);
+  assert.match(core, /from\('austa_public_listing_feed'\)/);
+  assert.match(core, /feedPayload\(raw\)/);
   assert.match(core, /createSignedUrl\(row\.storage_path,3600\)/);
   assert.match(core, /\.range\(offset,offset\+79\)/);
   assert.match(core, /for\(let page=0;page<16&&found\.size<perSourceTarget;page\+\+\)/);

@@ -164,7 +164,8 @@ test('mobile uses owner-scoped listing updates, staging statuses, CAS publish an
   assert.match(appSource, /staging:'draft'/);
   assert.match(appSource, /staging:'inactive'/);
   assert.match(marketplaceSource, /createSignedUrl\(item\.storage_path,3600\)/);
-  assert.match(marketplaceSource, /eq\('status','active'\)/);
+  assert.match(marketplaceSource, /from\('austa_public_listing_feed'\)/);
+  assert.match(marketplaceSource, /listing\.status!=='active'&&listing\.owner_id!==auth\.user\?\.id/);
   assert.match(marketplaceSource, /public_service_provider_listings/);
 });
 

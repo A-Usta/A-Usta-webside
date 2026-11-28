@@ -102,6 +102,12 @@ function feedPayload(row:Record<string,any>,category?:CategoryKey):Listing{
   const source=row.source as ListingSource,categoryKey=(category||row.category) as CategoryKey;
   return {...row.payload,id:row.id,status:row.status,published_at:row.published_at,expires_at:row.expires_at,promotion_type:row.promotion_type,promotion_started_at:row.promotion_started_at,promotion_until:row.promotion_until,last_boosted_at:row.last_boosted_at,_category:categoryKey,_source:source,__feed_sort_bucket:row.sort_bucket,__feed_sort_at:row.sort_at} as Listing;
 }
+const SOURCE_TABLE:Record<ListingSource,string>={vehicle:'vehicle_listings',marketplace:'marketplace_listings',service_provider:'service_provider_listings',auto_dealer:'auto_dealer_listings'};
+async function readPublicListing(client:SupabaseClient,category:Category,id:string):Promise<Listing|null>{
+  const {data,error}=await client.from('austa_public_listing_feed').select('*').eq('source',category.source).eq('category',category.key).eq('id',id).maybeSingle();
+  if(error)throw error;
+  return data?feedPayload(data,category.key):null;
+}
 function normalizedFilterValue(field:CategoryFilter,value:string):string{
   const raw=String(value||'').trim();return field.kind==='number'&&Number.isFinite(Number(raw))?String(Number(raw)):raw;
 }
@@ -162,11 +168,9 @@ export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<
       if(mediaResult.error)throw mediaResult.error;
       const media=(mediaResult.data||[]).filter((row:Record<string,any>)=>typeof row.listing_id==='string'&&typeof row.storage_path==='string');
       if(!media.length)break;
-      let query:any=client.from(source.table).select('*').eq('status','active').in('id',[...new Set(media.map((row:Record<string,any>)=>row.listing_id))]);
-      if(source.source==='vehicle')query=query.in('listing_type',['sale','rent']);
-      const parentResult=await query;
+      const parentResult=await client.from('austa_public_listing_feed').select('*').eq('source',source.source).in('id',[...new Set(media.map((row:Record<string,any>)=>row.listing_id))]);
       if(parentResult.error)throw parentResult.error;
-      const parents=new Map((parentResult.data||[]).map((row:Record<string,any>)=>[String(row.id),row]));
+      const parents=new Map((parentResult.data||[]).map((raw:Record<string,any>)=>[String(raw.id),feedPayload(raw)]));
       const grouped=new Map<string,Media[]>();
       await Promise.all(media.filter((row:Record<string,any>)=>parents.has(String(row.listing_id))).map(async(row:Record<string,any>)=>{
         const signed=await client.storage.from(source.bucket).createSignedUrl(row.storage_path,3600);
@@ -178,7 +182,7 @@ export async function listHomeVideos(client: SupabaseClient, limit=24): Promise<
         }
         const list=grouped.get(String(row.listing_id))||[];list.push({...row,url:signed.data.signedUrl,poster_url} as Media);grouped.set(String(row.listing_id),list);
       }));
-      for(const row of parentResult.data||[]){
+      for(const row of parents.values()){
         const videos=grouped.get(String(row.id));if(!videos?.length)continue;
         videos.sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0)||(Date.parse(String(a.created_at||''))||0)-(Date.parse(String(b.created_at||''))||0)||String(a.id).localeCompare(String(b.id)));
         let key:CategoryKey;
@@ -314,30 +318,29 @@ export async function createPromotionPaymentIntent(client: SupabaseClient, listi
 }
 
 export async function getListing(client: SupabaseClient, category: Category, id: string) {
-  const {data,error}=await client.from(category.table).select('*').eq('id',id).maybeSingle();
-  if(error) throw error;
-  if(!data || (data.status!=='active' && data.owner_id!== (await client.auth.getUser()).data.user?.id)) return null;
-  return attachMedia(client,category,{...data,_category:category.key,_source:category.source} as Listing);
+  const {data:auth,error:authError}=await client.auth.getUser();
+  if(authError)throw authError;
+  let listing:Listing|null=null;
+  if(auth.user){
+    const owned=await client.from(SOURCE_TABLE[category.source]).select('*').eq('id',id).eq('owner_id',auth.user.id).maybeSingle();
+    if(owned.error)throw owned.error;
+    if(owned.data)listing={...owned.data,_category:category.key,_source:category.source} as Listing;
+  }
+  if(!listing)listing=await readPublicListing(client,category,id);
+  if(!listing||(listing.status!=='active'&&listing.owner_id!==auth.user?.id))return null;
+  return attachMedia(client,category,listing);
 }
 
 /** Public, verified seller profile listings only; respects each category's existing read policy. */
 export async function listSellerProfileListings(client: SupabaseClient, sellerProfileId: string): Promise<Listing[]> {
   const results = await Promise.all(CATEGORIES.map(async category => {
-    let query: any = client.from(category.table).select('*').eq('seller_profile_id', sellerProfileId).eq('status', 'active');
-    if (category.source === 'vehicle') query = query.eq('listing_type', category.sourceValue);
-    else if (category.source === 'marketplace') query = query.eq('category', category.sourceValue);
-    else if (category.source === 'service_provider') {
-      query = query.eq('provider_type', category.sourceValue === 'usta' ? 'usta' : 'service');
-      if (['leasing', 'insurance', 'sober_driver'].includes(category.sourceValue || '')) query = query.contains('details', { service_category: category.sourceValue });
-    }
-    const { data, error } = await query.order('created_at', { ascending: false }).limit(12);
+    const { data, error } = await client.from('austa_public_listing_feed').select('*').eq('category',category.key)
+      .eq('payload->>seller_profile_id', sellerProfileId).order('sort_bucket',{ascending:true})
+      .order('sort_at',{ascending:false}).order('source',{ascending:true}).order('id',{ascending:false}).limit(12);
     if (error) return [] as Listing[];
-    const rows = (data || []).filter((row: Listing) => category.source !== 'service_provider' || category.sourceValue !== 'service' || !['leasing', 'insurance', 'sober_driver'].includes(String(row.details?.service_category || '')));
-    return Promise.all(rows.map((row: Listing) => attachMedia(client, category, {
-      ...row, _category: category.key, _source: category.source,
-    })));
+    return Promise.all((data||[]).map((row:Record<string,any>)=>attachMedia(client,category,feedPayload(row,category.key))));
   }));
-  return results.flat().sort((a, b) => Date.parse(String(b.published_at || b.created_at || '')) - Date.parse(String(a.published_at || a.created_at || '')));
+  return results.flat().sort((a,b)=>sortListings([a,b])[0]?.id===a.id?-1:1);
 }
 
 export async function getFavorites(client: SupabaseClient) {
@@ -349,20 +352,8 @@ export async function getFavorites(client: SupabaseClient) {
   for(const row of data||[]) {
     const candidates=CATEGORIES.filter(c=>c.source===row.listing_source);
     for(const category of candidates) {
-      let query:any=client.from(category.table).select('*').eq('id',row.listing_id).eq('status','active');
-      if(category.source==='vehicle')query=query.eq('listing_type',category.sourceValue);
-      else if(category.source==='marketplace')query=query.eq('category',category.sourceValue);
-      else if(category.source==='service_provider') {
-        query=query.eq('provider_type',category.sourceValue==='usta'?'usta':'service');
-        if(['leasing','insurance','sober_driver'].includes(category.sourceValue||''))query=query.contains('details',{service_category:category.sourceValue});
-      }
-      const {data:listing}=await query.maybeSingle();
-      if(listing && category.source==='service_provider') {
-        const subtype=listing.details?.service_category;
-        if(category.sourceValue==='service' && ['leasing','insurance','sober_driver'].includes(subtype)) continue;
-        if(['leasing','insurance','sober_driver'].includes(category.sourceValue||'') && subtype!==category.sourceValue) continue;
-      }
-      if(listing) { items.push(await attachMedia(client,category,{...listing,_category:category.key,_source:category.source} as Listing)); break; }
+      const listing=await readPublicListing(client,category,String(row.listing_id));
+      if(listing) { items.push(await attachMedia(client,category,listing)); break; }
     }
   }
   return {signedOut:false,listings:items};

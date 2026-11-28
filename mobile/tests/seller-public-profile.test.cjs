@@ -14,6 +14,7 @@ test('public seller profile reads only the approved DTO and verified active prof
   assert.match(screen, /\.eq\('status','active'\)\.eq\('verification_status','verified'\)/);
   assert.doesNotMatch(screen, /from\('profiles'\)|email|tax_id|documents/);
   assert.match(screen, /name="user"/);
-  assert.match(marketplace, /listSellerProfileListings[\s\S]*?\.eq\('seller_profile_id', sellerProfileId\)\.eq\('status', 'active'\)/);
+  assert.match(marketplace, /listSellerProfileListings[\s\S]*?from\('austa_public_listing_feed'\)[\s\S]*?\.eq\('category',category\.key\)[\s\S]*?payload->>seller_profile_id/);
+  assert.match(marketplace, /sort_bucket[\s\S]*?sort_at[\s\S]*?sortListings/);
   assert.match(route, /MarketplaceSellerProfileScreen/);
 });
