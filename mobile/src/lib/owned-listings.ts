@@ -52,7 +52,7 @@ export async function loadOwnedListings(client: any, ownerId: string): Promise<O
     for (const row of (result.data || []) as Record<string, any>[]) {
       // Even if a faulty/mock API returns another owner's row, never render it.
       if (row.owner_id !== ownerId) continue;
-      rows.push({ ...row, _category: category.key, _categoryTitle: category.title, _source: category.source } as Listing);
+      rows.push({ ...row, _category: category.key, _categoryTitle: category.title, _source: category.source } as unknown as Listing);
     }
   }
 
@@ -61,7 +61,7 @@ export async function loadOwnedListings(client: any, ownerId: string): Promise<O
 }
 
 /** One stable category/source mapping for the owner renewal RPC. */
-export async function renewOwnedListing(client: any, row: Listing, requestId: string) {
+export async function renewOwnedListing(client: any, row: Record<string, any>, requestId: string) {
   if (!row?.owner_id || !row.id || !row._source || row.status !== 'expired') {
     throw new Error('Yalnız sahibinə aid vaxtı bitmiş elan yenilənə bilər.');
   }
@@ -81,7 +81,7 @@ export async function renewOwnedListing(client: any, row: Listing, requestId: st
   return renewed as { listing_id: string; status: string; expires_at: string; replayed: boolean };
 }
 
-export function filterOwnedListings(rows: Listing[], filter: OwnedListingFilter, now = Date.now()): Listing[] {
+export function filterOwnedListings(rows: Record<string, any>[], filter: OwnedListingFilter, now = Date.now()): Record<string, any>[] {
   return rows.filter(item => {
     const promoActive = Boolean(item.promotion_until && Date.parse(String(item.promotion_until)) > now &&
       (!item.promotion_started_at || Date.parse(String(item.promotion_started_at)) <= now));
