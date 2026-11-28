@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 12573)
+Total output lines: 291
+
 // Exact reviewed V3.4 and V3.7 file fingerprints. All older regression boundaries remain authoritative.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{createHash}=require('node:crypto');
 const root=path.resolve(__dirname,'../..'),digest=s=>createHash('sha256').update(s).digest('hex');
@@ -69,88 +72,7 @@ function reverseV37(html){
     ['details[window.AUSTA_SERVICE_COMPANY_V37?.isType(type)?key:label]=value;','details[label]=value;','V153 provider form detail keys'],
     ['    if(window.AUSTA_SERVICE_COMPANY_V37?.isType(type))document.querySelectorAll(\'#austaV153CFields [data-v37-choice]\').forEach(input=>{const group=input.dataset.v37Choice,hidden=document.querySelector(\'#austaV153CFields [data-v153c-key="\'+group+\'"]\');if(hidden){hidden.value=JSON.stringify([...document.querySelectorAll(\'#austaV153CFields [data-v37-choice="\'+group+\'\']:checked\')].map(node=>node.value));details[group]=hidden.value;values[group]=hidden.value;}});\n','','V153 checklist value synchronization'],
     ["    if(window.AUSTA_SERVICE_COMPANY_V37?.isType(type))document.querySelectorAll('#austaV153CFields [data-v37-choice]').forEach(input=>{const group=input.dataset.v37Choice,hidden=document.querySelector('#austaV153CFields [data-v153c-key=\"'+group+'\"]');if(hidden){hidden.value=JSON.stringify([...document.querySelectorAll('#austaV153CFields [data-v37-choice=\"'+group+'\"]:checked')].map(node=>node.value));details[group]=hidden.value;values[group]=hidden.value;}});\n",'', 'V153 checklist value synchronization'],
-    ["        usta:['phone','name','specialty'],\n        leasing:['phone','company_name','city','service_area'],\n        insurance:['phone','company_name','city','service_area'],\n        sober_driver:['phone','company_name','city','service_area']","        usta:[\n            'phone',\n            'name',\n            'specialty'\n        ]",'V153 service provider required fields'],
-    ["    if(window.AUSTA_SERVICE_COMPANY_V37?.isType(type))return {provider_type:'service',phone:data.phone,name:data.company_name,title:data.company_name,specialty:type,services:CATEGORY_NAMES[type],working_hours:data.working_hours||'',region:location.region,district:location.district,address:location.address,about:data.description||'',details:{...data.details,service_category:type}};\n",'', 'V153 service-company profile adapter'],
-    ["/* ---------------- PROVIDERS ---------------- */\n\n\n    if(type==='service'){","/* ---------------- PROVIDERS ---------------- */\n\n    if(type==='service'){",'V153 provider adapter spacing'],
-    ['type=item.details?.service_category || item.provider_type;','type=\n        item.provider_type;','V153 provider edit subtype hydration'],
-    ["const PROVIDER_TYPES =\n    new Set([\n        'service',\n        'usta',\n        'leasing',\n        'insurance',\n        'sober_driver'\n    ]);","const PROVIDER_TYPES =\n    new Set([\n        'service',\n        'usta'\n    ]);",'V153 edit provider categories'],
-    ['service:"Avtoservislər",usta:"Usta profilləri",dealer:"Avtosalonlar",\n        leasing:"Lizinq şirkətləri",insurance:"Avtomobil sığorta şirkətləri",sober_driver:"Ayıq sürücü şirkətləri"','service:\n            "Avtoservislər",\n\n        usta:\n            "Usta profilləri",\n\n        dealer:\n            "Avtosalonlar"','V154 listing edit category labels'],
-    ['}else if(["leasing","insurance","sober_driver"].includes(type)){\n            query=supabase.from("public_service_provider_listings").select("*").eq("status","active").eq("provider_type","service").contains("details",{service_category:type});\n        }else if(\n            type === "service" ||\n            type === "usta"\n        ){','}else if(\n            type === "service" ||\n            type === "usta"\n        ){','V154 provider query subtype branch'],
-    ['}else if(["leasing","insurance","sober_driver"].includes(type)){\n            query=supabase.from("service_provider_listings").select("*").eq("status","active").eq("provider_type","service").contains("details",{service_category:type});\n        }else if(\n            type === "service" ||\n            type === "usta"\n        ){','}else if(\n            type === "service" ||\n            type === "usta"\n        ){','V154 normalized provider query subtype branch'],
-    ['} else if(SERVICE_COMPANY_TYPES.has(type)){\n        query=sb().from("public_service_provider_listings").select("*",{count:"exact"}).eq("status","active").eq("provider_type","service").contains("details",{service_category:type});\n    } else {\n        query=sb().from("public_service_provider_listings").select("*",{count:"exact"}).eq("status","active").eq("provider_type",type);\n    }','} else {\n\n        query = sb()\n            .from(\n                "service_provider_listings"\n            )\n            .select("*", {\n                count: "exact"\n            })\n            .eq("status", "active")\n            .eq(\n                "provider_type",\n                type\n            );\n    }','V3.7 public provider search query'],
-    ['} else if(SERVICE_COMPANY_TYPES.has(type)){\n        query=sb().from("service_provider_listings").select("*",{count:"exact"}).eq("status","active").eq("provider_type","service").contains("details",{service_category:type});\n    } else {\n        query=sb().from("service_provider_listings").select("*",{count:"exact"}).eq("status","active").eq("provider_type",type);\n    }','} else {\n\n        query = sb()\n            .from(\n                "service_provider_listings"\n            )\n            .select("*", {\n                count: "exact"\n            })\n            .eq("status", "active")\n            .eq(\n                "provider_type",\n                type\n            );\n    }','V3.7 normalized provider search query'],
-  ];
-  for(const [from,to,label] of edits){if(html.includes(from)){assert.equal(html.split(from).length,2,'exact V3.7 '+label);html=html.replace(from,to);}}
-  return html;
-}
-exports.reverseV37=reverseV37;
-
-function reverseV39Discovery(html){
- const exact=(from,to,label)=>{if(!html.includes(from))return;assert.equal(html.split(from).length,2,'exact V3.9 '+label);html=html.replace(from,()=>to);};
- exact('        const categoryKey =\n            category.dataset.austaV107Category;\n\n        if(\n            categoryKey &&\n            !["cars", "rent"].includes(categoryKey)\n        ){\n            return;\n        }\n\n','', 'category key routing guard');
- exact('    },\n\n    {\n        key:"leasing",\n        icon:"💳",\n        title:"Lizinq şirkətləri"\n    },\n\n    {\n        key:"insurance",\n        icon:"🛡️",\n        title:"Sığorta şirkətləri"\n    },\n\n    {\n        key:"sober_driver",\n        icon:"🚘",\n        title:"Ayıq sürücü"\n    }\n\n];','    }\n\n];','category panel entries');
- for(const [key,file] of [['leasing','lizinq-sirketleri.webp'],['insurance','sigorta-sirketleri.webp'],['sober_driver','ayiq-surucu.webp']]){
-  exact('#austaV107ListingCategories [data-austa-v107-category="'+key+'"]{\n    background-image:url("assets/austa-home/'+file+'") !important;\n}\n\n','','category image '+key);
- }
- const currentStart=html.indexOf('function ensureDealerOption(){'),currentEnd=html.indexOf('\n\n\n/* =========================================================\n   BOOL',currentStart);
- assert(currentStart>=0&&currentEnd>currentStart,'exact V3.9 dealer option function boundary');
- const current=html.slice(currentStart,currentEnd);
- const base=require('node:child_process').execFileSync('git',['show','449c37e9cece02cdf35de49eb806f90434ea3bd2:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
- const baseStart=base.indexOf('function ensureDealerOption(){'),baseEnd=base.indexOf('\n\n\n/* =========================================================\n   BOOL',baseStart);
- assert(baseStart>=0&&baseEnd>baseStart,'pinned base dealer option function boundary');
- exact(current,base.slice(baseStart,baseEnd),'duplicate dealer option cleanup');
- return html;
-}
-
-function reverseCarCareKiosk(html){
- const protectedClickException="if(b.matches('.austa-carcarekiosk-link'))return;";
- if(html.includes(protectedClickException)){assert.equal(html.split(protectedClickException).length,2,'one CarCareKiosk routing exemption');html=html.replace(protectedClickException,'');}
- const styleOpen='<style id="austa-carcarekiosk-link-style">',styleClose='</style>';
- const styleCount=(html.match(/<style id="austa-carcarekiosk-link-style">/g)||[]).length;
- const hasLink=html.includes('class="austa-carcarekiosk-link"');
- if(styleCount===0&&!hasLink)return html;
- assert.equal(styleCount,1,'one CarCareKiosk link style block');
- const styleStart=html.indexOf(styleOpen),styleEnd=html.indexOf(styleClose,styleStart)+styleClose.length;
- assert(styleEnd>=styleClose.length,'closed CarCareKiosk link style block');
- const style=html.slice(styleStart,styleEnd);
- assert(style.includes('.austa-carcarekiosk-link{')&&style.includes('#176244'),'reviewed CarCareKiosk link styles');
- const removeStart=styleStart>0&&html[styleStart-1]==='\n'?styleStart-1:styleStart;
- const removeEnd=styleEnd;
- html=html.slice(0,removeStart)+html.slice(removeEnd);
- const links=html.match(/<a class="austa-carcarekiosk-link"[\s\S]*?<\/a>/g)||[];
- assert.equal(links.length,1,'exactly one CarCareKiosk external link');
- const link=links[0];
- for(const expected of ['href="https://www.carcarekiosk.com/"','target="_blank"','rel="noopener noreferrer"','Avtomobilinizdəki problemləri axtarın','Avtomobilinizə aid təmir videolarını və təlimatları CarCareKiosk saytında araşdırın.'])assert(link.includes(expected),'reviewed CarCareKiosk link contract: '+expected);
- assert.equal(html.split(link).length,2,'unique CarCareKiosk link placement');
- const wrapper='<div class="austa-carcarekiosk-link-wrap">'+link+'</div>';
- const placement='\n'+wrapper+'\n';
- assert.equal(html.split(placement).length,2,'unique visible CarCareKiosk service placement');
- return html.replace(placement,'\n');
-}
-function reverseV39DealerCompletion(html){
- const marker="['sale', 'Adi satış'],\n                    ['order', 'Sifarişlə']";
- if(!html.includes(marker))return html;
- const base=require('node:child_process').execFileSync('git',['show','449c37e9cece02cdf35de49eb806f90434ea3bd2:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
- const restore=(start,end,label,after='')=>{
-  const a=html.indexOf(start,after?html.indexOf(after):0),b=html.indexOf(end,a);
-  const ba=base.indexOf(start,after?base.indexOf(after):0),bb=base.indexOf(end,ba);
-  assert(a>=0&&b>a&&ba>=0&&bb>ba,'exact V3.9 '+label+' boundary');
-  html=html.slice(0,a)+base.slice(ba,bb)+html.slice(b);
- };
- restore('const categories = [','function openCategory(key)','homepage category order');
- restore('const finalCategories = [','function findExistingImage(','final homepage categories');
- assert(html.includes('let homeDealerOffset = 0;'),'dealer premium independent pagination offset');
- html=html.replace('let homeDealerOffset = 0;\n','');
- restore('async function signedImageUrl(','/* =========================================================\n   FIRST IMAGE FOR LISTINGS','dealer signed media bucket');
- restore('async function attachImages(','/* =========================================================\n   CARD','dealer home media mapping');
- const cardStart=html.indexOf('function cardHtml(item){',html.indexOf('function homePromotionType('));
- const cardEnd=html.indexOf('function appendHomeItems(',cardStart);
- const baseCardStart=base.indexOf('function cardHtml(item){',base.indexOf('function homePromotionType('));
- const baseCardEnd=base.indexOf('function appendHomeItems(',baseCardStart);
- assert(cardStart>=0&&cardEnd>cardStart&&baseCardStart>=0&&baseCardEnd>baseCardStart,'exact V3.9 home card boundary');
- html=html.slice(0,cardStart)+base.slice(baseCardStart,baseCardEnd)+html.slice(cardEnd);
- restore('async function loadNextHomeBatch(){','function checkHomeScroll(){','active Premium Dealer source');
- const click='if(card.dataset.austaV151ListingType === "dealer" && typeof window.AUSTA_OPEN_FULL_LISTING === "function"){\n                void window.AUSTA_OPEN_FULL_LISTING(id,"auto_dealer","dealer");\n            }else{\n                openRealListing(id);\n            }';
+    ["        usta:['phone','name','specialty'],\n        leasing:['phone','company_name','city','service_area'],\n        insurance:['phone','company_name','city','service_area'],\n        sober_driver:['phone','company_name','city','service_area']","     …2573 tokens truncated…ngType === "dealer" && typeof window.AUSTA_OPEN_FULL_LISTING === "function"){\n                void window.AUSTA_OPEN_FULL_LISTING(id,"auto_dealer","dealer");\n            }else{\n                openRealListing(id);\n            }';
  assert.equal(html.split(click).length,2,'one V3.9 homepage Dealer detail route');
  html=html.replace(click,'openRealListing(\n                id\n            );');
  restore('function installDealerCategory(){','let dealerEditItem=','order type form field');
@@ -270,7 +192,7 @@ const files={
  "assets/marketplace/category-filters.js": "4c29711581b211aa1d52b3a59dcf46ba65411a4dfe4bbacdbed9a88c84591142",
  "assets/marketplace/listing-cards.js": "6ade325fa6d874dc60e7e0789396c24ec850466cbf43232cf1938ef40de2dcec",
  "assets/marketplace/listing-detail.js": "3d578bb4751ddcedc4ed5644dea8fd153cc41541875c6f8ef455a469329851c8",
- "assets/marketplace/listing-lifecycle.js": "232e79841ddbb63fa95dc4c42398da61d5229506c94ebb44a7f8c77075c1164d",
+ "assets/marketplace/listing-lifecycle.js": "97bf5564b871544a4c7029821f9114dae50196efafe576cf5d6c6c442a1e42e8",
  "assets/marketplace/seller-intent.js": "043f8ef855069f7e70fbe57da992f24728c3b6c842ca9c1cd24d92856147a7c9",
  "assets/marketplace/seller-page.js": "6c416fe824032f8fbbef6dcf9b08690880c7cb0b982fe4840344b55da62b8af7",
  "assets/marketplace/service-company-v37.css": "9564c7ae0d889cf7d2d99e3324d888f64400ebd94c4e9516932c6df58aeeecf0",

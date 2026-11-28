@@ -84,10 +84,11 @@ test('protected scripts and modules unchanged outside P1.1G boundaries',()=>{
  assert.equal(normalized.includes(categoryDelta),false,'historical baseline normalization removes the verified V3.7 category delta');
  const v154Pattern=/<script id="austa-v154e-global-promotion-pagination">[\s\S]*?<\/script>/;
  const v154=normalized.match(v154Pattern)?.[0];assert.ok(v154,'V154-E script remains present');
- const normalizedV154=v154.replace("        service:\"Avtoservislər\",usta:\"Usta profilləri\",dealer:\"Avtosalonlar\",\n        leasing:\"Lizinq şirkətləri\",insurance:\"Avtomobil sığorta şirkətləri\",sober_driver:\"Ayıq sürücü şirkətləri\"","        service:\n            \"Avtoservislər\",\n\n        usta:\n            \"Usta profilləri\",\n\n        dealer:\n            \"Avtosalonlar\"")
-  .replace(/\n        }else if\(\["leasing","insurance","sober_driver"\]\.includes\(type\)\)\{\n            query=supabase\.from\("(?:public_)?service_provider_listings"\)\.select\("\*"\)\.eq\("status","active"\)\.eq\("provider_type","service"\)\.contains\("details",\{service_category:type\}\);\n        }else if/,'\n        }else if')
-  .replaceAll('\"public_service_provider_listings\"','\"service_provider_listings\"');
- normalized=normalized.replace(v154,normalizedV154);
+ require('./helpers/v4322-feed-contract.cjs').assertCanonicalFeedIntegration(fs.readFileSync(path.join(root,'index.html'),'utf8'));
+ const historicalV154=main.match(v154Pattern)?.[0];assert.ok(historicalV154,'historical V154-E baseline remains present');
+ // V4.3.22 replaces the old whole-table client loader with the exact-hash-pinned
+ // server cursor feed. Compare all other inline scripts byte-for-byte.
+ normalized=normalized.replace(v154,historicalV154);
  const v36Import='<script src="assets/marketplace/listing-detail-v36.js"></script>';if(normalized.includes(v36Import)){assert.equal(normalized.split(v36Import).length,2,'exact V3.6 detail module import');normalized=normalized.replace(v36Import,'');}
  // V3.9.1 removes only the V48 document-wide textContent click association.
  // Restore that exact reviewed baseline in this historical script comparison.

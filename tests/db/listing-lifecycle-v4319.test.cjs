@@ -11,7 +11,7 @@ const lifecycle = fs.readFileSync(path.join(root, 'assets/marketplace/listing-li
 
 test('V4.3.19 migration source remains the exact reviewed TEST-applied version', () => {
   assert.equal(crypto.createHash('sha256').update(migration).digest('hex'), '053e75324a07aa88a09992431dc9857723d2295f0ffc94e7f6279ebeaec7f1e9');
-  assert.equal(crypto.createHash('sha256').update(lifecycle).digest('hex'), '232e79841ddbb63fa95dc4c42398da61d5229506c94ebb44a7f8c77075c1164d');
+  assert.equal(crypto.createHash('sha256').update(lifecycle).digest('hex'), '97bf5564b871544a4c7029821f9114dae50196efafe576cf5d6c6c442a1e42e8');
 });
 
 test('V4.3.19 adds server-owned publication and expiry dates to every listing source without resetting dates', () => {
