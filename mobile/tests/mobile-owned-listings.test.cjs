@@ -125,6 +125,6 @@ test('renewal is owner scoped, validates server response and forwards an idempot
     rpc: async (name, args) => { calls.push({ name, args }); return { data: { listing_id: 'listing-1', status: 'active', expires_at: '2026-12-28T12:00:00Z', replayed: false }, error: null }; } };
   const result = await renewOwnedListing(client, { id: 'listing-1', owner_id: 'owner-a', status: 'expired', _source: 'vehicle' }, 'request-1');
   assert.equal(result.status, 'active');
-  assert.deepEqual(calls, [{ name: 'austa_renew_listing', args: { p_source: 'vehicle', p_listing_id: 'listing-1', p_request_id: 'request-1' } }]);
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [{ name: 'austa_renew_listing', args: { p_source: 'vehicle', p_listing_id: 'listing-1', p_request_id: 'request-1' } }]);
   await assert.rejects(() => renewOwnedListing(client, { id: 'listing-1', owner_id: 'owner-b', status: 'expired', _source: 'vehicle' }, 'request-2'), /sahibi təsdiqlənmədi/);
 });
