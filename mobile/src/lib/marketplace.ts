@@ -417,5 +417,3 @@ export async function addVideoComment(client:SupabaseClient,listing:Listing,body
 export async function deleteVideoComment(client:SupabaseClient,commentId:string):Promise<boolean>{
   const {data,error}=await client.rpc('austa_delete_video_comment',{p_comment_id:commentId});if(error)throw error;return Boolean(data);
 }
-
-function escapeLike(value:string) { return value.replace(/[\\%_,()]/g, '\\$&'); }
