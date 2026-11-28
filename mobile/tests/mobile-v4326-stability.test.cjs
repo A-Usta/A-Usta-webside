@@ -35,5 +35,13 @@ test('marketplace renders feed rows before optional cards/media finish and ignor
   assert.match(screens,/setRows\(selected\.slice\(0,12\)\);setLoading\(false\)/);
   assert.match(screens,/attachMediaForCard/);
   assert.match(screens,/const sequence=\+\+categoryLoadSequence\.current/);
-  assert.match(screens,/setRows\(sorted\);setLimit\(Math\.min\(20,sorted\.length\)\);[\s\S]*?setLoading\(false\);const visibleMedia/);
+  assert.match(screens,/setRows\(sorted\);setLimit\(Math\.min\(20,sorted\.length\)\);[\s\S]*?setLoading\(false\);void getFavoriteKeys\(sb\)\.then\(favorites=>\{if\(current\(\)\)setFavoriteKeys\(favorites\);\}\)\.catch\(\(\)=>\{\}\);const visibleMedia/);
+});
+
+
+test('category and detail screens reveal primary listing data before optional reads finish',()=>{
+  const screens=source('src/components/MarketplaceScreens.tsx');
+  assert.match(screens,/const \[recent,promoted\]=await Promise\.all/);
+  assert.match(screens,/setRows\(sorted\);setLimit\(Math\.min\(20,sorted\.length\)\);[\s\S]*?setLoading\(false\);void getFavoriteKeys\(sb\)\.then\(favorites=>\{if\(current\(\)\)setFavoriteKeys\(favorites\);\}\)\.catch\(\(\)=>\{\}\);const visibleMedia/);
+  assert.match(screens,/setItem\(found\);setLoading\(false\);setSellerProfile\(null\)/);
 });
