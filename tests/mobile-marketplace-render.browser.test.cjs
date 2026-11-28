@@ -85,7 +85,7 @@ function renderCategoryScreens() {
 test('runtime category component trees render one filter panel and trigger for each of 17 categories', () => {
   for (const { category, html } of renderCategoryScreens()) {
     assert.equal((html.match(/data-filter-panel="true"/g) || []).length, 1, `${category.key} runtime tree has one filter panel`);
-    assert.equal((html.match(/Filtr/g) || []).length, 1, `${category.key} runtime tree has one filter trigger`);
+    assert.equal((html.match(/aria-label="[^"]*filtrlərini aç[^"]*"/gi) || []).length, 1, `${category.key} runtime tree has one accessible filter trigger`);
   }
 });
 
@@ -113,7 +113,7 @@ test('rendered category screens fit 320, 360, 390 and 412 dp without horizontal 
         await page.setViewportSize({ width, height: 844 });
         const state = await page.evaluate(() => ({
           panels: document.querySelectorAll('[data-filter-panel="true"]').length,
-          triggers: [...document.querySelectorAll('[role="button"]')].filter(node => /Filtr/.test(node.textContent || '')).length,
+          triggers: document.querySelectorAll('[role="button"][aria-label*="filtrlərini aç" i]').length,
           documentWidth: document.documentElement.scrollWidth,
           viewportWidth: window.innerWidth,
         }));
