@@ -104,7 +104,7 @@ function mount(host){
   if(hosts.get(host.id)!==host){hosts.set(host.id,host);mountRevision++;}
   return true;
 }
-function invalidate(){epoch++;loadRevision++;window.AUSTA_MY_REAL_LISTINGS=[];view={kind:'signedout',items:[],failed:[],message:''};paint();}
+function invalidate(){epoch++;loadRevision++;statusFilter='all';window.AUSTA_MY_REAL_LISTINGS=[];view={kind:'signedout',items:[],failed:[],message:''};paint();}
 function bindAuth(){
   const next=window.AUSTA_SUPABASE;
   if(next===client)return;
