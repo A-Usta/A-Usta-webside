@@ -102,7 +102,8 @@ test('selected-currency price range builds a bounded source-currency OR predicat
 test('homepage switches the selected category above adaptive search and queries its real table', () => {
   assert.match(appSource, /CATEGORIES\.map\(c=>/);
   assert.match(appSource, /setHomeCategory\(c\.key\);setSearch\(''\);setQuerySearch\(''\);setHomeBrand\(''\);setHomeModel\(''\);setDraftFilters\(\{\}\);setAppliedFilters\(\{\}\)/);
-  assert.match(appSource, /listCategory\(sb,activeCategory,\{from:0,to:39,search:querySearch,brand:homeBrand,model:homeModel,filters:appliedFilters,displayCurrency\}\)/);
+  assert.match(appSource, /listCategory\(sb,activeCategory,\{from:0,to:19,search:querySearch,brand:homeBrand,model:homeModel,filters:appliedFilters,displayCurrency\}\)/);
+  assert.match(appSource, /setRows\(selected\.slice\(0,12\)\);setLoading\(false\)/);
   assert.match(appSource, /CATEGORY_FILTERS\[homeCategory\]/);
 });
 

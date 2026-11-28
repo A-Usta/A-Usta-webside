@@ -1,7 +1,9 @@
 import 'react-native-gesture-handler';
-import { Stack } from 'expo-router';
+import { Stack, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { BackHandler, Platform, ToastAndroid } from 'react-native';
+import { useEffect, useRef } from 'react';
 import { Pressable, Text, View } from '../lib/themed-native';
 import { AppSettingsProvider, useAppTheme } from '../lib/app-settings';
 
@@ -17,7 +19,32 @@ export function ErrorBoundary({ retry }: { error: Error; retry: () => void }) {
 
 function AppNavigation() {
   const { colorScheme } = useAppTheme();
+  const pathname = usePathname();
+  const router = useRouter();
+  const lastHomeBackAt = useRef(0);
   const dark = colorScheme === 'dark';
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      // Let native stack screens and screen-level overlay handlers consume back first.
+      const isHome = pathname === '/' || pathname === '/index';
+      if (!isHome && router.canGoBack()) return false;
+      if (!isHome) {
+        router.replace('/(drawer)/(tabs)');
+        return true;
+      }
+      const now = Date.now();
+      if (now - lastHomeBackAt.current <= 2000) {
+        lastHomeBackAt.current = 0;
+        BackHandler.exitApp();
+      } else {
+        lastHomeBackAt.current = now;
+        ToastAndroid.show('Çıxmaq üçün bir daha basın', ToastAndroid.SHORT);
+      }
+      return true;
+    });
+    return () => subscription.remove();
+  }, [pathname, router]);
   return <>
     <StatusBar style={dark ? 'light' : 'dark'} />
     <Stack screenOptions={{
