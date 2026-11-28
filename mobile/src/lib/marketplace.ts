@@ -56,7 +56,7 @@ export const CATEGORY_FILTERS:Record<CategoryKey,CategoryFilter[]>={
 };
 
 export function categoryFilterValues(key:CategoryKey,values:Record<string,string>):Record<string,string>{
-  const allowed=new Set((CATEGORY_FILTERS[key]||[]).map(item=>item.key));
+  const allowed=new Set((CATEGORY_FILTERS[key]||[]).flatMap(item=>[item.key,`${item.key}_min`,`${item.key}_max`]));
   return Object.fromEntries(Object.entries(values).filter(([name,value])=>allowed.has(name)&&String(value).trim()!==''));
 }
 export function categoryFilterError(key:CategoryKey,values:Record<string,string>):string|null{
@@ -85,41 +85,61 @@ export function promotionRank(row: Listing): number {
 }
 export function sortListings(rows: Listing[]): Listing[] {
   const timestamp=(value:unknown)=>{const result=Date.parse(String(value||''));return Number.isFinite(result)?result:0;};
-  return [...rows].sort((a,b) => promotionRank(b)-promotionRank(a) || timestamp(b.last_boosted_at||b.created_at)-timestamp(a.last_boosted_at||a.created_at) || String(b.id).localeCompare(String(a.id)));
+  return [...rows].sort((a,b) => {
+    if(Number.isFinite(a.__feed_sort_bucket)&&Number.isFinite(b.__feed_sort_bucket)){
+      return a.__feed_sort_bucket-b.__feed_sort_bucket || timestamp(b.__feed_sort_at)-timestamp(a.__feed_sort_at) || String(a._source).localeCompare(String(b._source)) || String(b.id).localeCompare(String(a.id));
+    }
+    return promotionRank(b)-promotionRank(a) || timestamp(b.last_boosted_at||b.created_at)-timestamp(a.last_boosted_at||a.created_at) || String(b.id).localeCompare(String(a.id));
+  });
 }
 
 export function categoryConfig(key: string): Category | undefined { return CATEGORIES.find(item => item.key === key); }
 export function detailSource(category: CategoryKey): ListingSource { return categoryConfig(category)!.source; }
 
-export async function listHome(client: SupabaseClient, search = ''): Promise<Listing[]> {
-  const term=escapeLike(search.trim());
-  const vehicleTypes=['sale','rent'];
-  const marketplaceTypes=CATEGORIES.filter(item=>item.source==='marketplace').map(item=>item.key);
-  const read=(table:string,configure:(query:any)=>any)=>configure(client.from(table).select('*').eq('status','active'));
-  const recentQueries=[
-    read('vehicle_listings',query=>{let q=query.in('listing_type',vehicleTypes);if(term)q=q.or(`brand.ilike.%${term}%,model.ilike.%${term}%,description.ilike.%${term}%`);return q.order('created_at',{ascending:false}).limit(40);}),
-    read('marketplace_listings',query=>{let q=query.in('category',marketplaceTypes);if(term)q=q.or(`title.ilike.%${term}%,brand.ilike.%${term}%,model.ilike.%${term}%,description.ilike.%${term}%`);return q.order('created_at',{ascending:false}).limit(40);}),
-    read('public_service_provider_listings',query=>{let q=query.in('provider_type',['service','usta']);if(term)q=q.or(`title.ilike.%${term}%,name.ilike.%${term}%,specialty.ilike.%${term}%,services.ilike.%${term}%`);return q.order('created_at',{ascending:false}).limit(40);}),
-    read('auto_dealer_listings',query=>{let q=query;if(term)q=q.or(`dealer_name.ilike.%${term}%,brands.ilike.%${term}%,about.ilike.%${term}%`);return q.order('created_at',{ascending:false}).limit(40);}),
-  ];
-  const promotionQueries=['vehicle_listings','marketplace_listings','public_service_provider_listings','auto_dealer_listings'].map(table=>
-    client.from(table).select('*').eq('status','active').in('promotion_type',['premium','vip','top']).lte('promotion_started_at',new Date().toISOString()).gt('promotion_until',new Date().toISOString()).order('promotion_until',{ascending:false}).limit(24)
-  );
-  const results=await Promise.all([...recentQueries,...promotionQueries]);
-  for(const result of results) if(result.error) throw result.error;
-  const rows:Listing[]=[];
-  const add=(items:any[],source:ListingSource)=>items.forEach(row=>{
-    let key:CategoryKey;
-    if(source==='vehicle')key=row.listing_type==='rent'?'rent':'cars';
-    else if(source==='marketplace')key=row.category;
-    else if(source==='auto_dealer')key='dealer';
-    else key=row.provider_type==='usta'?'usta':['leasing','insurance','sober_driver'].includes(row.details?.service_category)?row.details.service_category:'service';
-    if(categoryConfig(key)) rows.push({...row,_category:key,_source:source});
+type PublicFeedCursor={sort_bucket:number;sort_at:string;source:ListingSource;id:string};
+export type PublicFeedPage={items:Listing[];nextCursor:PublicFeedCursor|null;hasMore:boolean};
+function feedPayload(row:Record<string,any>,category?:CategoryKey):Listing{
+  const source=row.source as ListingSource,categoryKey=(category||row.category) as CategoryKey;
+  return {...row.payload,id:row.id,status:row.status,published_at:row.published_at,expires_at:row.expires_at,promotion_type:row.promotion_type,promotion_started_at:row.promotion_started_at,promotion_until:row.promotion_until,last_boosted_at:row.last_boosted_at,_category:categoryKey,_source:source,__feed_sort_bucket:row.sort_bucket,__feed_sort_at:row.sort_at} as Listing;
+}
+function normalizedFilterValue(field:CategoryFilter,value:string):string{
+  const raw=String(value||'').trim();return field.kind==='number'&&Number.isFinite(Number(raw))?String(Number(raw)):raw;
+}
+type PriceRangeOptions={filters?:Record<string,string>;displayCurrency?:CurrencyCode;minPrice?:string;maxPrice?:string};
+function priceBounds(category:Category,options:PriceRangeOptions):Record<string,{min?:number;max?:number}>{
+  const fields=CATEGORY_FILTERS[category.key]||[];
+  const daily=fields.some(field=>field.key==='daily_price');
+  const rawMin=options.minPrice||options.filters?.[daily?'daily_price':'price']||'';
+  const rawMax=options.maxPrice||options.filters?.[daily?'daily_price_max':'price_max']||'';
+  if(!rawMin&&!rawMax)return {};
+  const snapshot=getCurrencySnapshot(),display=options.displayCurrency||snapshot.currency,rates=snapshot.rates;
+  if(!rates)throw new Error('Qiymət filtrini seçilmiş valyutada tətbiq etmək üçün Mərkəzi Bankın məzənnəsini yeniləyin.');
+  const displayRate=rates.aznPerUnit[display];if(!(displayRate>0))return {};
+  const result:Record<string,{min?:number;max?:number}>={};
+  for(const currency of ['AZN','USD','EUR'] as const){const sourceRate=rates.aznPerUnit[currency];if(!(sourceRate>0))continue;result[currency]={...(rawMin?{min:Number(rawMin)*displayRate/sourceRate}:{}),...(rawMax?{max:Number(rawMax)*displayRate/sourceRate}:{})};}
+  return result;
+}
+
+/** Shared RLS-protected server feed. Keyset cursors keep page order identical across clients. */
+export async function listPublicFeedPage(client:SupabaseClient,category:CategoryKey|null,options:{cursor?:PublicFeedCursor|null;pageSize?:number;search?:string;filters?:Record<string,string>;displayCurrency?:CurrencyCode;minPrice?:string;maxPrice?:string;promotionsOnly?:boolean}={}):Promise<PublicFeedPage>{
+  const config=category?categoryConfig(category):undefined;if(category&&!config)throw new Error('Kateqoriya tapılmadı.');
+  const filters=category?categoryFilterValues(category,options.filters||{}):{};
+  const priceFilters=['price','price_max','daily_price','daily_price_max'];
+  const serverFilters=Object.fromEntries(Object.entries(filters).filter(([key])=>!priceFilters.includes(key)).map(([key,value])=>{const field=(CATEGORY_FILTERS[category!]||[]).find(item=>item.key===key);return [key,field?normalizedFilterValue(field,value):String(value).trim()];}).filter(([,value])=>String(value).trim()!==''));
+  const cursor=options.cursor||null,pageSize=Math.max(1,Math.min(100,Math.trunc(options.pageSize||40)));
+  const {data,error}=await client.rpc('austa_public_listing_page',{
+    p_category:category,p_after_bucket:cursor?.sort_bucket??null,p_after_at:cursor?.sort_at??null,p_after_source:cursor?.source??null,p_after_id:cursor?.id??null,
+    p_page_size:pageSize,p_search:options.search||null,p_filters:serverFilters,p_price_field:category==='rent'?'daily_price':'price',p_price_bounds:category?priceBounds(config!,options):{},p_promotions_only:Boolean(options.promotionsOnly)
   });
-  add(results[0].data||[],'vehicle');add(results[1].data||[],'marketplace');add(results[2].data||[],'service_provider');add(results[3].data||[],'auto_dealer');
-  add(results[4].data||[],'vehicle');add(results[5].data||[],'marketplace');add(results[6].data||[],'service_provider');add(results[7].data||[],'auto_dealer');
-  const unique=[...new Map(rows.map(row=>[`${row._source}:${row.id}`,row])).values()];
-  return sortListings(unique);
+  if(error)throw error;
+  const raw=Array.isArray(data)?data as Record<string,any>[]:[];
+  const hasMore=raw.length>pageSize,items=raw.slice(0,pageSize).map(row=>feedPayload(row,category||undefined));
+  const last=raw.slice(0,pageSize).at(-1);
+  return {items,nextCursor:hasMore&&last?{sort_bucket:last.sort_bucket,sort_at:last.sort_at,source:last.source,id:last.id}:null,hasMore};
+}
+
+export async function listHome(client: SupabaseClient, search = ''): Promise<Listing[]> {
+  return (await listPublicFeedPage(client,null,{pageSize:100,search})).items;
 }
 
 /** Public video feed, sourced only from active listings and their already-published video media. */
@@ -206,52 +226,19 @@ export function currencyPriceOr(field:string,min:string|number|undefined,max:str
 
 export async function listCategory(client: SupabaseClient, category: Category, options: {from?:number;to?:number;search?:string;brand?:string;model?:string;region?:string;minPrice?:string;maxPrice?:string;yearMin?:string;yearMax?:string;promotionsOnly?:boolean;filters?:Record<string,string>;displayCurrency?:CurrencyCode} = {}) {
   const {from=0,to=19,search='',brand='',model='',region='',minPrice='',maxPrice='',yearMin='',yearMax='',promotionsOnly=false,filters={}}=options;
-  let query:any=client.from(category.table).select('*').eq('status','active');
-  if(category.source==='vehicle') query=query.eq('listing_type',category.sourceValue);
-  else if(category.source==='marketplace') query=query.eq('category',category.sourceValue);
-  else if(category.source==='auto_dealer') { /* dedicated dealer source */ }
-  else if(category.source==='service_provider') {
-    query=query.eq('provider_type', category.sourceValue==='usta'?'usta':'service');
-    if(category.sourceValue==='service') query=query.or('details->>service_category.is.null,details->>service_category.not.in.(insurance,leasing,sober_driver)');
-    if(['insurance','sober_driver','leasing'].includes(category.sourceValue||'')) query=query.contains('details',{service_category:category.sourceValue});
+  const normalized={...filters};if(brand)normalized.brand=brand;if(model)normalized.model=model;if(region)normalized.region=region;
+  if(minPrice)normalized[category.key==='rent'?'daily_price':'price']=minPrice;if(maxPrice)normalized[category.key==='rent'?'daily_price_max':'price_max']=maxPrice;
+  if(yearMin)normalized.year_min=yearMin;if(yearMax)normalized.year_max=yearMax;
+  const start=Math.max(0,Math.trunc(from)),end=Math.max(start,Math.trunc(to)),pageSize=100;
+  let cursor:PublicFeedCursor|null=null;const rows:Listing[]=[];let passed=0,hasMore=true;
+  while(passed<=end&&hasMore){
+    const page=await listPublicFeedPage(client,category.key,{cursor,pageSize,search,filters:normalized,displayCurrency:options.displayCurrency,minPrice,maxPrice,promotionsOnly});
+    if(!page.items.length)break;
+    const next=passed+page.items.length;
+    if(next>start)rows.push(...page.items.slice(Math.max(0,start-passed)));
+    passed=next;cursor=page.nextCursor;hasMore=page.hasMore;
   }
-  if(promotionsOnly) query=query.in('promotion_type',['premium','vip','top']).lte('promotion_started_at',new Date().toISOString()).gt('promotion_until',new Date().toISOString());
-  if(brand && ['vehicle','marketplace'].includes(category.source)) query=query.ilike('brand',`%${escapeLike(brand)}%`);
-  if(model && ['vehicle','marketplace'].includes(category.source)) query=query.ilike('model',`%${escapeLike(model)}%`);
-  if(region && category.source!=='service_provider') query=query.ilike('region',`%${escapeLike(region)}%`);
-  const priceField=category.key==='rent'?'daily_price':'price';
-  const hasDirectPriceFilter=Boolean(minPrice||maxPrice);
-  if(hasDirectPriceFilter && ['vehicle','marketplace'].includes(category.source)){
-    const snapshot=getCurrencySnapshot();const currency=options.displayCurrency||snapshot.currency,rates=snapshot.rates;
-    query=query.or(currencyPriceOr(priceField,minPrice,maxPrice,currency,rates));
-  }
-  if(yearMin && category.source==='vehicle') query=query.gte('year',Number(yearMin));
-  if(yearMax && category.source==='vehicle') query=query.lte('year',Number(yearMax));
-  const categoryFilters=CATEGORY_FILTERS[category.key]||[];
-  const filterPriceMin=categoryFilters.some(field=>field.key==='daily_price')?filters.daily_price:filters.price;
-  const filterPriceMax=categoryFilters.some(field=>field.key==='daily_price')?filters.daily_price_max:filters.price_max;
-  if((filterPriceMin||filterPriceMax)&&['vehicle','marketplace'].includes(category.source)){
-    const snapshot=getCurrencySnapshot();const currency=options.displayCurrency||snapshot.currency,rates=snapshot.rates;
-    query=query.or(currencyPriceOr(priceField,filterPriceMin,filterPriceMax,currency,rates));
-  }
-  for(const field of categoryFilters){
-    const value=String(filters[field.key]||'').trim();if(!value)continue;
-    if(['price','price_max','daily_price','daily_price_max'].includes(field.key))continue;
-    if(field.kind==='number'){
-      const amount=Number(value);if(Number.isFinite(amount)&&amount>=0)query=field.operator==='lte'?query.lte(field.column,amount):query.gte(field.column,amount);
-    }else query=query.ilike(field.column,`%${escapeLike(value)}%`);
-  }
-  if(search.trim()) {
-    const term=escapeLike(search.trim());
-    if(category.source==='vehicle') query=query.or(`brand.ilike.%${term}%,model.ilike.%${term}%,description.ilike.%${term}%`);
-    else if(category.source==='marketplace') query=query.or(`title.ilike.%${term}%,brand.ilike.%${term}%,model.ilike.%${term}%,description.ilike.%${term}%`);
-    else if(category.source==='auto_dealer') query=query.or(`dealer_name.ilike.%${term}%,brands.ilike.%${term}%,about.ilike.%${term}%`);
-    else query=query.or(`title.ilike.%${term}%,name.ilike.%${term}%,specialty.ilike.%${term}%,services.ilike.%${term}%`);
-  }
-  query=query.order(promotionsOnly?'promotion_until':'created_at',{ascending:false}).order('last_boosted_at',{ascending:false,nullsFirst:false}).order('id',{ascending:false}).range(from,to);
-  const {data,error}=await query;
-  if(error) throw error;
-  return (data||[]).map((row:Record<string,any>)=>({...row,_category:category.key,_source:category.source} as Listing));
+  return rows.slice(0,end-start+1);
 }
 
 export async function attachMedia(client: SupabaseClient, category: Category, listing: Listing): Promise<Listing> {

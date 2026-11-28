@@ -57469,6 +57469,7 @@ function deleteOwnedListing(source,id){
             const {data,error}=await client.from(config.parentTable).delete()
                 .eq('id',id).eq('owner_id',user.id).select('id');
             if(error || !Array.isArray(data) || data.length!==1 || data[0].id!==id)throw new Error('parent delete');
+            window.dispatchEvent(new CustomEvent('austa:listings:changed',{detail:{id,source}}));
             return true;
         }catch{
             throw new Error(storageTouched
@@ -58179,7 +58180,7 @@ function patchSave(){
             return mediaEdit(type,item.id,async()=>{
                 const result=await updateDealer(item,sellerIntent);
                 return result;
-            }).then(result=>{if(dealerEditItem===item)dealerEditItem=null;return result;});
+            }).then(result=>{if(dealerEditItem===item)dealerEditItem=null;window.dispatchEvent(new CustomEvent('austa:listings:changed',{detail:{id:item.id,category:type}}));return result;});
         }
         const user=await currentUser();
         const result=await publish.run({
@@ -58203,9 +58204,15 @@ function patchSave(){
     const originalUpdate = window.AUSTA_V153.updateListing.bind(window.AUSTA_V153);
     window.AUSTA_V153.updateListing = async function(type, listingId, input, sellerIntent){
         if(VEHICLE_TYPES.has(type) || MARKETPLACE_TYPES.has(type) || PROVIDER_TYPES.has(type)){
-            return mediaEdit(type,listingId,()=>originalUpdate(type,listingId,input,sellerIntent));
+            return mediaEdit(type,listingId,()=>originalUpdate(type,listingId,input,sellerIntent)).then(result=>{
+                window.dispatchEvent(new CustomEvent('austa:listings:changed',{detail:{id:listingId,category:type}}));
+                return result;
+            });
         }
-        return originalUpdate(type,listingId,input,sellerIntent);
+        return originalUpdate(type,listingId,input,sellerIntent).then(result=>{
+            window.dispatchEvent(new CustomEvent('austa:listings:changed',{detail:{id:listingId,category:type}}));
+            return result;
+        });
     };
 
     window.AUSTA_V153
@@ -59130,147 +59137,11 @@ if(
     }
 
 
-    async function queryAll(type, filters = {}){
-
-        const supabase =
-            window.AUSTA_SUPABASE;
-
-        if(!supabase){
-
-            throw new Error(
-                "Supabase client tapılmadı."
-            );
-        }
-
-
-        let query;
-
-
-        if(type === "cars"){
-
-            query =
-                supabase
-                    .from(
-                        "vehicle_listings"
-                    )
-                    .select("*")
-                    .eq(
-                        "status",
-                        "active"
-                    )
-                    .eq(
-                        "listing_type",
-                        "sale"
-                    );
-
-
-        }else if(type === "rent"){
-
-            query =
-                supabase
-                    .from(
-                        "vehicle_listings"
-                    )
-                    .select("*")
-                    .eq(
-                        "status",
-                        "active"
-                    )
-                    .eq(
-                        "listing_type",
-                        "rent"
-                    );
-
-
-        }else if(
-            MARKETPLACE_TYPES.has(type)
-        ){
-
-            query =
-                supabase
-                    .from(
-                        "marketplace_listings"
-                    )
-                    .select("*")
-                    .eq(
-                        "status",
-                        "active"
-                    )
-                    .eq(
-                        "category",
-                        type
-                    );
-
-
-        }else if(["leasing","insurance","sober_driver"].includes(type)){
-            query=supabase.from("public_service_provider_listings").select("*").eq("status","active").eq("provider_type","service").contains("details",{service_category:type});
-        }else if(
-            type === "service" ||
-            type === "usta"
-        ){
-
-            query =
-                supabase
-                    .from(
-                        "public_service_provider_listings"
-                    )
-                    .select("*")
-                    .eq(
-                        "status",
-                        "active"
-                    )
-                    .eq(
-                        "provider_type",
-                        type
-                    );
-
-
-        }else if(type === "dealer"){
-
-            query =
-                supabase
-                    .from(
-                        "auto_dealer_listings"
-                    )
-                    .select("*")
-                    .eq(
-                        "status",
-                        "active"
-                    );
-
-
-        }else{
-
-            throw new Error(
-                "Kateqoriya tapılmadı."
-            );
-        }
-
-
-        /*
-         * Burada .range() YOXDUR.
-         *
-         * Əvvəl uyğun elanların hamısı
-         * alınır.
-         */
-
-        query = window.AUSTA_CATEGORY_FILTERS.applyQuery(query, type, filters);
-
-        const {
-            data,
-            error
-        } =
-            await query;
-
-
-        if(error){
-            throw error;
-        }
-
-
-        return data || [];
+    const feedPageCursorsV4322 = new Map();
+    if(typeof window.addEventListener==='function'){
+        window.addEventListener('austa:listings:changed',()=>feedPageCursorsV4322.clear());
+        window.addEventListener('austa:real-listing-created',()=>feedPageCursorsV4322.clear());
     }
-
 
     async function fetchCategoryV154E(
         typeValue,
@@ -59304,76 +59175,32 @@ if(
                 1,
                 Number(page) || 1
             );
-
-
-        /*
-         * 1. Bütün uyğun elanlar.
-         */
-
-        const allItems =
-            await queryAll(type, filters);
-
-
-        /*
-         * 2. Bütün nəticələr üzrə
-         * promotion + vaxt sıralaması.
-         */
-
-        const sorted =
-            sortAllListings(
-                allItems
-            );
-
-
-        const total =
-            sorted.length;
-
-
-        const totalPages =
-            Math.max(
-                1,
-                Math.ceil(
-                    total /
-                    PAGE_SIZE
-                )
-            );
-
-
-        /*
-         * İstifadəçi mövcud olmayan
-         * səhifə nömrəsi göndərərsə
-         * son səhifədə saxla.
-         */
-
-        const finalPage =
-            Math.min(
-                safePage,
-                totalPages
-            );
-
-
-        const start =
-            (
-                finalPage - 1
-            ) *
-            PAGE_SIZE;
-
-
-        const end =
-            start +
-            PAGE_SIZE;
-
-
-        /*
-         * 3. YALNIZ İNDİ 40-lıq
-         * səhifəyə bölünür.
-         */
-
-        const items =
-            sorted.slice(
-                start,
-                end
-            );
+        const filterObject=filters&&typeof filters==='object'?filters:{};
+        const key=type+'|'+JSON.stringify(Object.keys(filterObject).sort().reduce((all,name)=>{all[name]=filterObject[name];return all;},{}));
+        let state=feedPageCursorsV4322.get(key);
+        if(!state||Date.now()-state.updatedAt>15000){state={cursors:[null],pages:[],hasMore:[],updatedAt:Date.now()};feedPageCursorsV4322.set(key,state);}
+        while(state.pages.length<safePage&&state.hasMore[state.pages.length]!==false){
+            const pageNumber=state.pages.length+1,cursor=state.cursors[pageNumber-1]||null;
+            const pageFilters=window.AUSTA_CATEGORY_FILTERS?.normalize(type,filterObject)||{};
+            const priceField=type==='rent'?'daily_price':'price';
+            const min=pageFilters[priceField+'_min'];const max=pageFilters[priceField+'_max'];
+            delete pageFilters[priceField+'_min'];delete pageFilters[priceField+'_max'];
+            const result=await window.AUSTA_SUPABASE.rpc('austa_public_listing_page',{
+                p_category:type,p_after_bucket:cursor?.sort_bucket??null,p_after_at:cursor?.sort_at??null,p_after_source:cursor?.source??null,p_after_id:cursor?.id??null,
+                p_page_size:PAGE_SIZE,p_search:null,p_filters:pageFilters,p_price_field:priceField,
+                p_price_bounds:min!=null||max!=null?{AZN:{...(min!=null?{min:Number(min)}:{}),...(max!=null?{max:Number(max)}:{})}}:{},p_promotions_only:false
+            });
+            if(result.error)throw result.error;
+            const raw=Array.isArray(result.data)?result.data:[],hasMore=raw.length>PAGE_SIZE,visible=raw.slice(0,PAGE_SIZE);
+            const items=visible.map(row=>({...row.payload,status:row.status,published_at:row.published_at,expires_at:row.expires_at,promotion_type:row.promotion_type,promotion_started_at:row.promotion_started_at,promotion_until:row.promotion_until,last_boosted_at:row.last_boosted_at,_category:type,_source:row.source,__feed_sort_bucket:row.sort_bucket,__feed_sort_at:row.sort_at}));
+            const last=visible[visible.length-1];state.pages.push(items);state.hasMore.push(hasMore);state.cursors.push(hasMore&&last?{sort_bucket:last.sort_bucket,sort_at:last.sort_at,source:last.source,id:last.id}:null);
+            state.updatedAt=Date.now();
+        }
+        const finalPage=Math.min(safePage,Math.max(1,state.pages.length));
+        const items=state.pages[finalPage-1]||[];
+        const hasMore=Boolean(state.hasMore[finalPage-1]);
+        const total=(finalPage-1)*PAGE_SIZE+items.length+(hasMore?1:0);
+        const totalPages=finalPage+(hasMore?1:0);
 
 
         return {
@@ -59390,8 +59217,7 @@ if(
             pageSize:
                 PAGE_SIZE,
 
-            total:
-                total,
+            total,
 
             totalPages:
                 totalPages,

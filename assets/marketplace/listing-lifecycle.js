@@ -15,6 +15,7 @@ const categoryLabels=Object.freeze({leasing:'Lizinq şirkəti',insurance:'Avtomo
 const own=(object,key)=>typeof key==='string'&&Object.prototype.hasOwnProperty.call(object,key);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const failure=(message,code='LIFECYCLE_REJECTED')=>Object.assign(new Error(message),{code});
+function feedChanged(source,id){try{window.dispatchEvent(new CustomEvent('austa:listings:changed',{detail:{source,id}}));}catch{}}
 let client=null,subscription=null,epoch=0,loadRevision=0,mountRevision=0;
 const hosts=new Map(),flights=new Map();
 let view={kind:'idle',items:[],failed:[],message:''},statusFilter='all';
@@ -89,6 +90,7 @@ async function renew(item){
   if(!current(context))throw failure('Hesab dəyişib.','LIFECYCLE_STALE');
   if(result.error)throw result.error;const row=Array.isArray(result.data)?result.data[0]:result.data;
   if(row?.listing_id!==item.id||row?.status!=='active'||!row?.expires_at)throw failure('Server elan yenilənməsini təsdiqləmədi.');
+  feedChanged(source,item.id);
   await load();return row;
 }
 document.addEventListener('click',event=>{
@@ -178,6 +180,7 @@ function transition(item,action){
       if(error||!Array.isArray(data)||data.length!==1||data[0].id!==reference.id||data[0].owner_id!==context.user.id||data[0].status!==next)throw failure('Elan dəyişib və ya əməliyyat təsdiqlənmədi. Yenidən yoxlayın.','LIFECYCLE_CONFLICT');
       const persisted=await parent(context,reference);
       if(persisted.status!==next||reference.config.field&&persisted[reference.config.field]!==row[reference.config.field])throw failure('Elanın yeni statusu təsdiqlənmədi.','LIFECYCLE_CONFLICT');
+      feedChanged(reference.source,reference.id);
       if(current(context))await load();
       if(!current(context))throw failure('Hesab və ya elan pəncərəsi dəyişib.','LIFECYCLE_STALE');
       return persisted;

@@ -27,7 +27,15 @@ function fixture(type='moto',brand='Land Rover',model='Range Rover'){
    return {data:this.one?json(rows[0]??null):json(rows),error:null};
   }).then(ok,bad)}
  }
- const sb={auth:{getSession:async()=>({data:{session:{user:{id:'owner'}}}}),getUser:async()=>({data:{user:{id:'owner'}}})},from:t=>new Q(t)};
+ const sb={auth:{getSession:async()=>({data:{session:{user:{id:'owner'}}}}),getUser:async()=>({data:{user:{id:'owner'}}})},from:t=>new Q(t),rpc:async(name,args)=>{
+  assert.equal(name,'austa_public_listing_page');state.ops.push({op:'feed',name,args:json(args)});
+  if(args.p_category!==type)return {data:[],error:null};
+  const matches=Object.entries(args.p_filters||{}).every(([key,value])=>{
+   const raw=key.startsWith('details.')?state.row.details?.[key.slice(8)]:state.row[key];
+   return raw!=null&&String(raw).toLowerCase().includes(String(value).toLowerCase());
+  });
+  return {data:matches?[{source:'marketplace',category:type,id:state.row.id,owner_id:state.row.owner_id,status:state.row.status,created_at:state.row.created_at,published_at:state.row.published_at,updated_at:state.row.updated_at,expires_at:state.row.expires_at,promotion_type:state.row.promotion_type,promotion_started_at:state.row.promotion_started_at,promotion_until:state.row.promotion_until,last_boosted_at:state.row.last_boosted_at,sort_bucket:3,sort_at:state.row.created_at,payload:json(state.row)}]:[],error:null};
+ }};
  const status={style:{},textContent:''},button={disabled:false,textContent:''},box={innerHTML:''};
  const document={readyState:'loading',addEventListener(){},querySelectorAll(){return state.nodes},getElementById(id){return id==='austaV153CCategory'?{value:type}:id==='austaV153CFields'?box:id==='austaV153CStatus'?status:id==='austaV153CSave'?button:null}};
  const window={AUSTA_SUPABASE:sb,dispatchEvent(e){state.events.push(e)},AUSTA_MARKETPLACE_CARD_DATA:{salePayload:()=>({})}};
@@ -99,7 +107,7 @@ test('Plate has no controls and router never fabricates brand/model',async()=>{
 test('multi-word values match real V170 top-level filters, card and detail outputs',async()=>{
  const f=fixture('accessories');await f.create({brand:'Land Rover',model:'Range Rover'});
  assert.equal((await f.query({brand:'Land Rover',model:'Range Rover'})).total,1);assert.equal((await f.query({brand:'Alfa Romeo'})).total,0);
- assert.ok(f.state.ops.some(o=>o.filters.some(([op,k])=>op==='ilike'&&k==='brand')));
+ const feed=f.state.ops.find(o=>o.op==='feed');assert.deepEqual(feed.args.p_filters,{brand:'Land Rover',model:'Range Rover'});
  const content=f.window.AUSTA_LISTING_CARDS.content('accessories',f.state.row);assert.ok(content.summary.includes('Land Rover Range Rover'));
  assert.deepEqual(f.specs().find(([k])=>k==='Marka'),['Marka','Land Rover']);assert.deepEqual(f.specs().find(([k])=>k==='Model'),['Model','Range Rover']);
 });

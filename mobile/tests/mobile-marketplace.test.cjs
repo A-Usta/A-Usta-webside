@@ -53,19 +53,41 @@ test('all 17 homepage categories expose their own real-query filters and clear s
   assert.match(categoryFilterError('rent', { daily_price:'-1' }), /müsbət rəqəm/);
 });
 
-test('each category filter is applied to its configured live query column', async () => {
+test('each category filter is passed to the canonical server feed before pagination', async () => {
   for (const category of CATEGORIES) {
     const field = CATEGORY_FILTERS[category.key][0];
     const calls = [];
-    const query = {};
-    for (const method of ['select','eq','in','contains','or','ilike','gte','lte','order','range']) query[method] = (...args) => { calls.push([method,...args]); return query; };
-    query.then = (resolve,reject) => Promise.resolve({data:[],error:null}).then(resolve,reject);
-    const client = { from: table => { calls.push(['from',table]); return query; } };
+    const client = { rpc: async(name,args) => { calls.push([name,args]); return {data:[],error:null}; } };
     const value = field.kind === 'number' ? '100' : 'test';
     await listCategory(client,category,{filters:{[field.key]:value}});
-    assert.ok(calls.some(call => call[0] === 'from' && call[1] === category.table), category.key+' table');
-    assert.ok(calls.some(call => ['ilike','gte','lte'].includes(call[0]) && call[1] === field.column), category.key+' filter '+field.column);
+    assert.equal(calls[0][0],'austa_public_listing_page',category.key+' uses one feed RPC');
+    assert.equal(calls[0][1].p_category,category.key);
+    assert.equal(calls[0][1].p_filters[field.key],value,category.key+' filter reaches the server');
+    assert.equal(calls[0][1].p_page_size,100);
   }
+});
+
+test('deep category pages advance server cursors without repeating or skipping rows', async()=>{
+  const category=categoryConfig('cars'),calls=[];
+  const client={rpc:async(name,args)=>{
+    calls.push(args);
+    const start=args.p_after_id==null?0:Number(args.p_after_id)+1;
+    return {data:Array.from({length:Math.min(101,301-start)},(_,offset)=>{
+      const index=start+offset;
+      return {source:'vehicle',category:'cars',id:String(index),status:'active',sort_bucket:3,sort_at:new Date(1_800_000_000_000-index).toISOString(),payload:{id:String(index),listing_type:'sale'}};
+    }),error:null};
+  }};
+  const rows=await listCategory(client,category,{from:250,to:259});
+  assert.equal(calls.length,3);
+  assert.deepEqual(Array.from(rows,row=>row.id),Array.from({length:10},(_,index)=>String(index+250)));
+});
+
+test('canonical feed metadata controls cross-platform deterministic sort order',()=>{
+  const future=new Date(Date.now()+86400000).toISOString();
+  const premium={id:'a',_source:'marketplace',__feed_sort_bucket:0,__feed_sort_at:future};
+  const vip={id:'z',_source:'vehicle',__feed_sort_bucket:1,__feed_sort_at:future};
+  const recent={id:'b',_source:'vehicle',__feed_sort_bucket:3,__feed_sort_at:future};
+  assert.deepEqual(Array.from(sortListings([recent,vip,premium]),row=>row.id),['a','z','b']);
 });
 
 test('selected-currency price range builds a bounded source-currency OR predicate',()=>{

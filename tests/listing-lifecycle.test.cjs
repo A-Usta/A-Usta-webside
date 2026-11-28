@@ -116,12 +116,16 @@ test('baseline repair is symmetric on exact main and retains real coordinator co
 for(const type of Object.keys(maps))test(type+' public category query excludes every non-active lifecycle state',async()=>{
  const f=fixture(type);
  f.state.tables[f.table]=['draft','inactive','sold','rented','archived','active'].map((status,i)=>({...f.row,id:'public-'+i,status}));
- f.window.AUSTA_CATEGORY_FILTERS={applyQuery:q=>q};
+ f.window.AUSTA_SUPABASE.rpc=async(name,args)=>{
+  assert.equal(name,'austa_public_listing_page');assert.equal(args.p_category,type);
+  const active=f.state.tables[f.table].filter(row=>row.status==='active');
+  return {data:active.map(row=>({source:f.source,category:type,id:row.id,owner_id:row.owner_id,status:row.status,created_at:row.created_at,published_at:row.published_at,updated_at:row.updated_at,expires_at:row.expires_at,promotion_type:null,promotion_started_at:null,promotion_until:null,last_boosted_at:null,sort_bucket:3,sort_at:row.created_at,payload:row})),error:null};
+ };
  let code=html.match(/<script id="austa-v154e-global-promotion-pagination">([\s\S]*?)<\/script>/)[1];
- const end=code.lastIndexOf('})();');code=code.slice(0,end)+'window.__p15PublicQuery=queryAll;'+code.slice(end);
+ const end=code.lastIndexOf('})();');code=code.slice(0,end)+'window.__p15PublicQuery=fetchCategoryV154E;'+code.slice(end);
  vm.runInContext(code,f.context);
- const rows=await f.window.__p15PublicQuery(type);
- assert.equal(rows.length,1);assert.equal(rows[0].status,'active');
+ const result=await f.window.__p15PublicQuery(type,1,{});
+ assert.equal(result.items.length,1);assert.equal(result.items[0].status,'active');
 });
 test('missing auth cannot mutate listing',async()=>{const f=fixture();f.state.user=null;await assert.rejects(f.transition('archive'));assert.equal(f.writes().length,0);});
 test('same-user latest load supersedes an older delayed load',async()=>{
