@@ -18,7 +18,8 @@ test('cold-start routes do not eagerly import the map and account native screens
     assert.doesNotMatch(source, /from ['"][^'"]*\/App['"]/);
     assert.doesNotMatch(source, /react-native-maps|ServiceScreens|AccountScreens/);
   }
-  assert.match(read('src/app/(drawer)/_layout.tsx'), /components\/ServiceDrawer/);
+  assert.match(read('src/app/(drawer)/_layout.tsx'), /<Stack/);
+  assert.doesNotMatch(read('src/app/(drawer)/_layout.tsx'), /drawerType|swipeEnabled|<Drawer/);
   assert.match(read('src/app/(drawer)/(tabs)/index.tsx'), /components\/MarketplaceScreens/);
   assert.match(read('src/app/service/[key].tsx'), /components\/ServiceScreens/);
   assert.match(read('src/app/(drawer)/(tabs)/account.tsx'), /components\/AccountScreens/);
@@ -39,7 +40,8 @@ test('root route has a user-facing JS error recovery boundary without logging ex
 test('adaptive and launch wordmarks use the existing brand assets with a configured safe background', () => {
   const app = JSON.parse(read('app.json')).expo;
   assert.equal(app.android.adaptiveIcon.foregroundImage, './assets/android-icon-foreground.png');
-  assert.equal(app.android.adaptiveIcon.backgroundColor, '#176244');
+  assert.equal(app.android.adaptiveIcon.backgroundColor, '#F00000');
+  assert.equal(app.plugins.find(plugin => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen')[1].backgroundColor, '#F00000');
   assert.equal(app.icon, './assets/icon.png');
   assert.equal(app.plugins.find(plugin => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen')[1].image, './assets/splash-icon.png');
   for (const relative of ['assets/android-icon-foreground.png', 'assets/android-icon-monochrome.png', 'assets/icon.png', 'assets/splash-icon.png']) {
@@ -47,12 +49,13 @@ test('adaptive and launch wordmarks use the existing brand assets with a configu
   }
 });
 
-test('marketplace titles, prices, metadata and category labels are allowed to wrap instead of ellipsize', () => {
+test('marketplace titles, prices and metadata fit the shared two-column layout without truncation', () => {
   const screens = read('src/components/MarketplaceScreens.tsx');
-  assert.match(screens, /<Text style=\{styles\.price\}>/);
-  assert.match(screens, /<Text style=\{styles\.title\}>/);
-  assert.match(screens, /<Text style=\{styles\.meta\}>/);
-  assert.doesNotMatch(screens, /numberOfLines=\{1\}/);
-  assert.doesNotMatch(screens, /numberOfLines=\{2\}/);
-  assert.match(screens, /flexBasis:'48%'/);
+  const card = screens.slice(screens.indexOf('function ListingCard'), screens.indexOf('export function MarketplaceHomeScreen'));
+  assert.match(card, /<Text style=\{styles\.price\}>/);
+  assert.match(card, /<Text style=\{styles\.title\}>/);
+  assert.match(card, /<Text style=\{styles\.meta\}>/);
+  assert.doesNotMatch(card, /numberOfLines=/);
+  assert.match(card, /width:cardWidth,flexBasis:cardWidth,flexGrow:0,flexShrink:0/);
+  assert.match(screens, /listingCardWidth\(viewportWidth\)/);
 });

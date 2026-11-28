@@ -151,12 +151,14 @@ test('P0.3.1 helper, visibility, public queries and protected runtime assets rem
  const base='19c91a76502dad439811fa86d95af0fac922c88a',html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const main=cp.execFileSync('git',['show',base+':index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  for(const id of ['austa-v154e-global-promotion-pagination']){
-  const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');const current=html.match(re)[0];assert.equal(current.split('\"public_service_provider_listings\"').length,3,'V3.7 provider privacy read in V154E');const normalized=current.replace("        service:\"Avtoservislər\",usta:\"Usta profilləri\",dealer:\"Avtosalonlar\",\n        leasing:\"Lizinq şirkətləri\",insurance:\"Avtomobil sığorta şirkətləri\",sober_driver:\"Ayıq sürücü şirkətləri\"","        service:\n            \"Avtoservislər\",\n\n        usta:\n            \"Usta profilləri\",\n\n        dealer:\n            \"Avtosalonlar\"").replace(/\n        }else if\(\["leasing","insurance","sober_driver"\]\.includes\(type\)\)\{\n            query=supabase\.from\("public_service_provider_listings"\)\.select\("\*"\)\.eq\("status","active"\)\.eq\("provider_type","service"\)\.contains\("details",\{service_category:type\}\);\n        }else if/,"\n        }else if").replaceAll('\"public_service_provider_listings\"','\"service_provider_listings\"');assert.equal(normalized,main.match(re)[0]);
+  const re=new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>');
+  assert.ok(html.match(re),'V154-E script remains present');
+  require('./helpers/v4322-feed-contract.cjs').assertCanonicalFeedIntegration(html);
  }
  require('./helpers/server-key-baseline.cjs').assertConfig();
  const changed=cp.execFileSync('git',['diff','--name-only',base,'--','assets','backend',':(exclude).github/workflows/v39-service-category-discovery.yml'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
  require('./helpers/personal-account-baseline.cjs').assertSellerMount(fs.readFileSync(path.join(root,'assets/marketplace/seller-verification.js'),'utf8'));
- assert.deepEqual(changed.filter(p=>!require('./helpers/homepage-baseline.cjs').isReviewedFile(p)&&!['backend/a-usta56/src/config/privileged-fetch.ts','backend/a-usta56/tests/privileged-fetch.test.ts','backend/a-usta56/src/config/supabase.ts','assets/account/my-vehicles.js','assets/account/my-vehicles.css','assets/account/vehicle-data.js','assets/account/maintenance-reminders.js','assets/account/personal-account.js','assets/account/personal-account.css','assets/marketplace/seller-verification.js','assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/config/server.ts','backend/a-usta56/src/diagnostics/foundation.ts','backend/a-usta56/src/diagnostics/admission.ts','backend/a-usta56/src/authority/worker.ts','backend/a-usta56/tests/durable-uploads.test.ts','backend/a-usta56/src/authority/reconcile-uploads.ts','backend/a-usta56/src/authority/upload-reservations.ts','backend/a-usta56/src/authority/durable-quotas.ts','backend/a-usta56/src/routes/listing-media.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts','backend/a-usta56/package.json','backend/a-usta56/package-lock.json','backend/a-usta56/.gitignore','backend/a-usta56/.env.example','backend/a-usta56/src/config/cors.ts','backend/a-usta56/src/config/env.ts','backend/a-usta56/tests/cors.test.ts','backend/a-usta56/tools/test-auth-bootstrap.mjs','backend/a-usta56/tools/test-auth-bootstrap.test.mjs'].includes(p)),[]);
+ assert.deepEqual(changed.filter(p=>!require('./helpers/homepage-baseline.cjs').isReviewedFile(p)&&!['backend/a-usta56/src/config/privileged-fetch.ts','backend/a-usta56/tests/privileged-fetch.test.ts','backend/a-usta56/src/config/supabase.ts','assets/account/my-vehicles.js','assets/account/my-vehicles.css','assets/account/vehicle-data.js','assets/account/maintenance-reminders.js','assets/account/personal-account.js','assets/account/personal-account.css','assets/marketplace/seller-verification.js','assets/marketplace/seller-intent.js','assets/marketplace/media-manager.js','assets/marketplace/listing-preview.js','assets/marketplace/listing-lifecycle.js','assets/marketplace/listing-detail.js','backend/a-usta56/tests/listing-media.test.ts','backend/a-usta56/src/config/server.ts','backend/a-usta56/src/diagnostics/foundation.ts','backend/a-usta56/src/diagnostics/admission.ts','backend/a-usta56/src/authority/worker.ts','backend/a-usta56/tests/durable-uploads.test.ts','backend/a-usta56/src/authority/reconcile-uploads.ts','backend/a-usta56/src/authority/upload-reservations.ts','backend/a-usta56/src/authority/durable-quotas.ts','backend/a-usta56/src/routes/listing-media.ts','backend/a-usta56/src/routes/service-orders.ts','backend/a-usta56/src/validation/service-orders.ts','backend/a-usta56/tests/service-orders.test.ts','backend/a-usta56/package.json','backend/a-usta56/package-lock.json','backend/a-usta56/.gitignore','backend/a-usta56/.env.example','backend/a-usta56/src/config/cors.ts','backend/a-usta56/src/config/env.ts','backend/a-usta56/tests/cors.test.ts','backend/a-usta56/tools/test-auth-bootstrap.mjs','backend/a-usta56/tools/test-auth-bootstrap.test.mjs','backend/a-usta56/src/routes/google-places.ts','backend/a-usta56/tests/google-places.test.ts','backend/a-usta56/src/payments/provider.ts','backend/a-usta56/tests/payment-provider.test.ts'].includes(p)),[]);
  // Permit only the reviewed supplemental seller block; all original detail logic remains exact.
  const detail=s=>s.match(/<script id="austa-final-full-listing-js">([\s\S]*?)<\/script>/)[1];
  const normalized=detail(require('./helpers/seller-integration-baseline.cjs').withBaselineMediaHydration(require('./helpers/seller-integration-baseline.cjs').withBaselineDetail(html,main),main))
@@ -172,7 +174,7 @@ test('P0.3.1 helper, visibility, public queries and protected runtime assets rem
  assert.equal(normalized,detail(main));
 });
 test('legacy num()/integer() unchanged and no arbitrary text maximum added',()=>{
- const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
+ const html=require('./helpers/account-polish-baseline.cjs').normalizeToV4315(fs.readFileSync(path.join(root,'index.html'),'utf8')),main=cp.execFileSync('git',['show','19c91a76502dad439811fa86d95af0fac922c88a:index.html'],{cwd:root,encoding:'utf8',maxBuffer:1e7});
  const part=s=>s.slice(s.indexOf('function num(value) {'),s.indexOf('function bool(value) {',s.indexOf('function num(value) {')));assert.equal(part(html),part(main));
  assert.deepEqual(html.match(/maxlength\s*=[^ >]+/g),main.match(/maxlength\s*=[^ >]+/g));
 });
@@ -221,19 +223,21 @@ test('P1.3A preserves source configuration, Vehicle video helper and P0.3 coordi
 function assertP2D1Configuration(){
  require('./helpers/e2b-baseline.cjs').assertScope();
  const reviewed={
-  "backend/a-usta56/src/diagnostics/admission.ts": "36b8b740be70381182abe322ed197b24a1db7ed19ba48da6b8c0f544082a5666",
+  "backend/a-usta56/src/diagnostics/admission.ts": "02d2cee6a650ffd3962ba39b4a284bd62540b756c7ece2ba8b3390e0f6b4ee8b",
   "backend/a-usta56/src/routes/listing-media.ts": "c5856ed33bac19d6f0a30b4cb4dc30e0a8831712af949350a1fc61021b9bdbe8",
-  "backend/a-usta56/src/config/server.ts": "3fb77bdc61be35b843e929963cdfb857c5bfa4c4bf376069414b5e512361c923",
+  "backend/a-usta56/src/config/server.ts": "94a52b6cd6ce78eeae8879cb5d455a4cb161d8b07ec70f18105171503e05a8a4",
   "backend/a-usta56/.env.example": "ec156a5a9081202759d5576019c3c998997dc15fef2edfa7be70196d9f932078",
   "backend/a-usta56/src/config/cors.ts": "24b3ffa59a096bfb74c42e26fa2c76e1a8e95dbe747e9383deb0a3eb65082c7e",
-  "backend/a-usta56/src/config/env.ts": "a5b15ce9875c6fb165f5339cd64b049e2e607964357f6caaa46d81d1b3fc225e",
+  "backend/a-usta56/src/config/env.ts": "18043abbd03da353f481e46674563b2de063a47cfd63c0f819ab5a3c804ebe83",
   "backend/a-usta56/tests/cors.test.ts": "bb91f9f8bc1c02146ab6819d14615019e889d9f9494bebdae8ade6bd3587763c",
   "backend/a-usta56/src/diagnostics/foundation.ts": "fc6a6cdeda3f510326baf785c3c779d3ccc1719f52e1f1bdffde73437700acee",
   "backend/a-usta56/package.json": "cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802",
   "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
   "backend/a-usta56/.gitignore": "a459038af144bb649dd32c98f20e160838ec500ed5580fb1669ed0860196e140",
   ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
-  ".github/workflows/main.yml": "ad25bc73fa3ae4884c1af045acb01a09774292f55bb71ed2ab0230a10da57113",
+  "backend/a-usta56/src/routes/google-places.ts": "9ce9199937878bc8b872d0754d02bf84347da8bcab5bc9e41814c95513d2772f",
+  "backend/a-usta56/tests/google-places.test.ts": "d9c142e527c6c59960124e5769218fb26362c4164e8695e3102be588484b374f",
+  ".github/workflows/main.yml": "a5ece0f7c62fa2664cb787f395b15adb90f496ec0be69771534c172fe8bb1cb7",
 };
  for(const [file,sha256] of Object.entries(reviewed)){
   assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);

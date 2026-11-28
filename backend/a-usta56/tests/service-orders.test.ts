@@ -331,6 +331,13 @@ test('E2A rich answer shape, count/item/aggregate bytes, initial evidence and fo
  assert.ok(validate({evidence_files:[{...evidence,path:evidence.path+'x'.repeat(1024)}]}));assert.ok(validate({evidence_files:[{...evidence,name:'x'.repeat(1025)}]}));
  assert.ok(validate({evidence_files:[{...evidence,path:`${customer}/../problem/x.jpg`}]}));assert.equal(validate({form_version:'x'.repeat(120)}),null);assert.ok(validate({form_version:'x'.repeat(121)}));
 });
+test('service-order payment method accepts only card/cash and preserves the no-payment default',()=>{
+ const validate=(payment_method?:unknown)=>serviceOrderInputError('/service-orders','POST',{service_category:'mechanic_service',...(payment_method===undefined?{}:{payment_method})},{});
+ assert.equal(validate(),null);assert.equal(validate('card'),null);assert.equal(validate('cash'),null);
+ for(const invalid of ['bank','wallet','paid',true,{}])assert.ok(validate(invalid),`rejected ${String(invalid)}`);
+ const route=readFileSync(new URL('../src/routes/service-orders.ts',import.meta.url),'utf8');
+ assert.match(route,/payment_method: paymentMethod/);
+});
 test('E2A oversized input rejected before Auth/DB; duplicate client_order_id still 409',async()=>{
  const f=await fixture({actor:customer,insertError:{code:'23505'}});try{
   const create=(payload:any)=>f.app.inject({method:'POST',url:'/service-orders',headers:{authorization:'Bearer test-token'},payload});

@@ -6,7 +6,7 @@ const block=id=>html.match(new RegExp('<script id="'+id+'">([\\s\\S]*?)</script>
 const plain=value=>JSON.parse(JSON.stringify(value));
 const values=['Günlük','Həftəlik','Aylıq','Uzunmüddətli'];
 function fixture({type='rent',stored=null}={}){
- const state={row:{id:'listing',owner_id:'owner',status:'active',listing_type:type==='rent'?'rent':'sale',rental_type:stored,brand:'Mercedes-Benz',model:'E-Class',year:2022,daily_price:50,price:100,phone:'123'},ops:[],nodes:[],events:[],timers:[]};
+ const state={row:{id:'listing',owner_id:'owner',status:'active',listing_type:type==='rent'?'rent':'sale',rental_type:stored,brand:'Mercedes-Benz',model:'E-Class',year:2022,daily_price:50,price:100,phone:'123'},ops:[],nodes:[],events:[],timers:[],listeners:{}};
  class Q{
   constructor(table){this.table=table;this.op='read';this.filters=[];}
   select(){return this}eq(k,v){this.filters.push(['eq',k,v]);return this}ilike(k,v){this.filters.push(['ilike',k,v]);return this}order(){return this}range(){return this}limit(){return this}single(){this.one=true;return this}
@@ -24,10 +24,14 @@ function fixture({type='rent',stored=null}={}){
    return {data:this.one?plain(rows[0]??null):plain(rows),error:null};
   }).then(ok,bad)}
  }
- const sb={auth:{getSession:async()=>({data:{session:{user:{id:'owner'}}}}),getUser:async()=>({data:{user:{id:'owner'}}})},from:table=>new Q(table)};
+ const sb={auth:{getSession:async()=>({data:{session:{user:{id:'owner'}}}}),getUser:async()=>({data:{user:{id:'owner'}}})},from:table=>new Q(table),rpc:async(name,args)=>{
+  assert.equal(name,'austa_public_listing_page');state.ops.push({op:'feed',args:plain(args)});
+  const active=state.row.status==='active'&&state.row.listing_type===(type==='rent'?'rent':'sale')&&Object.entries(args.p_filters||{}).every(([key,value])=>String(state.row[key]??'').toLowerCase().includes(String(value).toLowerCase()));
+  return {data:active?[{source:'vehicle',category:type,id:state.row.id,owner_id:state.row.owner_id,status:'active',created_at:null,published_at:null,updated_at:null,expires_at:null,promotion_type:null,promotion_started_at:null,promotion_until:null,last_boosted_at:null,sort_bucket:3,sort_at:'2026-11-28T00:00:00Z',payload:plain(state.row)}]:[],error:null};
+ }};
  const status={style:{},textContent:''},button={disabled:false,textContent:''},container={innerHTML:'',querySelectorAll(){return state.nodes},querySelector(){return null}};
  const document={readyState:'loading',addEventListener(){},querySelectorAll(){return state.nodes},getElementById(id){return id==='austaV153CCategory'?{value:type}:id==='austaV153CFields'?container:id==='austaV153CStatus'?status:id==='austaV153CSave'?button:null}};
- const window={AUSTA_SUPABASE:sb,dispatchEvent(e){state.events.push(e)},AUSTA_MARKETPLACE_CARD_DATA:{salePayload:()=>({}),mount(){},read:()=>({}),remember(){}},AUSTA_VEHICLE_SELECTOR:{mount(){}}};
+ const window={AUSTA_SUPABASE:sb,addEventListener(name,fn){(state.listeners[name]||= []).push(fn)},dispatchEvent(e){state.events.push(e);for(const fn of state.listeners[e.type]||[])fn(e)},AUSTA_MARKETPLACE_CARD_DATA:{salePayload:()=>({}),mount(){},read:()=>({}),remember(){}},AUSTA_VEHICLE_SELECTOR:{mount(){}}};
  const c=vm.createContext({window,document,console:{log(){},warn(){},error(){}},CustomEvent:class{constructor(type,init){this.type=type;this.detail=init?.detail}},setTimeout(fn){state.timers.push(fn)},clearTimeout(){}});
  for(const f of ['assets/vehicle/catalog.js','assets/vehicle/technical.js','assets/vehicle/vin.js','assets/marketplace/listing-publish.js'])vm.runInContext(fs.readFileSync(path.join(root,f),'utf8'),c);
  vm.runInContext(block('austa-v153b-all-real-listing-router'),c);
@@ -59,8 +63,8 @@ for(const value of values){
   const f=fixture({stored:value});assert.deepEqual(f.specs().find(([label])=>label==='İcarə növü'),['İcarə növü',value]);
  });
  test('Rent '+value+': canonical column filter includes created listing',async()=>{
-  const f=fixture();await f.create({rental_type:value});const result=await f.query({rental_type:value});assert.equal(result.total,1);
-  const query=f.state.ops.at(-1);assert.ok(query.filters.some(([,k])=>k==='rental_type'));assert.ok(!query.filters.some(([,k])=>k.includes('details')));
+  const f=fixture();await f.create({rental_type:value});const result=await f.query({rental_type:value});assert.equal(result.items.length,1);
+  const query=f.state.ops.at(-1);assert.deepEqual(query.args.p_filters,{rental_type:value});
  });
 }
 for(const value of ['Yearly','günlük',' Günlük ',false,0,[],{},'undefined'])for(const op of ['create','update'])test(op+': unsupported '+JSON.stringify(value)+' rejected before write',async()=>{
@@ -68,7 +72,7 @@ for(const value of ['Yearly','günlük',' Günlük ',false,0,[],{},'undefined'])
 });
 test('Rent Günlük → Həftəlik update changes canonical DB column and filters',async()=>{
  const f=fixture();await f.create({rental_type:'Günlük'});await f.update({rental_type:'Həftəlik'});assert.equal(f.state.row.rental_type,'Həftəlik');
- assert.equal((await f.query({rental_type:'Günlük'})).total,0);assert.equal((await f.query({rental_type:'Həftəlik'})).total,1);
+ assert.equal((await f.query({rental_type:'Günlük'})).items.length,0);assert.equal((await f.query({rental_type:'Həftəlik'})).items.length,1);
  assert.deepEqual(f.specs().find(([l])=>l==='İcarə növü'),['İcarə növü','Həftəlik']);
 });
 for(const patch of [{daily_price:75},{daily_price:0,rental_type:undefined}])test('Rent sparse update preserves existing Uzunmüddətli: '+JSON.stringify(patch),async()=>{
@@ -92,14 +96,14 @@ for(const op of ['create','edit','filter','detail'])test('Cars '+op+' isolation'
  const f=fixture({type:'cars'});
  if(op==='create'){await assert.rejects(async()=>f.create({rental_type:'Günlük'}));assert.ok(!f.state.ops.some(o=>o.op==='insert'));}
  if(op==='edit'){await assert.rejects(async()=>f.update({price:75,rental_type:'Günlük'}));assert.ok(!f.state.ops.some(o=>o.op==='update'));}
- if(op==='filter'){const result=await f.query({rental_type:'Günlük'});assert.equal(result.total,1);assert.ok(!f.state.ops.at(-1).filters.some(([,k])=>k==='rental_type'));}
+ if(op==='filter'){const result=await f.query({rental_type:'Günlük'});assert.equal(result.items.length,1);assert.deepEqual(f.state.ops.at(-1).args.p_filters,{});}
  if(op==='detail')assert.ok(!f.specs({...f.state.row,rental_type:'Günlük'}).some(([l])=>l==='İcarə növü'));
 });
 test('no production rental_type JSON source remains in runtime',()=>{
  assert.ok(!/details\.rental_type/.test(html));const filters=fs.readFileSync(path.join(root,'assets/marketplace/category-filters.js'),'utf8');assert.ok(!filters.includes("detail('rental_type'"));
 });
 for(const type of ['cars','rent'])test(type+': public category excludes draft staging',async()=>{
- const f=fixture({type});f.state.row.status='draft';assert.equal((await f.query({})).total,0);
- f.state.row.status='active';assert.equal((await f.query({})).total,1);
- assert.ok(f.state.ops.at(-1).filters.some(([,k,v])=>k==='status'&&v==='active'));
+ const f=fixture({type});f.state.row.status='draft';assert.equal((await f.query({})).items.length,0);
+ f.state.row.status='active';f.window.dispatchEvent({type:'austa:listings:changed'});assert.equal((await f.query({})).items.length,1);
+ assert.equal(f.state.ops.at(-1).op,'feed');assert.equal(f.state.ops.at(-1).args.p_category,type);
 });

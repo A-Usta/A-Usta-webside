@@ -9,6 +9,7 @@ const supabase = fs.readFileSync(path.join(root, 'src/lib/supabase.ts'), 'utf8')
 const schema = fs.readFileSync(path.resolve(root, '../supabase/migrations/20261111235300_v33d2_personal_vehicle_history.sql'), 'utf8');
 const idempotency = fs.readFileSync(path.resolve(root, '../supabase/migrations/20261112112645_v33d2_record_idempotency_hardening.sql'), 'utf8');
 const messaging = fs.readFileSync(path.resolve(root, '../supabase/migrations/20261120120000_v38_seller_messaging.sql'), 'utf8');
+const ownedListings = fs.readFileSync(path.join(root, 'src/lib/owned-listings.ts'), 'utf8');
 
 test('M5 account uses existing email auth and secure persisted Supabase session', () => {
   assert.match(supabase, /expo-secure-store/);
@@ -25,9 +26,18 @@ test('personal garage stays separate and every vehicle write is owner scoped', (
   assert.match(account, /from\('vehicles'\)/);
   assert.match(account, /eq\('user_id',ownerId\)/);
   assert.match(account, /eq\('user_id',user\.id\)/);
-  assert.match(account, /\['vehicle_listings','vehicle',/);
+  assert.match(account, /fetchOwnedListings\(sb,owner\.id\)/);
   assert.match(schema, /CREATE POLICY v33d2_vehicle_owner_guard ON public\.vehicles AS RESTRICTIVE/);
   assert.match(schema, /user_id=\(SELECT auth\.uid\(\)\)/);
+});
+
+test('owned marketplace listings read the TEST schema with owner isolation and category-level failure handling', () => {
+  assert.match(ownedListings, /security-barrier view/);
+  assert.doesNotMatch(ownedListings.match(/service_provider:\s*'([^']+)'/)?.[1] || '', /price/);
+  assert.match(ownedListings, /\.eq\('owner_id', ownerId\)/);
+  assert.match(ownedListings, /if \(row\.owner_id !== ownerId\) continue/);
+  assert.match(ownedListings, /errors\.push/);
+  assert.match(account, /ownedListingErrors\.length>0/);
 });
 
 test('service history writes through idempotent RPC and edits only user entered records', () => {

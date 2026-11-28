@@ -17,5 +17,8 @@ export const env = {
 
   supabaseUrl: required("SUPABASE_URL"),
   supabaseServiceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY"),
+  // TEST-only Places server key. Optional so existing deployments remain
+  // bootable when Places is not configured; the value is never logged.
+  googlePlacesApiKey: process.env.GOOGLE_PLACES_API_KEY?.trim() || "",
   corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS),
 };

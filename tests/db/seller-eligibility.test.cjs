@@ -162,7 +162,7 @@ test('migration is functions-only; reviewed SQL, managed fields and protected ru
  // P2.C: two exact production paths and one exact dedicated test path.
  require('../helpers/server-key-baseline.cjs').assertConfig();
  const cardBaseline=require('../helpers/homepage-baseline.cjs');assert(cardBaseline.isReviewedFile('assets/marketplace/listing-cards.css'));assert(cardBaseline.isReviewedFile('assets/marketplace/listing-cards.js'));
- const protectedPaths=['backend',':(exclude)backend/a-usta56/src/config/privileged-fetch.ts',':(exclude)backend/a-usta56/tests/privileged-fetch.test.ts',':(exclude)backend/a-usta56/src/config/supabase.ts',':(exclude)backend/a-usta56/src/authority/worker.ts',':(exclude)backend/a-usta56/tests/durable-uploads.test.ts',':(exclude)backend/a-usta56/src/authority/reconcile-uploads.ts',':(exclude)backend/a-usta56/src/authority/upload-reservations.ts',':(exclude)backend/a-usta56/src/authority/durable-quotas.ts',':(exclude)backend/a-usta56/src/config/server.ts',':(exclude)backend/a-usta56/.env.example',':(exclude)backend/a-usta56/src/config/cors.ts',':(exclude)backend/a-usta56/src/config/env.ts',':(exclude)backend/a-usta56/tests/cors.test.ts',':(exclude)backend/a-usta56/src/diagnostics/foundation.ts',':(exclude)backend/a-usta56/src/diagnostics/admission.ts',':(exclude)backend/a-usta56/src/routes/listing-media.ts',':(exclude)backend/a-usta56/package.json',':(exclude)backend/a-usta56/package-lock.json',':(exclude)backend/a-usta56/tools/test-auth-bootstrap.mjs',':(exclude)backend/a-usta56/tools/test-auth-bootstrap.test.mjs',':(exclude)backend/a-usta56/.gitignore',':(exclude)backend/a-usta56/src/routes/service-orders.ts',':(exclude)backend/a-usta56/src/validation/service-orders.ts',':(exclude)backend/a-usta56/tests/service-orders.test.ts',':(exclude)backend/a-usta56/tests/listing-media.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js',':(exclude)assets/marketplace/seller-page.js',':(exclude)assets/marketplace/category-filters.js','assets/marketplace/seller-page.js','assets/marketplace/category-filters.js'];
+ const protectedPaths=['backend',':(exclude)backend/a-usta56/src/config/privileged-fetch.ts',':(exclude)backend/a-usta56/tests/privileged-fetch.test.ts',':(exclude)backend/a-usta56/src/config/supabase.ts',':(exclude)backend/a-usta56/src/authority/worker.ts',':(exclude)backend/a-usta56/tests/durable-uploads.test.ts',':(exclude)backend/a-usta56/src/authority/reconcile-uploads.ts',':(exclude)backend/a-usta56/src/authority/upload-reservations.ts',':(exclude)backend/a-usta56/src/authority/durable-quotas.ts',':(exclude)backend/a-usta56/src/config/server.ts',':(exclude)backend/a-usta56/.env.example',':(exclude)backend/a-usta56/src/config/cors.ts',':(exclude)backend/a-usta56/src/config/env.ts',':(exclude)backend/a-usta56/tests/cors.test.ts',':(exclude)backend/a-usta56/src/diagnostics/foundation.ts',':(exclude)backend/a-usta56/src/diagnostics/admission.ts',':(exclude)backend/a-usta56/src/routes/listing-media.ts',':(exclude)backend/a-usta56/package.json',':(exclude)backend/a-usta56/package-lock.json',':(exclude)backend/a-usta56/tools/test-auth-bootstrap.mjs',':(exclude)backend/a-usta56/tools/test-auth-bootstrap.test.mjs',':(exclude)backend/a-usta56/.gitignore',':(exclude)backend/a-usta56/src/routes/service-orders.ts',':(exclude)backend/a-usta56/src/validation/service-orders.ts',':(exclude)backend/a-usta56/tests/service-orders.test.ts',':(exclude)backend/a-usta56/src/payments/provider.ts',':(exclude)backend/a-usta56/tests/payment-provider.test.ts',':(exclude)backend/a-usta56/tests/listing-media.test.ts',':(exclude)backend/a-usta56/src/routes/google-places.ts',':(exclude)backend/a-usta56/tests/google-places.test.ts','assets/marketplace/listing-publish.js','assets/marketplace/seller-verification.js','assets/marketplace/seller-identity.js',':(exclude)assets/marketplace/seller-page.js',':(exclude)assets/marketplace/category-filters.js','assets/marketplace/seller-page.js','assets/marketplace/category-filters.js'];
  // Exact approved Phase 1 mounting delta; all other Seller bytes remain fingerprinted.
  require('../helpers/personal-account-baseline.cjs').assertSellerMount(fs.readFileSync(path.join(root,'assets/marketplace/seller-verification.js'),'utf8'));
  protectedPaths.splice(protectedPaths.indexOf('assets/marketplace/seller-verification.js'),1);
@@ -173,6 +173,13 @@ test('migration is functions-only; reviewed SQL, managed fields and protected ru
  const approvedTest='backend/a-usta56/tests/listing-media.test.ts';
  // E.2A extends this exact reviewed test; retain byte authority rather than dropping the guard.
  assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,approvedTest))).digest('hex'),'c201de5d6ccbfc41303acb398313b1b44f6c32a711b82f55903f51c0471f4555');
+ // V4.3.14 adds exactly one fail-closed provider adapter and its test. Keep
+ // them exact-path exceptions and fingerprint their reviewed contents.
+ const reviewedPaymentFiles=[
+  ['backend/a-usta56/src/payments/provider.ts','ce539a560a8c385e2a00436f9d5c02c841e5796e9b0bc70e4a80768735873d46'],
+  ['backend/a-usta56/tests/payment-provider.test.ts','156fd276bd21a95719c0ee9451ee70ab4b395042996dc6829868dad3e3564fd8']
+ ];
+ for(const [file,sha] of reviewedPaymentFiles)assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha,file);
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');assert.match(html,/MANAGED_LISTING_FIELDS = Object\.freeze\(\[[\s\S]*?'seller_profile_id'/);
 });
 if(!process.env.P2A_CHILD){
@@ -216,19 +223,21 @@ test('trusted SQL with no JWT retains eligible attachment without broadening pub
 function assertP2D1Configuration(){
  require('../helpers/e2b-baseline.cjs').assertScope();
  const reviewed={
-  "backend/a-usta56/src/diagnostics/admission.ts": "36b8b740be70381182abe322ed197b24a1db7ed19ba48da6b8c0f544082a5666",
+  "backend/a-usta56/src/diagnostics/admission.ts": "02d2cee6a650ffd3962ba39b4a284bd62540b756c7ece2ba8b3390e0f6b4ee8b",
   "backend/a-usta56/src/routes/listing-media.ts": "c5856ed33bac19d6f0a30b4cb4dc30e0a8831712af949350a1fc61021b9bdbe8",
-  "backend/a-usta56/src/config/server.ts": "3fb77bdc61be35b843e929963cdfb857c5bfa4c4bf376069414b5e512361c923",
+  "backend/a-usta56/src/config/server.ts": "94a52b6cd6ce78eeae8879cb5d455a4cb161d8b07ec70f18105171503e05a8a4",
   "backend/a-usta56/.env.example": "ec156a5a9081202759d5576019c3c998997dc15fef2edfa7be70196d9f932078",
   "backend/a-usta56/src/config/cors.ts": "24b3ffa59a096bfb74c42e26fa2c76e1a8e95dbe747e9383deb0a3eb65082c7e",
-  "backend/a-usta56/src/config/env.ts": "a5b15ce9875c6fb165f5339cd64b049e2e607964357f6caaa46d81d1b3fc225e",
+  "backend/a-usta56/src/config/env.ts": "18043abbd03da353f481e46674563b2de063a47cfd63c0f819ab5a3c804ebe83",
   "backend/a-usta56/tests/cors.test.ts": "bb91f9f8bc1c02146ab6819d14615019e889d9f9494bebdae8ade6bd3587763c",
   "backend/a-usta56/src/diagnostics/foundation.ts": "fc6a6cdeda3f510326baf785c3c779d3ccc1719f52e1f1bdffde73437700acee",
   "backend/a-usta56/package.json": "cfee11ceea3568a764983e5d4e1b132500c6c4dedce963d2083445b9e4544802",
   "backend/a-usta56/package-lock.json": "fb3575fd4b25888badc2e0fd3192cba2f756a216d21d1c72c950e6506cfa9d19",
   "backend/a-usta56/.gitignore": "a459038af144bb649dd32c98f20e160838ec500ed5580fb1669ed0860196e140",
   ".node-version": "9185b9f67843cabfa8054f65ce47ce0b52036b0bfe07ae5a6b834d97cc127140",
-  ".github/workflows/main.yml": "ad25bc73fa3ae4884c1af045acb01a09774292f55bb71ed2ab0230a10da57113"
+  "backend/a-usta56/src/routes/google-places.ts": "9ce9199937878bc8b872d0754d02bf84347da8bcab5bc9e41814c95513d2772f",
+  "backend/a-usta56/tests/google-places.test.ts": "d9c142e527c6c59960124e5769218fb26362c4164e8695e3102be588484b374f",
+  ".github/workflows/main.yml": "a5ece0f7c62fa2664cb787f395b15adb90f496ec0be69771534c172fe8bb1cb7"
 };
  for(const [file,sha256] of Object.entries(reviewed)){
   assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),sha256,file);

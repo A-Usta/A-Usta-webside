@@ -29,6 +29,7 @@ export type ServiceOrderInput = {
   service_description: string;
   urgency: 'normal' | 'urgent';
   service_mode: 'mobile' | 'shop';
+  payment_method: 'card' | 'cash';
   address: string;
   region: string;
   district?: string;
@@ -46,6 +47,21 @@ export type ServiceOrderInput = {
 };
 
 export type ServiceOrder = Record<string, any> & { id: string; status: string; client_order_id?: string };
+export type GooglePlaceResult = {
+  id: string;
+  name: string;
+  address: string | null;
+  latitude: number;
+  longitude: number;
+  types: string[];
+  phone: string | null;
+  opening_hours: string[];
+  rating: number | null;
+  user_rating_count: number | null;
+  distance_km: number;
+  source: 'google_places';
+  attribution: 'Google Maps';
+};
 export class ServiceApiError extends Error {
   status: number;
   definite: boolean;
@@ -83,6 +99,17 @@ export async function serviceRequest<T>(client: SupabaseClient, path: string, in
   try { body = await response.json(); } catch { /* malformed error handled below */ }
   if (!response.ok) throw new ServiceApiError(body?.message || body?.error || `Server xətası (${response.status}).`, response.status);
   return body as T;
+}
+
+export async function searchGooglePlaces(client: SupabaseClient, input: { category: string; latitude: number; longitude: number; radiusKm: number }) {
+  if (process.env.EXPO_PUBLIC_APP_ENV?.trim().toLowerCase() !== 'test') {
+    throw new Error('Xarici məntəqə axtarışı yalnız təsdiqlənmiş TEST mühitində aktivdir.');
+  }
+  return serviceRequest<{ places: GooglePlaceResult[]; source: 'google_places'; attribution: string | null; returned: number }>(
+    client,
+    '/places/nearby-search',
+    { method: 'POST', body: JSON.stringify(input) },
+  );
 }
 
 export async function loadCustomerOrders(client: SupabaseClient): Promise<ServiceOrder[]> {

@@ -1,8 +1,11 @@
 import 'react-native-gesture-handler';
-import { Stack } from 'expo-router';
+import { Stack, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Pressable, Text, View } from 'react-native';
+import { BackHandler, Platform, ToastAndroid } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Pressable, Text, View } from '../lib/themed-native';
+import { AppSettingsProvider, useAppTheme } from '../lib/app-settings';
 
 export function ErrorBoundary({ retry }: { error: Error; retry: () => void }) {
   return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#F4F6F8' }}>
@@ -14,15 +17,61 @@ export function ErrorBoundary({ retry }: { error: Error; retry: () => void }) {
   </View>;
 }
 
-export default function RootLayout() {
-  return <SafeAreaProvider>
-    <StatusBar style="dark" />
-    <Stack screenOptions={{ headerBackTitle: 'Geri', headerTintColor: '#176244', contentStyle: { backgroundColor: '#F4F6F8' } }}>
+function AppNavigation() {
+  const { colorScheme } = useAppTheme();
+  const pathname = usePathname();
+  const router = useRouter();
+  const lastHomeBackAt = useRef(0);
+  const dark = colorScheme === 'dark';
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      // Let native stack screens and screen-level overlay handlers consume back first.
+      const isHome = pathname === '/' || pathname === '/index';
+      if (!isHome && router.canGoBack()) return false;
+      if (!isHome) {
+        router.replace('/(drawer)/(tabs)');
+        return true;
+      }
+      const now = Date.now();
+      if (now - lastHomeBackAt.current <= 2000) {
+        lastHomeBackAt.current = 0;
+        BackHandler.exitApp();
+      } else {
+        lastHomeBackAt.current = now;
+        ToastAndroid.show('Çıxmaq üçün bir daha basın', ToastAndroid.SHORT);
+      }
+      return true;
+    });
+    return () => subscription.remove();
+  }, [pathname, router]);
+  return <>
+    <StatusBar style={dark ? 'light' : 'dark'} />
+    <Stack screenOptions={{
+      headerBackTitle: 'Geri',
+      headerTintColor: '#D92D20',
+      headerStyle: { backgroundColor: dark ? '#151D26' : '#FFFFFF' },
+      headerTitleStyle: { color: dark ? '#EDF2F6' : '#202A35' },
+      contentStyle: { backgroundColor: dark ? '#0C1218' : '#F4F6F8' },
+    }}>
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
       <Stack.Screen name="service/[key]" options={{ title: 'Xidmət' }} />
       <Stack.Screen name="locations" options={{ title: 'Yaxın məntəqələr' }} />
-      <Stack.Screen name="category/[key]" options={{ title: 'Kateqoriya' }} />
+      <Stack.Screen name="category/[key]" options={{ headerShown: false }} />
       <Stack.Screen name="listing/[id]" options={{ title: 'Elan məlumatı' }} />
+      <Stack.Screen name="seller/[id]" options={{ title: 'Satıcı profili' }} />
+      <Stack.Screen name="tools/customs" options={{ title: 'Gömrük kalkulyatoru' }} />
+      <Stack.Screen name="tools/catalog" options={{ title: 'Avtokataloq' }} />
+      <Stack.Screen name="tools/dealers" options={{ title: 'Dilerlər' }} />
+      <Stack.Screen name="tools/most-viewed" options={{ title: 'Ən çox baxılanlar' }} />
+      <Stack.Screen name="settings" options={{ headerShown: false }} />
+      <Stack.Screen name="videos" options={{ headerShown: false }} />
     </Stack>
+  </>;
+}
+
+export default function RootLayout() {
+  return <SafeAreaProvider>
+    <AppSettingsProvider><AppNavigation /></AppSettingsProvider>
   </SafeAreaProvider>;
 }

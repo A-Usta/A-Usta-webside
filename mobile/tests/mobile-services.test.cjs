@@ -34,15 +34,22 @@ test('service orders use the owner-authenticated API and existing idempotency fi
   assert.match(screens, /evidence_files:files/);
   assert.match(screens, /Təsdiqlə/);
   assert.match(screens, /price_status==='confirmed'/);
+  assert.match(screens, /values=\{\[\["card","Bank kartı"\],\["cash","Nağd"\]\]\}/);
+  assert.match(screens, /payment_method:paymentMethod/);
+  assert.match(screens, /Kartdan pul tutulmur/);
+  assert.match(api, /payment_method: 'card' \| 'cash'/);
+  assert.doesNotMatch(screens, /card_number|cvv|cvc/i);
   assert.match(screens, /BEFORE|AFTER/);
 });
 
 test('public nearby search uses the bounded provider RPC and native permission config', () => {
   assert.match(screens, /rpc\('discover_public_providers'/);
   assert.match(screens, /result_offset:next/);
-  assert.match(screens, /Math\.min\(region\.latitudeDelta,\.48\)/);
+  assert.match(screens, /const latRadius=radiusKm\/111,lonRadius=radiusKm\/\(111\*Math\.max\(\.2,Math\.cos\(region\.latitude\*Math\.PI\/180\)\)\)/);
   assert.match(screens, /requestForegroundPermissionsAsync/);
-  assert.match(screens, /Google Maps və ya brauzer/);
+  assert.match(screens, /Marşrut qur/);
+  assert.match(screens, /google\.com\/maps\/dir/);
+  assert.match(screens, /austa_get_public_seller_avatar|discover_public_providers/);
   assert.doesNotMatch(screens, /geoapify\.com|api\.geoapify/i);
   assert.match(config, /expo-location/);
   assert.match(config, /react-native-maps/);

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Alert, Linking, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, Text, View, Feather } from '../lib/themed-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const GREEN = '#176244';
+const RED = '#D92D20';
 const INK = '#202A35';
 const MUTED = '#7A8491';
 const LINE = '#E8EBEF';
@@ -56,7 +57,7 @@ export function ServiceDrawer({ navigation }: Props) {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 22 },
   brand: { paddingVertical: 19, paddingHorizontal: 8 },
-  wordmark: { color: GREEN, fontSize: 22, fontWeight: '900', letterSpacing: 1.1, flexShrink: 0 },
+  wordmark: { color: '#FFFFFF', backgroundColor: RED, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 5, overflow: 'hidden', fontSize: 22, fontWeight: '900', letterSpacing: 1.1, flexShrink: 0, alignSelf: 'flex-start' },
   caption: { color: MUTED, fontSize: 12, marginTop: 5 },
   divider: { height: 1, backgroundColor: LINE, marginVertical: 8 },
   accordion: { minHeight: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 9, borderRadius: 10 },

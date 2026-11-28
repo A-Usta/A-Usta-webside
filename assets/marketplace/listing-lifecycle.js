@@ -8,15 +8,18 @@ const sources=Object.freeze({
   auto_dealer:{table:'auto_dealer_listings',types:['dealer']}
 });
 const aliases=Object.freeze({provider:'service_provider',dealer:'auto_dealer'});
-const labels=Object.freeze({active:'Aktiv',inactive:'Aktiv deyil',draft:'Qaralama',sold:'Satılıb',rented:'İcarəyə verilib',archived:'Arxivdə'});
+const labels=Object.freeze({active:'Aktiv',inactive:'Aktiv deyil',draft:'Qaralama',sold:'Satılıb',rented:'İcarəyə verilib',expired:'Vaxtı bitib',archived:'Arxivdə'});
+const statusFilters=Object.freeze([['all','Bütün elanlar'],['active','Aktiv'],['vip','VIP'],['premium','Premium'],['expired','Vaxtı bitmiş'],['draft','Qaralamalar'],['inactive','Deaktiv']]);
 const actionLabels=Object.freeze({mark_sold:'Satılıb kimi işarələ',mark_rented:'İcarəyə verilib',archive:'Arxivlə',reactivate:'Yenidən aktiv et'});
 const categoryLabels=Object.freeze({leasing:'Lizinq şirkəti',insurance:'Avtomobil sığortası',sober_driver:'Ayıq sürücü',parts:'Ehtiyat hissələri',accessories:'Aksesuarlar',special:'Xüsusi texnika',moto:'Moto / Moped / Skuter',plate:'Qeydiyyat nömrəsi',bus:'Avtobus',water:'Su nəqliyyatı',caravan:'Karavan',trailer:'Qoşqu / Treyler'});
 const own=(object,key)=>typeof key==='string'&&Object.prototype.hasOwnProperty.call(object,key);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const failure=(message,code='LIFECYCLE_REJECTED')=>Object.assign(new Error(message),{code});
+function feedChanged(source,id){try{window.dispatchEvent(new CustomEvent('austa:listings:changed',{detail:{source,id}}));}catch{}}
 let client=null,subscription=null,epoch=0,loadRevision=0,mountRevision=0;
 const hosts=new Map(),flights=new Map();
-let view={kind:'idle',items:[],failed:[],message:''};
+let view={kind:'idle',items:[],failed:[],message:''},statusFilter='all';
+if(typeof document!=='undefined'&&document.createElement&&document.head?.appendChild&&!document.getElementById('austa-my-status-filter-style')){const style=document.createElement('style');style.id='austa-my-status-filter-style';style.textContent='.austa-my-status-filters{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.austa-my-status-filters button{border:1px solid #245c7e;background:#092239;color:#d7e2eb;border-radius:999px;padding:6px 9px;font-size:10px;cursor:pointer}.austa-my-status-filters button[aria-pressed="true"]{border-color:#e21e48;background:#35101c;color:#fff}';document.head.appendChild(style);}
 function ref(item){
   const raw=item?.__austa_source,source=own(aliases,raw)?aliases[raw]:raw;
   if(!own(sources,source)||typeof item?.id!=='string'||!item.id)throw failure('Elan mənbəyi müəyyən edilmədi.');
@@ -63,18 +66,39 @@ function render(items=view.items,state=view){
   if(state.kind==='signedout')return '<p>Elanlarınızı görmək üçün hesabınıza daxil olun.</p>';
   const warning=state.failed?.length?'<p role="alert">Bəzi elanlar yüklənmədi: '+esc(state.failed.join(', '))+'. Yenidən cəhd edin.</p>':'';
   const retry=state.failed?.length||state.kind==='error'?'<button type="button" data-austa-my-retry>Yenidən yüklə</button>':'';
-  if(!items.length)return note+warning+retry+(state.failed?.length||state.kind==='error'?'':'<p>Hələ elanınız yoxdur.</p>');
-  return note+warning+retry+items.map(item=>{
+  const filtered=items.filter(item=>{const promoActive=item.promotion_until&&Date.parse(item.promotion_until)>Date.now()&&(!item.promotion_started_at||Date.parse(item.promotion_started_at)<=Date.now());if(statusFilter==='vip'||statusFilter==='premium')return item.promotion_type===statusFilter&&promoActive;if(statusFilter==='inactive')return ['inactive','archived','sold','rented'].includes(item.status);return statusFilter==='all'||item.status===statusFilter;});
+  const filters='<div class="austa-my-status-filters" role="group" aria-label="Elan statusu">'+statusFilters.map(([key,label])=>'<button type="button" data-austa-my-filter="'+key+'" aria-pressed="'+(statusFilter===key)+'">'+label+'</button>').join('')+'</div>';
+  if(!filtered.length)return filters+note+warning+retry+(items.length?'<p>Bu statusda elan yoxdur.</p>':state.failed?.length||state.kind==='error'?'':'<p>Hələ elanınız yoxdur.</p>');
+  return filters+note+warning+retry+filtered.map(item=>{
     const button=(attribute,text)=>'<button type="button" '+attribute+'>'+esc(text)+'</button>';
+    const expiry=item.expires_at?'<p>Bitmə tarixi: '+esc(new Date(item.expires_at).toLocaleDateString('az-AZ'))+'</p>':'';
     return '<article class="austa-listing-card austa-p15-listing" data-austa-my-id="'+esc(item.id)+'" data-austa-my-table="'+esc(item.__austa_table)+'">'+
       '<div><b>'+esc(item.__austa_title)+'</b><p>'+esc(item.__austa_label)+' · '+esc([item.region,item.district].filter(Boolean).join(' / '))+'</p>'+
-      (item.__austa_price?'<strong>'+esc(item.__austa_price)+'</strong>':'')+'<p><strong class="austa-p15-status">'+esc(statusLabel(item.status))+'</strong></p></div>'+
+      (item.__austa_price?'<strong>'+esc(item.__austa_price)+'</strong>':'')+'<p><strong class="austa-p15-status">'+esc(statusLabel(item.status))+'</strong></p>'+expiry+'</div>'+
       '<div class="austa-p15-actions"><div class="austa-listing-actions" role="group" aria-label="Elana baxış və redaktə">'+button('data-austa-my-view','Bax')+button('data-austa-my-edit','Düzəlt')+'</div>'+
+      (item.status==='expired'?'<div class="austa-listing-actions" role="group" aria-label="Vaxtı bitmiş elan">'+button('data-austa-my-renew','30 gün yenilə')+'</div>':'')+
       '<div class="austa-listing-actions" role="group" aria-label="Elanın vəziyyəti">'+actions(item).map(action=>button('data-austa-my-transition="'+action+'"',actionLabels[action])).join('')+'</div>'+
       (item.status==='active'&&actions(item).length?'<div class="austa-listing-actions" role="group" aria-label="Elanı tanıt">'+button('data-austa-my-boost','İrəli çək')+button('data-austa-my-vip','VIP')+button('data-austa-my-premium','Premium')+'</div>':'')+
       '<div class="austa-listing-actions" role="group" aria-label="Elanı sil">'+button('data-austa-my-delete','Sil')+'</div></div></article>';
   }).join('');
 }
+async function renew(item){
+  const {source}=ref(item);bindAuth();const context={client,epoch,mount:mountRevision,hosts:[...hosts.values()].filter(mounted)};
+  if(!window.crypto?.randomUUID)throw failure('Bu brauzerdə təhlükəsiz yeniləmə sorğusu dəstəklənmir.');
+  await auth(context);if(item.status!=='expired')throw failure('Yalnız vaxtı bitmiş elan yenilənə bilər.');
+  const result=await context.client.rpc('austa_renew_listing',{p_source:source,p_listing_id:item.id,p_request_id:window.crypto.randomUUID()});
+  if(!current(context))throw failure('Hesab dəyişib.','LIFECYCLE_STALE');
+  if(result.error)throw result.error;const row=Array.isArray(result.data)?result.data[0]:result.data;
+  if(row?.listing_id!==item.id||row?.status!=='active'||!row?.expires_at)throw failure('Server elan yenilənməsini təsdiqləmədi.');
+  feedChanged(source,item.id);
+  await load();return row;
+}
+document.addEventListener('click',event=>{
+  const filter=event.target?.closest?.('[data-austa-my-filter]');if(filter){statusFilter=filter.dataset.austaMyFilter;paint();return;}
+  const button=event.target?.closest?.('[data-austa-my-renew]');if(!button)return;
+  const card=button.closest('[data-austa-my-id]'),item=(window.AUSTA_MY_REAL_LISTINGS||[]).find(row=>String(row.id)===String(card?.dataset.austaMyId)&&row.__austa_table===card?.dataset.austaMyTable);
+  if(!item)return;button.disabled=true;void renew(item).catch(error=>{if(current({client,epoch,mount:mountRevision})){view.message=error?.message||'Elanı yeniləmək mümkün olmadı.';paint();}}).finally(()=>{if(button.isConnected)button.disabled=false;});
+});
 function mounted(host){return host&&host.isConnected!==false&&(!host.id||document.getElementById(host.id)===host);}
 function paint(){for(const [id,host] of hosts){if(!mounted(host)){hosts.delete(id);continue;}host.innerHTML=render();}}
 function mount(host){
@@ -82,7 +106,7 @@ function mount(host){
   if(hosts.get(host.id)!==host){hosts.set(host.id,host);mountRevision++;}
   return true;
 }
-function invalidate(){epoch++;loadRevision++;window.AUSTA_MY_REAL_LISTINGS=[];view={kind:'signedout',items:[],failed:[],message:''};paint();}
+function invalidate(){epoch++;loadRevision++;statusFilter='all';window.AUSTA_MY_REAL_LISTINGS=[];view={kind:'signedout',items:[],failed:[],message:''};paint();}
 function bindAuth(){
   const next=window.AUSTA_SUPABASE;
   if(next===client)return;
@@ -156,6 +180,7 @@ function transition(item,action){
       if(error||!Array.isArray(data)||data.length!==1||data[0].id!==reference.id||data[0].owner_id!==context.user.id||data[0].status!==next)throw failure('Elan dəyişib və ya əməliyyat təsdiqlənmədi. Yenidən yoxlayın.','LIFECYCLE_CONFLICT');
       const persisted=await parent(context,reference);
       if(persisted.status!==next||reference.config.field&&persisted[reference.config.field]!==row[reference.config.field])throw failure('Elanın yeni statusu təsdiqlənmədi.','LIFECYCLE_CONFLICT');
+      feedChanged(reference.source,reference.id);
       if(current(context))await load();
       if(!current(context))throw failure('Hesab və ya elan pəncərəsi dəyişib.','LIFECYCLE_STALE');
       return persisted;
@@ -176,6 +201,6 @@ async function authorizePromotion(item){
   if(row.status!=='active')throw failure('Tanıtım yalnız aktiv elan üçün mümkündür.');
   return decorate(reference.source,row);
 }
-window.AUSTA_MY_LIFECYCLE=Object.freeze({load,mount,render,actions,statusLabel,transition,authorizePromotion,bindAuth,
+window.AUSTA_MY_LIFECYCLE=Object.freeze({load,mount,render,actions,statusLabel,transition,authorizePromotion,bindAuth,renew,
   state:()=>({kind:view.kind,failed:[...view.failed],message:view.message})});
 })();

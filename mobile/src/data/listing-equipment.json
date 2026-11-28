@@ -1,0 +1,143 @@
+{
+  "cars": [
+    "Yüngül lehimli disklər",
+    "ABS",
+    "ESP",
+    "Kondisioner",
+    "Klimat-kontrol",
+    "Yağış sensoru",
+    "İşıq sensoru",
+    "Mərkəzi qapanma",
+    "Park radarı",
+    "Arxa görüntü kamerası",
+    "360° kamera",
+    "Ksenon / LED faralar",
+    "Yan pərdələr",
+    "Oturacaqların isidilməsi",
+    "Oturacaqların ventilyasiyası",
+    "Dəri salon",
+    "Kruiz-kontrol",
+    "Adaptiv kruiz-kontrol",
+    "Start-stop",
+    "Açarsız giriş",
+    "Elektrik oturacaqlar",
+    "Panoramik dam",
+    "Lyuk",
+    "Bluetooth / multimedia",
+    "Naviqasiya"
+  ],
+  "rent": [
+    "Kondisioner",
+    "Uşaq oturacağı",
+    "GPS / naviqasiya",
+    "Tam sığorta",
+    "Çatdırılma xidməti",
+    "Bluetooth / multimedia",
+    "Avtomat ötürücü",
+    "Wi-Fi"
+  ],
+  "parts": [
+    "Orijinal ehtiyat hissəsi",
+    "Alternativ ehtiyat hissəsi",
+    "Yeni",
+    "İşlənmiş",
+    "Zəmanət verilir",
+    "Quraşdırma mümkündür"
+  ],
+  "accessories": [
+    "Orijinal",
+    "Yeni",
+    "İşlənmiş",
+    "Zəmanət verilir",
+    "Quraşdırma mümkündür"
+  ],
+  "moto": [
+    "ABS",
+    "Dartmaya nəzarət",
+    "Baqaj qutusu",
+    "Külək qoruyucusu",
+    "Qızdırılan tutacaqlar",
+    "Mərkəzi ayaqaltı",
+    "LED faralar",
+    "Sürüşmə əleyhinə sistem"
+  ],
+  "special": [
+    "Kondisioner",
+    "Kabin qızdırıcısı",
+    "GPS izləmə",
+    "Kran avadanlığı",
+    "Ön yükləyici",
+    "Arxa ekskavator",
+    "Dayaq ayaqları",
+    "Əlavə hidravlik çıxış"
+  ],
+  "bus": [
+    "Kondisioner",
+    "İsitmə sistemi",
+    "Təhlükəsizlik kəmərləri",
+    "Video müşahidə",
+    "Əlçatanlıq lifti",
+    "Bağaj bölməsi",
+    "GPS izləmə"
+  ],
+  "water": [
+    "GPS / kartplotter",
+    "Ekolot",
+    "VHF rabitə",
+    "Xilasedici jiletlər",
+    "Bimini / günəşlik",
+    "Kabina",
+    "Tualet",
+    "Yuxu yeri"
+  ],
+  "caravan": [
+    "Mətbəx",
+    "Soyuducu",
+    "Duş",
+    "Tualet",
+    "Kondisioner",
+    "İsitmə sistemi",
+    "Günəş paneli",
+    "Su çəni",
+    "Markiz",
+    "Yuxu yeri"
+  ],
+  "trailer": [
+    "Əyləc sistemi",
+    "Dayaq ayaqları",
+    "Ehtiyat təkər",
+    "Yük bərkitmə relsləri",
+    "Hidravlik qaldırıcı",
+    "Soyuducu qurğu",
+    "Kran avadanlığı"
+  ],
+  "plate": [
+    "Rəsmi sənədlər mövcuddur",
+    "Qeydiyyat üçün hazırdır"
+  ],
+  "service": [
+    "Kompüter diaqnostikası",
+    "Yağ dəyişimi",
+    "Mühərrik təmiri",
+    "Sürətlər qutusu təmiri",
+    "Avtoelektrik",
+    "Kondisioner xidməti",
+    "Təkər təmiri",
+    "Səyyar xidmət",
+    "Evakuator xidməti"
+  ],
+  "usta": [
+    "Səyyar xidmət",
+    "Yerində təmir",
+    "Kompüter diaqnostikası",
+    "Avtoelektrik",
+    "Mühərrik təmiri",
+    "Təcili çağırış"
+  ],
+  "dealer": [
+    "Texniki yoxlama mümkündür",
+    "Zəmanət təklif olunur",
+    "Trade-in qəbul edilir",
+    "Çatdırılma xidməti"
+  ]
+}

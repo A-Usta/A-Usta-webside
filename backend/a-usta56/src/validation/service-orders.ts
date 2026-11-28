@@ -61,6 +61,7 @@ export function serviceOrderInputError(route: string, method: string, body: unkn
     if (key === "latitude" ? n < -90 || n > 90 : key === "longitude" ? n < -180 || n > 180 : n < 0) return key + " is outside its valid range";
   }
   if (create) {
+    if (!absent(b.payment_method) && (typeof b.payment_method !== 'string' || !['card','cash'].includes(b.payment_method))) return 'Invalid payment_method';
     for (const key of ["service_description","address","region","district","customer_note","client_order_id","form_version"]) if (!absent(b[key]) && typeof b[key] !== "string") return key + " must be text";
     if (typeof b.client_order_id === "string" && b.client_order_id.trim().length > 120) return "client_order_id is too long";
     if (!absent(b.vehicle_id) && (typeof b.vehicle_id !== "string" || !uuid.test(b.vehicle_id))) return "vehicle_id must be a UUID";

@@ -96,7 +96,8 @@ test('partial source failure preserves successful rows and displays warning',asy
 test('all source failures never claim empty listings',async()=>{const f=fixture(),host=f.host();f.failure(o=>o.op==='read',{once:false});await f.lifecycle.load(host);assert.ok(host.innerHTML.includes('Bəzi elanlar yüklənmədi'));assert.ok(!host.innerHTML.includes('Hələ elanınız yoxdur'));});
 test('real empty response has an empty state without failure warning',async()=>{const f=fixture(),host=f.host();f.state.tables[f.table]=[];await f.lifecycle.load(host);assert.ok(host.innerHTML.includes('Hələ elanınız yoxdur'));assert.ok(!host.innerHTML.includes('Bəzi elanlar'));});
 test('loader paginates owner-scoped sources and sorts globally',async()=>{const f=fixture('cars'),host=f.host();f.state.tables.marketplace_listings.push({id:'newer',owner_id:'owner-1',status:'active',category:'parts',created_at:'2026-02-01'});await f.lifecycle.load(host);assert.equal(f.window.AUSTA_MY_REAL_LISTINGS[0].id,'newer');assert.ok(f.state.ops.filter(o=>o.op==='read').every(o=>o.filters.some(([key,value])=>key==='owner_id'&&value==='owner-1')));});
-for(const [status,label] of Object.entries({active:'Aktiv',inactive:'Aktiv deyil',draft:'Qaralama',sold:'Satılıb',rented:'İcarəyə verilib',archived:'Arxivdə'}))test('status label '+status,()=>assert.equal(fixture().lifecycle.statusLabel(status),label));
+for(const [status,label] of Object.entries({active:'Aktiv',inactive:'Aktiv deyil',draft:'Qaralama',sold:'Satılıb',rented:'İcarəyə verilib',expired:'Vaxtı bitib',archived:'Arxivdə'}))test('status label '+status,()=>assert.equal(fixture().lifecycle.statusLabel(status),label));
+test('owner render exposes seven status filters and renew only for expired listings',()=>{const f=fixture('cars','expired'),markup=f.lifecycle.render([f.item]);for(const key of ['all','active','vip','premium','expired','draft','inactive'])assert.ok(markup.includes('data-austa-my-filter="'+key+'"'));assert.ok(markup.includes('data-austa-my-renew'));});
 test('unknown status is neutral; no raw values or lifecycle/promotion actions',()=>{const f=fixture('cars','<script>secret</script>');const markup=f.lifecycle.render([f.item]);assert.ok(markup.includes('Status əlçatan deyil'));assert.ok(!markup.includes('secret'));assert.ok(!markup.includes('data-austa-my-transition'));assert.ok(!markup.includes('data-austa-my-vip'));});
 test('seller-controlled owner listing text is escaped',async()=>{const f=fixture(),host=f.host();f.row.brand='<img src=x onerror=alert(1)>';await f.lifecycle.load(host);assert.ok(host.innerHTML.includes('&lt;img'));assert.ok(!host.innerHTML.includes('<img'));});
 test('inactive/draft render never shows generic activation',()=>{for(const status of ['draft','inactive']){const f=fixture('parts',status),markup=f.lifecycle.render([f.item]);assert.ok(!markup.includes('data-austa-my-transition'));assert.ok(!markup.includes('data-austa-my-vip'));}});
@@ -115,12 +116,16 @@ test('baseline repair is symmetric on exact main and retains real coordinator co
 for(const type of Object.keys(maps))test(type+' public category query excludes every non-active lifecycle state',async()=>{
  const f=fixture(type);
  f.state.tables[f.table]=['draft','inactive','sold','rented','archived','active'].map((status,i)=>({...f.row,id:'public-'+i,status}));
- f.window.AUSTA_CATEGORY_FILTERS={applyQuery:q=>q};
+ f.window.AUSTA_SUPABASE.rpc=async(name,args)=>{
+  assert.equal(name,'austa_public_listing_page');assert.equal(args.p_category,type);
+  const active=f.state.tables[f.table].filter(row=>row.status==='active');
+  return {data:active.map(row=>({source:f.source,category:type,id:row.id,owner_id:row.owner_id,status:row.status,created_at:row.created_at,published_at:row.published_at,updated_at:row.updated_at,expires_at:row.expires_at,promotion_type:null,promotion_started_at:null,promotion_until:null,last_boosted_at:null,sort_bucket:3,sort_at:row.created_at,payload:row})),error:null};
+ };
  let code=html.match(/<script id="austa-v154e-global-promotion-pagination">([\s\S]*?)<\/script>/)[1];
- const end=code.lastIndexOf('})();');code=code.slice(0,end)+'window.__p15PublicQuery=queryAll;'+code.slice(end);
+ const end=code.lastIndexOf('})();');code=code.slice(0,end)+'window.__p15PublicQuery=fetchCategoryV154E;'+code.slice(end);
  vm.runInContext(code,f.context);
- const rows=await f.window.__p15PublicQuery(type);
- assert.equal(rows.length,1);assert.equal(rows[0].status,'active');
+ const result=await f.window.__p15PublicQuery(type,1,{});
+ assert.equal(result.items.length,1);assert.equal(result.items[0].status,'active');
 });
 test('missing auth cannot mutate listing',async()=>{const f=fixture();f.state.user=null;await assert.rejects(f.transition('archive'));assert.equal(f.writes().length,0);});
 test('same-user latest load supersedes an older delayed load',async()=>{

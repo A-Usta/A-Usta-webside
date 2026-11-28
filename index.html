@@ -19987,6 +19987,7 @@ async function loadAdminKyc() {
    else if(page==='ratings') main.innerHTML=ratingsPage(role);
    else if(page==='vehicles') main.innerHTML=personal.vehicles();
    else if(page==='business') main.innerHTML='<section class="austa-v39-page active"><h1>Biznes profili</h1><p class="pa-subtitle">Biznes müraciətlərinizi və təsdiq vəziyyətini idarə edin.</p><div data-pa-business-host></div>'+((role==='store'||role==='partner')?'<details class="pa-vehicle-preview"><summary>Əvvəlki '+(role==='store'?'mağaza':'tərəfdaş')+' məlumatları</summary><p>Bu məlumatlar yalnız bu brauzerdə saxlanır və biznes təsdiqi vermir.</p>'+(role==='store'?storeRegister():partnerRegister())+'</details>':'')+'<div data-pa-auth-entry><button class="austa-v39-btn" data-action="login">Giriş / qeydiyyat</button></div></section>';
+   else if(page==='settings') main.innerHTML=personal.securityPage();
    else if(page==='registration') main.innerHTML='<section class="austa-v39-page active"><h1>Usta qeydiyyatı</h1><p class="pa-subtitle">Usta müraciətinizi göndərin və fəaliyyətə başlayın.</p>'+providerRegister()+'</section>';
    else if(page==='videos') main.innerHTML=videosPage();
    else if(page==='admin-kyc'){
@@ -20005,6 +20006,7 @@ async function loadAdminKyc() {
   }
    bindPage(page,role);
    personal.bindAuth();
+   if(page==='settings')void personal.bindSecurity(main);
    window.AUSTA_SELLER_VERIFICATION?.mountAccount?.();
    main.scrollTop=0;modal.scrollTop=0;shell.scrollTop=0;
  }
@@ -20572,6 +20574,24 @@ function bindPage(page, role) {
 
           </form>
 
+          <section id="austa-v39-auth-phone-panel" aria-label="Telefonla giriş" style="display:none;margin-top:20px;padding:16px;border:1px solid #343434;border-radius:12px;background:#161616;color:#fff">
+            <h3 style="margin:0 0 6px;font-size:16px">Telefonla WhatsApp kodu</h3>
+            <p style="margin:0 0 12px;color:#9aa7b2;font-size:13px;line-height:1.5">Altırəqəmli kod WhatsApp ilə göndərilir. E-poçt və şifrə ilə giriş yuxarıdakı formda qalır.</p>
+            <label for="austa-v39-auth-phone-otp-phone" style="display:block;margin-bottom:6px;color:#dce3e8;font-size:13px">Mobil nömrə</label>
+            <div style="display:flex;align-items:center;gap:9px;width:100%;box-sizing:border-box;padding:0 13px;border-radius:10px;border:1px solid #333;background:#181818;color:#fff"><span aria-hidden="true">+994</span><input id="austa-v39-auth-phone-otp-phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="XX XXX XX XX" style="flex:1;min-width:0;padding:13px 0;border:0;outline:0;background:transparent;color:#fff"></div>
+            <div id="austa-v39-auth-phone-code-wrap" style="display:none;margin-top:12px">
+              <label for="austa-v39-auth-phone-otp-code" style="display:block;margin-bottom:6px;color:#dce3e8;font-size:13px">6 rəqəmli təsdiq kodu</label>
+              <input id="austa-v39-auth-phone-otp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" style="width:100%;box-sizing:border-box;padding:13px;border-radius:10px;border:1px solid #333;background:#181818;color:#fff">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button id="austa-v39-auth-phone-send" type="button" style="flex:1;padding:12px;border:0;border-radius:10px;background:#176244;color:#fff;font-weight:700;cursor:pointer">WhatsApp ilə kod al</button>
+              <button id="austa-v39-auth-phone-verify" type="button" hidden style="flex:1;padding:12px;border:0;border-radius:10px;background:#176244;color:#fff;font-weight:700;cursor:pointer">Kodu təsdiqlə</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:13px">
+              <button id="austa-v39-auth-phone-resend" type="button" hidden style="border:0;background:none;color:#9fd1b5;cursor:pointer">Kodu yenidən göndər</button>
+            </div>
+          </section>
+
           <div
             id="austa-v39-auth-message"
             style="
@@ -20668,6 +20688,31 @@ function bindPage(page, role) {
         document.getElementById(
           'austa-v39-auth-message'
         );
+
+      const otpPhoneInput=document.getElementById('austa-v39-auth-phone-otp-phone');
+      const otpCodeWrap=document.getElementById('austa-v39-auth-phone-code-wrap');
+      const otpCodeInput=document.getElementById('austa-v39-auth-phone-otp-code');
+      const otpSendButton=document.getElementById('austa-v39-auth-phone-send');
+      const otpVerifyButton=document.getElementById('austa-v39-auth-phone-verify');
+      const otpResendButton=document.getElementById('austa-v39-auth-phone-resend');
+      let otpLastSentAt=0;
+      let otpAuthEnabled=false;
+      const otpPhonePanel=document.getElementById('austa-v39-auth-phone-panel');
+      const refreshOtpAvailability=async()=>{
+        try{
+          let base=String(supabaseClient?.supabaseUrl||'');
+          if(base.endsWith('/'))base=base.slice(0,-1);
+          if(!base)throw new Error('Supabase URL unavailable');
+          const response=await fetch(base+'/functions/v1/whatsapp-send-sms',{headers:{accept:'application/json'},cache:'no-store'});
+          const status=response.ok?await response.json():null;
+          otpAuthEnabled=status?.enabled===true;
+        }catch{otpAuthEnabled=false;}
+        otpPhonePanel.style.display=otpAuthEnabled?'block':'none';
+        otpPhonePanel.setAttribute('aria-hidden',String(!otpAuthEnabled));
+        if(!otpAuthEnabled)otpPhonePanel.querySelectorAll('input').forEach(input=>{input.value='';});
+      };
+      void refreshOtpAvailability();
+      const otpAvailabilityTimer=setInterval(()=>void refreshOtpAvailability(),30000);
 
       const subtitle =
         document.getElementById(
@@ -20782,6 +20827,83 @@ function bindPage(page, role) {
           'new-password';
       };
 
+      const normalizeAZOtpPhone=value=>{
+        let raw=String(value||'').trim().replace(/[^\d+]/g,'');
+        if(raw.startsWith('00'))raw='+'+raw.slice(2);
+        if(raw.startsWith('0'))raw='+994'+raw.slice(1);
+        else if(raw.startsWith('994'))raw='+'+raw;
+        else if(!raw.startsWith('+'))raw='+994'+raw;
+        return /^\+994\d{9}$/.test(raw)?raw:null;
+      };
+      const setOtpSent=()=>{
+        otpCodeWrap.style.display='block';
+        otpVerifyButton.hidden=false;
+        otpResendButton.hidden=false;
+        otpSendButton.textContent='Kodu yenidən göndər';
+        otpCodeInput.focus();
+      };
+      const requestPhoneOtp=async()=>{
+        if(!otpAuthEnabled){showMessage('Telefonla giriş hazırda aktiv deyil. E-poçt və şifrə ilə daxil olun.','info');return;}
+        clearMessage();
+        const phoneNumber=normalizeAZOtpPhone(otpPhoneInput.value);
+        if(!phoneNumber){showMessage('Azərbaycan mobil nömrəsini düzgün daxil edin.','error');return;}
+        const now=Date.now();
+        if(now-otpLastSentAt<60000){showMessage('Təhlükəsizlik üçün kod istəkləri arasında 60 saniyə gözləyin.','info');return;}
+        otpSendButton.disabled=true;
+        otpResendButton.disabled=true;
+        try{
+          const result=await supabaseClient.auth.signInWithOtp({
+            phone:phoneNumber,
+            options:{
+              channel:'sms',
+              shouldCreateUser:mode==='register',
+              ...(mode==='register'?{data:{austa_role:roleInput.value,phone_verified:false,account_status:'active'}}:{})
+            }
+          });
+          if(result.error)throw result.error;
+          otpPhoneInput.value=phoneNumber.replace(/^\+994/,'');
+          otpLastSentAt=Date.now();
+          setOtpSent();
+          showMessage('Kod sorğusu qəbul edildi. WhatsApp-da gələn 6 rəqəmli kodu daxil edin.','success');
+        }catch(error){
+          showMessage(error?.message||'WhatsApp kodu üçün sorğu alınmadı.','error');
+        }finally{
+          otpSendButton.disabled=false;
+          otpResendButton.disabled=false;
+        }
+      };
+      const verifyPhoneOtp=async()=>{
+        clearMessage();
+        const phoneNumber=normalizeAZOtpPhone(otpPhoneInput.value);
+        const token=String(otpCodeInput.value||'').replace(/\D/g,'');
+        if(!phoneNumber||!/^\d{6}$/.test(token)){showMessage('Düzgün nömrə və 6 rəqəmli kod daxil edin.','error');return;}
+        otpVerifyButton.disabled=true;
+        try{
+          const verified=await supabaseClient.auth.verifyOtp({
+            phone:phoneNumber,
+            token,
+            type:'sms'
+          });
+          if(verified.error)throw verified.error;
+          const user=verified.data?.user;
+          if(!user)throw new Error('Kod qəbul edildi, lakin Supabase Auth istifadəçi sessiyası qaytarmadı.');
+          const roleResult=await supabaseClient.from('profiles').select('role,is_active').eq('id',user.id).maybeSingle();
+          if(roleResult.error)throw roleResult.error;
+          if(roleResult.data?.is_active===false)throw new Error('A-USTA hesabı aktiv deyil.');
+          const savedRole=roleResult.data?.role||user.user_metadata?.austa_role||'customer';
+          localStorage.setItem('austa-account-role-v39',savedRole);
+          localStorage.setItem('austa-auth-user-id',user.id);
+          showMessage('✓ Telefon təsdiqləndi və Supabase sessiyası yaradıldı.','success');
+          setTimeout(()=>{if(!authModal.isConnected)return;showRole(savedRole);closeAuth();},700);
+        }catch(error){
+          showMessage(error?.message||'Təsdiq kodu düzgün deyil və ya vaxtı bitib.','error');
+        }finally{
+          otpVerifyButton.disabled=false;
+        }
+      };
+      otpSendButton.onclick=()=>void requestPhoneOtp();
+      otpResendButton.onclick=()=>void requestPhoneOtp();
+      otpVerifyButton.onclick=()=>void verifyPhoneOtp();
       // Native top layer makes the Account and page inert without z-index races.
       function closeAuth(){
         if(!authModal.isConnected)return;
@@ -57347,6 +57469,7 @@ function deleteOwnedListing(source,id){
             const {data,error}=await client.from(config.parentTable).delete()
                 .eq('id',id).eq('owner_id',user.id).select('id');
             if(error || !Array.isArray(data) || data.length!==1 || data[0].id!==id)throw new Error('parent delete');
+            window.dispatchEvent(new CustomEvent('austa:listings:changed',{detail:{id,source}}));
             return true;
         }catch{
             throw new Error(storageTouched
@@ -58057,7 +58180,7 @@ function patchSave(){
             return mediaEdit(type,item.id,async()=>{
                 const result=await updateDealer(item,sellerIntent);
                 return result;
-            }).then(result=>{if(dealerEditItem===item)dealerEditItem=null;return result;});
+            }).then(result=>{if(dealerEditItem===item)dealerEditItem=null;window.dispatchEvent(new CustomEvent('austa:listings:changed',{detail:{id:item.id,category:type}}));return result;});
         }
         const user=await currentUser();
         const result=await publish.run({
@@ -58081,9 +58204,15 @@ function patchSave(){
     const originalUpdate = window.AUSTA_V153.updateListing.bind(window.AUSTA_V153);
     window.AUSTA_V153.updateListing = async function(type, listingId, input, sellerIntent){
         if(VEHICLE_TYPES.has(type) || MARKETPLACE_TYPES.has(type) || PROVIDER_TYPES.has(type)){
-            return mediaEdit(type,listingId,()=>originalUpdate(type,listingId,input,sellerIntent));
+            return mediaEdit(type,listingId,()=>originalUpdate(type,listingId,input,sellerIntent)).then(result=>{
+                window.dispatchEvent(new CustomEvent('austa:listings:changed',{detail:{id:listingId,category:type}}));
+                return result;
+            });
         }
-        return originalUpdate(type,listingId,input,sellerIntent);
+        return originalUpdate(type,listingId,input,sellerIntent).then(result=>{
+            window.dispatchEvent(new CustomEvent('austa:listings:changed',{detail:{id:listingId,category:type}}));
+            return result;
+        });
     };
 
     window.AUSTA_V153
@@ -59008,147 +59137,11 @@ if(
     }
 
 
-    async function queryAll(type, filters = {}){
-
-        const supabase =
-            window.AUSTA_SUPABASE;
-
-        if(!supabase){
-
-            throw new Error(
-                "Supabase client tapılmadı."
-            );
-        }
-
-
-        let query;
-
-
-        if(type === "cars"){
-
-            query =
-                supabase
-                    .from(
-                        "vehicle_listings"
-                    )
-                    .select("*")
-                    .eq(
-                        "status",
-                        "active"
-                    )
-                    .eq(
-                        "listing_type",
-                        "sale"
-                    );
-
-
-        }else if(type === "rent"){
-
-            query =
-                supabase
-                    .from(
-                        "vehicle_listings"
-                    )
-                    .select("*")
-                    .eq(
-                        "status",
-                        "active"
-                    )
-                    .eq(
-                        "listing_type",
-                        "rent"
-                    );
-
-
-        }else if(
-            MARKETPLACE_TYPES.has(type)
-        ){
-
-            query =
-                supabase
-                    .from(
-                        "marketplace_listings"
-                    )
-                    .select("*")
-                    .eq(
-                        "status",
-                        "active"
-                    )
-                    .eq(
-                        "category",
-                        type
-                    );
-
-
-        }else if(["leasing","insurance","sober_driver"].includes(type)){
-            query=supabase.from("public_service_provider_listings").select("*").eq("status","active").eq("provider_type","service").contains("details",{service_category:type});
-        }else if(
-            type === "service" ||
-            type === "usta"
-        ){
-
-            query =
-                supabase
-                    .from(
-                        "public_service_provider_listings"
-                    )
-                    .select("*")
-                    .eq(
-                        "status",
-                        "active"
-                    )
-                    .eq(
-                        "provider_type",
-                        type
-                    );
-
-
-        }else if(type === "dealer"){
-
-            query =
-                supabase
-                    .from(
-                        "auto_dealer_listings"
-                    )
-                    .select("*")
-                    .eq(
-                        "status",
-                        "active"
-                    );
-
-
-        }else{
-
-            throw new Error(
-                "Kateqoriya tapılmadı."
-            );
-        }
-
-
-        /*
-         * Burada .range() YOXDUR.
-         *
-         * Əvvəl uyğun elanların hamısı
-         * alınır.
-         */
-
-        query = window.AUSTA_CATEGORY_FILTERS.applyQuery(query, type, filters);
-
-        const {
-            data,
-            error
-        } =
-            await query;
-
-
-        if(error){
-            throw error;
-        }
-
-
-        return data || [];
+    const feedPageCursorsV4322 = new Map();
+    if(typeof window.addEventListener==='function'){
+        window.addEventListener('austa:listings:changed',()=>feedPageCursorsV4322.clear());
+        window.addEventListener('austa:real-listing-created',()=>feedPageCursorsV4322.clear());
     }
-
 
     async function fetchCategoryV154E(
         typeValue,
@@ -59182,76 +59175,32 @@ if(
                 1,
                 Number(page) || 1
             );
-
-
-        /*
-         * 1. Bütün uyğun elanlar.
-         */
-
-        const allItems =
-            await queryAll(type, filters);
-
-
-        /*
-         * 2. Bütün nəticələr üzrə
-         * promotion + vaxt sıralaması.
-         */
-
-        const sorted =
-            sortAllListings(
-                allItems
-            );
-
-
-        const total =
-            sorted.length;
-
-
-        const totalPages =
-            Math.max(
-                1,
-                Math.ceil(
-                    total /
-                    PAGE_SIZE
-                )
-            );
-
-
-        /*
-         * İstifadəçi mövcud olmayan
-         * səhifə nömrəsi göndərərsə
-         * son səhifədə saxla.
-         */
-
-        const finalPage =
-            Math.min(
-                safePage,
-                totalPages
-            );
-
-
-        const start =
-            (
-                finalPage - 1
-            ) *
-            PAGE_SIZE;
-
-
-        const end =
-            start +
-            PAGE_SIZE;
-
-
-        /*
-         * 3. YALNIZ İNDİ 40-lıq
-         * səhifəyə bölünür.
-         */
-
-        const items =
-            sorted.slice(
-                start,
-                end
-            );
+        const filterObject=filters&&typeof filters==='object'?filters:{};
+        const key=type+'|'+JSON.stringify(Object.keys(filterObject).sort().reduce((all,name)=>{all[name]=filterObject[name];return all;},{}));
+        let state=feedPageCursorsV4322.get(key);
+        if(!state||Date.now()-state.updatedAt>15000){state={cursors:[null],pages:[],hasMore:[],updatedAt:Date.now()};feedPageCursorsV4322.set(key,state);}
+        while(state.pages.length<safePage&&state.hasMore[state.pages.length]!==false){
+            const pageNumber=state.pages.length+1,cursor=state.cursors[pageNumber-1]||null;
+            const pageFilters=window.AUSTA_CATEGORY_FILTERS?.normalize(type,filterObject)||{};
+            const priceField=type==='rent'?'daily_price':'price';
+            const min=pageFilters[priceField+'_min'];const max=pageFilters[priceField+'_max'];
+            delete pageFilters[priceField+'_min'];delete pageFilters[priceField+'_max'];
+            const result=await window.AUSTA_SUPABASE.rpc('austa_public_listing_page',{
+                p_category:type,p_after_bucket:cursor?.sort_bucket??null,p_after_at:cursor?.sort_at??null,p_after_source:cursor?.source??null,p_after_id:cursor?.id??null,
+                p_page_size:PAGE_SIZE,p_search:null,p_filters:pageFilters,p_price_field:priceField,
+                p_price_bounds:min!=null||max!=null?{AZN:{...(min!=null?{min:Number(min)}:{}),...(max!=null?{max:Number(max)}:{})}}:{},p_promotions_only:false
+            });
+            if(result.error)throw result.error;
+            const raw=Array.isArray(result.data)?result.data:[],hasMore=raw.length>PAGE_SIZE,visible=raw.slice(0,PAGE_SIZE);
+            const items=visible.map(row=>({...row.payload,status:row.status,published_at:row.published_at,expires_at:row.expires_at,promotion_type:row.promotion_type,promotion_started_at:row.promotion_started_at,promotion_until:row.promotion_until,last_boosted_at:row.last_boosted_at,_category:type,_source:row.source,__feed_sort_bucket:row.sort_bucket,__feed_sort_at:row.sort_at}));
+            const last=visible[visible.length-1];state.pages.push(items);state.hasMore.push(hasMore);state.cursors.push(hasMore&&last?{sort_bucket:last.sort_bucket,sort_at:last.sort_at,source:last.source,id:last.id}:null);
+            state.updatedAt=Date.now();
+        }
+        const finalPage=Math.min(safePage,Math.max(1,state.pages.length));
+        const items=state.pages[finalPage-1]||[];
+        const hasMore=Boolean(state.hasMore[finalPage-1]);
+        const total=(finalPage-1)*PAGE_SIZE+items.length+(hasMore?1:0);
+        const totalPages=finalPage+(hasMore?1:0);
 
 
         return {
@@ -59268,8 +59217,7 @@ if(
             pageSize:
                 PAGE_SIZE,
 
-            total:
-                total,
+            total,
 
             totalPages:
                 totalPages,
