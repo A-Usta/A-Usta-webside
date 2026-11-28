@@ -127,3 +127,8 @@
  #austa-v39-auth-modal[data-account-auth]{padding:12px!important}
  #austa-v39-auth-modal[data-account-auth]>div{padding:22px!important;max-height:calc(100dvh - 24px)!important}
 }
+
+#austaAccountModal .austa-v39-phone-row{display:flex;align-items:center;gap:10px;max-width:520px;margin-top:7px;padding:0 12px;border:1px solid #24546b;border-radius:9px;background:#06131e;color:#eef7fb}
+#austaAccountModal .austa-v39-phone-row span{font-size:13px;font-weight:700}
+#austaAccountModal .austa-v39-phone-row input,#austaAccountModal .austa-v39-auth-phone-label+input{width:100%;box-sizing:border-box;min-width:0;padding:11px 0;border:0;outline:0;background:transparent;color:#eef7fb;font:inherit}
+#austaAccountModal .austa-v39-auth-phone-label{display:block;margin:12px 0 4px;color:#a9bdca;font-size:12px}

@@ -80,7 +80,7 @@ test('selected-currency price range builds a bounded source-currency OR predicat
 test('homepage switches the selected category above adaptive search and queries its real table', () => {
   assert.match(appSource, /CATEGORIES\.map\(c=>/);
   assert.match(appSource, /setHomeCategory\(c\.key\);setSearch\(''\);setHomeBrand\(''\);setHomeModel\(''\);setDraftFilters\(\{\}\);setAppliedFilters\(\{\}\)/);
-  assert.match(appSource, /listCategory\(sb,activeCategory,\{from:0,to:39,search,brand:homeBrand,model:homeModel,filters:appliedFilters,displayCurrency\}\)/);
+  assert.match(appSource, /listCategory\(sb,activeCategory,\{from:0,to:39,search:querySearch,brand:homeBrand,model:homeModel,filters:appliedFilters,displayCurrency\}\)/);
   assert.match(appSource, /CATEGORY_FILTERS\[homeCategory\]/);
 });
 
@@ -88,7 +88,7 @@ test('home and category screens each mount a single filter panel', () => {
   assert.equal((appSource.match(/<View style=\{styles\.filters\}>/g) || []).length, 2);
   assert.match(appSource, /const isFocused=useIsFocused\(\)/);
   assert.match(appSource, /\{isFocused&&<View style=\{styles\.filters\}>/);
-  assert.equal((appSource.match(/accessibilityLabel=\{`\$\{activeCategory\.title\} filtrlərini aç`\}/g) || []).length, 1);
+  assert.equal((appSource.match(/accessibilityLabel=\{`\$\{activeCategory\.title\} filtrlərini aç\$\{/g) || []).length, 1);
   assert.equal((appSource.match(/CATEGORY_FILTERS\[category\.key\]/g) || []).length, 2);
 });
 
@@ -205,14 +205,25 @@ test('mobile equipment choices and detail values match the website category cata
   assert.equal(equipmentValue('["ABS"]', 'cars', 'not-an-option'), '["ABS"]');
 });
 
-test('all category listings render one shared filter surface with a non-card trigger at supported phone widths', () => {
+test('category listings fetch the first 40 rows only and fetch later pages on demand', () => {
+  assert.match(appSource, /listCategory\(sb,category,\{from:0,to:39,search:querySearch/);
+  assert.match(appSource, /setPageOffset\(40\)/);
+  assert.match(appSource, /recent\.length===40\|\|promoted\.length===40/);
+  assert.match(appSource, /from:pageOffset,to:pageOffset\+99/);
+});
+
+test('17 category filter headers keep search and one red trigger inline at supported phone widths', () => {
   assert.equal(CATEGORIES.length, 17);
   const categoryScreen = appSource.slice(appSource.indexOf('export function MarketplaceCategoryScreen()'), appSource.indexOf('const DETAIL_LABELS'));
   assert.equal((categoryScreen.match(/<View style={styles\.filters}>/g) || []).length, 1, 'category route has one filter container');
   const filterStyle = appSource.match(/filters:\{margin:14,padding:13,backgroundColor:'#fff',borderRadius:13,borderColor:LINE,borderWidth:1,gap:8\}/);
-  const triggerStyle = appSource.match(/filterToggle:\{([^}]+)\}/)?.[1] || '';
+  const triggerStyle = appSource.match(/filterIcon:\{([^}]+)\}/)?.[1] || '';
   assert.ok(filterStyle, 'one shared white filter surface remains');
-  assert.doesNotMatch(triggerStyle, /backgroundColor|borderWidth|borderColor/,'the nested trigger no longer looks like a second filter card');
+  assert.match(triggerStyle, /backgroundColor:RED/,'filter control is the red inline icon button');
+  assert.equal((categoryScreen.match(/style=\{styles\.filterIcon\}/g)||[]).length,1,'category route has one filter trigger');
+  assert.equal((appSource.match(/style=\{styles\.filterIcon\}/g)||[]).length,3,'home has one trigger per mutually exclusive vehicle/non-vehicle header; category route has one');
+  assert.doesNotMatch(categoryScreen,/styles\.filterToggle|filterToggleText/,'the separate second Filtr row is removed');
+  assert.match(categoryScreen,/<View style=\{\[styles\.search,\{margin:0\}\]\}>[\s\S]*?<Pressable[\s\S]*?style=\{styles\.filterIcon\}/,'search field and trigger share one horizontal row');
   for (const width of [320, 360, 390, 412]) {
     const fieldWidth = Math.floor((width - 28 - 26 - 8) * 0.48);
     assert.ok(fieldWidth > 110, `filter field remains usable at ${width}dp`);

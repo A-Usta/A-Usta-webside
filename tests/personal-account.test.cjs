@@ -16,7 +16,7 @@ test('role normalization handles server roles and rejects unknown/prototype keys
  assert.equal(api.normalizeRole('__proto__'),'customer');assert.equal(api.normalizeRole(null),'customer');
 });
 test('dashboard preserves reference card order and adds vehicles in sixth slot',()=>{
- const {api}=fixture();assert.deepEqual([...api.dashboard().matchAll(/data-page-open="([^"]+)"/g)].map(m=>m[1]),['listings','orders','ratings','registration','business','vehicles']);assert.doesNotMatch(api.dashboard(),/example@mail|DEMO|BMW/);
+ const {api}=fixture();assert.deepEqual([...api.dashboard().matchAll(/data-page-open="([^"]+)"/g)].map(m=>m[1]),['listings','orders','ratings','registration','business','vehicles','settings']);assert.doesNotMatch(api.dashboard(),/example@mail|DEMO|BMW/);
 });
 test('vehicle page delegates to the authenticated garage module',()=>{assert.match(fixture().api.vehicles(),/data-my-vehicles/);});
 test('personal presentation module cannot persist or modify vehicles',()=>{
