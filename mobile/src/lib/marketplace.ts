@@ -103,6 +103,17 @@ function feedPayload(row:Record<string,any>,category?:CategoryKey):Listing{
   return {...row.payload,id:row.id,status:row.status,published_at:row.published_at,expires_at:row.expires_at,promotion_type:row.promotion_type,promotion_started_at:row.promotion_started_at,promotion_until:row.promotion_until,last_boosted_at:row.last_boosted_at,_category:categoryKey,_source:source,__feed_sort_bucket:row.sort_bucket,__feed_sort_at:row.sort_at} as Listing;
 }
 const SOURCE_TABLE:Record<ListingSource,string>={vehicle:'vehicle_listings',marketplace:'marketplace_listings',service_provider:'service_provider_listings',auto_dealer:'auto_dealer_listings'};
+/**
+ * Authenticated owner reads intentionally use column-level grants, not table
+ * SELECT. Keep these projections aligned with TEST grants and the provider
+ * public view; lifecycle-owned first_published_at is not client-readable.
+ */
+export const OWNER_LISTING_SELECT:Record<ListingSource,string>={
+  vehicle:'id,owner_id,status,brand,model,year,mileage,body_type,fuel_type,transmission,engine,color,price,daily_price,deposit,region,district,address,latitude,longitude,description,phone,has_video,created_at,updated_at,published_at,promotion_type,promotion_started_at,promotion_until,last_boosted_at,engine_volume,horsepower,drivetrain,vehicle_condition,seats,damage_condition,market,barter_available,credit_available,seller_profile_id,vin,rental_type,contact_name,details,currency,expires_at',
+  marketplace:'id,owner_id,category,status,title,description,price,currency,brand,model,year,condition,region,district,address,phone,latitude,longitude,promotion_type,promotion_started_at,promotion_until,last_boosted_at,has_video,created_at,updated_at,published_at,details,seller_profile_id,expires_at',
+  service_provider:'id,owner_id,provider_type,status,title,name,phone,message_contact,specialty,services,about,experience,working_hours,region,district,address,latitude,longitude,rating,reviews_count,promotion_type,promotion_started_at,promotion_until,last_boosted_at,created_at,updated_at,published_at,details,seller_profile_id',
+  auto_dealer:'id,owner_id,status,dealer_name,contact_name,phone,message_contact,region,district,address,latitude,longitude,working_hours,brands,vehicle_condition,credit_available,leasing_available,barter_available,delivery_available,about,details,promotion_type,promotion_started_at,promotion_until,last_boosted_at,created_at,updated_at,published_at,seller_profile_id,expires_at',
+};
 async function readPublicListing(client:SupabaseClient,category:Category,id:string):Promise<Listing|null>{
   const {data,error}=await client.from('austa_public_listing_feed').select('*').eq('source',category.source).eq('category',category.key).eq('id',id).maybeSingle();
   if(error)throw error;
@@ -320,13 +331,15 @@ export async function createPromotionPaymentIntent(client: SupabaseClient, listi
 export async function getListing(client: SupabaseClient, category: Category, id: string) {
   const {data:auth,error:authError}=await client.auth.getUser();
   if(authError)throw authError;
-  let listing:Listing|null=null;
-  if(auth.user){
-    const owned=await client.from(SOURCE_TABLE[category.source]).select('*').eq('id',id).eq('owner_id',auth.user.id).maybeSingle();
+  // Active public listings come from the canonical, privacy-safe DTO. Only
+  // private owner states fall back to the authenticated owner-scoped table
+  // query, with explicitly granted columns.
+  let listing:Listing|null=await readPublicListing(client,category,id);
+  if(!listing&&auth.user){
+    const owned:any=await client.from(SOURCE_TABLE[category.source]).select(OWNER_LISTING_SELECT[category.source] as any).eq('id',id).eq('owner_id',auth.user.id).maybeSingle();
     if(owned.error)throw owned.error;
     if(owned.data)listing={...owned.data,_category:category.key,_source:category.source} as Listing;
   }
-  if(!listing)listing=await readPublicListing(client,category,id);
   if(!listing||(listing.status!=='active'&&listing.owner_id!==auth.user?.id))return null;
   return attachMedia(client,category,listing);
 }

@@ -72,7 +72,7 @@ test('message and phone actions remain wired and mobile wordmarks use approved r
 
 test('home video opens its selected item directly and closes to the retained home route', () => {
   assert.match(screens, /pathname:'\/videos',params:\{listingId:item\.id,source:item\._source,index:String\(index\),direct:'1'\}/);
-  assert.match(videoFeed, /if\(directOpen\)\{router\.back\(\);return;\}setViewerOpen\(false\)/);
+  assert.match(videoFeed, /if\(directOpen\)\{safeRouterBack\(router\);return;\}setViewerOpen\(false\)/);
   assert.match(videoFeed, /onRequestClose=\{closeViewer\}/);
   assert.match(videoFeed, /directOpen\?\(loading\|\|\(!viewerOpen&&!error&&!directUnavailable\)\?</);
   assert.match(videoFeed, /!directOpen&&<View style=\{s\.header\}/);
@@ -110,7 +110,7 @@ test('account navigation keeps its auth listener stable and hardware back return
   assert.ok(backHandler);
   assert.match(backHandler[0], /back\(\);return true/);
   assert.match(account, /accessibilityLabel="Geri" onPress=\{back\}/);
-  assert.match(account, /router\.replace\('\/\(drawer\)\/\(tabs\)\/index'\)/);
+  assert.match(account, /router\.replace\('\/\(drawer\)\/\(tabs\)'\)/);
   assert.doesNotMatch(backHandler[0], /signOut\(/);
 });
 

@@ -1,21 +1,14 @@
-import { CATEGORIES, type Category, type CategoryKey, type Listing, type ListingSource } from './marketplace';
+import { CATEGORIES, OWNER_LISTING_SELECT, type Category, type CategoryKey, type Listing } from './marketplace';
 
 type OwnedListingError = { key: CategoryKey; title: string; code?: string };
 export type OwnedListingResult = { rows: Listing[]; errors: OwnedListingError[] };
 export type OwnedListingFilter = 'all'|'active'|'vip'|'premium'|'expired'|'draft'|'inactive';
 
-const OWNED_SELECT: Record<ListingSource, string> = {
-  vehicle: 'id,owner_id,status,brand,model,created_at,listing_type,price,daily_price,currency,details,promotion_type,promotion_started_at,promotion_until,last_boosted_at,published_at,first_published_at,expires_at',
-  marketplace: 'id,owner_id,status,title,brand,model,created_at,category,details,price,currency,promotion_type,promotion_started_at,promotion_until,last_boosted_at,published_at,first_published_at,expires_at',
-  service_provider: 'id,owner_id,status,title,name,specialty,services,experience,working_hours,region,district,created_at,provider_type,details,promotion_type,promotion_started_at,promotion_until,last_boosted_at,published_at,first_published_at,expires_at',
-  auto_dealer: 'id,owner_id,status,dealer_name,brands,about,created_at,details,promotion_type,promotion_started_at,promotion_until,last_boosted_at,published_at,first_published_at,expires_at',
-};
-
 function queryForCategory(client: any, ownerId: string, category: Category) {
   // Provider listings use the existing security-barrier view: it returns full
   // details only where owner_id = auth.uid(), and redacts owner_id for every
   // other row. The base table has no client SELECT grant, by design.
-  let query = client.from(category.table).select(OWNED_SELECT[category.source]).eq('owner_id', ownerId);
+  let query = client.from(category.table).select(OWNER_LISTING_SELECT[category.source] as any).eq('owner_id', ownerId);
   if (category.source === 'vehicle') query = query.eq('listing_type', category.sourceValue);
   else if (category.source === 'marketplace') query = query.eq('category', category.sourceValue);
   else if (category.source === 'service_provider') {

@@ -49,7 +49,8 @@ test('publication maps vehicle detail fields and cleans a failed new staged list
 
 test('a timed-out draft insert keeps its UUID and reconciles duplicate-key retries by owner', () => {
   assert.match(screen, /id=newUuid\(\);currentListingId=id;setDraftId\(id\)/);
-  assert.match(screen, /async function insertListingDraft[\s\S]*insert\(\{id,\.\.\.payload\}\)[\s\S]*code==='23505'[\s\S]*eq\('id',id\)\.eq\('owner_id',owner\)/);
+  assert.match(screen, /async function insertListingDraft[\s\S]*insert\(\{id,\.\.\.payload\}\)\.select\('id,status'\)[\s\S]*code==='23505'[\s\S]*select\(OWNER_LISTING_SELECT\[source\](?: as any)?\)[\s\S]*eq\('id',id\)\.eq\('owner_id',owner\)/);
+  assert.doesNotMatch(screen, /insert\(\{id,\.\.\.payload\}\)\.select\('\*'\)/);
   assert.match(screen, /abortSignal\(signal\).*timeoutMs:20_000/);
 });
 

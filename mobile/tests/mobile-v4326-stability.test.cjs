@@ -43,5 +43,5 @@ test('category and detail screens reveal primary listing data before optional re
   const screens=source('src/components/MarketplaceScreens.tsx');
   assert.match(screens,/const \[recent,promoted\]=await Promise\.all/);
   assert.match(screens,/setRows\(sorted\);setLimit\(Math\.min\(20,sorted\.length\)\);[\s\S]*?setLoading\(false\);void getFavoriteKeys\(sb\)\.then\(favorites=>\{if\(current\(\)\)setFavoriteKeys\(favorites\);\}\)\.catch\(\(\)=>\{\}\);const visibleMedia/);
-  assert.match(screens,/setItem\(found\);setLoading\(false\);setSellerProfile\(null\)/);
+  assert.match(screens,/setItem\(found\);listingReady=true;setLoading\(false\);setSellerProfile\(null\)/);
 });

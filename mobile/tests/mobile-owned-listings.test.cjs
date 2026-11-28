@@ -20,7 +20,10 @@ const categories = [
 const mod = { exports: {} };
 vm.runInNewContext(`(function(exports,module,require){${js}\n})(module.exports,module,require)`, {
   module: mod,
-  require: name => name === './marketplace' ? { CATEGORIES: categories } : require(name),
+  require: name => name === './marketplace' ? {
+    CATEGORIES: categories,
+    OWNER_LISTING_SELECT: { vehicle: 'id,status', marketplace: 'id,status', service_provider: 'id,status', auto_dealer: 'id,status' },
+  } : require(name),
   Map, Set, Promise, String, Number, Object, Array, JSON,
 });
 const { loadOwnedListings, ownedListingDirectPrice, ownedListingServiceDetails, renewOwnedListing, filterOwnedListings } = mod.exports;
