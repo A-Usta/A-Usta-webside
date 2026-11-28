@@ -333,7 +333,7 @@ test('Chromium: actual full detail DOM for all nine categories keeps malicious J
  try{
   const page=await browser.newPage();await page.setContent('<main></main>');
   const runtime=require('./helpers/listing-detail-fixture.cjs');
-  await page.addScriptTag({content:`window.AUSTA_SUPABASE={auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})},from(table){const q={select(){return q},eq(){return q},order(){return q},maybeSingle:async()=>({data:window.__item,error:null}),then(resolve){return Promise.resolve({data:[],error:null}).then(resolve)}};return q;}};
+  await page.addScriptTag({content:`window.AUSTA_SUPABASE={auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})},from(table){const q={select(){return q},eq(){return q},order(){return q},maybeSingle:async()=>({data:table==='austa_public_listing_feed'?{source:'marketplace',category:window.__item.category,id:window.__item.id,owner_id:null,status:'active',created_at:'2026-11-28T00:00:00Z',published_at:'2026-11-28T00:00:00Z',updated_at:'2026-11-28T00:00:00Z',expires_at:'2026-12-28T00:00:00Z',promotion_type:'standard',payload:window.__item}:null,error:null}),then(resolve){return Promise.resolve({data:[],error:null}).then(resolve)}};return q;}};
     window.AUSTA_V153={mediaConfig:()=>({table:'marketplace_listing_media',bucket:'marketplace-media'})};`});
   for(const code of [technical,fs.readFileSync(path.join(root,'assets/vehicle/vin.js'),'utf8'),fs.readFileSync(path.join(root,'assets/marketplace/listing-lifecycle.js'),'utf8'),runtime.moduleSource,runtime.block])await page.addScriptTag({content:code});
   for(const [category,fields] of Object.entries(definitions)){

@@ -51,7 +51,12 @@ async function actor(c){
 async function read(c){
  await actor(c);
  let data=null,error=null;
- if(c.user){
+ // Service providers have a dedicated consent-aware projection. It returns an
+ // owner's full row under auth.uid() and a redacted public row to everyone else.
+ if(c.source==='service_provider'){
+  const result=await c.client.from('public_service_provider_listings').select('*').eq('id',c.id).maybeSingle();check(c);
+  data=result.data;error=result.error;
+ }else if(c.user){
   const owned=await c.client.from(c.config.table).select('*').eq('id',c.id).eq('owner_id',c.user.id).maybeSingle();check(c);
   if(owned.error)throw new Error('Unavailable');
   data=owned.data;

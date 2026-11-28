@@ -97,5 +97,5 @@ test('Vehicle detail/edit DB loads and mappers retain canonical contact column',
  for(const start of [html.indexOf('function mapSupabaseListing(item){'),html.indexOf('function mapSupabaseListing(item){',html.indexOf('function mapSupabaseListing(item){')+1)]){
   const end=html.indexOf('\nfunction ',start+1);assert.match(html.slice(start,end),/\.\.\.item/);
  }
- assert.match(require('./helpers/listing-initial-baseline.cjs').withoutPrivacyRead(fs.readFileSync(path.join(root,'assets/marketplace/listing-detail.js'),'utf8')),/from\(c.config.table\)\.select\('\*'\)\.eq\('id',c.id\)/);
+ const detail=fs.readFileSync(path.join(root,'assets/marketplace/listing-detail.js'),'utf8');assert.match(detail,/from\(c.config.table\)\.select\('\*'\)\.eq\('id',c.id\)\.eq\('owner_id',c.user.id\)/);assert.match(detail,/from\('austa_public_listing_feed'\)/);
 });
